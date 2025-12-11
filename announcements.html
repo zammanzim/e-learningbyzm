@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="script.js"></script>
+</head>
+
+<body>
+    <h2 id="welcomeText">Loading...</h2>
+
+    <div id="announcements"></div>
+    <button id="logoutBtn" onclick="logout()" style="
+        position:absolute; top:15px; right:15px;
+        padding:8px 16px; font-weight:bold;">
+        Logout
+    </button>
+
+    <a href="dashboard.html">go to dashboard</a>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user) return window.location.href = "index.html";
+
+            document.getElementById("welcomeText").innerText =
+                `Halo, ${user.full_name}!`;
+
+            // Muat pengumuman berdasarkan class_id
+            const { data, error } = await _supabase
+                .from("announcements")
+                .select("*")
+                .eq("class_id", user.class_id)
+                .order("created_at", { ascending: false });
+
+            const container = document.getElementById("announcements");
+            container.innerHTML = "<h3>Pengumuman Kelas</h3>";
+
+            if (!data || data.length === 0) {
+                container.innerHTML += "<p>Belum ada pengumuman</p>";
+                return;
+            }
+
+            data.forEach(item => {
+                container.innerHTML += `
+                <div style="
+                    background:#222;
+                    padding:12px;
+                    border-radius:10px;
+                    margin-top:10px;
+                ">
+                    <h4 style="margin:0;">${item.title}</h4>
+                    <p>${item.content}</p>
+                    <small>${new Date(item.created_at).toLocaleString()}</small>
+                </div>`;
+            });
+        });
+    </script>
+</body>
+
+</html>

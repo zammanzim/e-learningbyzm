@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Siswa</title>
+
+    <!-- Supabase + script utama -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="script.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: #f5f5f5;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #111;
+            border-bottom: 1px solid #222;
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .topbar button {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .wrapper {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 16px 40px;
+        }
+
+        .card {
+            background: #171717;
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 0 0 1px #262626;
+        }
+
+        .profile {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-main h2 {
+            margin: 0 0 4px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 999px;
+            background: #222;
+            margin-right: 6px;
+            opacity: .9;
+        }
+
+        .bio {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .ann-title {
+            margin: 0 0 8px;
+        }
+
+        .ann-empty {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .ann-item {
+            background: #111;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+
+        .ann-item h4 {
+            margin: 0 0 4px;
+        }
+
+        .ann-item small {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <h1>Dashboard Siswa</h1>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="wrapper">
+        <!-- PROFIL -->
+        <div class="card">
+            <div class="profile">
+                <div class="avatar" id="avatarBox">
+                    <!-- Huruf awal nama / foto -->
+                </div>
+                <div class="profile-main">
+                    <h2 id="profileName">Loading...</h2>
+                    <div>
+                        <span class="tag" id="profileUsernameTag">@username</span>
+                        <span class="tag" id="profileClassTag">Kelas -</span>
+                    </div>
+                    <div class="bio" id="profileBio">Biodata belum diisi.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PENGUMUMAN -->
+        <div class="card">
+            <h3 class="ann-title">Pengumuman Kelas</h3>
+            <div id="announcements"></div>
+        </div>
+
+        <div class="card">
+            <button id="editBtn" style="
+    margin-top:8px;
+    padding:4px 12px;
+    border-radius:8px;
+    border:none;
+    background:#0099ff;
+    font-size:12px;
+    cursor:pointer;
+">Edit Profil</button>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT PROFIL -->
+    <div id="modal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    backdrop-filter:blur(4px);
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+        background:#171717;
+        padding:18px;
+        border-radius:16px;
+        width:300px;
+        text-align:center;
+    ">
+            <h3>Edit Profil</h3>
+
+            <p>Foto Profil</p>
+            <input type="file" id="avatarInput" accept="image/*">
+
+            <p style="margin-top:10px;">Biodata</p>
+            <textarea id="bioInput" placeholder="Tulis biodata kamu..."
+                style="width:100%;height:80px;border-radius:10px;padding:6px;"></textarea>
+
+            <button onclick="saveProfile()" style="
+            margin-top:12px;
+            width:100%;
+            padding:10px;
+            border:none;
+            border-radius:12px;
+            background:#0099ff;
+            font-weight:bold;
+            cursor:pointer;
+        ">Simpan</button>
+
+            <button onclick="closeModal()" style="
+            margin-top:8px;
+            width:100%;
+            padding:8px;
+            border:none;
+            border-radius:10px;
+            background:#333;
+            color:#ccc;
+            cursor:pointer;
+        ">Batal</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user) return window.location.href = "index.html";
+
+            // === PROFIL ===
+            const nameEl = document.getElementById("profileName");
+            const userTagEl = document.getElementById("profileUsernameTag");
+            const classTagEl = document.getElementById("profileClassTag");
+            const bioEl = document.getElementById("profileBio");
+            const avatarBox = document.getElementById("avatarBox");
+
+            nameEl.textContent = user.full_name || "Tanpa Nama";
+            userTagEl.textContent = user.username ? `@${user.username}` : "@(belum ada username)";
+            bioEl.textContent = user.bio || "Biodata belum diisi.";
+
+            // Avatar: kalau ada avatar_url pakai gambar, kalau tidak pakai huruf awal
+            avatarBox.innerHTML = "";
+            if (user.avatar_url) {
+                const img = document.createElement("img");
+                img.src = user.avatar_url + "?v=" + Date.now();
+                avatarBox.appendChild(img);
+            } else {
+                const initial = (user.full_name || "?").charAt(0).toUpperCase();
+                avatarBox.textContent = initial;
+            }
+
+            // Ambil nama kelas dari tabel classes
+            try {
+                const { data: classData, error: classError } = await _supabase
+                    .from("classes")
+                    .select("name")
+                    .eq("id", user.class_id)
+                    .single();
+
+                if (!classError && classData) {
+                    classTagEl.textContent = `Kelas ${classData.name}`;
+                } else {
+                    classTagEl.textContent = "Kelas -";
+                }
+            } catch (e) {
+                console.log("Error ambil kelas:", e);
+                classTagEl.textContent = "Kelas -";
+            }
+
+            // === PENGUMUMAN ===
+            const container = document.getElementById("announcements");
+            container.innerHTML = "";
+
+            try {
+                const { data, error } = await _supabase
+                    .from("announcements")
+                    .select("*")
+                    .eq("class_id", user.class_id)
+                    .order("created_at", { ascending: false });
+
+                if (error) {
+                    console.log("Error announcements:", error);
+                    container.innerHTML = `<p class="ann-empty">Gagal memuat pengumuman.</p>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<p class="ann-empty">Belum ada pengumuman.</p>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const div = document.createElement("div");
+                    div.className = "ann-item";
+                    div.innerHTML = `
+                        <h4>${item.title}</h4>
+                        <p>${item.content}</p>
+                        <small>${new Date(item.created_at).toLocaleString()}</small>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                console.log(e);
+                container.innerHTML = `<p class="ann-empty">Terjadi kesalahan memuat pengumuman.</p>`;
+            }
+        });
+
+        document.getElementById("editBtn").onclick = () => {
+            document.getElementById("modal").style.display = "flex";
+
+            const user = JSON.parse(localStorage.getItem("user"));
+            document.getElementById("bioInput").value = user.bio || "";
+        };
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        async function saveProfile() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            const file = document.getElementById("avatarInput").files[0];
+            const newBio = document.getElementById("bioInput").value;
+            let avatarUrl = user.avatar_url;
+
+            if (file) {
+
+                const compressed = await compressImage(file, 500, 0.7);
+
+                const fileName = `${user.id}.jpg`;
+
+                // Convert blob jadi file
+                const compressedFile = new File([compressed], fileName, {
+                    type: "image/jpeg"
+                });
+
+                const { error: uploadError } = await _supabase.storage
+                    .from("avatars")
+                    .upload(fileName, compressedFile, {
+                        cacheControl: "3600",
+                        upsert: true,
+                        contentType: "image/jpeg"
+                    });
+
+                if (uploadError) {
+                    alert("Gagal upload foto!");
+                    console.log(uploadError);
+                    return;
+                }
+
+                const { data: publicUrlData } = _supabase.storage
+                    .from("avatars")
+                    .getPublicUrl(fileName);
+
+                avatarUrl = publicUrlData.publicUrl;
+            }
+
+            document.getElementById("avatarInput").value = "";
+
+            // === Update database ===
+            const { data, error } = await _supabase
+                .from("users")
+                .update({
+                    avatar_url: avatarUrl,
+                    bio: newBio
+                })
+                .eq("id", user.id)
+                .select()
+                .single();
+
+            if (error) {
+                alert("Gagal update profil!");
+                console.log(error);
+                return;
+            }
+
+            const { data: freshUser } = await _supabase
+                .from("users")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+            localStorage.setItem("user", JSON.stringify(freshUser));
+            alert("Profil berhasil diupdate!");
+            location.reload();
+
+        }
+        function compressImage(file, maxWidth = 500, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = e => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const scale = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scale;
+
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob(
+                            blob => {
+                                if (!blob) return reject("Gagal compress!");
+                                resolve(blob);
+                            },
+                            "image/jpeg",
+                            quality // 0.1 - 1.0
+                        );
+                    };
+                };
+                reader.onerror = err => reject(err);
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>

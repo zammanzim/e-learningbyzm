@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Masuk Portal</title>
+
+    <!-- LIBRARY Supabase WAJIB ADA -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- File JS kamu -->
+    <script defer src="script.js"></script>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #0a0a0a;
+            color: white;
+            font-family: Arial;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 350px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #171717;
+            padding: 10px;
+        }
+
+        .slides {
+            display: flex;
+            width: 300%;
+            transition: transform 0.4s ease;
+        }
+
+        .card {
+            width: 350px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 12px;
+            background: #0099ff;
+            border: none;
+            color: white;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: .8;
+        }
+
+        .backBtn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .backBtn:hover {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="slides">
+
+            <!-- STEP 1: pilih kelas -->
+            <div class="card step">
+                <h2>Pilih Kelas</h2>
+                <select id="classSelect" onchange="loadNames(); goToStep(2)"></select>
+            </div>
+
+            <!-- STEP 2: pilih nama -->
+            <div class="card step">
+                <button class="backBtn" onclick="goToStep(1)">←</button>
+                <h2>Pilih Nama</h2>
+                <select id="nameSelect" onchange="checkUserStatus(); goToStep(3)"></select>
+            </div>
+
+            <!-- STEP 3: Login / Register -->
+            <div class="card step" id="authCard">
+                <button class="backBtn" onclick="goToStep(2)">←</button>
+                <h2 id="authTitle">Login / Register</h2>
+
+                <!-- REGISTER -->
+                <div id="registerSection" style="display:none;">
+                    <input id="newUsername" placeholder="Buat Username">
+                    <input id="newPassword" type="password" placeholder="Buat Password">
+                    <button onclick="register()">Daftar</button>
+                </div>
+
+                <!-- LOGIN -->
+                <div id="loginSection" style="display:none;">
+                    <input id="loginUsername" placeholder="Username">
+                    <input id="loginPassword" type="password" placeholder="Password">
+                    <button onclick="login()">Masuk</button>
+                </div>
+
+                <p id="info"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+            window.location.href = "announcements.html";
+        }
+
+        let currentStep = 1;
+
+        function goToStep(step) {
+            currentStep = step;
+            document.querySelector(".slides").style.transform =
+                `translateX(-${(step - 1) * 350}px)`;
+
+        }
+
+    </script>
+
+</body>
+
+</html>
