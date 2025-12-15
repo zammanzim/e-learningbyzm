@@ -1,10 +1,3 @@
-// === KONFIGURASI SUPABASE ===
-const SUPABASE_URL = "https://vttmwtlqzbbiaromohrp.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dG13dGxxemJiaWFyb21vaHJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNjg4NTMsImV4cCI6MjA4MDg0NDg1M30.16SwOEqD5ZNAgk1oWhLrL41Eqw4kkeAKTyHxkSqmpiY";
-
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-
 // === HASH PASSWORD (SHA-256) ===
 async function hashPassword(password) {
     const encoder = new TextEncoder();
@@ -17,7 +10,7 @@ async function hashPassword(password) {
 
 // === REGISTER ===
 async function loadClasses() {
-    const { data } = await _supabase.from("classes").select("*");
+    const { data } = await supabase.from("classes").select("*");
     const select = document.getElementById("classSelect");
     select.innerHTML = `<option disabled selected value="">-- Pilih Kelas --</option>`;
     data.forEach(cls => {
@@ -27,7 +20,7 @@ async function loadClasses() {
 
 async function loadNames() {
     const class_id = document.getElementById("classSelect").value;
-    const { data, error } = await _supabase
+    const { data, error } = await supabase
         .from("users")
         .select("id, full_name")
         .eq("class_id", class_id)
@@ -52,7 +45,7 @@ async function register() {
     const password = document.getElementById("newPassword").value;
     const hashed = await hashPassword(password);
 
-    const { data, error } = await _supabase
+    const { data, error } = await supabase
         .from("users")
         .update({
             username: username,
@@ -106,14 +99,14 @@ async function submitPassword() {
 
     if (user.status === "pending") {
         // SET PASSWORD BARU → AKTIFKAN AKUN
-        await _supabase.from("users")
+        await supabase.from("users")
             .update({
                 password: hashed,
                 status: "active"
             })
             .eq("id", user.id);
 
-        const { data } = await _supabase
+        const { data } = await supabase
             .from("users")
             .select("*")
             .eq("id", user.id)
@@ -138,7 +131,7 @@ async function checkUserStatus() {
     const id = document.getElementById("nameSelect").value;
     if (!id) return;
 
-    const { data } = await _supabase
+    const { data } = await supabase
         .from("users")
         .select("*")
         .eq("id", id)
@@ -160,9 +153,4 @@ async function checkUserStatus() {
         document.getElementById("loginSection").style.display = "block";
         document.getElementById("loginUsername").value = data.username;
     }
-}
-
-function logout() {
-    localStorage.clear();       // Hapus data login
-    window.location.href = "index.html"; // Balik ke login
 }

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mata Pelajaran</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subject-manager.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="visitorPopup" style="display:none;">
+        <h3>Statistik Visitor</h3>
+
+        <p>Visitor Hari Ini: <b id="todayCount">0</b></p>
+        <p>Total Visitor: <b id="totalCount">0</b></p>
+
+        <div id="visitorList"></div>
+
+        <button id="resetVisitorBtn" style="display:none;">Reset</button>
+    </div>
+
+    <header>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div id="visitorBox" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-eye"></i>
+            <span id="visitorCount">0</span>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <h3>Main Menu</h3>
+        <ul>
+            <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="announcements.html"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="dashboard.html"><i class="fa-solid fa-table-columns"></i>Dashboard</a></li>
+            <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+            <li><a href="search.html"><i class="fa-solid fa-search"></i>Cari Akun</a></li>
+            <li><a href="nilai.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
+            <h3>Lessons</h3>
+            <li><a href="subject.html?subject=bahasa-indonesia" data-subject="bahasa-indonesia"><i
+                        class="fa-solid fa-book"></i>B. Indonesia</a></li>
+            <li><a href="subject.html?subject=bahasa-inggris" data-subject="bahasa-inggris"><i
+                        class="fa-solid fa-language"></i>B. Inggris</a></li>
+            <li><a href="subject.html?subject=bahasa-sunda" data-subject="bahasa-sunda"><B
+                        style="margin-right: 10px;">ᮘ</B>B. Sunda</a></li>
+            <li><a href="subject.html?subject=bahasa-jepang" data-subject="bahasa-jepang"><b
+                        style="margin-right: 10px;">ア</b>B. Jepang</a></li>
+            <li><a href="subject.html?subject=matematika" data-subject="matematika"><i
+                        class="fa-solid fa-calculator"></i>Matematika</a></li>
+            <li><a href="subject.html?subject=proipas" data-subject="proipas"><i
+                        class="fa-solid fa-atom"></i>Proipas</a></li>
+            <li><a href="subject.html?subject=sejarah" data-subject="sejarah"><i
+                        class="fa-solid fa-landmark"></i>Sejarah</a></li>
+            <li><a href="subject.html?subject=pabp" data-subject="pabp"><i class="fa-solid fa-mosque"></i>PABP</a></li>
+            <li><a href="subject.html?subject=pp" data-subject="pp"><i class="fa-solid fa-scale-balanced"></i>PP</a>
+            </li>
+            <li><a href="subject.html?subject=seni-budaya" data-subject="seni-budaya"><i
+                        class="fa-solid fa-masks-theater"></i>Seni Budaya</a></li>
+            <li><a href="subject.html?subject=pjok" data-subject="pjok"><i
+                        class="fa-solid fa-person-running"></i>PJOK</a></li>
+            <li><a href="subject.html?subject=informatika" data-subject="informatika"><i
+                        class="fa-solid fa-laptop"></i>Informatika</a></li>
+            <li><a href="subject.html?subject=bk" data-subject="bk"><i class="fa-solid fa-heart-circle-check"></i>BK</a>
+            </li>
+            <li><a href="subject.html?subject=dpr1" data-subject="dpr1"><i class="fa-solid fa-laptop-code"></i>DASPROG
+                    1</a></li>
+            <li><a href="subject.html?subject=dpr2" data-subject="dpr2"><i class="fa-solid fa-microchip"></i>DASPROG
+                    2</a></li>
+            <li><a href="subject.html?subject=dpr3" data-subject="dpr3"><i class="fa-solid fa-palette"></i>DASPROG 3</a>
+            </li>
+        </ul>
+    </div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h2 id="welcomeText"></h2>
+        </div>
+        <div class="right-section">
+            <div id="announcements"></div>
+            <div id="editControls"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================
+        // MAPPING SUBJECT ID → DISPLAY NAME
+        // ===================================
+        const SUBJECT_NAMES = {
+            "bahasa-indonesia": "Bahasa Indonesia",
+            "bahasa-inggris": "Bahasa Inggris",
+            "bahasa-sunda": "Bahasa Sunda",
+            "bahasa-jepang": "Bahasa Jepang",
+            "matematika": "Matematika",
+            "proipas": "Proyek IPAS",
+            "sejarah": "Sejarah",
+            "pabp": "PABP",
+            "pp": "Pendidikan Pancasila",
+            "seni-budaya": "Seni Budaya",
+            "pjok": "PJOK",
+            "informatika": "Informatika",
+            "bk": "Bimbingan Konseling",
+            "dpr1": "Dasar Pemrograman 1",
+            "dpr2": "Dasar Pemrograman 2",
+            "dpr3": "Dasar Pemrograman 3"
+        };
+
+        // ===================================
+        // LOAD SUBJECT BASED ON URL
+        // ===================================
+        function loadSubject() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const subjectId = urlParams.get('subject') || 'bahasa-indonesia';
+            const subjectName = SUBJECT_NAMES[subjectId] || subjectId;
+
+            // Update active state di sidebar
+            document.querySelectorAll('.sidebar a[data-subject]').forEach(link => {
+                if (link.dataset.subject === subjectId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Load content
+            SubjectApp.init(subjectId, subjectName);
+        }
+
+        // ===================================
+        // HANDLE CLICKS (NO PAGE REFRESH!)
+        // ===================================
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a[data-subject]');
+            if (!link) return;
+
+            e.preventDefault(); // Stop normal navigation
+
+            const subjectId = link.dataset.subject;
+
+            // Update URL tanpa refresh
+            const newUrl = `subject.html?subject=${subjectId}`;
+            window.history.pushState({ subject: subjectId }, '', newUrl);
+
+            // Load subject baru
+            loadSubject();
+        });
+
+        // Handle back/forward button
+        window.addEventListener('popstate', loadSubject);
+
+        // Initial load saat page dibuka
+        document.addEventListener("DOMContentLoaded", loadSubject);
+    </script>
+</body>
+
+</html>

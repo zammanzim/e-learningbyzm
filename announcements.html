@@ -3,61 +3,556 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Announcement</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="script.js"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/auth.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
-    <h2 id="welcomeText">Loading...</h2>
 
-    <div id="announcements"></div>
-    <button id="logoutBtn" onclick="logout()" style="
-        position:absolute; top:15px; right:15px;
-        padding:8px 16px; font-weight:bold;">
-        Logout
-    </button>
+    <header>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
 
-    <a href="dashboard.html">go to dashboard</a>
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
 
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <h3>Main Menu</h3>
+        <ul>
+            <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="announcements.html" class="active"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="dashboard.html"><i class="fa-solid fa-table-columns"></i>Dashboard</a></li>
+            <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+            <li><a href="search.html"><i class="fa-solid fa-search"></i>Cari Akun</a></li>
+            <li><a href="nilai.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
+            <h3>Lessons</h3>
+            <li><a href="bahasaindonesia.html"><i class="fa-solid fa-book"></i>B. Indonesia</a></li>
+            <li><a href="bahasainggris.html"><i class="fa-solid fa-language"></i>B. Inggris</a></li>
+            <li><a href="bahasasunda.html"><B style="margin-right: 10px;">ᮘ</B>B. Sunda</a></li>
+            <li><a href="bahasajepang.html"><b style="margin-right: 10px;">ア</b>B. Jepang</a></li>
+            <li><a href="matematika.html"><i class="fa-solid fa-calculator"></i>Matematika</a></li>
+            <li><a href="proipas.html"><i class="fa-solid fa-atom"></i>Proipas</a></li>
+            <li><a href="sejarah.html"><i class="fa-solid fa-landmark"></i>Sejarah</a></li>
+            <li><a href="pabp.html"><i class="fa-solid fa-mosque"></i>PABP</a></li>
+            <li><a href="pp.html"><i class="fa-solid fa-scale-balanced"></i>PP</a></li>
+            <li><a href="senibudaya.html"><i class="fa-solid fa-masks-theater"></i>Seni Budaya</a></li>
+            <li><a href="pjok.html"><i class="fa-solid fa-person-running"></i>PJOK</a></li>
+            <li><a href="informatika.html"><i class="fa-solid fa-laptop"></i>Informatika</a></li>
+            <li><a href="bk.html"><i class="fa-solid fa-heart-circle-check"></i>BK</a></li>
+            <li><a href="dpr1.html"><i class="fa-solid fa-laptop-code"></i>DASPROG 1</a></li>
+            <li><a href="dpr2.html"><i class="fa-solid fa-microchip"></i>DASPROG 2</a></li>
+            <li><a href="dpr3.html"><i class="fa-solid fa-palette"></i>DASPROG 3</a></li>
+            </li>
+        </ul>
+        </ul>
+    </div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h2 id="welcomeText"></h2>
+        </div>
+        <div class="right-section">
+
+            <div id="announcements"></div>
+
+            <div id="editControls"></div>
+
+        </div>
+    </div>
     <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const user = JSON.parse(localStorage.getItem("user"));
-            if (!user) return window.location.href = "index.html";
+        // ============================================
+        // ANNOUNCEMENT MANAGER - FIXED & COMPATIBLE
+        // Pastikan script.js, basicfeat.js, auth.js udah load
+        // ============================================
 
-            document.getElementById("welcomeText").innerText =
-                `Halo, ${user.full_name}!`;
+        const AnnouncementApp = {
+            state: {
+                editMode: false,
+                user: null,
+                announcements: []
+            },
 
-            // Muat pengumuman berdasarkan class_id
-            const { data, error } = await _supabase
-                .from("announcements")
-                .select("*")
-                .eq("class_id", user.class_id)
-                .order("created_at", { ascending: false });
+            // Cek user dari localStorage atau fungsi external
+            getUserData() {
+                // Coba pake fungsi getUser() dari auth.js kalo ada
+                if (typeof getUser === 'function') {
+                    return getUser();
+                }
+                // Fallback ke localStorage
+                const userData = localStorage.getItem("user");
+                return userData ? JSON.parse(userData) : null;
+            },
 
-            const container = document.getElementById("announcements");
-            container.innerHTML = "<h3>Pengumuman Kelas</h3>";
+            async init() {
+                // Tunggu supabase ready
+                if (typeof supabase === 'undefined') {
+                    console.error("❌ Supabase belum ready! Cek script.js");
+                    setTimeout(() => this.init(), 500);
+                    return;
+                }
 
-            if (!data || data.length === 0) {
-                container.innerHTML += "<p>Belum ada pengumuman</p>";
-                return;
+                this.state.user = this.getUserData();
+
+                if (!this.state.user) {
+                    console.warn("User tidak login, redirect ke index.html");
+                    window.location.href = "index.html";
+                    return;
+                }
+
+                console.log("✅ User loaded:", this.state.user.full_name);
+
+                this.updateWelcomeText();
+                this.setupAdminControls();
+                this.setupEventListeners();
+                await this.loadAnnouncements();
+            },
+
+            updateWelcomeText() {
+                const welcomeEl = document.getElementById("welcomeText");
+                if (welcomeEl) {
+                    welcomeEl.innerText = `Halo, ${this.state.user.full_name || 'User'}!`;
+                }
+            },
+
+            setupAdminControls() {
+                const isAdmin = (this.state.user.role === "class_admin" ||
+                    this.state.user.role === "super_admin");
+
+                const editControls = document.getElementById("editControls");
+
+                if (isAdmin && editControls) {
+                    editControls.innerHTML = `
+                <button id="toggleEditMode" style="padding:10px 20px; background:#2196F3; color:white; border:none; border-radius:5px; cursor:pointer; margin-right:10px;">Edit Pengumuman</button>
+                <button id="addAnnouncementBtn" style="display:none; padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;">+ Tambah Pengumuman</button>
+            `;
+                }
+            },
+
+            setupEventListeners() {
+                const self = this;
+
+                // Event delegation untuk semua tombol
+                document.addEventListener("click", function (e) {
+                    // Toggle edit mode
+                    if (e.target && e.target.id === "toggleEditMode") {
+                        e.preventDefault();
+                        self.toggleEditMode();
+                        return;
+                    }
+
+                    // Tambah pengumuman
+                    if (e.target && e.target.id === "addAnnouncementBtn") {
+                        e.preventDefault();
+                        self.createNewAnnouncement();
+                        return;
+                    }
+
+                    // Delete button
+                    const deleteBtn = e.target.closest(".delete-btn");
+                    if (deleteBtn) {
+                        e.preventDefault();
+                        const card = deleteBtn.closest(".course-card");
+                        self.deleteAnnouncement(card);
+                        return;
+                    }
+                });
+            },
+
+            async loadAnnouncements() {
+                const container = document.getElementById("announcements");
+                if (!container) {
+                    console.error("❌ Element #announcements tidak ditemukan!");
+                    return;
+                }
+
+                container.innerHTML = "<h3>Class Announcements</h3><p style='color:#666; padding:20px;'>Memuat pengumuman...</p>";
+
+                try {
+                    console.log("🔄 Loading announcements for class_id:", this.state.user.class_id);
+
+                    const { data, error } = await supabase
+                        .from("announcements")
+                        .select("*")
+                        .eq("class_id", this.state.user.class_id)
+                        .order("display_order", { ascending: true })
+                        .order("created_at", { ascending: true });
+
+                    if (error) {
+                        console.error("❌ Supabase error:", error);
+                        throw error;
+                    }
+
+                    console.log("✅ Loaded announcements:", data);
+
+                    this.state.announcements = data || [];
+                    this.renderAnnouncements();
+
+                } catch (err) {
+                    console.error("❌ Load error:", err);
+                    container.innerHTML = "<h3>Class Announcements</h3><p style='color:red;'>Gagal memuat pengumuman. Cek console untuk detail.</p>";
+                }
+            },
+
+            renderAnnouncements() {
+                const container = document.getElementById("announcements");
+                container.innerHTML = "<h3>Class Announcements</h3>";
+
+                if (this.state.announcements.length === 0) {
+                    container.innerHTML += "<p style='color:#666; padding:20px;'>Belum ada pengumuman</p>";
+                    return;
+                }
+
+                this.state.announcements.forEach((item) => {
+                    const card = this.createCardElement(item);
+                    container.appendChild(card);
+                });
+
+                console.log("✅ Rendered", this.state.announcements.length, "announcements");
+            },
+
+            createCardElement(data) {
+                const card = document.createElement("div");
+                card.className = "course-card";
+                card.dataset.id = data.id;
+                card.draggable = false;
+
+                const bigTitle = data.big_title || "";
+                const title = data.title || "";
+                const content = data.announcement || data.content || "";
+                const small = data.small || "";
+
+                card.innerHTML = `
+            <div class="drag-handle" style="display:none; cursor:move; color:#888; padding:5px; position:absolute; left:10px; top:10px;">
+                <i class="fa-solid fa-grip-vertical"></i>
+            </div>
+            <h3 contenteditable="false" class="editable" data-field="big_title">${bigTitle}</h3>
+            <h4 contenteditable="false" class="editable" data-field="title">${title}</h4>
+            <p contenteditable="false" class="editable" data-field="announcement">${content}</p>
+            <small contenteditable="false" class="editable" data-field="small">${small}</small>
+            <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:10px;">
+                <i class="fa-solid fa-trash"></i> Delete
+            </button>
+        `;
+
+                return card;
+            },
+
+            toggleEditMode() {
+                this.state.editMode = !this.state.editMode;
+
+                const toggleBtn = document.getElementById("toggleEditMode");
+                const addBtn = document.getElementById("addAnnouncementBtn");
+                const cards = document.querySelectorAll(".course-card");
+
+                if (toggleBtn) {
+                    toggleBtn.textContent = this.state.editMode ? "Selesai Edit" : "Edit Pengumuman";
+                }
+                if (addBtn) {
+                    addBtn.style.display = this.state.editMode ? "inline-block" : "none";
+                }
+
+                cards.forEach(card => {
+                    const fields = card.querySelectorAll(".editable");
+                    const deleteBtn = card.querySelector(".delete-btn");
+                    const dragHandle = card.querySelector(".drag-handle");
+
+                    if (this.state.editMode) {
+                        card.classList.add("editable-mode");
+                        card.draggable = true;
+                        fields.forEach(f => f.contentEditable = "true");
+                        if (deleteBtn) deleteBtn.style.display = "block";
+                        if (dragHandle) dragHandle.style.display = "block";
+                    } else {
+                        card.classList.remove("editable-mode");
+                        card.draggable = false;
+                        fields.forEach(f => f.contentEditable = "false");
+                        if (deleteBtn) deleteBtn.style.display = "none";
+                        if (dragHandle) dragHandle.style.display = "none";
+
+                        // Save changes
+                        this.saveAnnouncement(card);
+                    }
+                });
+
+                if (this.state.editMode) {
+                    this.enableDragDrop();
+                } else {
+                    this.disableDragDrop();
+                }
+            },
+
+            async createNewAnnouncement() {
+                try {
+                    console.log("🔄 Creating new announcement...");
+
+                    // Cari order terakhir
+                    const maxOrder = this.state.announcements.length > 0
+                        ? Math.max(...this.state.announcements.map(a => a.display_order || 0))
+                        : 0;
+
+                    const { data, error } = await supabase
+                        .from("announcements")
+                        .insert({
+                            class_id: this.state.user.class_id,
+                            big_title: "Judul Besar",
+                            title: "Subjudul",
+                            content: "Isi pengumuman...",
+                            small: "Teks kecil",
+                            display_order: maxOrder + 1
+                        })
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+
+                    console.log("✅ New announcement created:", data);
+
+                    this.state.announcements.push(data);
+
+                    const container = document.getElementById("announcements");
+                    const card = this.createCardElement(data);
+                    container.appendChild(card);
+
+                    // Auto-enable edit mode untuk card baru
+                    if (this.state.editMode) {
+                        const fields = card.querySelectorAll(".editable");
+                        fields.forEach(f => f.contentEditable = "true");
+                        card.classList.add("editable-mode");
+                        card.draggable = true;
+                        const deleteBtn = card.querySelector(".delete-btn");
+                        const dragHandle = card.querySelector(".drag-handle");
+                        if (deleteBtn) deleteBtn.style.display = "block";
+                        if (dragHandle) dragHandle.style.display = "block";
+                    }
+
+                } catch (err) {
+                    console.error("❌ Create error:", err);
+                    alert("Gagal menambah pengumuman: " + err.message);
+                }
+            },
+
+            async saveAnnouncement(card) {
+                const id = card.dataset.id;
+                if (!id) {
+                    console.warn("Card tanpa ID, skip save");
+                    return;
+                }
+
+                const getData = (field) => {
+                    const el = card.querySelector(`[data-field="${field}"]`);
+                    return el ? el.innerText.trim() : "";
+                };
+
+                try {
+                    const announcementText = getData("announcement");
+
+                    const updateData = {
+                        big_title: getData("big_title"),
+                        title: getData("title"),
+                        content: announcementText,
+                        small: getData("small")
+                    };
+
+                    console.log("💾 Saving announcement:", id, updateData);
+
+                    const { error } = await supabase
+                        .from("announcements")
+                        .update(updateData)
+                        .eq("id", id);
+
+                    if (error) throw error;
+
+                    console.log("✅ Saved:", id);
+
+                } catch (err) {
+                    console.error("❌ Save error:", err);
+                    alert("Gagal menyimpan: " + err.message);
+                }
+            },
+
+            async deleteAnnouncement(card) {
+                if (!confirm("Hapus pengumuman ini?")) return;
+
+                const id = card.dataset.id;
+
+                try {
+                    console.log("🗑️ Deleting announcement:", id);
+
+                    const { error } = await supabase
+                        .from("announcements")
+                        .delete()
+                        .eq("id", id);
+
+                    if (error) throw error;
+
+                    card.remove();
+                    this.state.announcements = this.state.announcements.filter(a => a.id !== id);
+
+                    console.log("✅ Deleted:", id);
+
+                } catch (err) {
+                    console.error("❌ Delete error:", err);
+                    alert("Gagal menghapus: " + err.message);
+                }
+            },
+
+            // === DRAG & DROP ===
+            enableDragDrop() {
+                const cards = document.querySelectorAll(".course-card");
+                const self = this;
+
+                cards.forEach(card => {
+                    card.ondragstart = function (e) { self.handleDragStart.call(self, e); };
+                    card.ondragover = function (e) { self.handleDragOver.call(self, e); };
+                    card.ondrop = function (e) { self.handleDrop.call(self, e); };
+                    card.ondragend = function (e) { self.handleDragEnd.call(self, e); };
+                });
+            },
+
+            disableDragDrop() {
+                const cards = document.querySelectorAll(".course-card");
+                cards.forEach(card => {
+                    card.ondragstart = null;
+                    card.ondragover = null;
+                    card.ondrop = null;
+                    card.ondragend = null;
+                });
+            },
+
+            handleDragStart(e) {
+                e.currentTarget.classList.add("dragging");
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/html", e.currentTarget.innerHTML);
+            },
+
+            handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+
+                const dragging = document.querySelector(".dragging");
+                const container = document.getElementById("announcements");
+                const afterElement = this.getDragAfterElement(container, e.clientY);
+
+                if (afterElement == null) {
+                    container.appendChild(dragging);
+                } else {
+                    container.insertBefore(dragging, afterElement);
+                }
+            },
+
+            handleDrop(e) {
+                e.stopPropagation();
+                console.log("📦 Card order changed, saving...");
+                this.updateDisplayOrder();
+            },
+
+            handleDragEnd(e) {
+                e.currentTarget.classList.remove("dragging");
+            },
+
+            getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll(".course-card:not(.dragging)")];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            },
+
+            async updateDisplayOrder() {
+                const cards = document.querySelectorAll(".course-card");
+                const updates = [];
+
+                cards.forEach((card, index) => {
+                    const id = card.dataset.id;
+                    if (id) {
+                        updates.push({
+                            id: id,
+                            display_order: index + 1
+                        });
+                    }
+                });
+
+                try {
+                    console.log("💾 Updating display order...", updates);
+
+                    // Batch update semua cards
+                    for (const update of updates) {
+                        await supabase
+                            .from("announcements")
+                            .update({ display_order: update.display_order })
+                            .eq("id", update.id);
+                    }
+
+                    // Update local state
+                    this.state.announcements.forEach(a => {
+                        const found = updates.find(u => u.id === a.id);
+                        if (found) a.display_order = found.display_order;
+                    });
+
+                    console.log("✅ Display order updated!");
+
+                } catch (err) {
+                    console.error("❌ Update order error:", err);
+                    alert("Gagal update urutan: " + err.message);
+                }
+            }
+        };
+
+        // Initialize dengan retry mechanism
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 DOM Ready, initializing AnnouncementApp...");
+
+            // Tunggu script.js load supabase
+            let retryCount = 0;
+            const maxRetries = 10;
+
+            function tryInit() {
+                if (typeof supabase !== 'undefined') {
+                    AnnouncementApp.init();
+                } else {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        console.log("⏳ Waiting for Supabase... retry", retryCount);
+                        setTimeout(tryInit, 300);
+                    } else {
+                        console.error("❌ Supabase tidak tersedia setelah", maxRetries, "percobaan");
+                        alert("Error: Gagal load Supabase. Cek koneksi internet atau console.");
+                    }
+                }
             }
 
-            data.forEach(item => {
-                container.innerHTML += `
-                <div style="
-                    background:#222;
-                    padding:12px;
-                    border-radius:10px;
-                    margin-top:10px;
-                ">
-                    <h4 style="margin:0;">${item.title}</h4>
-                    <p>${item.content}</p>
-                    <small>${new Date(item.created_at).toLocaleString()}</small>
-                </div>`;
-            });
+            tryInit();
         });
     </script>
+
 </body>
 
 </html>

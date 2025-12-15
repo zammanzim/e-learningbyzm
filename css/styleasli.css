@@ -1,0 +1,467 @@
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    overflow: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hilangkan scrollbar sidebar — Chrome/Safari/Edge */
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hilangkan scrollbar sidebar — Firefox */
+.sidebar {
+    scrollbar-width: none;
+    /* firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge lama */
+}
+
+/* ===== GLOBAL COLORS & FONT ===== */
+body {
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+body {
+    background-image:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+        linear-gradient(180deg,
+            #006b83 0%,
+            #005e73 35%,
+            #028ea7 75%,
+            #019196 100%);
+    background-size:
+        40px 40px,
+        40px 40px,
+        100% 100%;
+    background-attachment: fixed;
+}
+
+
+/* ===== HEADER ===== */
+header {
+    background-color: none;
+    color: #fff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 2001;
+}
+
+.hamburger {
+    width: 30px;
+    height: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    z-index: 4000;
+    /* biar di atas overlay */
+}
+
+.hamburger span {
+    height: 3px;
+    width: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: 0.35s ease;
+}
+
+/* === Transisi jadi X saat ACTIVE === */
+.hamburger.active span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    /* tingkat kegelapan */
+    backdrop-filter: blur(3px);
+    /* biar gelap + blur halus */
+    z-index: 1500;
+    /* harus > header, > main-content */
+    display: none;
+    /* default hilang */
+    transition: opacity .25s ease;
+    opacity: 0;
+}
+
+.sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    position: fixed;
+    left: -270px;
+    width: 270px;
+    height: 100vh;
+    padding: 20px 20px 20px 30px;
+    padding-top: 70px;
+    overflow-y: auto;
+    transition: left 0.5s ease;
+    background: linear-gradient(180deg,
+            #006b83 0%,
+            #005e73 35%,
+            #005767 75%,
+            #007377 100%);
+    border: 1px solid white;
+    z-index: 2000;
+    border-radius: 10px;
+}
+
+.sidebar.open {
+    left: -10px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin: 20px 0;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.sidebar a:hover {
+    background-color: #0091ff;
+    transform: scale(0.95);
+
+}
+
+.sidebar a.active {
+    background-color: #0088ff;
+    color: white;
+}
+
+.sidebar a {
+    margin: 0;
+    border-radius: 8px;
+    border: 1px solid #ffffff;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    margin-top: 60px;
+    padding: 20px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.course-card.editable-mode {
+    border: 2px dashed #fff;
+    cursor: grab;
+}
+
+/* ===== COURSE CARD ===== */
+.course-card {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    transition: all .3s ease;
+}
+
+.course-card h3 {
+    margin-bottom: 5px;
+}
+
+.course-card a {
+    display: inline-block;
+    margin-top: 10px;
+    text-decoration: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #c300ff, #ff00ea);
+    box-shadow: 0 3px 6px rgba(0, 100, 255, .3);
+    transition: .3s;
+}
+
+.course-card a:hover {
+    background: linear-gradient(135deg, #00aaff, #66d9ff);
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background: #007bff;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+
+@media (min-width: 1024px) {
+    .main-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 30px;
+        max-width: 1200px;
+        text-align: left;
+    }
+
+    .left-section,
+    .right-section {
+        flex: 1;
+    }
+
+    .sidebar {
+        left: -10px;
+    }
+
+    .main-content {
+        margin-left: 270px;
+        transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.closed {
+        left: -250px;
+    }
+
+    .main-content.shifted {
+        margin-left: 128px;
+    }
+
+    footer {
+        margin-top: 300px;
+    }
+
+
+}
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(1px);
+    z-index: 500;
+    /* harus di bawah sidebar (999) */
+    display: none;
+}
+
+/* Tampilkan overlay kalau active */
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* Desktop: overlay dimatikan */
+@media (min-width:1024px) {
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+
+i {
+    margin-right: 5px;
+}
+
+.profile-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    padding-right: 10px;
+    user-select: none;
+}
+
+.header-pp {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+/* PROFILE DROPDOWN ANIMATION */
+.profile-dropdown {
+    position: absolute;
+    right: 15px;
+    top: 58px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    width: 170px;
+    display: block;
+
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 7000;
+}
+
+/* Saat tampil */
+.profile-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* ROTATE PANAH ▼ */
+.profile-box i {
+    transition: transform .25s ease;
+}
+
+.profile-box.rotate i {
+    transform: rotate(180deg);
+}
+
+.profile-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-dropdown li {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.profile-dropdown li:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.course-card {
+    position: relative;
+}
+
+.delete-btn {
+    margin-top: 12px;
+    padding: 8px;
+    background: #d9534f;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn i {
+    margin-right: 6px;
+}
+
+/* Tambahan di styleasli.css */
+.btn-primary {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: #4CAF50;
+}
+
+.btn-danger {
+    background: #f44336;
+}
+
+/* Photo di card */
+.card-photo-container {
+    width: 100%;
+    position: relative;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.card-photo {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+}
+
+/* Placeholder foto */
+.card-photo-placeholder {
+    width: 100%;
+    padding: 40px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card-photo-placeholder:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Delete photo button */
+.delete-photo-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.delete-photo-btn:hover {
+    background: rgba(255, 0, 0, 1);
+}

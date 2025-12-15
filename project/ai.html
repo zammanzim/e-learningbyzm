@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelajaran - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">📚 E-Learning</h1>
+            <nav class="space-x-4">
+                <a href="index.html" class="hover:underline">Home</a>
+                <a href="announcements.html" class="hover:underline">Pengumuman</a>
+                <a href="lessons.html" class="hover:underline font-semibold">Pelajaran</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6">
+
+        <!-- Filter Subject -->
+        <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
+            <div>
+                <label class="font-semibold mr-2">Filter Mata Pelajaran:</label>
+                <select id="subjectFilter" class="p-2 border rounded-lg">
+                    <option value="">Semua</option>
+                </select>
+            </div>
+            <button onclick="openModal()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                <i class="fas fa-plus mr-2"></i>Tambah Materi
+            </button>
+        </div>
+
+        <!-- Lessons Grid -->
+        <div id="lessonsContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Lessons will be loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12 text-gray-500">
+            <i class="fas fa-book-open text-6xl mb-4"></i>
+            <p class="text-xl">Belum ada materi pelajaran</p>
+        </div>
+
+    </main>
+
+    <!-- Modal Add/Edit -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold">Tambah Materi</h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="lessonForm" class="space-y-4">
+                <input type="hidden" id="lessonId">
+
+                <div>
+                    <label class="block font-semibold mb-1">Mata Pelajaran</label>
+                    <select id="subject" required class="w-full p-2 border rounded-lg">
+                        <option value="">Pilih mata pelajaran</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                        <option value="Bahasa Inggris">Bahasa Inggris</option>
+                        <option value="IPA">IPA</option>
+                        <option value="IPS">IPS</option>
+                        <option value="PKN">PKN</option>
+                        <option value="Agama">Agama</option>
+                        <option value="Seni Budaya">Seni Budaya</option>
+                        <option value="PJOK">PJOK</option>
+                        <option value="Prakarya">Prakarya</option>
+                        <option value="Informatika">Informatika</option>
+                        <option value="Fisika">Fisika</option>
+                        <option value="Kimia">Kimia</option>
+                        <option value="Biologi">Biologi</option>
+                        <option value="Sejarah">Sejarah</option>
+                        <option value="Geografi">Geografi</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Judul</label>
+                    <input type="text" id="title" required class="w-full p-2 border rounded-lg"
+                        placeholder="Contoh: Tugas Bahasa Indonesia">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Subjudul</label>
+                    <input type="text" id="subtitle" class="w-full p-2 border rounded-lg" placeholder="Contoh: Nomor 1">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Isi/Konten</label>
+                    <textarea id="content" rows="5" class="w-full p-2 border rounded-lg"
+                        placeholder="Tulis isi materi atau tugas di sini..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Foto (opsional)</label>
+                    <input type="file" id="image" accept="image/*" class="w-full p-2 border rounded-lg">
+                    <div id="imagePreview" class="mt-2 hidden">
+                        <img id="previewImg" class="max-h-40 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <button type="submit" class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                    <button type="button" onclick="closeModal()"
+                        class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal View -->
+    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <span id="viewSubject"
+                    class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold"></span>
+                <button onclick="closeViewModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <h2 id="viewTitle" class="text-2xl font-bold mb-2"></h2>
+            <p id="viewSubtitle" class="text-gray-500 mb-4"></p>
+            <div id="viewImage" class="mb-4"></div>
+            <div id="viewContent" class="prose max-w-none whitespace-pre-wrap"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://vttmwtlqzbbiaromohrp.supabase.co";
+        const SUPABASE_KEY =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dG13dGxxemJiaWFyb21vaHJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNjg4NTMsImV4cCI6MjA4MDg0NDg1M30.16SwOEqD5ZNAgk1oWhLrL41Eqw4kkeAKTyHxkSqmpiY";
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allLessons = [];
+
+        // Load lessons on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLessons();
+            setupImagePreview();
+        });
+
+        async function loadLessons() {
+            const { data, error } = await supabase
+                .from('lessons')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error:', error);
+                return;
+            }
+
+            allLessons = data || [];
+            updateSubjectFilter();
+            renderLessons(allLessons);
+        }
+
+        function updateSubjectFilter() {
+            const subjects = [...new Set(allLessons.map(l => l.subject))];
+            const filter = document.getElementById('subjectFilter');
+            filter.innerHTML = '<option value="">Semua</option>';
+            subjects.forEach(s => {
+                filter.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+
+        document.getElementById('subjectFilter').addEventListener('change', (e) => {
+            const filtered = e.target.value
+                ? allLessons.filter(l => l.subject === e.target.value)
+                : allLessons;
+            renderLessons(filtered);
+        });
+
+        function renderLessons(lessons) {
+            const container = document.getElementById('lessonsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (lessons.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = lessons.map(lesson => `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="viewLesson(${lesson.id})">
+                    ${lesson.image_url ? `<img src="${lesson.image_url}" class="w-full h-40 object-cover">` : ''}
+                    <div class="p-4">
+                        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold">${lesson.subject}</span>
+                        <h3 class="font-bold text-lg mt-2">${lesson.title}</h3>
+                        <p class="text-gray-500 text-sm">${lesson.subtitle || ''}</p>
+                        <p class="text-gray-600 mt-2 line-clamp-2">${lesson.content || ''}</p>
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="event.stopPropagation(); editLesson(${lesson.id})" class="text-blue-500 hover:text-blue-700">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteLesson(${lesson.id})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal() {
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+            document.getElementById('modalTitle').textContent = 'Tambah Materi';
+            document.getElementById('lessonForm').reset();
+            document.getElementById('lessonId').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        }
+
+        function setupImagePreview() {
+            document.getElementById('image').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('previewImg').src = e.target.result;
+                        document.getElementById('imagePreview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        document.getElementById('lessonForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('lessonId').value;
+            const imageFile = document.getElementById('image').files[0];
+            let image_url = null;
+
+            // Upload image if exists
+            if (imageFile) {
+                const fileName = `${Date.now()}-${imageFile.name}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('lesson-images')
+                    .upload(fileName, imageFile);
+
+                if (uploadError) {
+                    alert('Gagal upload gambar: ' + uploadError.message);
+                    return;
+                }
+
+                const { data: urlData } = supabase.storage
+                    .from('lesson-images')
+                    .getPublicUrl(fileName);
+
+                image_url = urlData.publicUrl;
+            }
+
+            const lessonData = {
+                subject: document.getElementById('subject').value,
+                title: document.getElementById('title').value,
+                subtitle: document.getElementById('subtitle').value,
+                content: document.getElementById('content').value,
+            };
+
+            if (image_url) lessonData.image_url = image_url;
+
+            let result;
+            if (id) {
+                result = await supabase.from('lessons').update(lessonData).eq('id', id);
+            } else {
+                result = await supabase.from('lessons').insert([lessonData]);
+            }
+
+            if (result.error) {
+                alert('Error: ' + result.error.message);
+                return;
+            }
+
+            closeModal();
+            loadLessons();
+        });
+
+        async function editLesson(id) {
+            const lesson = allLessons.find(l => l.id === id);
+            if (!lesson) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Materi';
+            document.getElementById('lessonId').value = lesson.id;
+            document.getElementById('subject').value = lesson.subject;
+            document.getElementById('title').value = lesson.title;
+            document.getElementById('subtitle').value = lesson.subtitle || '';
+            document.getElementById('content').value = lesson.content || '';
+
+            if (lesson.image_url) {
+                document.getElementById('previewImg').src = lesson.image_url;
+                document.getElementById('imagePreview').classList.remove('hidden');
+            }
+
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        async function deleteLesson(id) {
+            if (!confirm('Yakin mau hapus materi ini?')) return;
+
+            const { error } = await supabase.from('lessons').delete().eq('id', id);
+
+            if (error) {
+                alert('Error: ' + error.message);
+                return;
+            }
+
+            loadLessons();
+        }
+
+        function viewLesson(id) {
+            const lesson = allLessons.find(l => l.id === id);
+            if (!lesson) return;
+
+            document.getElementById('viewSubject').textContent = lesson.subject;
+            document.getElementById('viewTitle').textContent = lesson.title;
+            document.getElementById('viewSubtitle').textContent = lesson.subtitle || '';
+            document.getElementById('viewContent').textContent = lesson.content || '';
+            document.getElementById('viewImage').innerHTML = lesson.image_url
+                ? `<img src="${lesson.image_url}" class="rounded-lg max-h-80 mx-auto">`
+                : '';
+
+            document.getElementById('viewModal').classList.remove('hidden');
+            document.getElementById('viewModal').classList.add('flex');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+            document.getElementById('viewModal').classList.remove('flex');
+        }
+    </script>
+
+</body>
+
+</html>

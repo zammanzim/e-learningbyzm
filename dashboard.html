@@ -3,46 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Siswa</title>
-
-    <!-- Supabase + script utama -->
+    <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="script.js"></script>
-
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subject-manager.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0a0a0a;
-            color: #f5f5f5;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background: #111;
-            border-bottom: 1px solid #222;
-        }
-
-        .topbar h1 {
-            font-size: 18px;
-            margin: 0;
-        }
-
-        .topbar button {
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
         .wrapper {
             max-width: 900px;
             margin: 20px auto;
-            padding: 0 16px 40px;
         }
 
         .card {
@@ -97,69 +69,92 @@
             font-size: 14px;
             color: #ccc;
         }
-
-        .ann-title {
-            margin: 0 0 8px;
-        }
-
-        .ann-empty {
-            font-size: 14px;
-            color: #aaa;
-        }
-
-        .ann-item {
-            background: #111;
-            border-radius: 12px;
-            padding: 10px 12px;
-            margin-top: 10px;
-        }
-
-        .ann-item h4 {
-            margin: 0 0 4px;
-        }
-
-        .ann-item small {
-            display: block;
-            margin-top: 4px;
-            font-size: 11px;
-            color: #aaa;
-        }
     </style>
 </head>
 
 <body>
-    <!-- TOPBAR -->
-    <div class="topbar">
-        <h1>Dashboard Siswa</h1>
-        <button onclick="logout()">Logout</button>
-    </div>
+    <header>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
 
-    <div class="wrapper">
-        <!-- PROFIL -->
-        <div class="card">
-            <div class="profile">
-                <div class="avatar" id="avatarBox">
-                    <!-- Huruf awal nama / foto -->
-                </div>
-                <div class="profile-main">
-                    <h2 id="profileName">Loading...</h2>
-                    <div>
-                        <span class="tag" id="profileUsernameTag">@username</span>
-                        <span class="tag" id="profileClassTag">Kelas -</span>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <h3>Main Menu</h3>
+        <ul>
+            <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="announcements.html"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="dashboard.html" class="active"><i class="fa-solid fa-table-columns"></i>Dashboard</a></li>
+            <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+            <li><a href="search.html"><i class="fa-solid fa-search"></i>Cari Akun</a></li>
+            <li><a href="nilai.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
+            <h3>Lessons</h3>
+            <li><a href="bahasaindonesia.html"><i class="fa-solid fa-book"></i>B. Indonesia</a></li>
+            <li><a href="bahasainggris.html"><i class="fa-solid fa-language"></i>B. Inggris</a></li>
+            <li><a href="bahasasunda.html"><B style="margin-right: 10px;">ᮘ</B>B. Sunda</a></li>
+            <li><a href="bahasajepang.html"><b style="margin-right: 10px;">ア</b>B. Jepang</a></li>
+            <li><a href="matematika.html"><i class="fa-solid fa-calculator"></i>Matematika</a></li>
+            <li><a href="proipas.html"><i class="fa-solid fa-atom"></i>Proipas</a></li>
+            <li><a href="sejarah.html"><i class="fa-solid fa-landmark"></i>Sejarah</a></li>
+            <li><a href="pabp.html"><i class="fa-solid fa-mosque"></i>PABP</a></li>
+            <li><a href="pp.html"><i class="fa-solid fa-scale-balanced"></i>PP</a></li>
+            <li><a href="senibudaya.html"><i class="fa-solid fa-masks-theater"></i>Seni Budaya</a></li>
+            <li><a href="pjok.html"><i class="fa-solid fa-person-running"></i>PJOK</a></li>
+            <li><a href="informatika.html"><i class="fa-solid fa-laptop"></i>Informatika</a></li>
+            <li><a href="bk.html"><i class="fa-solid fa-heart-circle-check"></i>BK</a></li>
+            <li><a href="dpr1.html"><i class="fa-solid fa-laptop-code"></i>DASPROG 1</a></li>
+            <li><a href="dpr2.html"><i class="fa-solid fa-microchip"></i>DASPROG 2</a></li>
+            <li><a href="dpr3.html"><i class="fa-solid fa-palette"></i>DASPROG 3</a></li>
+            </li>
+        </ul>
+        </ul>
+    </div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="wrapper">
+            <!-- PROFIL -->
+            <div class="card">
+                <div class="profile">
+                    <div class="avatar" id="avatarBox">
+                        <!-- Huruf awal nama / foto -->
                     </div>
-                    <div class="bio" id="profileBio">Biodata belum diisi.</div>
+                    <div class="profile-main">
+                        <h2 id="profileName">Loading...</h2>
+                        <div>
+                            <span class="tag" id="profileUsernameTag">@username</span>
+                            <span class="tag" id="profileClassTag">Kelas -</span>
+                        </div>
+                        <div class="bio" id="profileBio">Biodata belum diisi.</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- PENGUMUMAN -->
-        <div class="card">
-            <h3 class="ann-title">Pengumuman Kelas</h3>
-            <div id="announcements"></div>
-        </div>
+            <!-- PENGUMUMAN -->
+            <div class="card">
+                <h3 class="ann-title">Pengumuman Kelas</h3>
+                <div id="announcements"></div>
+            </div>
 
-        <div class="card">
-            <button id="editBtn" style="
+            <div class="card">
+                <button id="editBtn" style="
     margin-top:8px;
     padding:4px 12px;
     border-radius:8px;
@@ -168,11 +163,11 @@
     font-size:12px;
     cursor:pointer;
 ">Edit Profil</button>
+            </div>
         </div>
-    </div>
 
-    <!-- MODAL EDIT PROFIL -->
-    <div id="modal" style="
+        <!-- MODAL EDIT PROFIL -->
+        <div id="modal" style="
     display:none;
     position:fixed;
     inset:0;
@@ -181,23 +176,23 @@
     justify-content:center;
     align-items:center;
 ">
-        <div style="
+            <div style="
         background:#171717;
         padding:18px;
         border-radius:16px;
         width:300px;
         text-align:center;
     ">
-            <h3>Edit Profil</h3>
+                <h3>Edit Profil</h3>
 
-            <p>Foto Profil</p>
-            <input type="file" id="avatarInput" accept="image/*">
+                <p>Foto Profil</p>
+                <input type="file" id="avatarInput" accept="image/*">
 
-            <p style="margin-top:10px;">Biodata</p>
-            <textarea id="bioInput" placeholder="Tulis biodata kamu..."
-                style="width:100%;height:80px;border-radius:10px;padding:6px;"></textarea>
+                <p style="margin-top:10px;">Biodata</p>
+                <textarea id="bioInput" placeholder="Tulis biodata kamu..."
+                    style="width:100%;height:80px;border-radius:10px;padding:6px;"></textarea>
 
-            <button onclick="saveProfile()" style="
+                <button onclick="saveProfile()" style="
             margin-top:12px;
             width:100%;
             padding:10px;
@@ -208,7 +203,7 @@
             cursor:pointer;
         ">Simpan</button>
 
-            <button onclick="closeModal()" style="
+                <button onclick="closeModal()" style="
             margin-top:8px;
             width:100%;
             padding:8px;
@@ -218,9 +213,9 @@
             color:#ccc;
             cursor:pointer;
         ">Batal</button>
+            </div>
         </div>
     </div>
-
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const user = JSON.parse(localStorage.getItem("user"));
@@ -250,7 +245,7 @@
 
             // Ambil nama kelas dari tabel classes
             try {
-                const { data: classData, error: classError } = await _supabase
+                const { data: classData, error: classError } = await supabase
                     .from("classes")
                     .select("name")
                     .eq("id", user.class_id)
@@ -271,7 +266,7 @@
             container.innerHTML = "";
 
             try {
-                const { data, error } = await _supabase
+                const { data, error } = await supabase
                     .from("announcements")
                     .select("*")
                     .eq("class_id", user.class_id)
@@ -332,7 +327,7 @@
                     type: "image/jpeg"
                 });
 
-                const { error: uploadError } = await _supabase.storage
+                const { error: uploadError } = await supabase.storage
                     .from("avatars")
                     .upload(fileName, compressedFile, {
                         cacheControl: "3600",
@@ -346,7 +341,7 @@
                     return;
                 }
 
-                const { data: publicUrlData } = _supabase.storage
+                const { data: publicUrlData } = supabase.storage
                     .from("avatars")
                     .getPublicUrl(fileName);
 
@@ -356,7 +351,7 @@
             document.getElementById("avatarInput").value = "";
 
             // === Update database ===
-            const { data, error } = await _supabase
+            const { data, error } = await supabase
                 .from("users")
                 .update({
                     avatar_url: avatarUrl,
@@ -372,7 +367,7 @@
                 return;
             }
 
-            const { data: freshUser } = await _supabase
+            const { data: freshUser } = await supabase
                 .from("users")
                 .select("*")
                 .eq("id", user.id)
@@ -412,9 +407,7 @@
                 reader.onerror = err => reject(err);
             });
         }
-
     </script>
-
 </body>
 
 </html>
