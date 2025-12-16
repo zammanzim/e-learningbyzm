@@ -280,3 +280,90 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// ==========================================
+// ADMIN SIDEBAR INJECTOR
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    injectAdminMenu();
+});
+
+function injectAdminMenu() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.role || user.role === 'student') return;
+
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar) return;
+
+    // 1. DETEKSI HALAMAN SAAT INI
+    // Ambil nama file dari URL (misal: 'admin-nilai.html')
+    const path = window.location.pathname;
+    const page = path.split("/").pop();
+
+    // Helper function biar kodingan rapi
+    // Kalau link == page saat ini, return 'active', kalo beda return kosong
+    const isActive = (link) => page === link ? 'active' : '';
+
+    let menuTitle = "";
+    let menuItems = "";
+
+    // 2. BIKIN MENU DENGAN LOGIC 'ACTIVE'
+    if (user.role === 'class_admin') {
+        menuTitle = "Admin Panel";
+        menuItems = `
+            <li>
+                <a href="admin-nilai.html" class="${isActive('admin-nilai.html')}">
+                    <i class="fa-solid fa-pen-to-square"></i> Input Nilai
+                </a>
+            </li>
+            <li>
+                <a href="admin-pengumuman.html" class="${isActive('admin-pengumuman.html')}">
+                    <i class="fa-solid fa-bullhorn"></i> Edit Pengumuman
+                </a>
+            </li>
+        `;
+    }
+    else if (user.role === 'super_admin') {
+        menuTitle = "Super Admin";
+        menuItems = `
+            <li>
+                <a href="super-users.html" class="${isActive('super-users.html')}">
+                    <i class="fa-solid fa-users-gear"></i> Manage Users
+                </a>
+            </li>
+            <li>
+                <a href="admin-nilai.html" class="${isActive('admin-nilai.html')}">
+                    <i class="fa-solid fa-pen-to-square"></i> Input Nilai
+                </a>
+            </li>
+            <li>
+                <a href="admin-logs.html" class="${isActive('admin-logs.html')}">
+                    <i class="fa-solid fa-file-waveform"></i> System Logs
+                </a>
+            </li>
+        `;
+    }
+
+    // 3. INJECT KE SIDEBAR (PREPEND = PALING ATAS)
+    const h3 = document.createElement("h3");
+    h3.innerText = menuTitle;
+    h3.style.color = "#ffd700";
+    h3.style.marginTop = "0px";
+    h3.style.marginBottom = "10px";
+
+    const ul = document.createElement("ul");
+    ul.innerHTML = menuItems;
+
+    sidebar.prepend(ul);
+    sidebar.prepend(h3);
+}
+
+document.addEventListener('click', function (e) {
+    // Cek apakah yang diklik adalah menu yang dikunci
+    const lockedItem = e.target.closest('.nav-locked');
+
+    if (lockedItem) {
+        e.preventDefault(); // Cegah pindah halaman (double protection)
+        alert("🔒 The Page Isn't Ready Yet. \n Halaman Ini Belum Tersedia \n \n Halaman yang tersedia hanya Announcements dan Nilai PSASI. \n Menu pelajaran bisa sih, tapi tugasnya belum ditambahin.");
+    }
+});

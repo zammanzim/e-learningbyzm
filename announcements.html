@@ -75,16 +75,16 @@
             </div>
         </div>
     </div>
-    
+
     <div class="sidebar" id="sidebar">
         <h3>Main Menu</h3>
         <ul>
             <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
             <li><a href="announcements.html" class="active"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
-            <li><a href="dashboard.html"><i class="fa-solid fa-table-columns"></i>Dashboard</a></li>
-            <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
-            <li><a href="search.html"><i class="fa-solid fa-search"></i>Cari Akun</a></li>
-            <li><a href="nilai.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
+            <li class="nav-locked"><a href="dashboard.html" class="nav-locked"><i class="fa-solid fa-table-columns"></i>Dashboard</a></li>
+            <li class="nav-locked"><a href="profile.html" class="nav-locked"><i class="fa-solid fa-user"></i> Profile</a></li>
+            <li class="nav-locked"><a href="search.html" class="nav-locked"><i class="fa-solid fa-search"></i>Cari Akun</a></li>
+            <li><a href="nilaiv2.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
             <h3>Lessons</h3>
             <li><a href="bahasaindonesia.html"><i class="fa-solid fa-book"></i>B. Indonesia</a></li>
             <li><a href="bahasainggris.html"><i class="fa-solid fa-language"></i>B. Inggris</a></li>
@@ -104,7 +104,6 @@
             <li><a href="dpr3.html"><i class="fa-solid fa-palette"></i>DASPROG 3</a></li>
             </li>
         </ul>
-        </ul>
     </div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
@@ -115,6 +114,24 @@
         <div class="right-section">
             <div id="announcements"></div>
             <div id="editControls"></div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3>Tambah Materi Baru</h3>
+            <input type="text" id="addJudul" placeholder="Judul Besar (Big Title)" class="input-field">
+            <input type="text" id="addSubjudul" placeholder="Subjudul (Title)" class="input-field">
+            <textarea id="addIsi" placeholder="Isi Materi" class="input-field" rows="4"></textarea>
+            <input type="text" id="addSmall" placeholder="Teks Kecil (Footer)" class="input-field">
+
+            <label>Upload Foto (Bisa Banyak)</label>
+            <input type="file" id="addFiles" multiple accept="image/*" class="input-field">
+
+            <div class="modal-actions">
+                <button id="btnCancelAdd" class="btn-cancel">Batal</button>
+                <button id="btnSaveAdd" class="btn-save">Simpan</button>
+            </div>
         </div>
     </div>
 

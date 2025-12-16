@@ -19,6 +19,11 @@ function getUser() {
     return JSON.parse(localStorage.getItem("user"));
 }
 
+function getShortName(user) {
+    if (!user) return "";
+    // Prioritaskan kolom nickname dari DB, fallback ke split manual
+    return user.nickname || user.full_name?.split(" ")[0] || "User";
+}
 
 // =============================
 // AUTO-FETCH (ambil data terbaru user dari Supabase)
@@ -137,7 +142,7 @@ async function logVisitor() {
                     if (typeof renderVisitorStats === 'function') renderVisitorStats();
                 }
             } else {
-                console.log("⏳ Masih di halaman sama & < 1 menit. Skip.");
+                console.log("⏳ Under < 1 menit, skip update.");
             }
 
         } else {

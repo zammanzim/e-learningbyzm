@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Input Nilai</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/auth.js "></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 191, 255, 0.05);
+            border: 1px solid rgba(0, 191, 255, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00eaff;
+            font-weight: 600;
+        }
+
+        .admin-input,
+        .admin-select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .admin-input:focus,
+        .admin-select:focus {
+            border-color: #00eaff;
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
+        }
+
+        .nilai-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, rgba(0, 234, 255, 0.8), rgba(0, 150, 255, 0.8));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 800;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <h3>Main Menu</h3>
+        <ul>
+            <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="announcements.html"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
+            <li class="nav-locked"><a href="dashboard.html" class="nav-locked"><i
+                        class="fa-solid fa-table-columns"></i>Dashboard</a></li>
+            <li class="nav-locked"><a href="profile.html" class="nav-locked"><i class="fa-solid fa-user"></i>
+                    Profile</a></li>
+            <li class="nav-locked"><a href="search.html" class="nav-locked"><i class="fa-solid fa-search"></i>Cari
+                    Akun</a></li>
+            <li><a href="nilaiv2.html"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a></li>
+            <h3>Lessons</h3>
+            <li><a href="bahasaindonesia.html"><i class="fa-solid fa-book"></i>B. Indonesia</a></li>
+            <li><a href="bahasainggris.html"><i class="fa-solid fa-language"></i>B. Inggris</a></li>
+            <li><a href="bahasasunda.html"><B style="margin-right: 10px;">ᮘ</B>B. Sunda</a></li>
+            <li><a href="bahasajepang.html"><b style="margin-right: 10px;">ア</b>B. Jepang</a></li>
+            <li><a href="matematika.html"><i class="fa-solid fa-calculator"></i>Matematika</a></li>
+            <li><a href="proipas.html"><i class="fa-solid fa-atom"></i>Proipas</a></li>
+            <li><a href="sejarah.html"><i class="fa-solid fa-landmark"></i>Sejarah</a></li>
+            <li><a href="pabp.html"><i class="fa-solid fa-mosque"></i>PABP</a></li>
+            <li><a href="pp.html"><i class="fa-solid fa-scale-balanced"></i>PP</a></li>
+            <li><a href="senibudaya.html"><i class="fa-solid fa-masks-theater"></i>Seni Budaya</a></li>
+            <li><a href="pjok.html"><i class="fa-solid fa-person-running"></i>PJOK</a></li>
+            <li><a href="informatika.html"><i class="fa-solid fa-laptop"></i>Informatika</a></li>
+            <li><a href="bk.html"><i class="fa-solid fa-heart-circle-check"></i>BK</a></li>
+            <li><a href="dpr1.html"><i class="fa-solid fa-laptop-code"></i>DASPROG 1</a></li>
+            <li><a href="dpr2.html"><i class="fa-solid fa-microchip"></i>DASPROG 2</a></li>
+            <li><a href="dpr3.html"><i class="fa-solid fa-palette"></i>DASPROG 3</a></li>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h1 style="color: #00eaff; margin-bottom: 10px;">Input Nilai Siswa</h1>
+            <p style="opacity: 0.8; margin-bottom: 30px;">Pilih nickname siswa, isi nilai, lalu simpan.</p>
+
+            <div class="admin-container">
+                <div class="input-group">
+                    <label><i class="fa-solid fa-user"></i> Pilih Siswa (Nickname)</label>
+                    <select id="studentSelect" class="admin-select" onchange="loadStudentData()">
+                        <option value="">-- Pilih Nama Siswa --</option>
+                    </select>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 25px 0;">
+
+                <label><i class="fa-solid fa-list-ol"></i> Input Nilai Mata Pelajaran</label>
+                <div class="nilai-grid">
+                    <div>
+                        <label style="font-size:12px; color:#fff;">PABP</label>
+                        <input type="number" id="inp_pabp" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">PP</label>
+                        <input type="number" id="inp_pp" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">B. Indonesia</label>
+                        <input type="number" id="inp_bindo" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">B. Inggris</label>
+                        <input type="number" id="inp_bing" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">Matematika</label>
+                        <input type="number" id="inp_mtk" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">Sejarah</label>
+                        <input type="number" id="inp_sejarah" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">B. Jepang</label>
+                        <input type="number" id="inp_bjepang" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">B. Sunda</label>
+                        <input type="number" id="inp_bsunda" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">Seni Budaya</label>
+                        <input type="number" id="inp_senibudaya" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">Informatika</label>
+                        <input type="number" id="inp_informatika" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">PJOK</label>
+                        <input type="number" id="inp_pjok" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">Proipas</label>
+                        <input type="number" id="inp_proipas" class="admin-input" placeholder="0">
+                    </div>
+
+                    <div>
+                        <label style="font-size:12px; color:#fff;">DASPROGRPL 1</label>
+                        <input type="number" id="inp_dasprog1" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">DASPROGRPL 2</label>
+                        <input type="number" id="inp_dasprog2" class="admin-input" placeholder="0">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; color:#fff;">DASPROGRPL 3</label>
+                        <input type="number" id="inp_dasprog3" class="admin-input" placeholder="0">
+                    </div>
+                </div>
+
+                <button onclick="saveNilai()" class="btn-save" id="btnSave">
+                    <i class="fa-solid fa-floppy-disk"></i> SIMPAN DATA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAPEL_IDS = [
+            'pabp', 'pp', 'bindo', 'bing', 'mtk',
+            'sejarah', 'bjepang', 'bsunda', 'senibudaya',
+            'informatika', 'pjok', 'proipas', 'dasprog1', 'dasprog2', 'dasprog3'
+        ];
+
+        // Ambil data user admin dari local storage
+        const adminClass = JSON.parse(localStorage.getItem("user"))?.class_id;
+
+        // INIT: Jalanin loadUsers pas halaman kebuka
+        document.addEventListener("DOMContentLoaded", () => {
+            loadUsers();
+        });
+
+        // 1. FILTER DROPDOWN SESUAI KELAS
+        async function loadUsers() {
+            if (!adminClass) {
+                alert("Error: Class ID tidak ditemukan. Coba login ulang.");
+                return;
+            }
+
+            // Ambil nickname user yang class_id nya sama dengan admin
+            const { data, error } = await supabase
+                .from('users')
+                .select('nickname')
+                .eq('class_id', adminClass)
+                .neq('nickname', null)
+                .order('nickname', { ascending: true });
+
+            if (error) {
+                console.error("Gagal load users:", error);
+                return;
+            }
+
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">-- Pilih Nama Siswa --</option>';
+
+            data.forEach(u => {
+                if (u.nickname) {
+                    const opt = document.createElement('option');
+                    opt.value = u.nickname;
+                    opt.text = u.nickname;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        // 2. LOAD DATA LAMA (AUTO FILL)
+        async function loadStudentData() {
+            const nama = document.getElementById('studentSelect').value;
+            if (!nama) {
+                resetForm();
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('nilai_psasi')
+                .select('*')
+                .eq('nama_siswa', nama)
+                .eq('class_id', adminClass)
+                .single();
+
+            if (data) {
+                MAPEL_IDS.forEach(id => {
+                    const el = document.getElementById('inp_' + id);
+                    // UPDATE DISINI: Kalau ada datanya, format jadi 2 desimal
+                    if (el) {
+                        el.value = data[id] !== null ? parseFloat(data[id]).toFixed(2) : '';
+                    }
+                });
+                document.getElementById('btnSave').innerText = "UPDATE DATA (" + nama + ")";
+            } else {
+                resetForm();
+                document.getElementById('btnSave').innerText = "SIMPAN DATA BARU";
+            }
+        }
+
+        function resetForm() {
+            MAPEL_IDS.forEach(id => {
+                const el = document.getElementById('inp_' + id);
+                if (el) el.value = '';
+            });
+            document.getElementById('btnSave').innerText = "SIMPAN DATA";
+        }
+
+        // 3. SIMPAN KE DATABASE (UPSERT)
+        async function saveNilai() {
+            const nama = document.getElementById('studentSelect').value;
+            if (!nama) {
+                alert("Pilih nama siswa dulu!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            // Payload (Data yang mau dikirim)
+            let payload = {
+                nama_siswa: nama,
+                class_id: adminClass // Kunci ke kelas ini
+            };
+
+            MAPEL_IDS.forEach(id => {
+                const el = document.getElementById('inp_' + id);
+                if (el) {
+                    // Simpan angka float, atau null jika kosong
+                    payload[id] = el.value !== "" ? parseFloat(el.value) : null;
+                }
+            });
+
+            // Upsert ke Supabase
+            const { error } = await supabase
+                .from('nilai_psasi')
+                .upsert(payload, { onConflict: 'nama_siswa' });
+
+            // Feedback UI
+            btn.disabled = false;
+
+            if (error) {
+                console.error("Error save:", error);
+                alert("Gagal simpan: " + error.message);
+                btn.innerText = "GAGAL";
+            } else {
+                alert("Berhasil disimpan untuk " + nama + "!");
+                btn.innerText = "DATA TERSIMPAN";
+
+                // Balikin teks tombol setelah 2 detik
+                setTimeout(() => {
+                    if (document.getElementById('studentSelect').value === nama) {
+                        document.getElementById('btnSave').innerText = "UPDATE DATA (" + nama + ")";
+                    }
+                }, 2000);
+            }
+        }
+
+        // ==========================================
+        // SHORTCUT KEYBOARD (UX)
+        // ==========================================
+        document.addEventListener("keydown", function (e) {
+            // 1. CTRL + ENTER => SIMPAN
+            if (e.ctrlKey && e.key === "Enter") {
+                e.preventDefault(); // Biar gak nambah baris baru aneh-aneh
+                saveNilai();
+                return;
+            }
+
+            // 2. ENTER BIASA => PINDAH INPUT BAWAHNYA
+            if (e.key === "Enter") {
+                const target = e.target;
+
+                // Cek apakah yang lagi diketik itu input nilai
+                if (target.tagName === "INPUT" && target.id.startsWith("inp_")) {
+                    e.preventDefault();
+
+                    // Cari urutan input sekarang di list MAPEL_IDS
+                    // id input kan "inp_pabp", kita ambil "pabp"-nya aja
+                    const currentMapel = target.id.replace("inp_", "");
+                    const currentIndex = MAPEL_IDS.indexOf(currentMapel);
+
+                    // Kalau masih ada input selanjutnya, pindah fokus
+                    if (currentIndex >= 0 && currentIndex < MAPEL_IDS.length - 1) {
+                        const nextMapel = MAPEL_IDS[currentIndex + 1];
+                        const nextInput = document.getElementById("inp_" + nextMapel);
+                        if (nextInput) {
+                            nextInput.focus();
+                            nextInput.select(); // Otomatis block teksnya biar enak kalo mau ganti
+                        }
+                    }
+                    // Kalau udah di input terakhir, pindah ke tombol Simpan
+                    else if (currentIndex === MAPEL_IDS.length - 1) {
+                        document.getElementById("btnSave").focus();
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
