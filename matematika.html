@@ -15,10 +15,17 @@
 
 <body>
     <header>
-        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
         </div>
 
         <div class="profile-box" id="profileTrigger">
@@ -35,6 +42,38 @@
             </ul>
         </div>
     </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="sidebar" id="sidebar">
         <h3>Main Menu</h3>
@@ -77,7 +116,7 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             SubjectApp.init(
                 "matematika",
                 "Matematika"

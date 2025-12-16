@@ -84,3 +84,80 @@ function logout() {
     localStorage.clear();       // Hapus data login
     window.location.href = "index.html"; // Balik ke login
 }
+// =============================
+// VISITOR LOGGER (TRACK LAST LOCATION)
+// =============================
+async function logVisitor() {
+    const user = getUser();
+    if (!user) return;
+
+    try {
+        // 1. Ambil Nama Halaman (Pastikan <title> di HTML sudah benar)
+        const currentPage = document.title || "Unknown Page";
+
+        // 2. Setup Waktu Reset (Jam 3 Sore)
+        const now = new Date();
+        const resetHour = 15;
+        let lastReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour, 0, 0);
+
+        if (now.getHours() < resetHour) {
+            lastReset.setDate(lastReset.getDate() - 1);
+        }
+        const timeThreshold = lastReset.toISOString();
+
+        // 3. Cek Data Existing
+        const { data: existing } = await supabase
+            .from("visitors")
+            .select("id, visited_at, last_page")
+            .eq("user_id", user.id)
+            .eq("class_id", user.class_id)
+            .gte("visited_at", timeThreshold)
+            .maybeSingle();
+
+        if (existing) {
+            // SKENARIO A: User sudah ada
+            const lastVisit = new Date(existing.visited_at);
+            const diffMinutes = (now - lastVisit) / 60000;
+
+            // Logic: Update kalo pindah halaman ATAU udah lewat 1 menit
+            const isPageChanged = existing.last_page !== currentPage;
+
+            if (diffMinutes >= 1 || isPageChanged) {
+                const { error: updateError } = await supabase
+                    .from("visitors")
+                    .update({
+                        visited_at: now.toISOString(),
+                        is_visible: true,
+                        last_page: currentPage // <--- Simpan Lokasi Baru
+                    })
+                    .eq("id", existing.id);
+
+                if (!updateError) {
+                    console.log(`📍 Location updated: ${currentPage}`);
+                    if (typeof renderVisitorStats === 'function') renderVisitorStats();
+                }
+            } else {
+                console.log("⏳ Masih di halaman sama & < 1 menit. Skip.");
+            }
+
+        } else {
+            // SKENARIO B: User Baru Masuk
+            const { error: insertError } = await supabase
+                .from("visitors")
+                .insert({
+                    user_id: user.id,
+                    class_id: user.class_id,
+                    is_visible: true,
+                    last_page: currentPage // <--- Simpan Lokasi Awal
+                });
+
+            if (!insertError) {
+                console.log(`✅ New visit logged at: ${currentPage}`);
+                if (typeof renderVisitorStats === 'function') renderVisitorStats();
+            }
+        }
+
+    } catch (err) {
+        console.error("❌ Log error:", err);
+    }
+}

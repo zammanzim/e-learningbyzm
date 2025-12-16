@@ -1,4 +1,3 @@
-/* ===== RESET ===== */
 * {
     margin: 0;
     padding: 0;
@@ -14,51 +13,24 @@ body {
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-    display: none;
-}
-
-/* Hilangkan scrollbar sidebar — Chrome/Safari/Edge */
+body::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar {
     display: none;
 }
 
-/* Hilangkan scrollbar sidebar — Firefox */
-.sidebar {
-    scrollbar-width: none;
-    /* firefox */
-    -ms-overflow-style: none;
-    /* IE/Edge lama */
-}
-
-/* ===== GLOBAL COLORS & FONT ===== */
 body {
     font-family: Arial, sans-serif;
     color: #ffffff;
-    background-attachment: fixed;
-    background-size: cover;
-}
-
-body {
     background-image:
         linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
-        linear-gradient(180deg,
-            #006b83 0%,
-            #005e73 35%,
-            #028ea7 75%,
-            #019196 100%);
-    background-size:
-        40px 40px,
-        40px 40px,
-        100% 100%;
+        linear-gradient(180deg, #006b83 0%, #005e73 35%, #028ea7 75%, #019196 100%);
+    background-size: 40px 40px, 40px 40px, 100% 100%;
     background-attachment: fixed;
 }
 
-
-/* ===== HEADER ===== */
 header {
-    background-color: none;
+    background-color: transparent;
     color: #fff;
     padding: 15px;
     display: flex;
@@ -70,6 +42,12 @@ header {
     z-index: 2001;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .hamburger {
     width: 30px;
     height: 22px;
@@ -79,7 +57,6 @@ header {
     cursor: pointer;
     position: relative;
     z-index: 4000;
-    /* biar di atas overlay */
 }
 
 .hamburger span {
@@ -90,7 +67,6 @@ header {
     transition: 0.35s ease;
 }
 
-/* === Transisi jadi X saat ACTIVE === */
 .hamburger.active span:nth-child(1) {
     transform: translateY(9px) rotate(45deg);
 }
@@ -103,46 +79,105 @@ header {
     transform: translateY(-9px) rotate(-45deg);
 }
 
+.visitor-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
 
-.sidebar-overlay {
-    position: fixed;
-    inset: 0;
+.visitor-trigger:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.profile-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    padding-right: 10px;
+    user-select: none;
+}
+
+.profile-box i {
+    transition: transform .25s ease;
+}
+
+.profile-box.rotate i {
+    transform: rotate(180deg);
+}
+
+.header-pp {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+.profile-dropdown {
+    position: absolute;
+    right: 15px;
+    top: 58px;
     background: rgba(0, 0, 0, 0.55);
-    /* tingkat kegelapan */
-    backdrop-filter: blur(3px);
-    /* biar gelap + blur halus */
-    z-index: 1500;
-    /* harus > header, > main-content */
-    display: none;
-    /* default hilang */
-    transition: opacity .25s ease;
-    opacity: 0;
-}
-
-.sidebar-overlay.show {
+    backdrop-filter: blur(6px);
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    width: 170px;
     display: block;
-    opacity: 1;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 7000;
 }
 
+.profile-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
 
-/* ===== SIDEBAR ===== */
+.profile-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-dropdown li {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.profile-dropdown li:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .sidebar {
     position: fixed;
     left: -270px;
     width: 270px;
     height: 100vh;
-    padding: 20px 20px 20px 30px;
-    padding-top: 70px;
+    padding: 70px 20px 20px 30px;
     overflow-y: auto;
     transition: left 0.5s ease;
-    background: linear-gradient(180deg,
-            #006b83 0%,
-            #005e73 35%,
-            #005767 75%,
-            #007377 100%);
+    background: linear-gradient(180deg, #006b83 0%, #005e73 35%, #005767 75%, #007377 100%);
     border: 1px solid white;
     z-index: 2000;
     border-radius: 10px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .sidebar.open {
@@ -157,24 +192,10 @@ header {
     margin: 20px 0;
 }
 
-.sidebar ul li a {
+.sidebar a {
     color: white;
     text-decoration: none;
     font-size: 18px;
-}
-
-.sidebar a:hover {
-    background-color: #0091ff;
-    transform: scale(0.95);
-
-}
-
-.sidebar a.active {
-    background-color: #0088ff;
-    color: white;
-}
-
-.sidebar a {
     margin: 0;
     border-radius: 8px;
     border: 1px solid #ffffff;
@@ -186,7 +207,32 @@ header {
     padding: 20px;
 }
 
-/* ===== MAIN CONTENT ===== */
+.sidebar a:hover {
+    background-color: #0091ff;
+    transform: scale(0.95);
+}
+
+.sidebar a.active {
+    background-color: #0088ff;
+    color: white;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 1500;
+    display: none;
+    transition: opacity .25s ease;
+    opacity: 0;
+}
+
+.sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
 .main-content {
     margin-top: 60px;
     padding: 20px;
@@ -195,18 +241,18 @@ header {
     margin-right: auto;
 }
 
-.course-card.editable-mode {
-    border: 2px dashed #fff;
-    cursor: grab;
-}
-
-/* ===== COURSE CARD ===== */
 .course-card {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 12px;
     padding: 20px;
     margin: 20px 0;
     transition: all .3s ease;
+    position: relative;
+}
+
+.course-card.editable-mode {
+    border: 2px dashed #fff;
+    cursor: grab;
 }
 
 .course-card h3 {
@@ -229,191 +275,6 @@ header {
     background: linear-gradient(135deg, #00aaff, #66d9ff);
 }
 
-/* ===== FOOTER ===== */
-footer {
-    background: #007bff;
-    color: #fff;
-    padding: 20px;
-    text-align: center;
-}
-
-
-@media (min-width: 1024px) {
-    .main-content {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 30px;
-        max-width: 1200px;
-        text-align: left;
-    }
-
-    .left-section,
-    .right-section {
-        flex: 1;
-    }
-
-    .sidebar {
-        left: -10px;
-    }
-
-    .main-content {
-        margin-left: 270px;
-        transition: margin-left 0.3s ease;
-    }
-
-    .sidebar.closed {
-        left: -250px;
-    }
-
-    .main-content.shifted {
-        margin-left: 128px;
-    }
-
-    footer {
-        margin-top: 300px;
-    }
-
-
-}
-
-.sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(1px);
-    z-index: 500;
-    /* harus di bawah sidebar (999) */
-    display: none;
-}
-
-/* Tampilkan overlay kalau active */
-.sidebar-overlay.show {
-    display: block;
-}
-
-/* Desktop: overlay dimatikan */
-@media (min-width:1024px) {
-    .sidebar-overlay {
-        display: none !important;
-    }
-}
-
-i {
-    margin-right: 5px;
-}
-
-.profile-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    padding-right: 10px;
-    user-select: none;
-}
-
-.header-pp {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid white;
-}
-
-/* PROFILE DROPDOWN ANIMATION */
-.profile-dropdown {
-    position: absolute;
-    right: 15px;
-    top: 58px;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    padding: 10px 0;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    width: 170px;
-    display: block;
-
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-    transition: opacity .25s ease, transform .25s ease;
-    z-index: 7000;
-}
-
-/* Saat tampil */
-.profile-dropdown.show {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-/* ROTATE PANAH ▼ */
-.profile-box i {
-    transition: transform .25s ease;
-}
-
-.profile-box.rotate i {
-    transform: rotate(180deg);
-}
-
-.profile-dropdown ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.profile-dropdown li {
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.profile-dropdown li:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.course-card {
-    position: relative;
-}
-
-.delete-btn {
-    margin-top: 12px;
-    padding: 8px;
-    background: #d9534f;
-    border: none;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.delete-btn i {
-    margin-right: 6px;
-}
-
-/* Tambahan di styleasli.css */
-.btn-primary {
-    background: #2196F3;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.btn-success {
-    background: #4CAF50;
-}
-
-.btn-danger {
-    background: #f44336;
-}
-
-/* Photo di card */
 .card-photo-container {
     width: 100%;
     position: relative;
@@ -431,7 +292,6 @@ i {
     border-radius: 8px;
 }
 
-/* Placeholder foto */
 .card-photo-placeholder {
     width: 100%;
     padding: 40px 20px;
@@ -448,7 +308,6 @@ i {
     border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Delete photo button */
 .delete-photo-btn {
     position: absolute;
     top: 10px;
@@ -464,4 +323,272 @@ i {
 
 .delete-photo-btn:hover {
     background: rgba(255, 0, 0, 1);
+}
+
+.btn-primary {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: #4CAF50;
+}
+
+.btn-danger {
+    background: #f44336;
+}
+
+.delete-btn {
+    margin-top: 12px;
+    padding: 8px;
+    background: #d9534f;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn i {
+    margin-right: 6px;
+}
+
+footer {
+    background: #007bff;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+i {
+    margin-right: 5px;
+}
+
+.visitor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.visitor-overlay.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.visitor-popup {
+    background-color: #0b1221;
+    width: 90%;
+    max-width: 380px;
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid #1e293b;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    color: white;
+    font-family: sans-serif;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.visitor-overlay.show .visitor-popup {
+    transform: scale(1);
+}
+
+/* === UPDATE HEADER POPUP (Posisi X) === */
+.popup-header {
+    display: flex;
+    /* Bikin sejajar (Judul Kiri, X Kanan) */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Garis pemisah tipis */
+    padding-bottom: 15px;
+}
+
+.popup-header h3 {
+    margin-bottom: 0;
+    /* Reset margin lama */
+    font-size: 20px;
+}
+
+/* Style Tombol X */
+.close-popup {
+    font-size: 32px;
+    /* Ukuran X besar */
+    color: #94a3b8;
+    /* Warna abu */
+    cursor: pointer;
+    line-height: 20px;
+    font-weight: 300;
+    transition: color 0.2s;
+}
+
+.close-popup:hover {
+    color: #ff4757;
+    /* Merah pas di-hover (biar kerasa close) */
+}
+
+.stats-grid {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background-color: #151e32;
+    flex: 1;
+    padding: 15px 10px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-card h4 {
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    font-weight: normal;
+}
+
+.stat-card p {
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+    margin: 0;
+}
+
+.list-section {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.list-title {
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+    margin-left: 5px;
+}
+
+.visitor-list-container {
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.visitor-list-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.visitor-list-container::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 5px;
+}
+
+.visitor-item {
+    background-color: #151e32;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.visitor-pp {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    border: 2px solid #334155;
+}
+
+.visitor-name {
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.visited-at {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.admin-actions {
+    margin-top: 15px;
+    display: none;
+}
+
+.btn-reset-text {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-reset-text:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 30px;
+        max-width: 1200px;
+        text-align: left;
+        margin-left: 270px;
+        transition: margin-left 0.3s ease;
+    }
+
+    .left-section,
+    .right-section {
+        flex: 1;
+    }
+
+    .sidebar {
+        left: -10px;
+    }
+
+    .sidebar.closed {
+        left: -270px;
+    }
+
+    .main-content.shifted {
+        margin-left: 20px;
+    }
+
+    footer {
+        margin-top: 300px;
+    }
+
+    .sidebar-overlay {
+        display: none !important;
+    }
 }

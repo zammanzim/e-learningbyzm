@@ -32,11 +32,16 @@ const SubjectApp = {
 
         console.log("✅ Subject loaded:", subjectName);
 
+        // NEW: Log visitor saat masuk mapel
+        if (typeof logVisitor === 'function') logVisitor();
+
+        this.updatePageTitle();
         this.updatePageTitle();
         this.updateWelcomeText();
         this.setupAdminControls();
         this.setupEventListeners();
         this.loadAnnouncements();
+        this.setupShortcuts();
     },
 
     getUserData() {
@@ -655,19 +660,112 @@ const SubjectApp = {
                     .update({ display_order: update.display_order })
                     .eq("id", update.id);
             }
-
-            this.state.announcements.forEach(a => {
-                const found = updates.find(u => u.id === a.id);
-                if (found) a.display_order = found.display_order;
-            });
-
             console.log("✅ Display order updated!");
 
         } catch (err) {
             console.error("❌ Update order error:", err);
         }
-    }
-};
+    },
 
-// JANGAN PANGGIL INIT DI SINI!
-// Init dipanggil dari masing-masing HTML file
+    // === KEYBOARD SHORTCUTS ===
+    setupShortcuts() {
+        document.addEventListener('keydown', (e) => {
+
+            // 1. Ctrl + Q: Toggle Visitor (Buka/Tutup)
+            if (e.ctrlKey && e.code === 'KeyQ') {
+                e.preventDefault();
+                // Logic: Cek dulu ada tombol close yang nongol gak?
+                const closeBtn = document.querySelector('.modal.show .close, .modal.show .btn-close, .swal2-close, .close-visitor, .closeVisitorPopup');
+
+                if (closeBtn && closeBtn.offsetParent !== null) {
+                    // Kalo ada tombol close visible, berarti lagi BUKA -> Klik Close
+                    closeBtn.click();
+                } else {
+                    // Kalo gak ada, berarti lagi TUTUP -> Klik Icon Mata
+                    const viewBtn = document.querySelector('.fa-eye')?.closest('div, a, span, button');
+                    if (viewBtn) viewBtn.click();
+                }
+            }
+
+            // 2. Ctrl + Backslash (\): Masuk Edit Mode
+            if (e.ctrlKey && e.code === 'Backslash') {
+                e.preventDefault();
+                if (!this.state.editMode) {
+                    const editBtn = document.getElementById("toggleEditMode");
+                    if (editBtn) editBtn.click();
+                }
+            }
+
+            // 3. Ctrl + Enter: Selesai Edit (Simpan)
+            if (e.ctrlKey && e.code === 'Enter') {
+                if (this.state.editMode) {
+                    e.preventDefault();
+                    // Klik toggleEditMode lagi buat save
+                    const editBtn = document.getElementById("toggleEditMode");
+                    if (editBtn) editBtn.click();
+                }
+            }
+
+            // 4. Ctrl + BracketRight ( ] ): Tambah Materi
+            if (e.ctrlKey && e.code === 'BracketRight') {
+                e.preventDefault();
+                const addBtn = document.getElementById("addAnnouncementBtn");
+                if (addBtn && addBtn.offsetParent !== null) {
+                    addBtn.click();
+                    // Auto scroll ke bawah & focus ke judul (Ctrl+1 logic)
+                    setTimeout(() => {
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                        // Cari card terakhir
+                        const cards = document.querySelectorAll(".course-card");
+                        const lastCard = cards[cards.length - 1];
+                        if (lastCard) {
+                            const field = lastCard.querySelector('[data-field="big_title"]');
+                            if (field) field.focus();
+                        }
+                    }, 300);
+                }
+            }
+
+            // 5. Ctrl + Backspace: Delete Materi (yang lagi difokus)
+            if (e.ctrlKey && e.code === 'Backspace') {
+                if (this.state.editMode) {
+                    // Cari card tempat kursor berada
+                    const activeCard = document.activeElement?.closest('.course-card');
+                    if (activeCard) {
+                        e.preventDefault();
+                        // Panggil fungsi delete yang sudah ada
+                        this.deleteAnnouncement(activeCard);
+                    }
+                }
+            }
+
+            // 6. Ctrl + 1, 2, 3, 4: Pindah Fokus Field
+            if (e.ctrlKey && ['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) {
+                if (!this.state.editMode) return;
+
+                e.preventDefault();
+
+                // Tentukan target card: yang lagi diketik ATAU card terakhir
+                let targetCard = document.activeElement?.closest('.course-card');
+                if (!targetCard) {
+                    const cards = document.querySelectorAll(".course-card");
+                    targetCard = cards[cards.length - 1];
+                }
+
+                if (targetCard) {
+                    const map = {
+                        'Digit1': 'big_title', // Judul
+                        'Digit2': 'title',     // Subjudul
+                        'Digit3': 'content',   // Isi
+                        'Digit4': 'small'      // Small
+                    };
+
+                    const fieldName = map[e.code];
+                    const el = targetCard.querySelector(`[data-field="${fieldName}"]`);
+                    if (el) el.focus();
+                }
+            }
+        });
+    }
+
+}; // <--- Penutup Object SubjectApp
