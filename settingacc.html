@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pengaturan Akun</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        h2.section-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #00eaff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #00eaff;
+            background: rgba(0, 234, 255, 0.05);
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
+        }
+
+        /* STYLE KHUSUS INPUT DISABLED (READ ONLY) */
+        .form-input:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            /* Lebih gelap/abu */
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #666;
+            /* Teks abu */
+            cursor: not-allowed;
+            font-style: italic;
+        }
+
+        /* UPLOAD AREA */
+        .pp-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .current-pp {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #00eaff;
+            object-fit: cover;
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+            background: #222;
+        }
+
+        .file-upload-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-btn:hover {
+            border-color: #00eaff;
+            color: #00eaff;
+            background: rgba(0, 234, 255, 0.1);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #00eaff, #0088ff);
+            color: black;
+            font-weight: 800;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+            transition: 0.3s;
+            display: block;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
+        }
+
+        .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </div>
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i><span id="headerVisitorCount">0</span>
+            </div>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+            <div class="popup-header">
+                <h3>Visitors</h3><span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+            <div class="list-section">
+                <h4 class="list-title">Visited Today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">Reset Today (Admin)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h1 style="color: #00eaff;">Account Setting</h1>
+                <p style="opacity: 0.8; margin-bottom: 20px;">Atur Akun Kamu</p>
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Data Pribadi</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Foto Profil</label>
+                    <div class="pp-upload-area">
+                        <img src="profpicture.png" id="previewPP" class="current-pp"
+                            onerror="this.src='profpicture.png'">
+                        <input type="file" id="inputPPFile" accept="image/*" style="display: none;"
+                            onchange="previewImage(this)">
+                        <label for="inputPPFile" class="file-upload-btn">
+                            <i class="fa-solid fa-camera"></i> Ganti Foto
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" id="inputFullName" class="form-input" disabled placeholder="Memuat...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nama Pendek</label>
+                    <input type="text" id="inputOfficialNick" class="form-input" disabled placeholder="Memuat...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Role / Status</label>
+                    <input type="text" id="inputRole" class="form-input" disabled placeholder="Memuat...">
+                </div>
+<p style="color: red; margin: 0;"><i>Hanya admin yang bisa mengedit</i></p>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 25px 0;">
+
+                <div class="form-group">
+                    <label class="form-label" style="color:#00eaff;">Nama Panggilan (Tampilan)</label>
+                    <input type="text" id="inputShortName" class="form-input" placeholder="Mau dipanggil apa?">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="color:#00eaff;">Bio Singkat</label>
+                    <input type="text" id="inputBio" class="form-input" placeholder="Tulis status/bio kamu...">
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div class="course-card" style="margin-top: 0;">
+                <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> Akun Login</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="inputUser" class="form-input" placeholder="Buat username unik">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="inputPass" class="form-input" placeholder="Buat password">
+                        <i class="fa-solid fa-eye toggle-pw" onclick="togglePass()"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="saveChanges()">
+                <i class="fa-solid fa-floppy-disk"></i> SIMPAN PERUBAHAN
+            </button>
+
+        </div>
+    </div>
+    <script>
+        // 1. CEK USER MANUAL
+        let user = null;
+        try {
+            const stored = localStorage.getItem("user");
+            if (!stored) throw new Error("No user");
+            user = JSON.parse(stored);
+        } catch (e) {
+            window.location.href = "index.html";
+        }
+
+        // 2. JALANKAN SAAT LOAD
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (typeof supabase === 'undefined') {
+                alert("❌ Supabase Error! Cek file js/supabase-clients.js");
+                return;
+            }
+            await refreshUserData();
+        });
+
+        // 3. LOAD DATA USER
+        async function refreshUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) throw error;
+                if (!data) return;
+
+                // Update UI Foto
+                const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "profpicture.png";
+                if (document.getElementById('previewPP')) document.getElementById('previewPP').src = ppUrl;
+                if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
+
+                // ISI FIELD DISABLED
+                document.getElementById('inputFullName').value = data.full_name || "-";
+                document.getElementById('inputOfficialNick').value = data.nickname || "-";
+                document.getElementById('inputRole').value = (data.role || "student").toUpperCase();
+
+                // ISI FIELD EDITABLE
+                document.getElementById('inputShortName').value = data.short_name || "";
+                document.getElementById('inputBio').value = data.bio || "";
+                document.getElementById('inputUser').value = data.username || "";
+                document.getElementById('inputPass').value = data.password || "";
+
+                // Update Header Nama (Prioritas: Short Name -> Nickname -> Full Name)
+                const displayName = data.short_name || data.nickname || data.full_name || 'User';
+                if (document.getElementById('headerName')) document.getElementById('headerName').innerText = `Hai, ${displayName}`;
+
+                // Sync Storage
+                localStorage.setItem("user", JSON.stringify(data));
+
+            } catch (err) {
+                console.error("Load Error:", err);
+            }
+        }
+
+        // 4. PREVIEW IMAGE
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('previewPP').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 5. COMPRESS IMAGE
+        function compressImage(file, maxWidth = 500, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = e => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const scale = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob(blob => {
+                            if (!blob) return reject("Gagal compress!");
+                            resolve(blob);
+                        }, "image/jpeg", quality);
+                    };
+                };
+                reader.onerror = err => reject(err);
+            });
+        }
+
+        // 6. SIMPAN DATA (HANYA FIELD EDITABLE)
+        async function saveChanges() {
+            const btn = document.querySelector('.btn-save');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> MENYIMPAN...';
+            btn.style.opacity = 0.7;
+            btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('inputPPFile');
+                let newAvatarUrl = user.avatar_url;
+
+                // A. Upload Foto
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const compressedFile = await compressImage(file, 500, 0.7);
+                    const fileName = `${user.id}.jpg`;
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('avatars')
+                        .upload(fileName, compressedFile, {
+                            cacheControl: '3600',
+                            upsert: true,
+                            contentType: 'image/jpeg'
+                        });
+
+                    if (uploadError) throw new Error("Gagal upload foto: " + uploadError.message);
+
+                    const { data: publicUrlData } = supabase.storage
+                        .from('avatars')
+                        .getPublicUrl(fileName);
+
+                    // Versi baru biar cache refresh
+                    const timestamp = new Date().getTime();
+                    newAvatarUrl = `${publicUrlData.publicUrl}?v=${timestamp}`;
+                }
+
+                // B. Update Database (Cuma kirim yang boleh diedit)
+                const updates = {
+                    avatar_url: newAvatarUrl,
+                    short_name: document.getElementById('inputShortName').value, // Edit
+                    bio: document.getElementById('inputBio').value,             // Edit
+                    username: document.getElementById('inputUser').value,       // Edit
+                    password: document.getElementById('inputPass').value        // Edit
+                    // full_name, nickname, role GAK DIKIRIM biar gak berubah
+                };
+
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update(updates)
+                    .eq('id', user.id);
+
+                if (updateError) throw updateError;
+
+                alert("✅ Profil Berhasil Diupdate!");
+                await refreshUserData();
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ Gagal Menyimpan: " + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.style.opacity = 1;
+                btn.disabled = false;
+            }
+        }
+
+        function togglePass() {
+            const input = document.getElementById('inputPass');
+            const icon = document.querySelector('.toggle-pw');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+
+</html>

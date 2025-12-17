@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Nilai PSASI V2</title>
+    <title>Nilai PSASI</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js"></script>
     <script src="js/basicfeat.js"></script>
@@ -68,7 +68,7 @@
         .personal-table td,
         .personal-table th {
             padding: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
             text-align: center;
         }
 
@@ -120,7 +120,7 @@
         }
 
         .podium {
-            width: 90px;
+            width: 120px;
             border: 2px solid #b6ffda;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
@@ -143,21 +143,22 @@
         }
 
         .podium.p1 {
-            height: 180px;
+            height: 200px;
             background: rgba(255, 215, 0, 0.2);
             border-color: gold;
         }
 
         .podium.p2 {
-            height: 150px;
+            height: 170px;
+            background: rgba(255, 215, 210, 0.2);
         }
 
         .podium.p3 {
-            height: 130px;
+            height: 150px;
         }
 
         .podium.pd {
-            height: 120px;
+            height: 140px;
         }
 
         /* Rank 4-10 */
@@ -178,15 +179,24 @@
 <body>
     <header>
         <div class="header-left">
-            <div class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
-            <div id="visitorTrigger" class="visitor-trigger"><i class="fa-solid fa-eye"></i> <span
-                    id="headerVisitorCount">0</span></div>
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
         </div>
+
         <div class="profile-box" id="profileTrigger">
             <span id="headerName">Hai, ...</span>
             <img id="headerPP" class="header-pp">
             <i class="fa-solid fa-caret-down"></i>
         </div>
+
         <div class="profile-dropdown" id="profileDropdown">
             <ul>
                 <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
@@ -196,70 +206,66 @@
         </div>
     </header>
 
-    <div class="sidebar" id="sidebar">
-        <h3>Main Menu</h3>
-        <ul>
-            <li><a href="homev2.html"><i class="fa-solid fa-house"></i> Home</a></li>
-            <li><a href="announcements.html"><i class="fa-solid fa-bullhorn"></i> Announcement</a></li>
-            <li class="nav-locked"><a href="dashboard.html" class="nav-locked"><i
-                        class="fa-solid fa-table-columns"></i>Dashboard</a></li>
-            <li class="nav-locked"><a href="profile.html" class="nav-locked"><i class="fa-solid fa-user"></i>
-                    Profile</a></li>
-            <li class="nav-locked"><a href="search.html" class="nav-locked"><i class="fa-solid fa-search"></i>Cari
-                    Akun</a></li>
-            <li><a href="nilaiv2.html" class="active"><i class="fa-solid fa-clipboard-check"></i>Nilai PSASI 25-26</a>
-            </li>
-            <h3>Lessons</h3>
-            <li><a href="bahasaindonesia.html"><i class="fa-solid fa-book"></i>B. Indonesia</a></li>
-            <li><a href="bahasainggris.html"><i class="fa-solid fa-language"></i>B. Inggris</a></li>
-            <li><a href="bahasasunda.html"><B style="margin-right: 10px;">ᮘ</B>B. Sunda</a></li>
-            <li><a href="bahasajepang.html"><b style="margin-right: 10px;">ア</b>B. Jepang</a></li>
-            <li><a href="matematika.html"><i class="fa-solid fa-calculator"></i>Matematika</a></li>
-            <li><a href="proipas.html"><i class="fa-solid fa-atom"></i>Proipas</a></li>
-            <li><a href="sejarah.html"><i class="fa-solid fa-landmark"></i>Sejarah</a></li>
-            <li><a href="pabp.html"><i class="fa-solid fa-mosque"></i>PABP</a></li>
-            <li><a href="pp.html"><i class="fa-solid fa-scale-balanced"></i>PP</a></li>
-            <li><a href="senibudaya.html"><i class="fa-solid fa-masks-theater"></i>Seni Budaya</a></li>
-            <li><a href="pjok.html"><i class="fa-solid fa-person-running"></i>PJOK</a></li>
-            <li><a href="informatika.html"><i class="fa-solid fa-laptop"></i>Informatika</a></li>
-            <li><a href="bk.html"><i class="fa-solid fa-heart-circle-check"></i>BK</a></li>
-            <li><a href="dpr1.html"><i class="fa-solid fa-laptop-code"></i>DASPROG 1</a></li>
-            <li><a href="dpr2.html"><i class="fa-solid fa-microchip"></i>DASPROG 2</a></li>
-            <li><a href="dpr3.html"><i class="fa-solid fa-palette"></i>DASPROG 3</a></li>
-            </li>
-        </ul>
-        </ul>
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
     </div>
+
+    <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <div class="main-content">
         <div class="left-section">
-            <h1 style="color: #00eaff;">Nilai PSAS</h1>
+            <h1 style="color: #00eaff;"><i class="fa-solid fa-clipboard-check"></i> Nilai PSAS</h1>
             <p style="opacity: 0.8; margin-bottom: 20px;">PSASI 25-26 • X-RPL 2</p>
 
-            <div class="carddashboard">
+            <div class="course-card">
                 <img id="pp" src="profpicture.png">
                 <div class="userInfo">
                     <p id="uname" style="margin:0; font-weight:bold;">@username</p>
                     <h3 id="name" style="margin:0; opacity:0.8;">Loading...</h3>
                 </div>
-                <div style="clear:both;"></div>
 
-                <div style="margin-top: 20px;">
-                    <h3>Daftar Nilai Kamu:</h3>
-                    <table class="personal-table" id="personalTable">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Mapel</th>
-                                <th>Nilai</th>
-                                <th>KKM?</th>
-                            </tr>
-                        </thead>
-                        <tbody id="personalTableBody">
-                        </tbody>
-                    </table>
-                </div>
+                <h3>Daftar Nilai Kamu:</h3>
+                <table class="personal-table" id="personalTable">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Mapel</th>
+                            <th>Nilai</th>
+                            <th>KKM?</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personalTableBody">
+                    </tbody>
+                </table>
 
                 <div style="text-align:center; margin-top:20px;">
                     <h3 style="margin-bottom:5px;">Rata-Rata Kamu:</h3>
@@ -270,18 +276,18 @@
             </div>
 
             <div class="course-card">
-                <h3>Top 10 Leaderboard</h3>
-                <h4>Berdasarkan Rata-Rata Tertinggi (Auto-Sync)</h4>
+                <h1 style="color: #00eaff;">Top 15 Leaderboard</h1>
+                <p style="opacity: 0.8; margin-bottom: 20px;">Ranking Berdasarkan Rata-Rata Nilai PSAS</p>
 
                 <div class="podium-container-5" id="podiumTop3">
                 </div>
-                <hr style="margin: 30px 0; border-color:rgba(255,255,255,0.1);">
+                <hr style="margin: 30px 0; border-color:rgba(0,191,255,0.4);">
                 <div class="podium-container-5" id="podiumRest">
                 </div>
             </div>
         </div>
 
-        <div class="right-section">
+        <div class="right-section course-card">
             <h2 style="color: #00eaff;">Daftar Nilai Kelas</h2>
             <p style="opacity:0.7; margin-bottom:15px;">Pilih Mapel untuk melihat nilai semua siswa.</p>
 
@@ -303,24 +309,21 @@
                 <option value="dasprog3">DASPROGRPL 3</option>
             </select>
 
-            <div style="overflow-x:auto;">
-                <table class="personal-table" style="text-align:left;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nama</th>
-                            <th>Nilai</th>
-                        </tr>
-                    </thead>
-                    <tbody id="classTableBody">
-                    </tbody>
-                </table>
-            </div>
+            <table class="personal-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama</th>
+                        <th>Nilai</th>
+                    </tr>
+                </thead>
+                <tbody id="classTableBody">
+                </tbody>
+            </table>
         </div>
     </div>
-
     <script>
-        // Config Mapel (Harus sama persis ID-nya dengan kolom database & admin-nilai)
+        // Config Mapel
         const MAPEL_CONFIG = {
             'pabp': 'PABP',
             'pp': 'PP',
@@ -340,88 +343,86 @@
         };
 
         const KKM = 75;
-        let globalData = []; // Penampung data nilai satu kelas
+        let globalData = [];
 
-        // 1. AMBIL USER DARI LOCALSTORAGE
         const localUser = JSON.parse(localStorage.getItem("user"));
-
-        // Tentukan identitas (Prioritas Nickname, Fallback ke Username)
         const myIdentifier = localUser ? (localUser.nickname || localUser.username) : null;
 
         document.addEventListener("DOMContentLoaded", async function () {
-            // Cek Login
             if (!localUser || !localUser.class_id) {
-                console.warn("User belum login atau Class ID hilang.");
-                // alert("Sesi habis, silakan login lagi.");
                 window.location.href = "index.html";
                 return;
             }
 
-            console.log("Login:", myIdentifier, "| Kelas:", localUser.class_id);
-
-            // Init Sidebar/Pengumuman (kalo ada)
             if (typeof SubjectApp !== 'undefined') SubjectApp.init("announcements", "Pengumuman");
-
-            // Set UI Header
             updateProfileUI(localUser);
-
-            // Tarik Data (Filter Kelas)
             await loadData();
         });
 
         function updateProfileUI(user) {
-            // Update Header & Dashboard Info
-            const ids = ['headerName', 'name', 'uname'];
-            const display = user.nickname || user.full_name || user.username;
-
-            if (document.getElementById('headerName')) document.getElementById('headerName').innerText = `Hai, ${display}`;
+            const display = user.nickname;
             if (document.getElementById('name')) document.getElementById('name').innerText = user.full_name || display;
             if (document.getElementById('uname')) document.getElementById('uname').innerText = `@${user.username}`;
 
-            // Update Foto
             const ppUrl = user.avatar_url || 'profpicture.png';
-            if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
             if (document.getElementById('pp')) document.getElementById('pp').src = ppUrl;
         }
 
-        // FUNGSI UTAMA: LOAD DATA DENGAN FILTER KELAS
+        // ==========================================
+        // CUSTOM COLOR GRADING (0 - 100)
+        // ==========================================
+        function getDynamicColor(nilai) {
+            const n = parseFloat(nilai);
+            if (isNaN(n)) return "#888"; // Abu-abu kalau kosong
+
+            // 90 - 100: Cyan Banget (Neon)
+            if (n >= 90) return "#00eaff";
+
+            // 80 - 90: Cyan Kurang Cerah (Agak redup/Teal)
+            if (n >= 80) return "#00cec9";
+
+            // 70 - 80: Hijau Cyan (Turquoise)
+            if (n >= 70) return "#1abc9c";
+
+            // 60 - 70: Hijau (Green)
+            if (n >= 60) return "#2ecc71";
+
+            // 50 - 60: Kuning Hijau (Lime)
+            if (n >= 50) return "#badc58";
+
+            // 40 - 50: Kuning (Yellow)
+            if (n >= 40) return "#f1c40f";
+
+            // 30 - 40: Merah Orange (Carrot)
+            if (n >= 30) return "#e67e22";
+
+            // 20 - 30: Merah Biasa
+            if (n >= 20) return "#e74c3c";
+
+            // 0 - 20: Merah Banget (Maroon/Dark Red)
+            return "#c0392b";
+        }
+
         async function loadData() {
-            // Query ke Supabase: Ambil SEMUA data nilai, TAPI cuma yang class_id nya sama
             const { data, error } = await supabase
                 .from('nilai_psasi')
                 .select('*')
-                .eq('class_id', localUser.class_id); // <--- FILTER PENTING INI
+                .eq('class_id', localUser.class_id);
 
-            if (error) {
-                console.error("Gagal tarik data:", error);
-                return;
-            }
+            if (error || !data) return;
 
-            if (!data || data.length === 0) {
-                console.warn("Data nilai kosong untuk kelas ini.");
-                document.getElementById('rataNum').innerText = "Belum Ada Data";
-                return;
-            }
-
-            // 1. Hitung Rata-rata Tiap Siswa
             globalData = data.map(siswa => {
                 let total = 0, count = 0;
                 for (let key in MAPEL_CONFIG) {
                     let val = parseFloat(siswa[key]);
-                    if (!isNaN(val)) {
-                        total += val;
-                        count++;
-                    }
+                    if (!isNaN(val)) { total += val; count++; }
                 }
-                // Kalau mapel kosong, rata-rata 0
                 const avg = count > 0 ? (total / count).toFixed(2) : "0.00";
                 return { ...siswa, average: parseFloat(avg) };
             });
 
-            // 2. Urutkan Ranking (Tertinggi ke Terendah)
             globalData.sort((a, b) => b.average - a.average);
 
-            // 3. Render Tampilan
             renderPersonal();
             renderPodium();
             renderClassTable();
@@ -437,64 +438,39 @@
 
             if (!myData) {
                 document.getElementById('rataNum').innerText = "-";
-                document.getElementById('peringkat').innerText = "Data nilai kamu belum diinput.";
                 return;
             }
 
-            // Tampilkan Rata-rata (toFixed(2) udah ada di calculation awal, jadi aman)
+            // 1. RATA-RATA: UBAH WARNA TEXT (Bukan Background)
             const rataEl = document.getElementById('rataNum');
-            rataEl.innerText = myData.average; // Ini string "xx.xx"
+            rataEl.innerText = myData.average.toFixed(2);
 
-            
+            const fontColor = getDynamicColor(myData.average);
 
-            const totalSiswa = globalData.length;
+            // Reset background jadi transparan
+            rataEl.style.background = "rgba(255,255,255,0.05)";
+            rataEl.style.color = fontColor; // <--- INI YG DIRUBAH
+            rataEl.style.textShadow = `0 0 15px ${fontColor}`; // Efek NEON GLOW
+            rataEl.style.boxShadow = "none"; // Hapus kotak glow
+
+            // Logic Ucapan
+            const ucapan = document.getElementById('ucapanText');
+            // Warna ucapan ngikutin warna nilai juga biar matching
+            ucapan.style.color = fontColor;
+            ucapan.style.textShadow = "0 0 5px rgba(0,0,0,0.5)";
+
+            if (myData.average >= 80) ucapan.innerText = "dinginn ah di puncak🥶";
+            else if (myData.average >= 75) ucapan.innerText = "pass KKM eyyy, hore";
+            else if (myData.average >= 70) ucapan.innerText = "yah tipis";
+            else if (myData.average >= 60) ucapan.innerText = "lumayann lahh sakie ma";
+            else if (myData.average >= 50) ucapan.innerText = "gaoaoa, trs semangat";
+            else ucapan.innerText = "gapapa dibawah 50, yang penting jujur.";
+
+            // Ranking
             const rank = myIndex + 1;
-            const kalahkan = totalSiswa - rank;
-            document.getElementById('peringkat').innerHTML = `
-            Peringkat <span style="font-size:1.2em; color:#ffd700;">#${rank}</span> 
-            dari ${totalSiswa} siswa`;
+            document.getElementById('peringkat').innerHTML = `Peringkat <span style="color:${fontColor}; font-size:1.3em; font-weight:bold;">#${rank}</span>`;
 
-            // --- LOGIC WARNA & UCAPAN BARU (6 TIER) ---       
-        const ucapan = document.getElementById('ucapanText');
-
-        // Reset style dasar
-        rataEl.style.color = "#fff"; 
-        rataEl.style.boxShadow = "none";
-        rataEl.style.textShadow = "none";
-
-        if (myData.average >= 80) {
-            // TIER DEWA: Biru Cyan (Dingin / Icy)
-            rataEl.style.background = "#00eaff"; 
-            rataEl.style.boxShadow = "0 0 20px rgba(0, 234, 255, 0.8)";
-            ucapan.innerText = "dinginn ah di puncak🥶";
-        } 
-        else if (myData.average >= 75) {
-            // TIER AMAN: Hijau Segar
-            rataEl.style.background = "#2ecc71"; 
-            ucapan.innerText = "pass KKM eyyy, hore";
-        } 
-        else if (myData.average >= 70) {
-            // TIER NYARIS: Kuning Emas
-            rataEl.style.background = "#f1c40f"; 
-            ucapan.innerText = "yah tipis";
-        } 
-        else if (myData.average >= 60) {
-            // TIER LUMAYAN: Orange
-            rataEl.style.background = "#e67e22"; 
-            ucapan.innerText = "lumayann lahh sakie ma";
-        } 
-        else if (myData.average >= 50) {
-            // TIER BAWAH: Merah Terang
-            rataEl.style.background = "#e74c3c"; 
-            ucapan.innerText = "gaoaoa, trs semangat";
-        } 
-        else {
-            // TIER JUJUR: Merah Gelap (Maroon)
-            rataEl.style.background = "#c0392b"; 
-            ucapan.innerText = "gapapa dibawah 50, yang penting jujur.";
-        }
-
-            // Render Tabel Personal
+            // 2. TABEL PERSONAL: UBAH WARNA TEXT
             const tbody = document.getElementById('personalTableBody');
             tbody.innerHTML = "";
             let no = 1;
@@ -502,22 +478,18 @@
             for (let key in MAPEL_CONFIG) {
                 const val = parseFloat(myData[key]);
                 const isAda = !isNaN(val);
-
-                // UPDATE DISINI: Pake toFixed(2) biar muncul .00
                 const displayVal = isAda ? val.toFixed(2) : "-";
 
-                let statusIcon = "-";
-                if (isAda) {
-                    statusIcon = val >= KKM
-                        ? `<i class="fa-solid fa-check" style="color:#2ecc71;"></i>`
-                        : `<i class="fa-solid fa-xmark" style="color:#e74c3c;"></i>`;
-                }
+                // Generate warna TEXT
+                const textColor = isAda ? getDynamicColor(val) : "#fff";
 
                 const tr = `<tr>
                 <td>${no++}</td>
                 <td style="text-align:left;">${MAPEL_CONFIG[key]}</td>
-                <td>${displayVal}</td>
-                <td>${statusIcon}</td>
+                <td style="font-weight:bold; font-size:16px; color: ${textColor}; text-shadow: 0 0 8px ${textColor};">
+                    ${displayVal}
+                </td>
+                <td>${isAda ? (val >= KKM ? '✅' : '❌') : '-'}</td>
             </tr>`;
                 tbody.innerHTML += tr;
             }
@@ -529,26 +501,27 @@
             if (top3) top3.innerHTML = "";
             if (rest) rest.innerHTML = "";
 
-            // Fungsi Bikin Kotak Podium
-            const createPodiumHTML = (siswa, rank, cls) => `
+            const createPodiumHTML = (siswa, rank, cls) => {
+                const color = getDynamicColor(siswa.average);
+                return `
             <div class="podium ${cls}">
                 <img src="studentsprofile/${siswa.nama_siswa}.jpg" class="pp-top" onerror="this.src='profpicture.png'">
                 <div style="font-weight:bold; margin-top:5px; font-size:13px;">${siswa.nama_siswa}</div>
-                <div style="font-size:12px; margin-top:2px;">${siswa.average}</div>
+                
+                <div style="font-size:14px; margin-top:2px; color:${color}; font-weight:bold; text-shadow: 0 0 5px ${color};">
+                    ${siswa.average.toFixed(2)}
+                </div>
+                
                 <div style="font-size:20px; font-weight:900; opacity:0.3; position:absolute; bottom:5px; left:50%; transform:translateX(-50%);">${rank}</div>
             </div>
-        `;
+        `};
 
-            // Render Juara 1, 2, 3 (Urutan visual: 2 - 1 - 3)
             if (globalData[1]) top3.innerHTML += createPodiumHTML(globalData[1], 2, 'p2');
             if (globalData[0]) top3.innerHTML += createPodiumHTML(globalData[0], 1, 'p1');
             if (globalData[2]) top3.innerHTML += createPodiumHTML(globalData[2], 3, 'p3');
 
-            // Render Rank 4-10
-            for (let i = 3; i < 10; i++) {
-                if (globalData[i]) {
-                    rest.innerHTML += createPodiumHTML(globalData[i], i + 1, 'pd');
-                }
+            for (let i = 3; i < 15; i++) {
+                if (globalData[i]) rest.innerHTML += createPodiumHTML(globalData[i], i + 1, 'pd');
             }
         }
 
@@ -565,21 +538,23 @@
 
             sortedList.forEach((siswa, i) => {
                 const val = parseFloat(siswa[mapelKey]);
-                // UPDATE DISINI: Pake toFixed(2)
                 const displayVal = !isNaN(val) ? val.toFixed(2) : "-";
+                const color = !isNaN(val) ? getDynamicColor(val) : "#fff";
 
                 const tr = document.createElement('tr');
-
                 if (myIdentifier && siswa.nama_siswa.toLowerCase() === myIdentifier.toLowerCase()) {
                     tr.style.background = 'rgba(0, 234, 255, 0.15)';
                     tr.style.fontWeight = 'bold';
                     tr.style.borderLeft = '3px solid #00eaff';
                 }
 
+                // Kolom Nilai pakai warna text
                 tr.innerHTML = `
                 <td>${i + 1}</td>
                 <td>${siswa.nama_siswa}</td>
-                <td>${displayVal}</td>
+                <td style="font-weight:bold; color:${color}; text-shadow:0 0 5px ${color};">
+                    ${displayVal}
+                </td>
             `;
                 tbody.appendChild(tr);
             });

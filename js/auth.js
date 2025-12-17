@@ -63,25 +63,6 @@ function getShortName(user) {
     return user.short_name || user.full_name?.split(" ")[0] || "";
 }
 
-function getProfilePicture(user) {
-    if (!user || !user.avatar_url) return "defaultpp.png";
-    return user.avatar_url;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const user = getUser();
-    if (!user) return;
-
-    const shortName = getShortName(user);
-    const ppUrl = getProfilePicture(user);
-
-    const nameEl = document.getElementById("headerName");
-    const ppEl = document.getElementById("headerPP");
-
-    if (nameEl) nameEl.innerText = `Hai, ${shortName}`;
-    if (ppEl) ppEl.src = ppUrl;
-});
-
 const user = JSON.parse(localStorage.getItem("user"));
 console.log("✅ User loaded:", user.full_name);
 

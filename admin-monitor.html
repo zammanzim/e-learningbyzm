@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Monitor Nilai</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/auth.js "></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* Container Admin */
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 191, 255, 0.05);
+            border: 1px solid rgba(0, 191, 255, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+            min-height: 500px;
+        }
+
+        /* Dropdown Style Admin */
+        .admin-select {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 234, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .admin-select:focus {
+            border-color: #00eaff;
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+        }
+
+        /* --- STYLE DASHBOARD SISWA (COPY DARI NILAIV2) --- */
+        .carddashboard {
+            display: none;
+            /* Sembunyiin dulu sebelum pilih siswa */
+            gap: 16px;
+            padding: 25px;
+            border-radius: 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 191, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            text-align: left;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(1000px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #pp {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00eaff;
+            box-shadow: 0 0 10px #00eaff;
+            float: left;
+            margin-right: 20px;
+        }
+
+        .userInfo {
+            text-align: left;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #rataNum {
+            padding: 4px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 32px;
+            /* Lebih gede dikit biar puas liatnya */
+            display: inline-block;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .personal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .personal-table td,
+        .personal-table th {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .personal-table th {
+            color: #00eaff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* Status Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            opacity: 0.5;
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #00eaff;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h1 style="color: #00eaff; margin-bottom: 10px;">Monitor Nilai Siswa</h1>
+
+            <div class="admin-container">
+
+                <label style="margin-bottom:10px; display:block; color:#00eaff; font-weight:bold;">
+                    <i class="fa-solid fa-users-viewfinder"></i> Pilih Siswa (Kelas Kamu)
+                </label>
+                <select id="studentSelect" class="admin-select" onchange="previewDashboard()">
+                    <option value="">-- Pilih Siswa --</option>
+                </select>
+
+                <div id="dashboardPreview" class="carddashboard">
+                    <img id="pp" src="profpicture.png" onerror="this.src='profpicture.png'">
+                    <div class="userInfo">
+                        <p id="uname" style="margin:0; font-weight:bold; color:#00eaff;">@username</p>
+                        <h3 id="name" style="margin:0; color:white;">Nama Siswa</h3>
+                    </div>
+                    <div style="clear:both;"></div>
+
+                    <hr style="border-color:rgba(255,255,255,0.1); margin:20px 0;">
+
+                    <div style="text-align:center;">
+                        <span style="font-size:14px; opacity:0.7;">Rata-Rata Saat Ini</span><br>
+                        <div id="rataNum">-</div>
+                        <p id="ucapanText" style="margin-top:10px; font-style:italic; font-size:14px;"></p>
+                        <p id="peringkat" style="margin-top:5px; font-weight:bold;"></p>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h4 style="color:#00eaff; margin-bottom:15px;"><i class="fa-solid fa-list"></i> Rincian Nilai
+                        </h4>
+                        <table class="personal-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th style="text-align:left;">Mata Pelajaran</th>
+                                    <th>Nilai</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personalTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="emptyState" class="empty-state">
+                    <i class="fa-solid fa-eye-slash"></i>
+                    <p>Pilih siswa di atas untuk melihat dashboard mereka.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG & UTILS ---
+        const MAPEL_CONFIG = {
+            'pabp': 'PABP', 'pp': 'PP', 'bindo': 'B. Indonesia', 'bing': 'B. Inggris',
+            'mtk': 'Matematika', 'sejarah': 'Sejarah', 'bjepang': 'B. Jepang',
+            'bsunda': 'B. Sunda', 'senibudaya': 'Seni Budaya', 'informatika': 'Informatika',
+            'pjok': 'PJOK', 'proipas': 'Proipas',
+            'dasprog1': 'DASPROGRPL 1', 'dasprog2': 'DASPROGRPL 2', 'dasprog3': 'DASPROGRPL 3'
+        };
+        const KKM = 75;
+        let globalData = []; // Data nilai satu kelas (buat hitung ranking)
+
+        // 1. CEK ADMIN
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        const adminClass = localUser?.class_id;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (!localUser || !localUser.role.includes('admin')) {
+                alert("Halaman khusus Admin!");
+                window.location.href = "index.html";
+                return;
+            }
+            // Load Data
+            await loadClassData(); // Tarik semua nilai sekelas dulu (biar dapet ranking)
+            await loadStudentList(); // Isi dropdown
+        });
+
+        // 2. LOAD SEMUA NILAI KELAS (Buat kalkulasi Ranking)
+        async function loadClassData() {
+            const { data, error } = await supabase
+                .from('nilai_psasi')
+                .select('*')
+                .eq('class_id', adminClass);
+
+            if (error) return console.error(error);
+
+            // Hitung Rata-rata Sekelas
+            globalData = data.map(siswa => {
+                let total = 0, count = 0;
+                for (let key in MAPEL_CONFIG) {
+                    let val = parseFloat(siswa[key]);
+                    if (!isNaN(val)) { total += val; count++; }
+                }
+                const avg = count > 0 ? (total / count).toFixed(2) : "0.00";
+                return { ...siswa, average: parseFloat(avg) };
+            });
+
+            // Urutkan Ranking (Tertinggi ke Terendah)
+            globalData.sort((a, b) => b.average - a.average);
+        }
+
+        // 3. ISI DROPDOWN
+        async function loadStudentList() {
+            const { data } = await supabase
+                .from('users')
+                .select('nickname')
+                .eq('class_id', adminClass)
+                .neq('nickname', null)
+                .order('nickname', { ascending: true });
+
+            const select = document.getElementById('studentSelect');
+            if (data) {
+                data.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.nickname;
+                    opt.text = u.nickname;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        // 4. COLOR LOGIC (Sesuai Request Terakhir: 0-40 Ijo, lalu Gradient ke Cyan)
+        function getDynamicColor(nilai) {
+            const n = parseFloat(nilai);
+            if (isNaN(n)) return "#888"; // Abu-abu kalau kosong
+
+            // 90 - 100: Cyan Banget (Neon)
+            if (n >= 90) return "#00eaff";
+
+            // 80 - 90: Cyan Kurang Cerah (Agak redup/Teal)
+            if (n >= 80) return "#00cec9";
+
+            // 70 - 80: Hijau Cyan (Turquoise)
+            if (n >= 70) return "#1abc9c";
+
+            // 60 - 70: Hijau (Green)
+            if (n >= 60) return "#2ecc71";
+
+            // 50 - 60: Kuning Hijau (Lime)
+            if (n >= 50) return "#badc58";
+
+            // 40 - 50: Kuning (Yellow)
+            if (n >= 40) return "#f1c40f";
+
+            // 30 - 40: Merah Orange (Carrot)
+            if (n >= 30) return "#e67e22";
+
+            // 20 - 30: Merah Biasa
+            if (n >= 20) return "#e74c3c";
+
+            // 0 - 20: Merah Banget (Maroon/Dark Red)
+            return "#c0392b";
+        }
+
+        // 5. RENDER PREVIEW (Inti Fitur)
+        function previewDashboard() {
+            const selectedNick = document.getElementById('studentSelect').value;
+            const card = document.getElementById('dashboardPreview');
+            const empty = document.getElementById('emptyState');
+
+            if (!selectedNick) {
+                card.style.display = "none";
+                empty.style.display = "block";
+                return;
+            }
+
+            // Cari Data Siswa di Global Data
+            const myIndex = globalData.findIndex(s => s.nama_siswa === selectedNick);
+            const myData = globalData[myIndex];
+
+            if (!myData) {
+                card.style.display = "none";
+                empty.style.display = "block";
+                alert("Siswa ini belum ada data nilainya di tabel 'nilai_psasi'. Input dulu gan!");
+                return;
+            }
+
+            // Show Card
+            card.style.display = "block";
+            empty.style.display = "none";
+
+            // A. Update Header Profil
+            document.getElementById('uname').innerText = "@" + selectedNick; // Asumsi username mirip nickname
+            document.getElementById('name').innerText = selectedNick;
+            document.getElementById('pp').src = `studentsprofile/${selectedNick}.jpg`; // Fallback ada di HTML onerror
+
+            // B. Update Rata-rata & Ranking
+            const rataEl = document.getElementById('rataNum');
+            rataEl.innerText = myData.average.toFixed(2);
+
+            const color = getDynamicColor(myData.average);
+            rataEl.style.color = color;
+            rataEl.style.textShadow = `0 0 15px ${color}`;
+            rataEl.style.background = "rgba(0,0,0,0.3)"; // Background gelap transparan biar teks nyala
+
+            // Ranking Context
+            const rank = myIndex + 1;
+            document.getElementById('peringkat').innerHTML =
+                `Ranking Kelas: <span style="color:${color}; font-size:1.2em;">#${rank}</span> / ${globalData.length}`;
+
+            // C. Tabel Nilai
+            const tbody = document.getElementById('personalTableBody');
+            tbody.innerHTML = "";
+            let no = 1;
+
+            for (let key in MAPEL_CONFIG) {
+                const val = parseFloat(myData[key]);
+                const isAda = !isNaN(val);
+
+                const displayVal = isAda ? val.toFixed(2) : "-";
+                const itemColor = isAda ? getDynamicColor(val) : "#fff";
+
+                const tr = `<tr>
+                    <td>${no++}</td>
+                    <td style="text-align:left;">${MAPEL_CONFIG[key]}</td>
+                    <td style="font-weight:bold; color:${itemColor}; text-shadow:0 0 5px ${itemColor};">
+                        ${displayVal}
+                    </td>
+                    <td>${isAda ? (val >= KKM ? '✅' : '❌') : '-'}</td>
+                </tr>`;
+                tbody.innerHTML += tr;
+            }
+        }
+
+        // ==========================================
+        // KEYBOARD NAVIGATION (ARROW LEFT/RIGHT)
+        // ==========================================
+        document.addEventListener('keydown', function (e) {
+            const select = document.getElementById('studentSelect');
+
+            // Pastikan dropdown ada & isinya udah keload
+            if (!select || select.options.length <= 1) return;
+
+            if (e.key === "ArrowRight") {
+                // NEXT STUDENT
+                if (select.selectedIndex < select.options.length - 1) {
+                    select.selectedIndex++;
+                    previewDashboard(); // Update UI
+                }
+            }
+            else if (e.key === "ArrowLeft") {
+                // PREVIOUS STUDENT
+                // Index 0 itu "-- Pilih Siswa --", jadi kita batesin minimal index 1
+                if (select.selectedIndex > 1) {
+                    select.selectedIndex--;
+                    previewDashboard(); // Update UI
+                } else if (select.selectedIndex === 1) {
+                    // Opsional: Kalau mau balik ke 'Pilih Siswa' (kosong)
+                    select.selectedIndex = 0;
+                    previewDashboard();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

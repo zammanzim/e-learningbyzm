@@ -29,6 +29,19 @@ body {
     background-attachment: fixed;
 }
 
+@media (max-width: 1024px) {
+    body {
+        height: calc(100vh - 60px);
+        margin-top: 60px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        margin-top: 60px;
+    }
+}
+
 header {
     background-color: transparent;
     color: #fff;
@@ -234,7 +247,6 @@ header {
 }
 
 .main-content {
-    margin-top: 60px;
     padding: 20px;
     max-width: 900px;
     margin-left: auto;
@@ -576,7 +588,7 @@ i {
         justify-content: center;
         align-items: flex-start;
         gap: 30px;
-        max-width: 1200px;
+        max-width: 100%;
         text-align: left;
         margin-left: 270px;
         transition: margin-left 0.3s ease;
@@ -585,6 +597,10 @@ i {
     .left-section,
     .right-section {
         flex: 1;
+    }
+
+    .right-section {
+        margin-top: 75px;
     }
 
     .sidebar {
