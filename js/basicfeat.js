@@ -262,3 +262,49 @@ function renderVisitorList(visitors, listEl) {
         listEl.appendChild(item);
     });
 }
+
+// === EVENT LISTENERS (Popup Logic & ESC) ===
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Render data awal
+    renderVisitorStats();
+
+    // 2. Setup Elemen
+    const trigger = document.getElementById("visitorTrigger");
+    const overlay = document.getElementById("visitorOverlay");
+    const closeBtn = document.getElementById("closeVisitorPopup");
+    const resetBtn = document.getElementById("resetVisitorBtn");
+
+    // 3. Buka Popup (Klik Mata)
+    if (trigger && overlay) {
+        trigger.onclick = () => {
+            overlay.classList.add("show");
+            renderVisitorStats();
+        };
+    }
+
+    // 4. Tutup Popup (Klik X)
+    if (closeBtn && overlay) {
+        closeBtn.onclick = () => overlay.classList.remove("show");
+    }
+
+    // 5. Tutup Popup (Klik Background Luar)
+    if (overlay) {
+        overlay.onclick = (e) => {
+            if (e.target === overlay) overlay.classList.remove("show");
+        };
+    }
+
+    // 6. Tombol Reset
+    if (resetBtn) {
+        resetBtn.onclick = resetTodayVisitor;
+    }
+
+    // 7. SHORTCUT: Tekan ESC untuk Tutup
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            if (overlay && overlay.classList.contains("show")) {
+                overlay.classList.remove("show");
+            }
+        }
+    });
+});
