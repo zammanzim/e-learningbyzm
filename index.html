@@ -599,7 +599,7 @@
             });
         }
 
-        // --- MODAL NAME LOGIC ---
+        // --- MODAL NAME LOGIC (UPDATED WITH ERROR HANDLING) ---
         async function openModal() {
             if (!selectedClassId) return;
 
@@ -609,31 +609,59 @@
             const list = document.getElementById('modalList');
             list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat siswa...</div>';
 
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('class_id', selectedClassId)
-                .order('nickname', { ascending: true });
+            try {
+                // 1. Cek apakah Supabase Client jalan
+                if (typeof supabase === 'undefined') {
+                    throw new Error("Supabase tidak terhubung (Client Error).");
+                }
 
-            if (error || !data || data.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Kelas kosong / error.</div>';
-                return;
+                console.log("Mengambil data untuk Class ID:", selectedClassId);
+
+                // 2. Fetch Data
+                const { data, error } = await supabase
+                    .from('users') // <--- PASTIKAN NAMA TABEL INI BENAR
+                    .select('*')
+                    .eq('class_id', selectedClassId) // <--- PASTIKAN NAMA KOLOM INI BENAR
+                    .order('nickname', { ascending: true });
+
+                // 3. Tangkap Error dari Supabase
+                if (error) {
+                    console.error("Supabase DB Error:", error);
+                    throw new Error(error.message);
+                }
+
+                // 4. Cek Data Kosong
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Data siswa tidak ditemukan di kelas ini.</div>';
+                    return;
+                }
+
+                // 5. Render List
+                list.innerHTML = "";
+                data.forEach(u => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `<div class="dot"></div> <span>${u.nickname}</span>`;
+
+                    item.onclick = () => {
+                        handleUserSelect(u);
+                        closeModal();
+                    };
+                    list.appendChild(item);
+                });
+
+            } catch (err) {
+                // Tampilkan Error di Layar (Bukan cuma console)
+                console.error("CRITICAL ERROR:", err);
+                list.innerHTML = `
+                    <div style="text-align:center; padding:20px; color:#ff4757;">
+                        <i class="fa-solid fa-triangle-exclamation"></i><br>
+                        <b>Gagal Memuat!</b><br>
+                        <small>${err.message}</small>
+                    </div>
+                `;
             }
-
-            list.innerHTML = "";
-            data.forEach(u => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `<div class="dot"></div> <span>${u.nickname}</span>`;
-
-                item.onclick = () => {
-                    handleUserSelect(u);
-                    closeModal();
-                };
-                list.appendChild(item);
-            });
         }
-
         function closeModal() {
             document.getElementById('modalOverlay').classList.remove('open');
         }

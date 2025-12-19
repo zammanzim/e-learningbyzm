@@ -4,7 +4,8 @@ const SubjectApp = {
         user: null,
         subjectId: null,
         subjectName: null,
-        announcements: []
+        announcements: [],
+        tempFiles: []
     },
 
     init(subjectId, subjectName) {
@@ -161,29 +162,73 @@ const SubjectApp = {
         card.dataset.id = data.id;
         card.draggable = false;
 
+        // --- EVENT LISTENER KLIK CARD ---
+        // Pas diklik, buka detail overlay (Kecuali lagi Edit Mode)
+        card.onclick = (e) => {
+            // Cek apakah user lagi klik tombol delete/upload atau lagi Edit Mode
+            if (this.state.editMode) return;
+            if (e.target.closest('button') || e.target.closest('input')) return;
+
+            // Buka Detail
+            openDetail(data);
+        };
         const bigTitle = data.big_title || "";
         const title = data.title || "";
         const content = data.content || "";
         const small = data.small || "";
-        // Handle photo_url kalau dia array (dari fitur upload baru) atau string (lama)
-        let photoUrl = "";
-        if (Array.isArray(data.photo_url) && data.photo_url.length > 0) {
-            photoUrl = data.photo_url[0]; // Ambil foto pertama dulu buat preview
-        } else if (typeof data.photo_url === 'string') {
-            photoUrl = data.photo_url;
+
+        // --- LOGIC FOTO GRID BARU ---
+        let photoHTML = "";
+        let photos = [];
+
+        // 1. Cek apakah null/undefined
+        if (data.photo_url) {
+            // 2. Jika sudah Array, aman
+            if (Array.isArray(data.photo_url)) {
+                photos = data.photo_url;
+            }
+            // 3. Jika String, kita cek formatnya
+            else if (typeof data.photo_url === 'string') {
+                try {
+                    // Cek kalo formatnya JSON Array string '["url1", "url2"]'
+                    if (data.photo_url.startsWith('[') && data.photo_url.endsWith(']')) {
+                        photos = JSON.parse(data.photo_url);
+                    }
+                    // Cek format Postgres Array string '{url1,url2}' (Jaga-jaga)
+                    else if (data.photo_url.startsWith('{') && data.photo_url.endsWith('}')) {
+                        photos = data.photo_url.slice(1, -1).split(',');
+                    }
+                    // Kalo string biasa (1 foto)
+                    else {
+                        photos = [data.photo_url];
+                    }
+                } catch (e) {
+                    // Kalo error parsing, anggap string biasa
+                    photos = [data.photo_url];
+                }
+            }
         }
 
-        const photoHTML = photoUrl
-            ? `<div class="card-photo-container">
-                   <img src="${photoUrl}" class="card-photo" alt="Foto materi">
-                   <button class="delete-photo-btn" style="display:none; position:absolute; top:5px; right:5px; background:rgba(255,0,0,0.8); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
-                       <i class="fa-solid fa-trash"></i>
-                   </button>
-               </div>`
-            : `<div class="card-photo-placeholder" style="display:none; padding:20px; background:rgba(255,255,255,0.1); border:2px dashed rgba(255,255,255,0.3); border-radius:8px; text-align:center; margin-bottom:15px; cursor:pointer;">
-                   <i class="fa-solid fa-image" style="font-size:32px; color:rgba(255,255,255,0.5);"></i>
-                   <p style="margin-top:10px; color:rgba(255,255,255,0.6);">Klik Upload Foto untuk menambah gambar</p>
-               </div>`;
+        if (photos.length > 0) {
+            // Tentukan Class Grid berdasarkan jumlah foto (max class grid-4)
+            let gridClass = "grid-1";
+            if (photos.length === 2) gridClass = "grid-2";
+            if (photos.length === 3) gridClass = "grid-3";
+            if (photos.length >= 4) gridClass = "grid-4";
+
+            // Loop bikin HTML gambar
+            let imgsHTML = "";
+            // Kita batasi max 4 foto yang tampil di grid biar rapi
+            // Kalau mau tampil semua tinggal hapus .slice(0,4)
+            const displayPhotos = photos.slice(0, 4);
+
+            displayPhotos.forEach(url => {
+                imgsHTML += `<img src="${url}" class="photo-item" onclick="openLightbox('${url}')">`;
+            });
+
+            photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
+        }
+        // -----------------------------
 
         card.innerHTML = `
             <input type="file" class="photo-input" accept="image/*" style="display:none;">
@@ -200,11 +245,8 @@ const SubjectApp = {
             <small contenteditable="false" class="editable" data-field="small">${small}</small>
             
             <div class="card-actions" style="margin-top:15px; display:flex; gap:10px;">
-                <button class="upload-photo-btn" style="display:none; background:#FF9800; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
-                    <i class="fa-solid fa-camera"></i> Upload Foto
-                </button>
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
-                    <i class="fa-solid fa-trash"></i> Delete
+                    <i class="fa-solid fa-trash"></i> Hapus Materi
                 </button>
             </div>
         `;
@@ -433,21 +475,28 @@ const SubjectApp = {
         }
     },
 
-    // --- NEW: INITIALIZE POPUP FEATURE ---
     initAdd: function () {
         const modal = document.getElementById('addModal');
-        // Note: ID ini harus match dengan tombol yang ada di setupAdminControls
         const btnAdd = document.getElementById('addAnnouncementBtn');
         const btnSave = document.getElementById('btnSaveAdd');
         const btnCancel = document.getElementById('btnCancelAdd');
 
-        if (!btnAdd) return; // Kalau admin blm login, btnAdd null
+        // Element Drag Drop Baru
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('addFiles');
+        const previewContainer = document.getElementById('previewContainer');
 
+        if (!btnAdd) return;
+
+        // BUKA MODAL
         btnAdd.onclick = (e) => {
             e.preventDefault();
             if (modal) modal.classList.remove('hidden');
+            this.tempFiles = []; // Reset file
+            previewContainer.innerHTML = '';
         };
 
+        // TUTUP MODAL
         if (btnCancel) {
             btnCancel.onclick = () => {
                 modal.classList.add('hidden');
@@ -455,6 +504,36 @@ const SubjectApp = {
             };
         }
 
+        // --- LOGIC DRAG & DROP ---
+
+        // 1. Klik Area -> Buka Explorer
+        dropZone.onclick = () => fileInput.click();
+
+        // 2. Handle File Pilih dari Explorer
+        fileInput.onchange = (e) => {
+            this.handleNewFiles(e.target.files);
+        };
+
+        // 3. Handle Drag Over (Biar ada efek visual)
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        };
+
+        dropZone.ondragleave = () => {
+            dropZone.classList.remove('dragover');
+        };
+
+        // 4. Handle Drop File
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                this.handleNewFiles(e.dataTransfer.files);
+            }
+        };
+
+        // --- SIMPAN DATA ---
         if (btnSave) {
             btnSave.onclick = async () => {
                 const data = {
@@ -462,18 +541,60 @@ const SubjectApp = {
                     tit: document.getElementById('addSubjudul').value,
                     con: document.getElementById('addIsi').value,
                     sml: document.getElementById('addSmall').value,
-                    files: document.getElementById('addFiles').files
+                    // PENTING: Ambil file dari variable tempFiles, bukan input element
+                    files: this.tempFiles
                 };
 
                 if (!data.big) return alert('Judul Besar wajib diisi!');
 
-                btnSave.innerText = 'Menyimpan...';
+                const originalText = btnSave.innerHTML;
+                btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+                btnSave.disabled = true;
+
                 await this.uploadAndSave(data);
-                btnSave.innerText = 'Simpan';
+
+                btnSave.innerHTML = originalText;
+                btnSave.disabled = false;
                 modal.classList.add('hidden');
                 this.clearForm();
             };
         }
+    },
+
+    // Fungsi Helper buat handle file baru masuk
+    handleNewFiles: function (files) {
+        const previewContainer = document.getElementById('previewContainer');
+
+        Array.from(files).forEach(file => {
+            // Validasi Image Only
+            if (!file.type.startsWith('image/')) return;
+
+            // Push ke variable state
+            this.tempFiles.push(file);
+
+            // Bikin Preview Thumbnail
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}">
+                    <div class="preview-remove"><i class="fa-solid fa-trash"></i></div>
+                `;
+
+                // Logic Hapus Preview
+                div.onclick = (ev) => {
+                    ev.stopPropagation(); // Biar gak kebuka file explorer lagi
+                    // Hapus dari array tempFiles
+                    const index = this.tempFiles.indexOf(file);
+                    if (index > -1) this.tempFiles.splice(index, 1);
+                    div.remove();
+                };
+
+                previewContainer.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
     },
 
     clearForm: function () {
@@ -481,7 +602,9 @@ const SubjectApp = {
         document.getElementById('addSubjudul').value = '';
         document.getElementById('addIsi').value = '';
         document.getElementById('addSmall').value = '';
-        document.getElementById('addFiles').value = '';
+        document.getElementById('addFiles').value = ''; // Reset input asli
+        document.getElementById('previewContainer').innerHTML = '';
+        this.tempFiles = []; // Reset array file
     },
 
     uploadAndSave: async function (d) {
@@ -653,4 +776,145 @@ const SubjectApp = {
             // ... sisa shortcut (digit 1-4) sama kayak asli
         });
     }
-};
+}
+// =========================================================
+// GLOBAL VARIABLES & LOGIC UNTUK SLIDER + DETAIL OVERLAY
+// =========================================================
+
+// Pastikan variable ini ada di scope global
+let currentViewerPhotos = [];
+let currentViewerIndex = 0;
+let mobileInfoTimer = null;
+
+// --- FUNGSI UTAMA: BUKA OVERLAY ---
+function openDetail(data) {
+    const overlay = document.getElementById('detailOverlay');
+    const infoSection = document.getElementById('detailInfoSection');
+
+    // 1. Isi Teks
+    document.getElementById('detailBigTxt').innerText = data.big_title || '';
+    document.getElementById('detailTitleTxt').innerText = data.title || '';
+    document.getElementById('detailContentTxt').innerText = data.content || '';
+    document.getElementById('detailSmallTxt').innerText = data.small || '';
+
+    // 2. Parse Foto
+    currentViewerPhotos = [];
+    if (data.photo_url) {
+        if (Array.isArray(data.photo_url)) {
+            currentViewerPhotos = data.photo_url;
+        } else if (typeof data.photo_url === 'string') {
+            try {
+                let clean = data.photo_url.replace(/^\{|\}$/g, '').replace(/\\"/g, '"');
+                if (data.photo_url.startsWith('[')) {
+                    currentViewerPhotos = JSON.parse(data.photo_url);
+                } else {
+                    currentViewerPhotos = clean.split(',');
+                }
+            } catch (e) {
+                currentViewerPhotos = [data.photo_url];
+            }
+        }
+    }
+
+    // 3. Reset Slider
+    currentViewerIndex = 0;
+    updateSliderUI();
+
+    // 4. Tampilkan
+    overlay.classList.add('active');
+
+    // 5. LOGIC MOBILE: Reset posisi (munculin dulu) & mulai timer
+    if (infoSection) {
+        infoSection.classList.remove('hidden-mobile'); // Pastikan muncul
+
+        // Reset scroll ke atas (penting kalo teks panjang)
+        const scrollBox = infoSection.querySelector('.info-content-scroll');
+        if (scrollBox) scrollBox.scrollTop = 0;
+
+        startAutoHideTimer(); // Mulai hitung mundur 3 detik
+    }
+}
+
+function closeDetail() {
+    document.getElementById('detailOverlay').classList.remove('active');
+    clearTimeout(mobileInfoTimer);
+}
+
+// --- SLIDER LOGIC ---
+function updateSliderUI() {
+    const imgEl = document.getElementById('detailImg');
+    const navBtns = document.getElementById('sliderNavBtns');
+    const counter = document.getElementById('photoCounterTag');
+
+    if (!imgEl) return;
+
+    if (currentViewerPhotos.length === 0) {
+        imgEl.style.display = 'none';
+        if (navBtns) navBtns.style.display = 'none';
+        if (counter) counter.style.display = 'none';
+    } else {
+        imgEl.style.display = 'block';
+        imgEl.src = currentViewerPhotos[currentViewerIndex];
+
+        if (counter) {
+            counter.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;
+            counter.style.display = 'block';
+        }
+        if (navBtns) {
+            navBtns.style.display = (currentViewerPhotos.length > 1) ? 'block' : 'none';
+        }
+    }
+
+    // Reset timer setiap ganti foto biar teks gak ilang pas lagi liat-liat
+    resetMobileTimer();
+}
+
+function nextSlide(e) {
+    if (e) e.stopPropagation();
+    if (currentViewerPhotos.length <= 1) return;
+    currentViewerIndex = (currentViewerIndex + 1) % currentViewerPhotos.length;
+    updateSliderUI();
+}
+
+function prevSlide(e) {
+    if (e) e.stopPropagation();
+    if (currentViewerPhotos.length <= 1) return;
+    currentViewerIndex = (currentViewerIndex - 1 + currentViewerPhotos.length) % currentViewerPhotos.length;
+    updateSliderUI();
+}
+
+// --- MOBILE AUTO-HIDE LOGIC (3 DETIK) ---
+
+function startAutoHideTimer() {
+    // Hanya jalan di layar Mobile (< 768px)
+    if (window.innerWidth > 768) return;
+
+    clearTimeout(mobileInfoTimer);
+    mobileInfoTimer = setTimeout(() => {
+        hideInfo();
+    }, 3000); // 3000ms = 3 Detik
+}
+
+function resetMobileTimer() {
+    if (window.innerWidth > 768) return;
+    showInfo(); // Munculin lagi kalo user interaksi
+    startAutoHideTimer(); // Restart timer
+}
+
+function hideInfo() {
+    const infoSection = document.getElementById('detailInfoSection');
+    if (infoSection) infoSection.classList.add('hidden-mobile');
+}
+
+function showInfo(e) {
+    if (e) e.stopPropagation();
+    const infoSection = document.getElementById('detailInfoSection');
+    if (infoSection) {
+        infoSection.classList.remove('hidden-mobile');
+        startAutoHideTimer();
+    }
+}
+
+function showMobileInfo(e) {
+    showInfo(e);
+}

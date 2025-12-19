@@ -311,11 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // 6. Tombol Reset
-    if (resetBtn) {
-        resetBtn.onclick = resetTodayVisitor;
-    }
-
     // 7. SHORTCUT: Tekan ESC untuk Tutup
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
