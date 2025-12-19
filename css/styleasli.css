@@ -29,19 +29,6 @@ body {
     background-attachment: fixed;
 }
 
-@media (max-width: 1024px) {
-    body {
-        height: calc(100vh - 60px);
-        margin-top: 60px;
-    }
-}
-
-@media (min-width: 1024px) {
-    .main-content {
-        margin-top: 60px;
-    }
-}
-
 header {
     background-color: transparent;
     color: #fff;
@@ -191,6 +178,7 @@ header {
     border-radius: 10px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overscroll-behavior: contain;
 }
 
 .sidebar.open {
@@ -251,6 +239,7 @@ header {
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 60px;
 }
 
 .course-card {

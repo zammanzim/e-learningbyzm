@@ -54,7 +54,6 @@ function renderSidebar() {
             items: [
                 { text: "Home", url: "homev2.html", icon: "fa-house" },
                 { text: "Announcement", url: "announcements.html", icon: "fa-bullhorn" },
-                { text: "Dashboard", url: "dashboard.html", icon: "fa-table-columns" },
                 { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear" },
                 { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check" },
             ]
@@ -137,26 +136,44 @@ function renderSidebar() {
     }
 }
 
-// ==========================================
-// 3. UI HELPERS
-// ==========================================
 function toggleMenu() {
     const sidebar = document.getElementById("sidebar");
     const hamburger = document.getElementById("hamburger");
     const overlay = document.getElementById("sidebarOverlay");
 
+    // Logic Desktop
     if (window.innerWidth >= 1024) {
         sidebar.classList.toggle("closed");
         const main = document.querySelector(".main-content");
         if (main) main.classList.toggle("shifted");
-    } else {
+    }
+    // Logic Mobile
+    else {
         sidebar.classList.toggle("open");
         hamburger.classList.toggle("active");
+
         if (sidebar.classList.contains("open")) {
+            // BUKA MENU -> KUNCI RAPET
             overlay.classList.add("show");
             overlay.onclick = toggleMenu;
+
+            // Kunci HTML & BODY biar ga gerak
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.overflow = "hidden";
+
+            // Opsional: Kalo lo pake wrapper main-content yg scroll
+            const main = document.querySelector(".main-content");
+            if (main) main.style.overflow = "hidden";
+
         } else {
+            // TUTUP MENU -> LEPAS KUNCI
             overlay.classList.remove("show");
+
+            document.documentElement.style.overflow = "";
+            document.body.style.overflow = "";
+
+            const main = document.querySelector(".main-content");
+            if (main) main.style.overflow = "";
         }
     }
 }

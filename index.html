@@ -5,16 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Akses</title>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* --- GLOBAL & SCROLLBAR HIDING --- */
+        html,
+        body {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
         * {
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
             font-family: 'Poppins', sans-serif;
         }
 
@@ -26,15 +36,16 @@
             margin: 0;
             background: #050505;
             background-image:
-                radial-gradient(circle at 20% 20%, rgba(0, 234, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(255, 0, 150, 0.15) 0%, transparent 40%);
+                radial-gradient(circle at 20% 20%, rgba(0, 234, 255, 0.3) 0%, transparent 100%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 150, 0.3) 0%, transparent 100%);
             color: white;
             overflow: hidden;
         }
 
+        /* --- GLASS CARD --- */
         .glass-card {
             width: 380px;
-            min-height: 500px;
+            height: 570px;
             border-radius: 24px;
             background: rgba(20, 20, 20, 0.65);
             backdrop-filter: blur(25px);
@@ -48,6 +59,33 @@
             flex-direction: column;
         }
 
+        /* --- FLOATING BACK BUTTON --- */
+        .floating-back {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .floating-back:hover {
+            color: #00eaff;
+            transform: translateX(-5px);
+        }
+
+        .floating-back.show {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0);
+        }
+
+        /* --- HEADER --- */
         .header {
             text-align: center;
             margin-bottom: 20px;
@@ -66,13 +104,40 @@
             margin: 5px 0 0;
             font-size: 12px;
             opacity: 0.6;
+            transition: 0.3s;
         }
 
-        /* Badge Kelas */
+        /* --- SLIDER ANIMATION --- */
+        .slider-window {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            flex: 1;
+        }
+
+        .slider-content {
+            display: flex;
+            width: 200%;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .slide-step {
+            width: 50%;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slider-content.step-2 {
+            transform: translateX(-50%);
+        }
+
+        /* --- COMPONENTS --- */
         .class-badge {
             text-align: center;
             margin-bottom: 25px;
             display: none;
+            margin-top: 5px;
         }
 
         .class-badge span {
@@ -96,9 +161,9 @@
             border-radius: 12px;
             color: #ff4757;
             display: none;
+            margin-bottom: 15px;
         }
 
-        /* Tombol & Input */
         .dropdown-trigger {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -138,11 +203,12 @@
             gap: 10px;
         }
 
-        .fa-chevron-down {
+        .fa-chevron-down,
+        .fa-chevron-right {
             color: #00eaff;
         }
 
-        /* AREA DYNAMIC (Bisa Form Login / Bisa Confirm Area) */
+        /* --- AUTH FORMS --- */
         #authContainer {
             margin-top: auto;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -159,7 +225,7 @@
             pointer-events: all;
         }
 
-        /* MODE 1: SECURE LOGIN */
+        /* Secure Mode */
         .secure-login {
             display: none;
         }
@@ -182,10 +248,41 @@
             color: white;
             outline: none;
             margin-bottom: 10px;
+            transition: 0.3s;
         }
 
         .input-box:focus {
             border-color: #00eaff;
+        }
+
+        /* ERROR STATE (RED BORDER) */
+        .input-box.error {
+            border-color: #ff4757 !important;
+            animation: shake 0.3s ease-in-out;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.2);
+        }
+
+        /* Animasi Getar */
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
         }
 
         .input-wrapper {
@@ -200,7 +297,7 @@
             opacity: 0.8;
         }
 
-        /* MODE 2: DIRECT ENTRY */
+        /* Direct Mode */
         .direct-entry {
             display: none;
             text-align: center;
@@ -240,7 +337,7 @@
             box-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
         }
 
-        /* Modal */
+        /* --- MODAL --- */
         .selection-modal {
             position: absolute;
             bottom: -100%;
@@ -285,9 +382,12 @@
         .modal-list {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
         .list-item {
@@ -321,26 +421,13 @@
             font-size: 12px;
         }
 
-        @keyframes shake {
-            0% {
-                transform: translateX(0);
-            }
+        a {
+            color: red;
+            text-decoration: none;
+        }
 
-            25% {
-                transform: translateX(-10px);
-            }
-
-            50% {
-                transform: translateX(10px);
-            }
-
-            75% {
-                transform: translateX(-10px);
-            }
-
-            100% {
-                transform: translateX(0);
-            }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -348,128 +435,188 @@
 <body>
 
     <div class="glass-card">
+        <div id="globalBackBtn" class="floating-back" onclick="goBack()">
+            <i class="fa-solid fa-arrow-left"></i>
+        </div>
+
         <div class="header">
-            <h2>PORTAL AKSES</h2>
-            <p>Verifikasi Identitas Siswa</p>
+            <h2>LOGIN</h2>
+            <p id="headerSubtitle">Pilih Kelas Terlebih Dahulu</p>
         </div>
 
-        <div class="class-badge" id="classBadge">
-            <span id="displayClass">...</span>
-        </div>
+        <div class="error-box" id="errorBox"></div>
 
-        <div class="error-box" id="errorBox">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size:30px; margin-bottom:10px;"></i><br>
-            <b>Link Tidak Valid</b><br>
-            ID Kelas tidak ditemukan di URL.
-        </div>
+        <div class="slider-window">
+            <div class="slider-content" id="mainSlider">
 
-        <div class="dropdown-trigger" id="btnName" onclick="openModal()" style="display:none;">
-            <div>
-                <span class="trigger-label">IDENTITAS</span>
-                <div class="trigger-value" id="valName">-- Pilih Nama Kamu --</div>
+                <div class="slide-step">
+                    <div style="margin-top: 20px;"></div>
+                    <div class="dropdown-trigger" onclick="openClassModal()">
+                        <div>
+                            <span class="trigger-label">AKSES</span>
+                            <div class="trigger-value" id="dispClassSelected">Pilih Kelas</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+
+                <div class="slide-step">
+
+                    <div class="class-badge" id="classBadge">
+                        <span id="displayClass">...</span>
+                    </div>
+
+                    <div class="dropdown-trigger" id="btnName" onclick="openModal()">
+                        <div>
+                            <span class="trigger-label">IDENTITAS</span>
+                            <div class="trigger-value" id="valName">Pilih Nama Kamu</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+
+                    <div id="authContainer">
+
+                        <div id="secureMode" class="secure-login">
+                            <div class="secure-title">
+                                <i class="fa-solid fa-lock"></i>Masukan Username dan Password
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input id="loginUsn" class="input-box" placeholder="Username" readonly
+                                    style="opacity:0.7; cursor:not-allowed;">
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-key" style="margin-top: -10px;"></i>
+                                <input id="loginPw" type="password" class="input-box" placeholder="Masukkan Password"
+                                    oninput="this.classList.remove('error')">
+                            </div>
+                            <button class="btn-neon" onclick="loginSecure()">
+                                <i class="fa-solid fa-right-to-bracket"></i> LOGIN
+                            </button>
+                        </div>
+
+                        <div id="directMode" class="direct-entry">
+                            <div class="confirm-text">
+                                <h2>Halo <b><span id="directName">User</span></b>!<br></h2>
+                                <h4>Ini bener <b><span id="directName1">User</span></b>? Kalo iya, ayo masuk</h4>
+                            </div>
+                            <button class="btn-neon" onclick="loginDirect()">
+                                <i class="fa-solid fa-door-open"></i> MASUK SEKARANG
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
-            <i class="fa-solid fa-chevron-down"></i>
-        </div>
-
-        <div id="authContainer">
-
-            <div id="secureMode" class="secure-login">
-                <div class="secure-title">
-                    <i class="fa-solid fa-lock"></i> Akun Terkunci (Privat)
-                </div>
-
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-user"></i>
-                    <input id="loginUsn" class="input-box" placeholder="Username" readonly
-                        style="opacity:0.7; cursor:not-allowed;">
-                </div>
-
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-key"></i>
-                    <input id="loginPw" type="password" class="input-box" placeholder="Masukkan Password">
-                </div>
-
-                <button class="btn-neon" onclick="loginSecure()">
-                    <i class="fa-solid fa-right-to-bracket"></i> LOGIN
-                </button>
-            </div>
-
-            <div id="directMode" class="direct-entry">
-                <div class="confirm-text">
-                    Halo <b><span id="directName">User</span></b>!<br>
-                    Kamu belum mengatur password.<br>
-                    <span style="font-size:12px; opacity:0.6;">(Bisa diatur nanti di Menu Setting)</span>
-                </div>
-                <button class="btn-neon" onclick="loginDirect()">
-                    <i class="fa-solid fa-door-open"></i> MASUK SEKARANG
-                </button>
-            </div>
-
-            <p id="msg" style="color:#ff4757; font-size:12px; text-align:center; margin-top:10px;"></p>
         </div>
 
         <div class="selection-modal" id="modalOverlay">
             <div class="modal-header">
-                <span class="modal-title">PILIH NAMA</span>
+                <span class="modal-title">PILIH OPSI</span>
                 <i class="fa-solid fa-xmark close-btn" onclick="closeModal()"></i>
             </div>
             <div class="modal-list" id="modalList"></div>
         </div>
+
+        <small style="text-align: center; margin-top: auto;">Ada masalah? <a
+                href="https://wa.me/6283851088843?text=Min%20ada%20kendala%20login" target="_blank">Hubungi
+                Dev</a></small>
     </div>
 
     <script>
+        // DATA KELAS MANUAL
         const DAFTAR_KELAS = {
             "1": "X - RPL 1",
             "2": "X - RPL 2",
-            "3": "X - TJKKT 1",
-            "4": "X - TJKKT 2",
-            "5": "X - DKV 1",
+            "3": "X - RPL 3",
+            "4": "X - RPL 4",
         };
 
+        // AUTO REDIRECT IF LOGGED IN
         const user = JSON.parse(localStorage.getItem("user"));
         if (user) window.location.href = "announcements.html";
 
+        // VARIABLES
         let selectedClassId = null;
-        let selectedUserObj = null; // Menyimpan data user lengkap
+        let selectedUserObj = null;
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const classParam = urlParams.get('class');
+        // --- NAVIGATION LOGIC ---
+        function goNext() {
+            document.getElementById('mainSlider').classList.add('step-2');
+            document.getElementById('headerSubtitle').innerText = "Pilih Nama Kamu";
+            document.getElementById('globalBackBtn').classList.add('show');
+            document.getElementById('classBadge').style.display = 'block';
+        }
 
-            if (!classParam) {
-                document.getElementById('errorBox').style.display = 'block';
-            } else {
-                selectedClassId = classParam;
-                const namaKeren = DAFTAR_KELAS[selectedClassId] || `KELAS ID: ${selectedClassId}`;
+        function goBack() {
+            // Reset UI ke Step 1
+            document.getElementById('mainSlider').classList.remove('step-2');
+            document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
+            document.getElementById('globalBackBtn').classList.remove('show');
 
-                document.getElementById('displayClass').innerText = namaKeren;
-                document.getElementById('classBadge').style.display = 'block';
-                document.getElementById('btnName').style.display = 'flex';
-            }
-        });
+            // Reset Data Step 2
+            document.getElementById('authContainer').classList.remove('show');
+            document.getElementById('valName').innerText = "Pilih Nama Kamu";
+            document.getElementById('btnName').classList.remove('active');
 
-        // UI Logic
-        async function openModal() {
+            // Hapus merah error jika ada
+            document.getElementById('loginPw').classList.remove('error');
+            document.getElementById('loginPw').value = "";
+
+            selectedUserObj = null;
+        }
+
+        // --- MODAL CLASS LOGIC ---
+        function openClassModal() {
             document.getElementById('modalOverlay').classList.add('open');
-            await renderNameList();
-        }
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.remove('open');
+            document.querySelector('.modal-title').innerText = "PILIH KELAS";
+
+            const list = document.getElementById('modalList');
+            list.innerHTML = '';
+
+            Object.keys(DAFTAR_KELAS).forEach(id => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `<div class="dot"></div> <span>${DAFTAR_KELAS[id]}</span>`;
+
+                item.onclick = () => {
+                    selectedClassId = id;
+
+                    const namaKelas = DAFTAR_KELAS[id];
+                    document.getElementById('displayClass').innerText = namaKelas;
+                    document.getElementById('dispClassSelected').innerText = namaKelas;
+
+                    closeModal();
+
+                    setTimeout(() => {
+                        goNext();
+                        document.getElementById('valName').innerText = "Pilih Nama Kamu";
+                        selectedUserObj = null;
+                        document.getElementById('authContainer').classList.remove('show');
+                    }, 300);
+                };
+                list.appendChild(item);
+            });
         }
 
-        // FETCH NAMA
-        async function renderNameList() {
+        // --- MODAL NAME LOGIC ---
+        async function openModal() {
+            if (!selectedClassId) return;
+
+            document.getElementById('modalOverlay').classList.add('open');
+            document.querySelector('.modal-title').innerText = "PILIH NAMA";
+
             const list = document.getElementById('modalList');
             list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat siswa...</div>';
 
             const { data, error } = await supabase
                 .from('users')
-                .select('*') // Ambil semua (usn, pw, dll)
+                .select('*')
                 .eq('class_id', selectedClassId)
                 .order('nickname', { ascending: true });
 
             if (error || !data || data.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Kelas kosong.</div>';
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Kelas kosong / error.</div>';
                 return;
             }
 
@@ -487,89 +634,72 @@
             });
         }
 
-        // --- LOGIC PENENTUAN MODE AUTH ---
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        // --- AUTH LOGIC ---
         function handleUserSelect(userObj) {
             selectedUserObj = userObj;
-
-            // Update UI Trigger
             document.getElementById('valName').innerText = userObj.nickname;
-            document.getElementById('btnName').classList.add('active');
-            document.getElementById('msg').innerText = "";
 
-            // Munculin Container
+            // Reset Error
+            document.getElementById('loginPw').classList.remove('error');
+            document.getElementById('loginPw').value = "";
+
+            document.getElementById('btnName').classList.add('active');
+
             const container = document.getElementById('authContainer');
             const secureDiv = document.getElementById('secureMode');
             const directDiv = document.getElementById('directMode');
 
             container.classList.add('show');
 
-            // CEK APAKAH USERNAME & PASSWORD SUDAH ADA (TIDAK NULL)
             if (userObj.username && userObj.password) {
-                // MODE 1: SECURE (Harus Login)
                 secureDiv.style.display = 'block';
                 directDiv.style.display = 'none';
-
-                // Isi otomatis username biar user tinggal isi password
                 document.getElementById('loginUsn').value = userObj.username;
-                document.getElementById('loginPw').value = ""; // Reset password field
                 document.getElementById('loginPw').focus();
             } else {
-                // MODE 2: DIRECT (Masuk Langsung)
                 secureDiv.style.display = 'none';
                 directDiv.style.display = 'block';
-
                 document.getElementById('directName').innerText = userObj.nickname;
+                document.getElementById('directName1').innerText = userObj.nickname;
             }
         }
 
-        // ==========================================
-        // HELPER: SHA-256 HASHER
-        // ==========================================
-        async function hash256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map((bytes) => bytes.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
-        // ACTION: LOGIN SECURE (PLAIN TEXT VERSION)
         function loginSecure() {
-            const pwInput = document.getElementById('loginPw').value;
-            const msg = document.getElementById('msg');
+            const pwInputEl = document.getElementById('loginPw');
+            const pwInput = pwInputEl.value;
 
-            // 1. Validasi Input Kosong
+            // Reset error state
+            pwInputEl.classList.remove('error');
+            // Hapus animation class biar bisa dipicu ulang (reflow)
+            void pwInputEl.offsetWidth;
+
+            // 1. Validasi Kosong
             if (!pwInput) {
-                msg.innerText = "Password wajib diisi!";
+                pwInputEl.classList.add('error'); // Jadi Merah
+                pwInputEl.focus();
                 return;
             }
 
-            // 2. BANDINGKAN LANGSUNG (TEXT vs TEXT)
-            // Karena di database sekarang ceritanya plain text
+            // 2. Cek Password
             if (pwInput === selectedUserObj.password) {
-                // SUKSES
                 localStorage.setItem("user", JSON.stringify(selectedUserObj));
                 window.location.href = "announcements.html";
             } else {
-                // GAGAL
-                msg.innerText = "Password Salah!";
-
-                // Efek Getar
-                const box = document.getElementById('authContainer');
-                box.style.animation = "shake 0.3s";
-                setTimeout(() => box.style.animation = "none", 300);
+                // Password Salah
+                pwInputEl.classList.add('error'); // Jadi Merah
+                pwInputEl.focus();
             }
         }
-        
-        // ACTION: LOGIN DIRECT
+
         function loginDirect() {
             if (!selectedUserObj) return;
-
-            // Simpan data apa adanya
             localStorage.setItem("user", JSON.stringify(selectedUserObj));
             window.location.href = "announcements.html";
         }
-
     </script>
 </body>
 
