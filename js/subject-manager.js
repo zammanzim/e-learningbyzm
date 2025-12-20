@@ -89,17 +89,39 @@ const SubjectApp = {
     setupEventListeners() {
         const self = this;
 
-        // [RESET] Hapus logic 'detailOverlay.onclick' disini agar overlay
-        // HANYA bisa ditutup lewat tombol X (yang ada di HTML).
-
-        // --- EVENT LAINNYA ---
         document.addEventListener("click", function (e) {
+
+            // 1. [BARU] HANDLE KLIK KARTU (OPEN DETAIL)
+            // Cek apakah yang diklik adalah bagian dari kartu yang punya foto
+            const card = e.target.closest(".course-card");
+
+            if (card && card.classList.contains("clickable-card")) {
+                // PENTING: Jangan buka detail kalo user sebenernya mau klik tombol/edit
+                const isInteractive =
+                    self.state.editMode ||               // Lagi mode edit
+                    e.target.closest("button") ||        // Klik tombol bookmark/hapus
+                    e.target.closest("input") ||         // Klik input
+                    e.target.closest(".delete-photo-btn"); // Klik hapus foto
+
+                if (!isInteractive) {
+                    const id = card.dataset.id;
+                    // Ambil data asli dari state berdasarkan ID
+                    const data = self.state.announcements.find(a => a.id == id);
+                    if (data) {
+                        openDetail(data);
+                        return; // Stop eksekusi biar gak tabrakan sama logic lain
+                    }
+                }
+            }
+
+            // 2. TOGGLE EDIT MODE
             if (e.target && e.target.id === "toggleEditMode") {
                 e.preventDefault();
                 self.toggleEditMode();
                 return;
             }
 
+            // 3. DELETE BUTTON
             const deleteBtn = e.target.closest(".delete-btn");
             if (deleteBtn) {
                 e.preventDefault();
@@ -108,6 +130,7 @@ const SubjectApp = {
                 return;
             }
 
+            // 4. BOOKMARK BUTTON
             const bookmarkBtn = e.target.closest(".bookmark-btn");
             if (bookmarkBtn) {
                 e.preventDefault();
@@ -116,6 +139,7 @@ const SubjectApp = {
                 return;
             }
 
+            // 5. UPLOAD BUTTON
             const uploadBtn = e.target.closest(".upload-photo-btn");
             if (uploadBtn) {
                 e.preventDefault();
@@ -124,6 +148,7 @@ const SubjectApp = {
                 return;
             }
 
+            // 6. DELETE PHOTO BUTTON
             const deletePhotoBtn = e.target.closest(".delete-photo-btn");
             if (deletePhotoBtn) {
                 e.preventDefault();
@@ -276,27 +301,21 @@ const SubjectApp = {
                 ).join('');
             }
 
+            // ... (Logic Photo Grid di atas TETAP SAMA) ...
             photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
         }
 
-        // --- [BARU] LOGIC CLICK HANDLER ---
-        // Jika ada foto: Bisa diklik & kursor pointer
-        // Jika tidak ada foto: Tidak bisa diklik & kursor default
+        // --- [UPDATED] LOGIC CLICK HANDLER (VERSI STABIL) ---
+        // Kita tidak pasang onclick disini biar gak berat/konflik.
+        // Kita cuma kasih tanda class 'clickable-card' kalau ada foto.
         if (photos.length > 0) {
-            card.style.cursor = "pointer";
-            card.onclick = (e) => {
-                if (this.state.editMode) return;
-                // Abaikan jika klik tombol interaktif
-                if (e.target.closest('button') || e.target.closest('input')) return;
-
-                openDetail(data); // Buka Overlay
-            };
+            card.classList.add('clickable-card'); // Penanda: Kartu ini bisa diklik
         } else {
-            card.style.cursor = "default"; // Ubah kursor jadi panah biasa
-            card.onclick = null; // Matikan fungsi klik
+            card.classList.remove('clickable-card');
+            card.style.cursor = "default";
         }
 
-        // --- BOOKMARK LOGIC ---
+        // --- BOOKMARK LOGIC (TETAP SAMA) ---
         const isSaved = this.state.bookmarks.includes(String(data.id));
         const btnClass = isSaved ? "bookmark-btn active" : "bookmark-btn";
         const iconClass = isSaved ? "fa-solid fa-bookmark" : "fa-regular fa-bookmark";

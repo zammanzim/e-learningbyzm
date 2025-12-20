@@ -1575,3 +1575,15 @@ li.nav-locked a::after {
     /* Geser ke atas */
     pointer-events: auto;
 }
+
+/* --- FIX RESPONSIVE CLICK CARD --- */
+.course-card.clickable-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efek visual pas ditekan biar kerasa 'Responsive' */
+.course-card.clickable-card:active {
+    transform: scale(0.98);
+    background: rgba(0, 0, 0, 0.4);
+}
