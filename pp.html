@@ -90,19 +90,76 @@
     </div>
 
     <div id="addModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <h3>Tambah Materi Baru</h3>
-            <input type="text" id="addJudul" placeholder="Judul Besar (Big Title)" class="input-field">
-            <input type="text" id="addSubjudul" placeholder="Subjudul (Title)" class="input-field">
-            <textarea id="addIsi" placeholder="Isi Materi" class="input-field" rows="4"></textarea>
-            <input type="text" id="addSmall" placeholder="Teks Kecil (Footer)" class="input-field">
+        <div class="glass-modal-box">
+            <h3><i class="fa-solid fa-layer-group"></i> Materi Baru</h3>
 
-            <label>Upload Foto (Bisa Banyak)</label>
-            <input type="file" id="addFiles" multiple accept="image/*" class="input-field">
+            <input type="text" id="addJudul" class="glass-input" placeholder="Judul Utama" spellcheck="false">
+            <input type="text" id="addSubjudul" class="glass-input" placeholder="Sub-judul (Opsional)"
+                spellcheck="false">
 
-            <div class="modal-actions">
-                <button id="btnCancelAdd" class="btn-cancel">Batal</button>
-                <button id="btnSaveAdd" class="btn-save">Simpan</button>
+            <textarea id="addIsi" class="glass-input" placeholder="Tulis isi pengumuman atau materi di sini..."
+                spellcheck="false"></textarea>
+
+            <input type="text" id="addSmall" class="glass-input" placeholder="Footer text (Opsional)"
+                style="font-size: 12px; opacity:0.8;" spellcheck="false">
+
+            <div id="dropZone" class="drop-area">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <div class="drop-text">
+                    <b>Click to upload</b> or drag photos here
+                </div>
+                <input type="file" id="addFiles" multiple accept="image/*" style="display: none;">
+            </div>
+
+            <div id="previewContainer" class="preview-container"></div>
+
+            <div class="action-buttons">
+                <button id="btnCancelAdd" class="btn-glass-cancel">Batal</button>
+                <button id="btnSaveAdd" class="btn-glass-save">
+                    <i class="fa-solid fa-paper-plane"></i> Posting
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailOverlay" class="detail-overlay">
+        <div class="glass-detail-box">
+            <span class="close-detail-btn" onclick="closeDetail()">&times;</span>
+
+            <div id="mobileHeader" class="mobile-header-overlay">
+                <h2 id="mobBig">JUDUL MATERI</h2>
+                <h4 id="mobSub">Sub Judul</h4>
+            </div>
+
+            <div class="detail-media-section">
+                <div class="slider-wrapper">
+                    <img id="detailImg" src="" alt="Detail View">
+
+                    <div id="sliderNavBtns" class="slider-nav-container">
+                        <button class="glass-nav-btn prev-btn" onclick="prevSlide(event)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button class="glass-nav-btn next-btn" onclick="nextSlide(event)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div id="photoCounterTag" class="photo-counter-tag">1 / 1</div>
+                </div>
+            </div>
+
+            <div id="detailInfoSection" class="detail-info-section">
+                <div class="info-content-scroll">
+                    <h2 id="detailBigTxt" class="desktop-only-title">JUDUL BESAR</h2>
+                    <h4 id="detailTitleTxt" class="desktop-only-title">Sub Judul</h4>
+
+                    <div id="detailContentTxt" class="detail-body-text">Isi konten...</div>
+                    <small id="detailSmallTxt" class="detail-footer-text">Footer text</small>
+                </div>
+            </div>
+
+            <div id="mobileToggleInfo" class="mobile-toggle-btn" onclick="showMobileInfo(event)">
+                <i class="fa-solid fa-circle-info"></i> Lihat Deskripsi
             </div>
         </div>
     </div>

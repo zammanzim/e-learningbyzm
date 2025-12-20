@@ -9,6 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     syncHeaderProfile();
+
+    // ... kode renderSidebar, visitorStats, dll (biarin aja) ...
+
+    // [GLOBAL FIX] HAPUS GARIS MERAH (SPELLCHECK)
+    // 1. Matikan di Body (biar elemen baru mewarisi)
+    document.body.setAttribute('spellcheck', 'false');
+
+    // 2. Matikan paksa di semua input & textarea yang sudah ada
+    const inputs = document.querySelectorAll('input, textarea');
+    inputs.forEach(el => {
+        el.setAttribute('spellcheck', 'false');
+    });
+
+// ... tutup kurung event listener
 });
 
 // ==========================================
@@ -320,3 +334,60 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// ==========================================
+// 5. UNIVERSAL POPUP (REPLACEMENT FOR ALERT)
+// ==========================================
+function showPopup(msg, type = 'info') {
+    // 1. Cek apakah elemen popup sudah ada di HTML?
+    let overlay = document.getElementById('uniOverlay');
+
+    // 2. Kalau belum ada, suntikkan HTML-nya (Auto Injection)
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'uniOverlay';
+        overlay.className = 'uni-overlay';
+        overlay.innerHTML = `
+            <div class="uni-box">
+                <div id="uniIcon" class="uni-icon"></div>
+                <p id="uniMsg" class="uni-msg"></p>
+                <button class="uni-btn" onclick="closePopup()">OK</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Setup close on overlay click
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closePopup();
+        }
+    }
+
+    // 3. Set Content
+    const iconEl = document.getElementById('uniIcon');
+    const msgEl = document.getElementById('uniMsg');
+
+    msgEl.innerText = msg;
+    iconEl.className = 'uni-icon'; // Reset class
+
+    if (type === 'success') {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        iconEl.classList.add('success');
+    } else if (type === 'error') {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+        iconEl.classList.add('error');
+    } else {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+        iconEl.classList.add('info');
+    }
+
+    // 4. Show Animation
+    setTimeout(() => overlay.classList.add('active'), 10);
+}
+
+function closePopup() {
+    const overlay = document.getElementById('uniOverlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+// Expose ke global window biar aman
+window.showPopup = showPopup;
