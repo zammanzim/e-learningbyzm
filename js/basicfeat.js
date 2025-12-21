@@ -32,7 +32,6 @@ function syncHeaderProfile() {
         }
     } catch (e) { console.error("Sync Profile Error:", e); }
 }
-
 // ==========================================
 // 3. UNIFIED SIDEBAR RENDERER
 // ==========================================
@@ -48,30 +47,35 @@ function renderSidebar() {
             header: "Main Menu",
             items: [
                 { text: "Home", url: "homev2.html", icon: "fa-house" },
-                { text: "Announcement", url: "announcements.html", icon: "fa-bullhorn" },
-                { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear" },
-                { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check" },
+                { text: "Announcement", url: "announcements.html", icon: "fa-bullhorn", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear", badge: "NEW", badgeType: "badge-new" },
+                { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
             ]
         },
         {
             header: "Lessons",
             items: [
-                { text: "B. Indonesia", url: "bahasaindonesia.html", icon: "fa-book" },
-                { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-language" },
-                { text: "B. Sunda", url: "bahasasunda.html", icon: "fa-book" },
-                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-torii-gate" },
-                { text: "Matematika", url: "matematika.html", icon: "fa-calculator" },
-                { text: "Proipas", url: "proipas.html", icon: "fa-atom" },
-                { text: "Sejarah", url: "sejarah.html", icon: "fa-landmark" },
-                { text: "PABP", url: "pabp.html", icon: "fa-mosque" },
-                { text: "PP", url: "pp.html", icon: "fa-scale-balanced" },
-                { text: "Seni Budaya", url: "senibudaya.html", icon: "fa-masks-theater" },
-                { text: "PJOK", url: "pjok.html", icon: "fa-person-running" },
-                { text: "Informatika", url: "informatika.html", icon: "fa-laptop" },
-                { text: "BK", url: "bk.html", icon: "fa-heart-circle-check" },
-                { text: "DASPROG 1", url: "dpr1.html", icon: "fa-laptop-code" },
-                { text: "DASPROG 2", url: "dpr2.html", icon: "fa-microchip" },
-                { text: "DASPROG 3", url: "dpr3.html", icon: "fa-palette" },
+                { text: "B. Indonesia", url: "bahasaindonesia.html", icon: "fa-book", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-language", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "B. Sunda", url: "bahasasunda.html", icon: "fa-book", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-torii-gate", badge: "UPDATE", badgeType: "badge-upd" },
+
+                // CONTOH PEMAKAIAN BADGE:
+                { text: "Matematika", url: "matematika.html", icon: "fa-calculator", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Proipas", url: "proipas.html", icon: "fa-atom", badge: "UPDATE", badgeType: "badge-upd" },
+
+                { text: "Sejarah", url: "sejarah.html", icon: "fa-landmark", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "PABP", url: "pabp.html", icon: "fa-mosque", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "PP", url: "pp.html", icon: "fa-scale-balanced", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Seni Budaya", url: "senibudaya.html", icon: "fa-masks-theater", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "PJOK", url: "pjok.html", icon: "fa-person-running", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Informatika", url: "informatika.html", icon: "fa-laptop", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "BK", url: "bk.html", icon: "fa-heart-circle-check", badge: "UPDATE", badgeType: "badge-upd" },
+
+                // CONTOH 'SOON' (Materi belum siap)
+                { text: "DASPROG 1", url: "dpr1.html", icon: "fa-laptop-code", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "DASPROG 2", url: "dpr2.html", icon: "fa-microchip", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "DASPROG 3", url: "dpr3.html", icon: "fa-palette", badge: "UPDATE", badgeType: "badge-upd" },
             ]
         }
     ];
@@ -93,13 +97,29 @@ function renderSidebar() {
     menuGroups.forEach(group => {
         const headerStyle = group.color ? `style="color:${group.color}; margin-top:0px;"` : "";
         htmlContent += `<h3 ${headerStyle}>${group.header}</h3><ul>`;
+
         group.items.forEach(item => {
             const itemUrl = item.url.toLowerCase();
             const isActive = currentPath.endsWith(itemUrl) ? "active" : "";
-            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 10px;">ᮘ</b>` :
-                (item.text === "B. Jepang") ? `<b style="margin-right: 10px;">ア</b>` :
+
+            // Icon Custom
+            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 20px;">ᮘ</b>` :
+                (item.text === "B. Jepang") ? `<b style="margin-right: 20px;">ア</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;
-            htmlContent += `<li><a href="${item.url}" class="${isActive}">${iconHtml} ${item.text}</a></li>`;
+
+            // Badge Logic
+            let badgeHtml = "";
+            if (item.badge) {
+                badgeHtml = `<span class="sidebar-badge ${item.badgeType || 'badge-new'}">${item.badge}</span>`;
+            }
+
+            htmlContent += `
+                <li class="${isActive}" onclick="window.location.href='${item.url}'">
+                    <a href="javascript:void(0)">
+                        ${iconHtml} ${item.text}
+                    </a>
+                    ${badgeHtml}
+                </li>`;
         });
         htmlContent += `</ul>`;
     });
