@@ -4,20 +4,21 @@ const SubjectApp = {
         user: null,
         subjectId: null,
         subjectName: null,
+        isLessonMode: false, // Default false
+        completedTasks: [],  // Penampung tugas selesai
         announcements: [],
         tempFiles: [],
         bookmarks: []
     },
 
-    init(subjectId, subjectName) {
+    init(subjectId, subjectName, isLesson = false) {
         if (typeof supabase === 'undefined') {
-            console.error("❌ Supabase belum ready!");
-            setTimeout(() => this.init(subjectId, subjectName), 500);
             return;
         }
 
         this.state.subjectId = subjectId;
         this.state.subjectName = subjectName;
+        this.state.isLessonMode = isLesson;
         this.state.user = this.getUserData();
 
         if (!this.state.user) {
@@ -27,15 +28,12 @@ const SubjectApp = {
 
         console.log("✅ Subject loaded:", subjectName);
 
-        if (typeof logVisitor === 'function') logVisitor();
-
         this.updatePageTitle();
         this.updateWelcomeText();
         this.setupAdminControls();
         this.setupEventListeners();
         this.loadAnnouncements();
         this.setupShortcuts();
-
         this.initAdd();
     },
 
@@ -72,15 +70,12 @@ const SubjectApp = {
         if (isAdmin && editControls) {
             editControls.innerHTML = `
                 <div id="adminFabContainer" class="admin-fab-container">
-                    
                     <button id="toggleEditMode" class="fab-main state-edit">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-
                     <button id="addAnnouncementBtn" class="fab-add">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-
                 </div>
             `;
         }
@@ -91,37 +86,40 @@ const SubjectApp = {
 
         document.addEventListener("click", function (e) {
 
-            // 1. [BARU] HANDLE KLIK KARTU (OPEN DETAIL)
-            // Cek apakah yang diklik adalah bagian dari kartu yang punya foto
+            // 1. HANDLE KLIK KARTU (OPEN DETAIL)
             const card = e.target.closest(".course-card");
-
             if (card && card.classList.contains("clickable-card")) {
-                // PENTING: Jangan buka detail kalo user sebenernya mau klik tombol/edit
                 const isInteractive =
-                    self.state.editMode ||               // Lagi mode edit
-                    e.target.closest("button") ||        // Klik tombol bookmark/hapus
-                    e.target.closest("input") ||         // Klik input
-                    e.target.closest(".delete-photo-btn"); // Klik hapus foto
+                    self.state.editMode ||
+                    e.target.closest("button") ||
+                    e.target.closest("input") ||
+                    e.target.closest(".delete-photo-btn");
 
                 if (!isInteractive) {
                     const id = card.dataset.id;
-                    // Ambil data asli dari state berdasarkan ID
                     const data = self.state.announcements.find(a => a.id == id);
                     if (data) {
                         openDetail(data);
-                        return; // Stop eksekusi biar gak tabrakan sama logic lain
+                        return;
                     }
                 }
             }
 
-            // 2. TOGGLE EDIT MODE
-            if (e.target && e.target.id === "toggleEditMode") {
+            // 2. TOGGLE EDIT MODE (FAB BUTTON)
+            const toggleBtn = e.target.closest("#toggleEditMode");
+            if (toggleBtn) {
                 e.preventDefault();
                 self.toggleEditMode();
                 return;
             }
 
-            // 3. DELETE BUTTON
+            // 3. TOMBOL TAMBAH MATERI (FAB ADD)
+            const addBtn = e.target.closest("#addAnnouncementBtn");
+            if (addBtn) {
+                // Handled by initAdd
+            }
+
+            // 4. DELETE BUTTON
             const deleteBtn = e.target.closest(".delete-btn");
             if (deleteBtn) {
                 e.preventDefault();
@@ -130,7 +128,7 @@ const SubjectApp = {
                 return;
             }
 
-            // 4. BOOKMARK BUTTON
+            // 5. BOOKMARK BUTTON
             const bookmarkBtn = e.target.closest(".bookmark-btn");
             if (bookmarkBtn) {
                 e.preventDefault();
@@ -139,7 +137,7 @@ const SubjectApp = {
                 return;
             }
 
-            // 5. UPLOAD BUTTON
+            // 6. UPLOAD BUTTON
             const uploadBtn = e.target.closest(".upload-photo-btn");
             if (uploadBtn) {
                 e.preventDefault();
@@ -148,7 +146,7 @@ const SubjectApp = {
                 return;
             }
 
-            // 6. DELETE PHOTO BUTTON
+            // 7. DELETE PHOTO BUTTON
             const deletePhotoBtn = e.target.closest(".delete-photo-btn");
             if (deletePhotoBtn) {
                 e.preventDefault();
@@ -156,7 +154,59 @@ const SubjectApp = {
                 self.deletePhoto(card);
                 return;
             }
+
+            // 8. TASK CHECKLIST BUTTON (FIXED POSISI)
+            const taskBtn = e.target.closest(".task-btn");
+            if (taskBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const card = taskBtn.closest(".course-card");
+                self.toggleTaskStatus(card, taskBtn);
+                return;
+            }
         });
+    },
+
+    // FUNGSI TOGGLE STATUS (DIPISAH DENGAN BENAR)
+    async toggleTaskStatus(card, btn) {
+        const id = card.dataset.id;
+        const isDone = btn.classList.contains("done");
+
+        // UI Feedback Instan
+        if (isDone) {
+            btn.classList.remove("done");
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        } else {
+            btn.classList.add("done");
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        }
+
+        try {
+            if (isDone) {
+                // UNMARK (Hapus dari DB)
+                await supabase.from("user_progress").delete()
+                    .eq("user_id", this.state.user.id)
+                    .eq("announcement_id", id);
+
+                this.state.completedTasks = this.state.completedTasks.filter(tid => tid !== id);
+                btn.innerHTML = '<i class="fa-regular fa-circle"></i> Tandai Selesai';
+            } else {
+                // MARK (Simpan ke DB)
+                await supabase.from("user_progress").insert({
+                    user_id: this.state.user.id,
+                    announcement_id: id
+                });
+
+                this.state.completedTasks.push(id);
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+            }
+        } catch (err) {
+            console.error("Task toggle error:", err);
+            // Revert UI kalau error
+            if (isDone) btn.classList.add("done");
+            else btn.classList.remove("done");
+            showPopup("Gagal update status tugas", "error");
+        }
     },
 
     async loadBookmarks() {
@@ -209,23 +259,44 @@ const SubjectApp = {
         container.innerHTML = "<h3>Materi & Pengumuman</h3><p style='color:#666; padding:20px;'>Memuat...</p>";
 
         try {
-            const { data, error } = await supabase
+            // 1. Fetch Materi
+            // Kita bikin variabel query dulu biar bisa disisipin logika IF
+            let query = supabase
                 .from("subject_announcements")
                 .select("*")
-                .eq("subject_id", this.state.subjectId)
-                .eq("class_id", this.state.user.class_id)
+                .eq("subject_id", this.state.subjectId);
+
+            // [PERBAIKAN] Cek apakah user punya class_id? Kalau ada, filter!
+            if (this.state.user && this.state.user.class_id) {
+                query = query.eq("class_id", this.state.user.class_id);
+            }
+
+            // Baru jalankan query dengan urutan
+            const { data, error } = await query
                 .order("display_order", { ascending: true })
                 .order("created_at", { ascending: true });
 
             if (error) throw error;
-
             this.state.announcements = data || [];
+
+            // 2. Fetch Progress (Cuma jalan kalo ini halaman Lesson/Pelajaran)
+            if (this.state.isLessonMode) {
+                const { data: prog, error: progErr } = await supabase
+                    .from("user_progress")
+                    .select("announcement_id")
+                    .eq("user_id", this.state.user.id);
+
+                if (!progErr && prog) {
+                    this.state.completedTasks = prog.map(p => String(p.announcement_id));
+                }
+            }
+
             await this.loadBookmarks();
             this.renderAnnouncements();
 
         } catch (err) {
             console.error("❌ Load error:", err);
-            container.innerHTML = "<h3>Materi & Pengumuman</h3><p style='color:red;'>Gagal memuat. Cek console.</p>";
+            container.innerHTML = "<p>Gagal memuat.</p>";
         }
     },
 
@@ -256,7 +327,7 @@ const SubjectApp = {
         const content = data.content || "";
         const small = data.small || "";
 
-        // --- PHOTO LOGIC (UPDATED: WHATSAPP STYLE +X) ---
+        // --- PHOTO LOGIC ---
         let photoHTML = "";
         let photos = [];
         if (data.photo_url) {
@@ -274,51 +345,53 @@ const SubjectApp = {
             let gridClass = '';
             let imgsHTML = '';
 
-            // SKENARIO 1: Foto Lebih dari 4 (Contoh: 5, 10, 20)
             if (photos.length > 4) {
-                gridClass = 'grid-4'; // Tetap pakai layout 4 kotak
-                const remaining = photos.length - 4; // Hitung sisanya
-
-                // Render 3 Foto Pertama (Normal)
+                gridClass = 'grid-4';
+                const remaining = photos.length - 4;
                 imgsHTML += photos.slice(0, 3).map(url =>
                     `<img src="${url}" class="photo-item">`
                 ).join('');
-
-                // Render Foto Ke-4 (Pake Wrapper & Overlay +X)
-                // Note: Class 'photo-item' dipasang di wrapper biar Grid CSS bacanya bener
                 imgsHTML += `
                     <div class="photo-item photo-wrapper">
                         <img src="${photos[3]}" alt="More">
                         <div class="more-overlay">+${remaining}</div>
                     </div>
                 `;
-            }
-            // SKENARIO 2: Foto 4 atau Kurang (Normal)
-            else {
+            } else {
                 gridClass = `grid-${Math.min(photos.length, 4)}`;
                 imgsHTML = photos.slice(0, 4).map(url =>
                     `<img src="${url}" class="photo-item">`
                 ).join('');
             }
-
-            // ... (Logic Photo Grid di atas TETAP SAMA) ...
             photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
         }
 
-        // --- [UPDATED] LOGIC CLICK HANDLER (VERSI STABIL) ---
-        // Kita tidak pasang onclick disini biar gak berat/konflik.
-        // Kita cuma kasih tanda class 'clickable-card' kalau ada foto.
         if (photos.length > 0) {
-            card.classList.add('clickable-card'); // Penanda: Kartu ini bisa diklik
+            card.classList.add('clickable-card');
         } else {
             card.classList.remove('clickable-card');
             card.style.cursor = "default";
         }
 
-        // --- BOOKMARK LOGIC (TETAP SAMA) ---
+        // --- BOOKMARK LOGIC ---
         const isSaved = this.state.bookmarks.includes(String(data.id));
         const btnClass = isSaved ? "bookmark-btn active" : "bookmark-btn";
         const iconClass = isSaved ? "fa-solid fa-bookmark" : "fa-regular fa-bookmark";
+
+        let taskBtnHTML = "";
+
+        // Cuma render tombol kalau lagi mode Lesson
+        if (this.state.isLessonMode) {
+            const isDone = this.state.completedTasks.includes(String(data.id));
+            const btnClass = isDone ? "task-btn done" : "task-btn";
+            const btnText = isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Tandai Selesai';
+
+            taskBtnHTML = `
+                <button class="${btnClass}">
+                    ${btnText}
+                </button>
+            `;
+        }
 
         card.innerHTML = `
             <input type="file" class="photo-input" accept="image/*" style="display:none;">
@@ -338,9 +411,10 @@ const SubjectApp = {
             <p contenteditable="false" spellcheck="false" class="editable" data-field="content">${content}</p>
             <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
             
-            <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+            <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
+                ${taskBtnHTML} 
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
-                    <i class="fa-solid fa-trash"></i> Hapus Materi
+                    <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `;
@@ -355,33 +429,24 @@ const SubjectApp = {
         const toggleBtn = document.getElementById("toggleEditMode");
         const cards = document.querySelectorAll(".course-card");
 
-        // --- ANIMASI TOMBOL ---
         if (toggleBtn && container) {
             if (this.state.editMode) {
-                // MASUK MODE EDIT
-                container.classList.add("active"); // Memicu tombol (+) muncul
-
-                // Ubah Tombol Utama jadi Ceklis (Hijau)
+                container.classList.add("active");
                 toggleBtn.classList.remove("state-edit");
                 toggleBtn.classList.add("state-done");
                 toggleBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-
             } else {
-                // KELUAR MODE EDIT
-                container.classList.remove("active"); // Sembunyikan tombol (+)
-
-                // Ubah Tombol Utama jadi Pensil (Orange)
+                container.classList.remove("active");
                 toggleBtn.classList.remove("state-done");
                 toggleBtn.classList.add("state-edit");
                 toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
             }
         }
 
-        // --- LOGIC KARTU (TETAP SAMA) ---
         cards.forEach(card => {
             const fields = card.querySelectorAll(".editable");
             const deleteBtn = card.querySelector(".delete-btn");
-            const uploadBtn = card.querySelector(".upload-photo-btn");
+            const uploadBtn = card.querySelector(".upload-photo-btn"); // Hapus kalo ga dipake
             const dragHandle = card.querySelector(".drag-handle");
             const placeholder = card.querySelector(".card-photo-placeholder");
             const deletePhotoBtn = card.querySelector(".delete-photo-btn");
@@ -391,7 +456,6 @@ const SubjectApp = {
                 card.draggable = true;
                 fields.forEach(f => f.contentEditable = "true");
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
-                if (uploadBtn) uploadBtn.style.display = "inline-block";
                 if (dragHandle) dragHandle.style.display = "block";
                 if (placeholder) placeholder.style.display = "block";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
@@ -400,11 +464,9 @@ const SubjectApp = {
                 card.draggable = false;
                 fields.forEach(f => f.contentEditable = "false");
                 if (deleteBtn) deleteBtn.style.display = "none";
-                if (uploadBtn) uploadBtn.style.display = "none";
                 if (dragHandle) dragHandle.style.display = "none";
                 if (placeholder) placeholder.style.display = "none";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "none";
-
                 this.saveAnnouncement(card);
             }
         });
@@ -421,13 +483,28 @@ const SubjectApp = {
         fileInput.click();
 
         fileInput.onchange = async (e) => {
-            const file = e.target.files[0];
+            let file = e.target.files[0]; // Ubah const jadi let
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
                 showPopup("File harus berupa gambar!", "error");
                 return;
             }
+
+            // --- MULAI KOMPRESI ---
+            try {
+                const originalSize = (file.size / 1024).toFixed(2);
+                console.log(`⏳ Mengompres: ${originalSize} KB`);
+
+                // Proses kompresi (tunggu sampe kelar)
+                file = await this.compressImage(file);
+
+                const newSize = (file.size / 1024).toFixed(2);
+                console.log(`✅ Hasil Kompres: ${newSize} KB`);
+            } catch (err) {
+                console.error("Gagal kompres, upload file asli:", err);
+            }
+            // ---------------------
 
             if (file.size > 5 * 1024 * 1024) {
                 showPopup("Ukuran file maksimal 5MB!", "error");
@@ -503,8 +580,35 @@ const SubjectApp = {
     },
 
     async deletePhoto(card) {
-        if (!confirm("Hapus foto ini?")) return;
+        const yakin = await showPopup("Hapus foto ini?", "confirm");
+        if (!yakin) return;
+
         const id = card.dataset.id;
+        const data = this.state.announcements.find(a => a.id == id);
+
+        // 1. Hapus File di Storage
+        if (data && data.photo_url) {
+            let urls = [];
+            // Logic parsing sama kayak di atas (bisa dibikin function helper sebenernya)
+            if (Array.isArray(data.photo_url)) urls = data.photo_url;
+            else if (typeof data.photo_url === 'string') {
+                try {
+                    if (data.photo_url.startsWith('[')) urls = JSON.parse(data.photo_url);
+                    else urls = [data.photo_url];
+                } catch (e) { urls = [data.photo_url]; }
+            }
+
+            const paths = urls.map(url => {
+                if (url.includes('/subject-photos/')) return decodeURIComponent(url.split('/subject-photos/')[1]);
+            }).filter(p => p);
+
+            if (paths.length > 0) {
+                await supabase.storage.from('subject-photos').remove(paths);
+                console.log("File terhapus dari storage");
+            }
+        }
+
+        // 2. Update DB jadi NULL
         try {
             const { error } = await supabase
                 .from("subject_announcements")
@@ -513,7 +617,7 @@ const SubjectApp = {
 
             if (error) throw error;
             this.removeCardPhoto(card);
-
+            showPopup("Foto dihapus!", "success");
         } catch (err) {
             console.error("❌ Delete photo error:", err);
             showPopup("Gagal hapus foto: " + err.message, "error");
@@ -562,21 +666,53 @@ const SubjectApp = {
         }
     },
 
+    // --- FUNGSI HAPUS YANG LEBIH PINTAR (BERSIH-BERSIH STORAGE) ---
     async deleteAnnouncement(card) {
-        if (!confirm("Hapus materi ini?")) return;
+        const yakin = await showPopup("Yakin hapus? Foto & File juga akan hilang permanen.", "confirm");
+        if (!yakin) return;
+
         const id = card.dataset.id;
-        try {
-            const { data: announcement } = await supabase.from("subject_announcements").select("photo_url").eq("id", id).single();
-            if (announcement?.photo_url) {
-                // Logic hapus storage (simplified)
+        const data = this.state.announcements.find(a => a.id == id);
+
+        if (data && data.photo_url) {
+            let photosToDelete = [];
+
+            let urls = [];
+            if (Array.isArray(data.photo_url)) urls = data.photo_url;
+            else if (typeof data.photo_url === 'string') {
+                try {
+                    if (data.photo_url.startsWith('[')) urls = JSON.parse(data.photo_url);
+                    else if (data.photo_url.startsWith('{')) urls = data.photo_url.slice(1, -1).split(',');
+                    else urls = [data.photo_url];
+                } catch (e) { urls = [data.photo_url]; }
             }
 
+            urls.forEach(url => {
+                if (url.includes('/subject-photos/')) {
+                    const path = url.split('/subject-photos/')[1];
+                    if (path) photosToDelete.push(decodeURIComponent(path));
+                }
+            });
+
+            if (photosToDelete.length > 0) {
+                console.log("🗑️ Menghapus file sampah di storage:", photosToDelete);
+                const { error: storageError } = await supabase
+                    .storage
+                    .from('subject-photos')
+                    .remove(photosToDelete);
+
+                if (storageError) console.error("Gagal hapus file:", storageError);
+            }
+        }
+
+        // 2. PROSES HAPUS DATA DI DATABASE
+        try {
             const { error } = await supabase.from("subject_announcements").delete().eq("id", id);
             if (error) throw error;
 
             card.remove();
             this.state.announcements = this.state.announcements.filter(a => a.id !== id);
-            showPopup("Materi berhasil dihapus!", "success");
+            showPopup("Materi & File berhasil dihapus bersih!", "success");
         } catch (err) {
             showPopup("Gagal menghapus: " + err.message, "error");
         }
@@ -608,7 +744,6 @@ const SubjectApp = {
             };
         }
 
-        // --- LOGIC DRAG & DROP ---
         dropZone.onclick = () => fileInput.click();
 
         fileInput.onchange = (e) => {
@@ -661,11 +796,21 @@ const SubjectApp = {
         }
     },
 
-    handleNewFiles: function (files) {
+    handleNewFiles: async function (files) { // Tambah async di sini
         const previewContainer = document.getElementById('previewContainer');
 
-        Array.from(files).forEach(file => {
-            if (!file.type.startsWith('image/')) return;
+        // Ganti loop jadi for...of biar bisa await kompresi satu-satu
+        for (let file of Array.from(files)) {
+            if (!file.type.startsWith('image/')) continue;
+
+            // --- KOMPRESI SEBELUM PREVIEW ---
+            try {
+                file = await this.compressImage(file);
+            } catch (err) {
+                console.error("Skip kompresi:", err);
+            }
+            // --------------------------------
+
             this.tempFiles.push(file);
 
             const reader = new FileReader();
@@ -687,7 +832,7 @@ const SubjectApp = {
                 previewContainer.appendChild(div);
             };
             reader.readAsDataURL(file);
-        });
+        }
     },
 
     clearForm: function () {
@@ -821,54 +966,33 @@ const SubjectApp = {
 
     setupShortcuts() {
         document.addEventListener('keydown', (e) => {
-
-            // 1. NAVIGASI DETAIL OVERLAY (LIHAT MATERI)
             const detailOverlay = document.getElementById('detailOverlay');
             const isDetailOpen = detailOverlay && detailOverlay.classList.contains('active');
 
             if (isDetailOpen) {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    closeDetail();
-                    return;
-                }
-                if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    nextSlide();
-                    return;
-                }
-                if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    prevSlide();
-                    return;
-                }
+                if (e.key === 'Escape') { e.preventDefault(); closeDetail(); return; }
+                if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); return; }
+                if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); return; }
             }
 
-            // 2. [BARU] NAVIGASI ADD MODAL (MATERI BARU)
             const addModal = document.getElementById('addModal');
-            // Modal terbuka jika TIDAK memiliki class 'hidden'
             const isAddModalOpen = addModal && !addModal.classList.contains('hidden');
 
             if (isAddModalOpen) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    // Kita trigger klik tombol "Batal" biar form-nya ke-reset juga
                     const btnCancel = document.getElementById('btnCancelAdd');
                     if (btnCancel) btnCancel.click();
                     return;
                 }
             }
 
-            // --- SHORTCUT LAINNYA (CTRL + ...) ---
-
-            // CTRL + Q: Tutup Modal / Popup Universal
             if (e.ctrlKey && e.code === 'KeyQ') {
                 e.preventDefault();
                 const closeBtn = document.querySelector('.modal.show .close, .modal.show .btn-close, .swal2-close, .close-visitor, .closeVisitorPopup, #btnCancelAdd');
                 if (closeBtn) closeBtn.click();
             }
 
-            // CTRL + \ : Toggle Edit Mode
             if (e.ctrlKey && e.code === 'Backslash') {
                 e.preventDefault();
                 if (!this.state.editMode) {
@@ -877,19 +1001,16 @@ const SubjectApp = {
                 }
             }
 
-            // CTRL + ENTER : Save / Submit
             if (e.ctrlKey && e.code === 'Enter') {
                 if (this.state.editMode) {
                     e.preventDefault();
                     document.getElementById("toggleEditMode").click();
                 }
-                // Kalau Modal Tambah Materi kebuka -> Save
                 if (isAddModalOpen) {
                     document.getElementById('btnSaveAdd').click();
                 }
             }
 
-            // CTRL + ] : Buka Modal Tambah Materi
             if (e.ctrlKey && e.code === 'BracketRight') {
                 e.preventDefault();
                 const addBtn = document.getElementById("addAnnouncementBtn");
@@ -898,6 +1019,47 @@ const SubjectApp = {
                     setTimeout(() => document.getElementById('addJudul').focus(), 100);
                 }
             }
+        });
+    },
+
+    compressImage: async function (file, quality = 0.6, maxWidth = 1024) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Resize proporsional kalau lebar > 1024px
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert canvas balik ke File (JPEG 60%)
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const newFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(newFile);
+                        } else {
+                            reject(new Error('Gagal kompres gambar'));
+                        }
+                    }, 'image/jpeg', quality);
+                };
+            };
+            reader.onerror = (error) => reject(error);
         });
     }
 }
@@ -908,20 +1070,17 @@ let mobileInfoTimer = null;
 
 function openDetail(data) {
     const overlay = document.getElementById('detailOverlay');
-    const box = document.querySelector('.glass-detail-box'); // Ambil Box Utama
+    const box = document.querySelector('.glass-detail-box');
     const infoSection = document.getElementById('detailInfoSection');
 
-    // 1. Isi Data Teks
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
     document.getElementById('detailContentTxt').innerText = data.content || '';
     document.getElementById('detailSmallTxt').innerText = data.small || '';
 
-    // Mobile Header
     document.getElementById('mobBig').innerText = data.big_title || '';
     document.getElementById('mobSub').innerText = data.title || '';
 
-    // 2. Parse Foto
     currentViewerPhotos = [];
 
     if (data.photo_url) {
@@ -932,38 +1091,28 @@ function openDetail(data) {
                 let clean = data.photo_url.replace(/^\{|\}$/g, '').replace(/\\"/g, '"');
                 if (data.photo_url.startsWith('[')) {
                     let parsed = JSON.parse(data.photo_url);
-                    if (parsed.length > 0) {
-                        currentViewerPhotos = parsed;
-                    }
+                    if (parsed.length > 0) currentViewerPhotos = parsed;
                 } else {
                     let arr = clean.split(',');
-                    if (arr.length > 0 && arr[0] !== "") {
-                        currentViewerPhotos = arr;
-                    }
+                    if (arr.length > 0 && arr[0] !== "") currentViewerPhotos = arr;
                 }
             } catch (e) {
-                // String biasa (1 URL)
                 currentViewerPhotos = [data.photo_url];
             }
         }
     }
 
-    // 3. Reset UI ke Mode Normal (Foto)
-    // Kita hapus class text-only-mode untuk memastikan layout normal
     box.classList.remove('text-only-mode');
-
     currentViewerIndex = 0;
     updateSliderUI();
 
-    // Logic Mobile Auto-Hide
     if (infoSection && window.innerWidth <= 768) {
         infoSection.classList.remove('hidden-mobile');
         const scrollBox = infoSection.querySelector('.info-content-scroll');
         if (scrollBox) scrollBox.scrollTop = 0;
-        startAutoHideTimer(); // Jalankan timer ngumpet
+        startAutoHideTimer();
     }
 
-    // 4. Buka Overlay
     overlay.classList.add('active');
 }
 
@@ -972,14 +1121,10 @@ function closeDetail() {
     clearTimeout(mobileInfoTimer);
 }
 
-// --- UPDATE LOGIC SLIDER (LINEAR / TIDAK LOOPING) ---
-
 function updateSliderUI() {
     const imgEl = document.getElementById('detailImg');
     const navBtns = document.getElementById('sliderNavBtns');
     const counter = document.getElementById('photoCounterTag');
-
-    // Ambil tombol spesifik
     const btnPrev = document.querySelector('#sliderNavBtns .prev-btn');
     const btnNext = document.querySelector('#sliderNavBtns .next-btn');
 
@@ -993,31 +1138,24 @@ function updateSliderUI() {
         imgEl.style.display = 'block';
         imgEl.src = currentViewerPhotos[currentViewerIndex];
 
-        // Update Counter
         if (counter) {
             counter.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;
             counter.style.display = 'block';
         }
 
-        // Update Visibility Tombol (Mentok Kanan/Kiri hilang)
         if (navBtns) {
             if (currentViewerPhotos.length > 1) {
                 navBtns.style.display = 'block';
-
-                // Cek Ujung Awal (Hide Prev)
                 if (currentViewerIndex === 0) {
                     if (btnPrev) btnPrev.style.display = 'none';
                 } else {
-                    if (btnPrev) btnPrev.style.display = 'flex'; // Pakai flex biar icon di tengah
+                    if (btnPrev) btnPrev.style.display = 'flex';
                 }
-
-                // Cek Ujung Akhir (Hide Next)
                 if (currentViewerIndex === currentViewerPhotos.length - 1) {
                     if (btnNext) btnNext.style.display = 'none';
                 } else {
                     if (btnNext) btnNext.style.display = 'flex';
                 }
-
             } else {
                 navBtns.style.display = 'none';
             }
@@ -1027,18 +1165,14 @@ function updateSliderUI() {
 
 function nextSlide(e) {
     if (e) e.stopPropagation();
-    // Stop jika sudah di foto terakhir
     if (currentViewerIndex >= currentViewerPhotos.length - 1) return;
-
     currentViewerIndex++;
     updateSliderUI();
 }
 
 function prevSlide(e) {
     if (e) e.stopPropagation();
-    // Stop jika sudah di foto pertama
     if (currentViewerIndex <= 0) return;
-
     currentViewerIndex--;
     updateSliderUI();
 }
@@ -1046,9 +1180,7 @@ function prevSlide(e) {
 function startAutoHideTimer() {
     if (window.innerWidth > 768) return;
     clearTimeout(mobileInfoTimer);
-    mobileInfoTimer = setTimeout(() => {
-        hideInfo();
-    }, 3000);
+    mobileInfoTimer = setTimeout(() => { hideInfo(); }, 3000);
 }
 
 function hideInfo() {

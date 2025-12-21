@@ -1,146 +1,176 @@
-const VisitorApp = {
-    pageKey: null,
-    user: null,
+// ==========================================
+// VISITOR SYSTEM (TOTAL CENTRALIZED)
+// ==========================================
 
-    init(pageKey) {
-        this.pageKey = pageKey;
-        this.user = getUser();
-        if (!this.user) return;
+const _getVisitorUser = () => {
+    try {
+        const data = localStorage.getItem("user");
+        return data ? JSON.parse(data) : null;
+    } catch (e) { return null; }
+};
 
-        this.handleAutoReset();
-        this.recordVisit();
-        this.loadStats();
-        this.setupUI();
-        this.setupResetButton();
-    },
+function getResetTime() {
+    const now = new Date();
+    let resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
+    if (now.getTime() >= resetTime.getTime()) resetTime.setDate(resetTime.getDate() + 1);
+    return resetTime;
+}
 
-    // =========================
-    // RESET OTOMATIS JAM 15:00 WIB
-    // =========================
-    handleAutoReset() {
+// 1. LOGIC MENCATAT KUNJUNGAN (ANTI-NUMPUK)
+async function logVisitor() {
+    const user = _getVisitorUser();
+    if (!user || typeof supabase === 'undefined') return;
+
+    try {
+        const currentPage = document.title || "Unknown Page";
         const now = new Date();
-        const hour = now.getHours();
+        const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
 
-        const resetKey = "visitor_reset_at";
-        const lastReset = localStorage.getItem(resetKey);
+        const { data: list } = await supabase.from("visitors").select("id, visited_at, last_page")
+            .eq("user_id", user.id).eq("class_id", user.class_id)
+            .gte("visited_at", timeThreshold).order('visited_at', { ascending: false }).limit(1);
 
-        const todayReset = new Date();
-        todayReset.setHours(15, 0, 0, 0);
+        const existing = (list && list.length > 0) ? list[0] : null;
 
-        if (hour >= 15) {
-            if (!lastReset || new Date(lastReset) < todayReset) {
-                localStorage.setItem(resetKey, todayReset.toISOString());
+        if (existing) {
+            const diffMin = (now - new Date(existing.visited_at)) / 60000;
+            if (diffMin >= 1 || existing.last_page !== currentPage) {
+                await supabase.from("visitors").update({
+                    visited_at: now.toISOString(),
+                    is_visible: true,
+                    last_page: currentPage
+                }).eq("id", existing.id);
+                renderVisitorStats();
             }
+        } else {
+            await supabase.from("visitors").insert({
+                user_id: user.id, class_id: user.class_id,
+                is_visible: true, last_page: currentPage, visited_at: now.toISOString()
+            });
+            renderVisitorStats();
         }
-    },
+    } catch (err) { console.error("Log Error:", err); }
+}
 
-    // =========================
-    // CATAT VISITOR
-    // =========================
-    async recordVisit() {
-    const resetAt = localStorage.getItem("visitor_reset_at");
+// 2. RENDER STATISTIK & ADMIN PANEL
+async function renderVisitorStats() {
+    if (typeof supabase === 'undefined') return;
+    const user = _getVisitorUser();
+    if (!user) return;
 
-    // cek apakah user sudah tercatat sejak reset
-    const { data } = await supabase
-        .from("page_visitors")
-        .select("id")
-        .eq("page_key", this.pageKey)
-        .eq("user_id", this.user.id)
-        .gte("visited_at", resetAt)
-        .limit(1);
+    const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
 
-    // kalau sudah ada → JANGAN INSERT LAGI
-    if (data && data.length > 0) return;
+    try {
+        const { data: totalData } = await supabase.from('visitors').select('user_id').eq('class_id', user.class_id);
+        const { data: todayData } = await supabase.from('visitors')
+            .select('user_id, visited_at, last_page, user:user_id (full_name, avatar_url, nickname)')
+            .eq('class_id', user.class_id).eq('is_visible', true).gte('visited_at', timeThreshold)
+            .order('visited_at', { ascending: false });
 
-    // belum ada → insert
-    await supabase.from("page_visitors").insert({
-        page_key: this.pageKey,
-        user_id: this.user.id
-    });
-},
-    // =========================
-    // LOAD STATISTIK
-    // =========================
-    async loadStats() {
-        const resetAt = localStorage.getItem("visitor_reset_at");
+        if (!totalData || !todayData) return;
 
-        const { data, error } = await supabase
-            .from("page_visitors")
-            .select("user_id, visited_at, users(full_name, avatar_url)")
-            .eq("page_key", this.pageKey)
-            .gte("visited_at", resetAt)
-            .order("visited_at", { ascending: false });
+        const uniqueTotal = new Set(totalData.map(v => v.user_id)).size;
+        const uniqueTodayMap = new Map();
+        todayData.forEach(v => { if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v); });
 
-        if (error || !data) return;
+        // Update UI Elements
+        document.getElementById("headerVisitorCount")?.setAttribute('innerText', uniqueTodayMap.size);
+        if (document.getElementById("headerVisitorCount")) document.getElementById("headerVisitorCount").innerText = uniqueTodayMap.size;
+        if (document.getElementById("popupToday")) document.getElementById("popupToday").innerText = uniqueTodayMap.size;
+        if (document.getElementById("popupTotal")) document.getElementById("popupTotal").innerText = uniqueTotal;
 
-        const uniqueUser = new Set(data.map(d => d.user_id));
+        const listEl = document.getElementById("visitorList");
+        if (listEl) {
+            listEl.innerHTML = uniqueTodayMap.size === 0 ? '<p style="color:#aaa; font-size:12px;">Belum ada yang mampir.</p>' : '';
+            uniqueTodayMap.forEach(v => {
+                const u = v.user || {};
+                const item = document.createElement('div');
+                item.className = 'visitor-item';
+                item.innerHTML = `
+                    <img src="${u.avatar_url || 'profpicture.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                    <div style="flex:1; margin-left:10px;">
+                        <div style="font-size:13px; font-weight:bold;">${u.nickname || u.full_name || 'User'}</div>
+                        <div style="font-size:11px; color:#aaa;">
+                            <span style="color:#00eaff">${v.last_page || "Muter-muter"}</span> • ${new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>`;
+                listEl.appendChild(item);
+            });
+        }
 
-        const todayEl = document.getElementById("todayCount");
-        const counterEl = document.getElementById("visitorCount");
+        const adminActions = document.querySelector(".admin-actions");
+        if (adminActions) adminActions.style.display = (user.role === 'class_admin' || user.role === 'super_admin') ? 'block' : 'none';
 
-        if (todayEl) todayEl.innerText = uniqueUser.size;
-        if (counterEl) counterEl.innerText = uniqueUser.size;
+    } catch (err) { console.error("Stats Error:", err); }
+}
 
-        this.renderList(data);
-    },
+// ==========================================
+// 3. EVENT LISTENERS & AUTO RUNNER
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    const user = _getVisitorUser();
 
-    // =========================
-    // RENDER LIST VISITOR
-    // =========================
-    renderList(data) {
-        const box = document.getElementById("visitorList");
-        if (!box) return;
+    // --- [FITUR BERDIKARI] AUTO LOG SETELAH 1 DETIK ---
+    // Delay 1 detik (1000ms) memberi waktu agar SubjectApp/Script lain
+    // selesai mengubah document.title (misal: "Loading..." -> "Nilai PSAS")
+    // sehingga yang tercatat di database adalah judul yang benar.
+    setTimeout(() => {
+        if (typeof logVisitor === 'function') logVisitor();
+    }, 1000);
 
-        box.innerHTML = "";
+    // --- SETUP VISITOR UI (POPUP, BUTTON, DLL) ---
+    const trigger = document.getElementById("visitorTrigger");
+    const overlay = document.getElementById("visitorOverlay");
+    const closeBtn = document.getElementById("closeVisitorPopup");
+    const resetBtn = document.getElementById("resetVisitorBtn");
 
-        data.forEach(d => {
-            const jam = new Date(d.visited_at)
-                .toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
+    if (trigger) trigger.onclick = () => { overlay?.classList.add("show"); renderVisitorStats(); };
+    if (closeBtn) closeBtn.onclick = () => overlay?.classList.remove("show");
+    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("show"); };
 
-            box.innerHTML += `
-                <div class="visitor-item">
-                    <img src="${d.users?.avatar_url || 'defaultpp.png'}">
-                    <span>${d.users?.full_name || 'Unknown'}</span>
-                    <small>${jam}</small>
-                </div>
-            `;
-        });
-    },
+    // ... (kode atas tetap sama) ...
 
-    // =========================
-    // UI POPUP
-    // =========================
-    setupUI() {
-        const box = document.getElementById("visitorBox");
-        const popup = document.getElementById("visitorPopup");
+    if (resetBtn) {
+        resetBtn.onclick = async () => {
+            // [BARU] Pakai Universal Popup tipe 'confirm'
+            // Kita tunggu (await) sampai user pilih Iya/Tidak
+            const yakin = await showPopup("Yakin ingin mereset data visitor hari ini?", "confirm");
 
-        if (!box || !popup) return;
+            // Kalau user pilih "Tidak" (false), stop di sini
+            if (!yakin) return;
 
-        box.onclick = () => {
-            popup.style.display =
-                popup.style.display === "block" ? "none" : "block";
-        };
-    },
+            // Lanjut proses reset...
+            const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
+            
+            const { error } = await supabase
+                .from('visitors')
+                .update({ is_visible: false })
+                .eq('class_id', user.class_id)
+                .gte('visited_at', timeThreshold);
 
-    // =========================
-    // RESET MANUAL (SUPER ADMIN)
-    // =========================
-    setupResetButton() {
-        if (this.user.role !== "super_admin") return;
-
-        const btn = document.getElementById("resetVisitorBtn");
-        if (!btn) return;
-
-        btn.style.display = "block";
-        btn.onclick = () => {
-            localStorage.setItem(
-                "visitor_reset_at",
-                new Date().toISOString()
-            );
-            this.loadStats();
+            if (!error) {
+                // [BARU] Tipe 'success' (Hijau, Ceklis)
+                await showPopup("Visitor today berhasil direset!", "success");
+                renderVisitorStats();
+            } else {
+                // [BARU] Tipe 'error' (Merah, Silang)
+                await showPopup("Gagal reset data: " + error.message, "error");
+            }
         };
     }
-};
+
+    // ... (sisa kode bawah tetap sama) ...
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && overlay?.classList.contains("show")) overlay.classList.remove("show");
+    });
+
+    // Render statistik awal (tanpa log baru)
+    renderVisitorStats();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape" && overlay?.classList.contains("show")) overlay.classList.remove("show");
+});
+
+renderVisitorStats();

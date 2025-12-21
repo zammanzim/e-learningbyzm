@@ -8,8 +8,7 @@
     <script src="js/supabase-clients.js"></script>
     <script src="js/basicfeat.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/subject-manager.js"></script>
-
+    <script src="js/visitor.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -349,12 +348,8 @@
         const myIdentifier = localUser ? (localUser.nickname || localUser.username) : null;
 
         document.addEventListener("DOMContentLoaded", async function () {
-            if (!localUser || !localUser.class_id) {
-                window.location.href = "index.html";
-                return;
-            }
-
-            if (typeof SubjectApp !== 'undefined') SubjectApp.init("announcements", "Pengumuman");
+            if (typeof SubjectApp !== 'undefined') SubjectApp.init("nilai", "Nilai PSAS");
+            
             updateProfileUI(localUser);
             await loadData();
         });

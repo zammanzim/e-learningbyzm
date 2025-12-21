@@ -1491,81 +1491,66 @@ li.nav-locked a::after {
     box-shadow: 0 0 25px rgba(0, 234, 255, 0.5);
 }
 
-/* --- ADMIN FAB (DIRECT ACTION) --- */
 .admin-fab-container {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px;
+    right: 20px;
     z-index: 2000;
     display: flex;
     flex-direction: column-reverse;
-    /* Item baru muncul di atas */
     align-items: center;
     gap: 15px;
 }
 
-/* Tombol Utama (Edit / Selesai) */
 .fab-main {
     width: 60px;
     height: 60px;
     border-radius: 50%;
     border: none;
     color: white;
-    font-size: 24px;
+    font-size: 30px;
+    padding: 10px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2;
+    z-index: 1000;
 }
 
 .fab-main:active {
     transform: scale(0.9);
 }
 
-/* Warna State Normal (Edit) */
 .fab-main.state-edit {
     background: #ff9800;
-    /* Orange - Ikon Pensil */
 }
 
-/* Warna State Active (Selesai) */
 .fab-main.state-done {
     background: #4CAF50;
-    /* Hijau - Ikon Ceklis */
     transform: rotate(360deg);
-    /* Efek muter dikit pas berubah */
 }
 
-/* Tombol Secondary (Tambah Materi) */
 .fab-add {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     background: #00eaff;
-    /* Cyan */
-    color: black;
     border: none;
     font-size: 22px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 234, 255, 0.3);
-
-    /* Default: Ngumpet di belakang tombol utama */
     opacity: 0;
     transform: translateY(40px) scale(0.5);
-    pointer-events: none;
     position: absolute;
     bottom: 10px;
-    /* Posisi awal */
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 1;
+    z-index: 999;
 }
 
 .fab-add:hover {
-    transform: translateY(-80px) scale(1.1) !important;
-    /* Efek hover */
+    transform: translateY(-80px) scale(1.1);
 }
 
 /* Saat Edit Mode Aktif -> Tombol Add Muncul ke Atas */
@@ -1586,4 +1571,109 @@ li.nav-locked a::after {
 .course-card.clickable-card:active {
     transform: scale(0.98);
     background: rgba(0, 0, 0, 0.4);
+}
+
+/* --- UNIVERSAL POPUP UPDATES --- */
+
+/* Tipe Confirm (Warning) - Kuning */
+.uni-icon.warning {
+    color: #ffd700;
+    /* Emas/Kuning */
+    drop-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    animation: pulseWarning 2s infinite;
+}
+
+@keyframes pulseWarning {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Layout Tombol Ganda (Untuk Confirm) */
+.uni-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+    width: 100%;
+}
+
+/* Tombol Tidak / Batal */
+.uni-btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ddd;
+    padding: 10px 25px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+    flex: 1;
+}
+
+.uni-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+}
+
+/* Tombol Iya / Konfirmasi */
+.uni-btn-confirm {
+    background: #ffd700;
+    /* Kuning */
+    color: black;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+    transition: 0.3s;
+    flex: 1;
+}
+
+.uni-btn-confirm:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+}
+
+.task-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #00bfff;
+    color: #00bfff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-btn:hover {
+    background: rgba(0, 191, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.task-btn.done {
+    background: #00c853;
+    /* Hijau Mantap */
+    border-color: #00c853;
+    color: white;
+    box-shadow: 0 0 10px rgba(0, 200, 83, 0.4);
+}
+
+.task-btn.done:hover {
+    background: #009624;
 }

@@ -3,57 +3,38 @@
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     renderSidebar();
-
-    if (document.getElementById("visitorTrigger")) {
-        renderVisitorStats();
-    }
-
     syncHeaderProfile();
 
-    // ... kode renderSidebar, visitorStats, dll (biarin aja) ...
-
     // [GLOBAL FIX] HAPUS GARIS MERAH (SPELLCHECK)
-    // 1. Matikan di Body (biar elemen baru mewarisi)
     document.body.setAttribute('spellcheck', 'false');
-
-    // 2. Matikan paksa di semua input & textarea yang sudah ada
     const inputs = document.querySelectorAll('input, textarea');
     inputs.forEach(el => {
         el.setAttribute('spellcheck', 'false');
     });
-
-// ... tutup kurung event listener
 });
 
 // ==========================================
-// [FIXED] SINKRONISASI HEADER (CACHE FRIENDLY)
+// 2. SINKRONISASI HEADER
 // ==========================================
 function syncHeaderProfile() {
-    // Ambil data dari LocalStorage (Operasi Sync = INSTANT, Gak pake internet)
-    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) return;
 
-    if (!user) return;
+        const headerName = document.getElementById("headerName");
+        const headerPP = document.getElementById("headerPP");
 
-    const headerName = document.getElementById("headerName");
-    const headerPP = document.getElementById("headerPP");
-
-    // Update Nama
-    if (headerName) {
-        headerName.innerText = `Hai, ${user.short_name}`;
-    }
-
-    // Update Foto Profil
-    if (headerPP) {
-        // HAPUS BAGIAN TIMESTAMP (?t=...)
-        // Kita percaya sama URL yang disimpan di Database.
-        // Kalau URL-nya sama, browser bakal ambil dari CACHE (Ngebut).
-        const url = user.avatar_url || "profpicture.png";
-        headerPP.src = url;
-    }
+        if (headerName) {
+            headerName.innerText = `Hai, ${user.short_name || user.nickname || 'User'}`;
+        }
+        if (headerPP) {
+            headerPP.src = user.avatar_url || "profpicture.png";
+        }
+    } catch (e) { console.error("Sync Profile Error:", e); }
 }
 
 // ==========================================
-// 2. UNIFIED SIDEBAR RENDERER
+// 3. UNIFIED SIDEBAR RENDERER
 // ==========================================
 function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
@@ -95,19 +76,9 @@ function renderSidebar() {
         }
     ];
 
-    if (role === 'class_admin') {
+    if (role === 'class_admin' || role === 'super_admin') {
         menuGroups.unshift({
             header: "Admin Panel",
-            color: "#ffd700",
-            items: [
-                { text: "Input Nilai PSAS", url: "admin-nilai.html", icon: "fa-pen-to-square" },
-                { text: "Monitor Nilai PSAS", url: "admin-monitor.html", icon: "fa-users-viewfinder" }
-            ]
-        });
-    }
-    else if (role === 'super_admin') {
-        menuGroups.unshift({
-            header: "Super Admin Panel",
             color: "#ffd700",
             items: [
                 { text: "Input Nilai PSAS", url: "admin-nilai.html", icon: "fa-pen-to-square" },
@@ -122,227 +93,68 @@ function renderSidebar() {
     menuGroups.forEach(group => {
         const headerStyle = group.color ? `style="color:${group.color}; margin-top:0px;"` : "";
         htmlContent += `<h3 ${headerStyle}>${group.header}</h3><ul>`;
-
         group.items.forEach(item => {
             const itemUrl = item.url.toLowerCase();
-            let isActive = "";
-            if (currentPath.endsWith(itemUrl) || (currentPath === "/" && itemUrl === "index.html")) {
-                isActive = "active";
-            }
-
-            let iconHtml = "";
-            if (item.text === "B. Sunda") iconHtml = `<b style="margin-right: 10px;">ᮘ</b>`;
-            else if (item.text === "B. Jepang") iconHtml = `<b style="margin-right: 10px;">ア</b>`;
-            else iconHtml = `<i class="fa-solid ${item.icon}"></i>`;
-
+            const isActive = currentPath.endsWith(itemUrl) ? "active" : "";
+            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 10px;">ᮘ</b>` :
+                (item.text === "B. Jepang") ? `<b style="margin-right: 10px;">ア</b>` :
+                    `<i class="fa-solid ${item.icon}"></i>`;
             htmlContent += `<li><a href="${item.url}" class="${isActive}">${iconHtml} ${item.text}</a></li>`;
         });
         htmlContent += `</ul>`;
     });
 
     sidebar.innerHTML = htmlContent;
-
     const activeItem = sidebar.querySelector(".active");
-    if (activeItem) {
-        setTimeout(() => {
-            activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 300);
-    }
+    if (activeItem) setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
 }
 
+// ==========================================
+// 4. NAVIGATION & UI LOGIC
+// ==========================================
 function toggleMenu() {
     const sidebar = document.getElementById("sidebar");
     const hamburger = document.getElementById("hamburger");
     const overlay = document.getElementById("sidebarOverlay");
 
-    // Logic Desktop
     if (window.innerWidth >= 1024) {
         sidebar.classList.toggle("closed");
-        const main = document.querySelector(".main-content");
-        if (main) main.classList.toggle("shifted");
-    }
-    // Logic Mobile
-    else {
+        document.querySelector(".main-content")?.classList.toggle("shifted");
+    } else {
         sidebar.classList.toggle("open");
         hamburger.classList.toggle("active");
-
         if (sidebar.classList.contains("open")) {
-            // BUKA MENU -> KUNCI RAPET
             overlay.classList.add("show");
             overlay.onclick = toggleMenu;
-
-            // Kunci HTML & BODY biar ga gerak
-            document.documentElement.style.overflow = "hidden";
             document.body.style.overflow = "hidden";
-
-            // Opsional: Kalo lo pake wrapper main-content yg scroll
-            const main = document.querySelector(".main-content");
-            if (main) main.style.overflow = "hidden";
-
         } else {
-            // TUTUP MENU -> LEPAS KUNCI
             overlay.classList.remove("show");
-
-            document.documentElement.style.overflow = "";
             document.body.style.overflow = "";
-
-            const main = document.querySelector(".main-content");
-            if (main) main.style.overflow = "";
         }
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("click", (e) => {
     const trigger = document.getElementById("profileTrigger");
     const dropdown = document.getElementById("profileDropdown");
-
-    if (trigger && dropdown) {
-        trigger.onclick = (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle("show");
-            trigger.classList.toggle("rotate");
-        };
-        document.addEventListener("click", (e) => {
-            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.remove("show");
-                trigger.classList.remove("rotate");
-            }
-        });
+    if (trigger?.contains(e.target)) {
+        dropdown.classList.toggle("show");
+        trigger.classList.toggle("rotate");
+    } else if (!dropdown?.contains(e.target)) {
+        dropdown?.classList.remove("show");
+        trigger?.classList.remove("rotate");
     }
 });
 
 function goDashboard() { window.location.href = "dashboard.html"; }
 function goProfile() { window.location.href = "settingacc.html"; }
-function logout() {
-    if (confirm("Yakin mau logout?")) {
-        localStorage.clear();
-        window.location.href = "index.html";
-    }
-}
+function logout() { if (confirm("Yakin mau logout?")) { localStorage.clear(); window.location.href = "index.html"; } }
 
 // ==========================================
-// 4. VISITOR SYSTEM
-// ==========================================
-function getResetTime() {
-    const now = new Date();
-    let resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
-    if (now.getTime() >= resetTime.getTime()) resetTime.setDate(resetTime.getDate() + 1);
-    return resetTime;
-}
-
-async function renderVisitorStats() {
-    if (typeof supabase === 'undefined') return;
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) return;
-
-    const resetTime = getResetTime();
-    const yesterday = new Date(resetTime);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const timeThreshold = yesterday.toISOString();
-
-    try {
-        const { data: totalData } = await supabase.from('visitors').select('user_id').eq('class_id', user.class_id);
-        const { data: todayData } = await supabase.from('visitors')
-            .select('user_id, visited_at, last_page, user:user_id (full_name, avatar_url, nickname)')
-            .eq('class_id', user.class_id).eq('is_visible', true).gte('visited_at', timeThreshold)
-            .order('visited_at', { ascending: false });
-
-        if (!totalData || !todayData) return;
-
-        const uniqueTotal = new Set(totalData.map(v => v.user_id)).size;
-        const uniqueTodayMap = new Map();
-        todayData.forEach(v => { if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v); });
-
-        const headerCount = document.getElementById("headerVisitorCount");
-        const popupToday = document.getElementById("popupToday");
-        const popupTotal = document.getElementById("popupTotal");
-        const listEl = document.getElementById("visitorList");
-
-        if (headerCount) headerCount.innerText = uniqueTodayMap.size;
-        if (popupToday) popupToday.innerText = uniqueTodayMap.size;
-        if (popupTotal) popupTotal.innerText = uniqueTotal;
-        if (listEl) renderVisitorList(Array.from(uniqueTodayMap.values()), listEl);
-
-    } catch (err) { console.error("Stats Error:", err); }
-}
-
-function renderVisitorList(visitors, listEl) {
-    listEl.innerHTML = '';
-    if (visitors.length === 0) {
-        listEl.innerHTML = '<p style="color:#aaa; font-size:12px;">Sepi amat, belum ada yang mampir.</p>';
-        return;
-    }
-    visitors.forEach(v => {
-        const u = v.user || {};
-        const name = u.nickname || u.full_name || 'User';
-        const pp = u.avatar_url || 'profpicture.png';
-        const page = v.last_page || "Muter-muter";
-        const time = new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-        const item = document.createElement('div');
-        item.className = 'visitor-item';
-        item.innerHTML = `
-            <img src="${pp}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
-            <div style="flex:1; margin-left:10px;">
-                <div style="font-size:13px; font-weight:bold;">${name}</div>
-                <div style="font-size:11px; color:#aaa;">
-                    <span style="color:#00eaff">${page}</span> • ${time}
-                </div>
-            </div>
-        `;
-        listEl.appendChild(item);
-    });
-}
-
-// === EVENT LISTENERS (Popup Logic & ESC) ===
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Render data awal
-    renderVisitorStats();
-
-    // 2. Setup Elemen
-    const trigger = document.getElementById("visitorTrigger");
-    const overlay = document.getElementById("visitorOverlay");
-    const closeBtn = document.getElementById("closeVisitorPopup");
-    const resetBtn = document.getElementById("resetVisitorBtn");
-
-    // 3. Buka Popup (Klik Mata)
-    if (trigger && overlay) {
-        trigger.onclick = () => {
-            overlay.classList.add("show");
-            renderVisitorStats();
-        };
-    }
-
-    // 4. Tutup Popup (Klik X)
-    if (closeBtn && overlay) {
-        closeBtn.onclick = () => overlay.classList.remove("show");
-    }
-
-    // 5. Tutup Popup (Klik Background Luar)
-    if (overlay) {
-        overlay.onclick = (e) => {
-            if (e.target === overlay) overlay.classList.remove("show");
-        };
-    }
-
-    // 7. SHORTCUT: Tekan ESC untuk Tutup
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape") {
-            if (overlay && overlay.classList.contains("show")) {
-                overlay.classList.remove("show");
-            }
-        }
-    });
-});
-
-// ==========================================
-// 5. UNIVERSAL POPUP (REPLACEMENT FOR ALERT)
+// 5. UNIVERSAL POPUP SYSTEM
 // ==========================================
 function showPopup(msg, type = 'info') {
-    // 1. Cek apakah elemen popup sudah ada di HTML?
     let overlay = document.getElementById('uniOverlay');
-
-    // 2. Kalau belum ada, suntikkan HTML-nya (Auto Injection)
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'uniOverlay';
@@ -352,42 +164,123 @@ function showPopup(msg, type = 'info') {
                 <div id="uniIcon" class="uni-icon"></div>
                 <p id="uniMsg" class="uni-msg"></p>
                 <button class="uni-btn" onclick="closePopup()">OK</button>
-            </div>
-        `;
+            </div>`;
         document.body.appendChild(overlay);
-
-        // Setup close on overlay click
-        overlay.onclick = (e) => {
-            if (e.target === overlay) closePopup();
-        }
+        overlay.onclick = (e) => { if (e.target === overlay) closePopup(); }
     }
-
-    // 3. Set Content
     const iconEl = document.getElementById('uniIcon');
     const msgEl = document.getElementById('uniMsg');
-
     msgEl.innerText = msg;
-    iconEl.className = 'uni-icon'; // Reset class
-
-    if (type === 'success') {
-        iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-        iconEl.classList.add('success');
-    } else if (type === 'error') {
-        iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-        iconEl.classList.add('error');
-    } else {
-        iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
-        iconEl.classList.add('info');
-    }
-
-    // 4. Show Animation
+    iconEl.className = 'uni-icon ' + type;
+    iconEl.innerHTML = type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' :
+        type === 'error' ? '<i class="fa-solid fa-circle-xmark"></i>' :
+            '<i class="fa-solid fa-circle-info"></i>';
     setTimeout(() => overlay.classList.add('active'), 10);
 }
 
-function closePopup() {
-    const overlay = document.getElementById('uniOverlay');
-    if (overlay) overlay.classList.remove('active');
-}
+window.showPopup = function (msg, type = 'info') {
+    return new Promise((resolve) => {
+        // 1. Bersihkan popup lama jika ada
+        const existing = document.getElementById('uniOverlay');
+        if (existing) existing.remove();
 
-// Expose ke global window biar aman
-window.showPopup = showPopup;
+        // 2. Buat elemen baru
+        const overlay = document.createElement('div');
+        overlay.id = 'uniOverlay';
+        overlay.className = 'uni-overlay';
+
+        // 3. Tentukan Icon & Tombol berdasarkan Tipe
+        let iconHtml = '';
+        let btnsHtml = '';
+        let iconClass = 'uni-icon';
+
+        if (type === 'success') {
+            // TIPE: BERHASIL (Hijau/Cyan - Ceklis)
+            iconClass += ' success';
+            iconHtml = '<i class="fa-solid fa-check"></i>';
+            btnsHtml = `<button class="uni-btn" id="uniBtnOk">OK</button>`;
+
+        } else if (type === 'error') {
+            // TIPE: GAGAL (Merah - Silang)
+            iconClass += ' error';
+            iconHtml = '<i class="fa-solid fa-xmark"></i>';
+            btnsHtml = `<button class="uni-btn" style="background:#ff4757; color:white;" id="uniBtnOk">OK</button>`;
+
+        } else if (type === 'confirm') {
+            // TIPE: CONFIRM (Kuning - Tanda Seru)
+            iconClass += ' warning';
+            iconHtml = '<i class="fa-solid fa-exclamation"></i>';
+            btnsHtml = `
+                <div class="uni-actions">
+                    <button class="uni-btn-cancel" id="uniBtnNo">Tidak</button>
+                    <button class="uni-btn-confirm" id="uniBtnYes">Iya</button>
+                </div>
+            `;
+        } else {
+            // Default Info
+            iconClass += ' info';
+            iconHtml = '<i class="fa-solid fa-info"></i>';
+            btnsHtml = `<button class="uni-btn" id="uniBtnOk">OK</button>`;
+        }
+
+        // 4. Masukkan HTML
+        overlay.innerHTML = `
+            <div class="uni-box">
+                <div class="${iconClass}">${iconHtml}</div>
+                <p class="uni-msg">${msg}</p>
+                ${btnsHtml}
+            </div>`;
+
+        document.body.appendChild(overlay);
+
+        // Animasi Masuk
+        setTimeout(() => overlay.classList.add('active'), 10);
+
+        // --- LOGIC PENUTUPAN ---
+        const close = (result) => {
+            overlay.classList.remove('active');
+            // Hapus listener keyboard biar gak numpuk
+            document.removeEventListener('keydown', handleKey);
+
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 300);
+
+            resolve(result); // Kembalikan hasil (true/false) ke pemanggil
+        };
+
+        // --- EVENT HANDLERS ---
+
+        // 1. Keyboard Shortcuts (Enter / Esc)
+        const handleKey = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                close(true); // Enter = IYA / OK
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                // Kalau confirm: Esc = Batal (false). Kalau info: Esc = Tutup (true/ok)
+                if (type === 'confirm') close(false);
+                else close(true);
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+
+        // 2. Click Handlers
+        if (type === 'confirm') {
+            document.getElementById('uniBtnYes').onclick = () => close(true);
+            document.getElementById('uniBtnNo').onclick = () => close(false);
+            // Klik background = Batal
+            overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+        } else {
+            document.getElementById('uniBtnOk').onclick = () => close(true);
+            // Klik background = OK
+            overlay.onclick = (e) => { if (e.target === overlay) close(true); };
+        }
+    });
+};
+
+// Fungsi helper buat nutup paksa (jarang dipake krn skrg pake promise)
+window.closePopup = function () {
+    const overlay = document.getElementById('uniOverlay');
+    if (overlay) overlay.click();
+};
