@@ -1,5 +1,5 @@
 // ==========================================
-// VISITOR SYSTEM (TOTAL CENTRALIZED)
+// VISITOR SYSTEM (MANUAL RESET ONLY)
 // ==========================================
 
 const _getVisitorUser = () => {
@@ -9,14 +9,9 @@ const _getVisitorUser = () => {
     } catch (e) { return null; }
 };
 
-function getResetTime() {
-    const now = new Date();
-    let resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
-    if (now.getTime() >= resetTime.getTime()) resetTime.setDate(resetTime.getDate() + 1);
-    return resetTime;
-}
+// [HAPUS] Fungsi getResetTime tidak lagi digunakan
 
-// 1. LOGIC MENCATAT KUNJUNGAN (ANTI-NUMPUK)
+// 1. LOGIC MENCATAT KUNJUNGAN
 async function logVisitor() {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
@@ -24,30 +19,46 @@ async function logVisitor() {
     try {
         const currentPage = document.title || "Unknown Page";
         const now = new Date();
-        const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
 
-        const { data: list } = await supabase.from("visitors").select("id, visited_at, last_page")
-            .eq("user_id", user.id).eq("class_id", user.class_id)
-            .gte("visited_at", timeThreshold).order('visited_at', { ascending: false }).limit(1);
+        // Cari data user ini (kapanpun terakhir dia masuk)
+        const { data: list, error: fetchError } = await supabase.from("visitors")
+            .select("id, visited_at, last_page")
+            .eq("user_id", user.id)
+            .eq("class_id", user.class_id)
+            .order('visited_at', { ascending: false })
+            .limit(1);
+
+        if (fetchError) console.error("Visitor Fetch Error:", fetchError);
 
         const existing = (list && list.length > 0) ? list[0] : null;
 
         if (existing) {
+            // User lama login lagi -> UPDATE waktu & Munculkan kembali (is_visible: true)
             const diffMin = (now - new Date(existing.visited_at)) / 60000;
+
+            // Update jika sudah beda 1 menit atau beda halaman
             if (diffMin >= 1 || existing.last_page !== currentPage) {
-                await supabase.from("visitors").update({
+                const { error: updateError } = await supabase.from("visitors").update({
                     visited_at: now.toISOString(),
-                    is_visible: true,
+                    is_visible: true, // Pastikan user MUNCUL lagi setelah di-reset admin
                     last_page: currentPage
                 }).eq("id", existing.id);
-                renderVisitorStats();
+
+                if (updateError) console.error("Visitor Update Error:", updateError);
+                else renderVisitorStats();
             }
         } else {
-            await supabase.from("visitors").insert({
-                user_id: user.id, class_id: user.class_id,
-                is_visible: true, last_page: currentPage, visited_at: now.toISOString()
+            // User benar-benar baru -> INSERT
+            const { error: insertError } = await supabase.from("visitors").insert({
+                user_id: user.id,
+                class_id: user.class_id,
+                is_visible: true,
+                last_page: currentPage,
+                visited_at: now.toISOString()
             });
-            renderVisitorStats();
+
+            if (insertError) console.error("Visitor Insert Error:", insertError);
+            else renderVisitorStats();
         }
     } catch (err) { console.error("Log Error:", err); }
 }
@@ -58,23 +69,32 @@ async function renderVisitorStats() {
     const user = _getVisitorUser();
     if (!user) return;
 
-    const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
-
     try {
-        const { data: totalData } = await supabase.from('visitors').select('user_id').eq('class_id', user.class_id);
-        const { data: todayData } = await supabase.from('visitors')
-            .select('user_id, visited_at, last_page, user:user_id (full_name, avatar_url, nickname)')
-            .eq('class_id', user.class_id).eq('is_visible', true).gte('visited_at', timeThreshold)
+        // Hitung Total (Semua User Unik di Kelas Ini)
+        const { data: totalData } = await supabase.from('visitors')
+            .select('user_id')
+            .eq('class_id', user.class_id);
+
+        // Hitung "Hari Ini" (Hanya yang is_visible: true)
+        // [UBAH] Tidak ada lagi filter .gte('visited_at', ...)
+        const { data: todayData, error: errToday } = await supabase.from('visitors')
+            .select('user_id, visited_at, last_page, user:users (full_name, avatar_url, nickname)')
+            .eq('class_id', user.class_id)
+            .eq('is_visible', true) // Kuncinya disini: Hanya yang visible
             .order('visited_at', { ascending: false });
 
+        if (errToday) console.error("Stats Render Error:", errToday);
         if (!totalData || !todayData) return;
 
         const uniqueTotal = new Set(totalData.map(v => v.user_id)).size;
         const uniqueTodayMap = new Map();
-        todayData.forEach(v => { if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v); });
+
+        // Filter duplikasi user di sisi client (jaga-jaga)
+        todayData.forEach(v => {
+            if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v);
+        });
 
         // Update UI Elements
-        document.getElementById("headerVisitorCount")?.setAttribute('innerText', uniqueTodayMap.size);
         if (document.getElementById("headerVisitorCount")) document.getElementById("headerVisitorCount").innerText = uniqueTodayMap.size;
         if (document.getElementById("popupToday")) document.getElementById("popupToday").innerText = uniqueTodayMap.size;
         if (document.getElementById("popupTotal")) document.getElementById("popupTotal").innerText = uniqueTotal;
@@ -110,15 +130,10 @@ async function renderVisitorStats() {
 document.addEventListener("DOMContentLoaded", () => {
     const user = _getVisitorUser();
 
-    // --- [FITUR BERDIKARI] AUTO LOG SETELAH 1 DETIK ---
-    // Delay 1 detik (1000ms) memberi waktu agar SubjectApp/Script lain
-    // selesai mengubah document.title (misal: "Loading..." -> "Nilai PSAS")
-    // sehingga yang tercatat di database adalah judul yang benar.
     setTimeout(() => {
         if (typeof logVisitor === 'function') logVisitor();
     }, 1000);
 
-    // --- SETUP VISITOR UI (POPUP, BUTTON, DLL) ---
     const trigger = document.getElementById("visitorTrigger");
     const overlay = document.getElementById("visitorOverlay");
     const closeBtn = document.getElementById("closeVisitorPopup");
@@ -128,49 +143,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeBtn) closeBtn.onclick = () => overlay?.classList.remove("show");
     if (overlay) overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("show"); };
 
-    // ... (kode atas tetap sama) ...
-
+    // --- LOGIC RESET MANUAL (ADMIN ONLY) ---
     if (resetBtn) {
         resetBtn.onclick = async () => {
-            // [BARU] Pakai Universal Popup tipe 'confirm'
-            // Kita tunggu (await) sampai user pilih Iya/Tidak
             const yakin = await showPopup("Yakin ingin mereset data visitor hari ini?", "confirm");
-
-            // Kalau user pilih "Tidak" (false), stop di sini
             if (!yakin) return;
 
-            // Lanjut proses reset...
-            const timeThreshold = new Date(getResetTime().getTime() - 86400000).toISOString();
-            
+            // [UBAH] Reset semua yang 'visible' menjadi 'hidden'
+            // Tidak peduli jam berapa, pokoknya kosongkan list "Today"
             const { error } = await supabase
                 .from('visitors')
                 .update({ is_visible: false })
                 .eq('class_id', user.class_id)
-                .gte('visited_at', timeThreshold);
+                .eq('is_visible', true); // Hanya reset yang sedang tampil
 
             if (!error) {
-                // [BARU] Tipe 'success' (Hijau, Ceklis)
-                await showPopup("Visitor today berhasil direset!", "success");
+                await showPopup("Visitor berhasil direset!", "success");
                 renderVisitorStats();
             } else {
-                // [BARU] Tipe 'error' (Merah, Silang)
                 await showPopup("Gagal reset data: " + error.message, "error");
             }
         };
     }
 
-    // ... (sisa kode bawah tetap sama) ...
-
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && overlay?.classList.contains("show")) overlay.classList.remove("show");
     });
 
-    // Render statistik awal (tanpa log baru)
     renderVisitorStats();
 });
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === "Escape" && overlay?.classList.contains("show")) overlay.classList.remove("show");
-});
-
-renderVisitorStats();

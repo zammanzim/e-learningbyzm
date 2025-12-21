@@ -3,83 +3,33 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Dashboard Siswa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js"></script>
-    <script src="js/basicfeat.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/subject-manager.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/visitor.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        .wrapper {
-            max-width: 900px;
-            margin: 20px auto;
-        }
-
-        .card {
-            background: #171717;
-            border-radius: 16px;
-            padding: 16px 18px;
-            margin-bottom: 18px;
-            box-shadow: 0 0 0 1px #262626;
-        }
-
-        .profile {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #262626;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            font-weight: bold;
-            overflow: hidden;
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-main h2 {
-            margin: 0 0 4px;
-        }
-
-        .tag {
-            display: inline-block;
-            padding: 2px 8px;
-            font-size: 12px;
-            border-radius: 999px;
-            background: #222;
-            margin-right: 6px;
-            opacity: .9;
-        }
-
-        .bio {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #ccc;
-        }
-    </style>
 </head>
 
 <body>
-    <header>
-        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
 
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
+        </div>
 
         <div class="profile-box" id="profileTrigger">
             <span id="headerName">Hai, ...</span>
@@ -96,288 +46,110 @@
         </div>
     </header>
 
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
-    
+
     <div class="main-content">
-        <div class="wrapper">
-            <!-- PROFIL -->
-            <div class="card">
-                <div class="profile">
-                    <div class="avatar" id="avatarBox">
-                        <!-- Huruf awal nama / foto -->
+
+        <div class="ig-profile-wrapper">
+
+            <div class="ig-header">
+                <div class="ig-pp-section">
+                    <div class="ig-pp-ring">
+                        <img id="dashPP" src="" class="ig-pp-img">
                     </div>
-                    <div class="profile-main">
-                        <h2 id="profileName">Loading...</h2>
-                        <div>
-                            <span class="tag" id="profileUsernameTag">@username</span>
-                            <span class="tag" id="profileClassTag">Kelas -</span>
-                        </div>
-                        <div class="bio" id="profileBio">Biodata belum diisi.</div>
+                </div>
+
+                <div class="ig-stats-section">
+                    <div class="ig-stat-item">
+                        <span class="ig-stat-num" id="statMateri">0</span>
+                        <span class="ig-stat-label">Posts</span>
+                    </div>
+                    <div class="ig-stat-item">
+                        <span class="ig-stat-num" id="statDone">0</span>
+                        <span class="ig-stat-label">Selesai</span>
+                    </div>
+                    <div class="ig-stat-item">
+                        <span class="ig-stat-num" id="statClass">...</span>
+                        <span class="ig-stat-label">Kelas</span>
                     </div>
                 </div>
             </div>
 
-            <!-- PENGUMUMAN -->
-            <div class="card">
-                <h3 class="ann-title">Pengumuman Kelas</h3>
-                <div id="announcements"></div>
+            <div class="ig-bio-section">
+                <div class="ig-fullname" id="dashFullName">Nama Lengkap</div>
+                <div class="ig-bio-text">
+                    <span id="dashUsername" style="color:#aaa;">@username</span><br>
+                    Student at E-Learning V2 🎓<br>
+                    Keep learning, keep growing! 🚀
+                </div>
             </div>
 
-            <div class="card">
-                <button id="editBtn" style="
-    margin-top:8px;
-    padding:4px 12px;
-    border-radius:8px;
-    border:none;
-    background:#0099ff;
-    font-size:12px;
-    cursor:pointer;
-">Edit Profil</button>
+            <div class="ig-actions">
+                <button class="ig-btn" onclick="window.location.href='settingacc.html'">Edit Profile</button>
+                <button class="ig-btn" onclick="logout()">Logout</button>
             </div>
+
+            <div class="ig-highlights">
+                <div class="ig-hl-item">
+                    <div class="ig-hl-ring"><i class="fa-solid fa-star"></i></div>
+                    <span>Tugas</span>
+                </div>
+                <div class="ig-hl-item">
+                    <div class="ig-hl-ring"><i class="fa-solid fa-award"></i></div>
+                    <span>Nilai</span>
+                </div>
+            </div>
+
+            <div class="ig-tabs">
+                <div class="ig-tab active"><i class="fa-solid fa-table-cells"></i></div>
+                <div class="ig-tab"><i class="fa-regular fa-bookmark"></i></div>
+            </div>
+
+            <div id="igFeed" class="ig-feed-grid">
+                <div style="padding:40px; text-align:center; grid-column:1/-1;">Loading...</div>
+            </div>
+
         </div>
 
-        <!-- MODAL EDIT PROFIL -->
-        <div id="modal" style="
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.65);
-    backdrop-filter:blur(4px);
-    justify-content:center;
-    align-items:center;
-">
-            <div style="
-        background:#171717;
-        padding:18px;
-        border-radius:16px;
-        width:300px;
-        text-align:center;
-    ">
-                <h3>Edit Profil</h3>
-
-                <p>Foto Profil</p>
-                <input type="file" id="avatarInput" accept="image/*">
-
-                <p style="margin-top:10px;">Biodata</p>
-                <textarea id="bioInput" placeholder="Tulis biodata kamu..."
-                    style="width:100%;height:80px;border-radius:10px;padding:6px;"></textarea>
-
-                <button onclick="saveProfile()" style="
-            margin-top:12px;
-            width:100%;
-            padding:10px;
-            border:none;
-            border-radius:12px;
-            background:#0099ff;
-            font-weight:bold;
-            cursor:pointer;
-        ">Simpan</button>
-
-                <button onclick="closeModal()" style="
-            margin-top:8px;
-            width:100%;
-            padding:8px;
-            border:none;
-            border-radius:10px;
-            background:#333;
-            color:#ccc;
-            cursor:pointer;
-        ">Batal</button>
-            </div>
-        </div>
+        <br><br><br>
     </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const user = JSON.parse(localStorage.getItem("user"));
-            if (!user) return window.location.href = "index.html";
 
-            // === PROFIL ===
-            const nameEl = document.getElementById("profileName");
-            const userTagEl = document.getElementById("profileUsernameTag");
-            const classTagEl = document.getElementById("profileClassTag");
-            const bioEl = document.getElementById("profileBio");
-            const avatarBox = document.getElementById("avatarBox");
-
-            nameEl.textContent = user.full_name || "Tanpa Nama";
-            userTagEl.textContent = user.username ? `@${user.username}` : "@(belum ada username)";
-            bioEl.textContent = user.bio || "Biodata belum diisi.";
-
-            // Avatar: kalau ada avatar_url pakai gambar, kalau tidak pakai huruf awal
-            avatarBox.innerHTML = "";
-            if (user.avatar_url) {
-                const img = document.createElement("img");
-                img.src = user.avatar_url + "?v=" + Date.now();
-                avatarBox.appendChild(img);
-            } else {
-                const initial = (user.full_name || "?").charAt(0).toUpperCase();
-                avatarBox.textContent = initial;
-            }
-
-            // Ambil nama kelas dari tabel classes
-            try {
-                const { data: classData, error: classError } = await supabase
-                    .from("classes")
-                    .select("name")
-                    .eq("id", user.class_id)
-                    .single();
-
-                if (!classError && classData) {
-                    classTagEl.textContent = `Kelas ${classData.name}`;
-                } else {
-                    classTagEl.textContent = "Kelas -";
-                }
-            } catch (e) {
-                console.log("Error ambil kelas:", e);
-                classTagEl.textContent = "Kelas -";
-            }
-
-            // === PENGUMUMAN ===
-            const container = document.getElementById("announcements");
-            container.innerHTML = "";
-
-            try {
-                const { data, error } = await supabase
-                    .from("announcements")
-                    .select("*")
-                    .eq("class_id", user.class_id)
-                    .order("created_at", { ascending: false });
-
-                if (error) {
-                    console.log("Error announcements:", error);
-                    container.innerHTML = `<p class="ann-empty">Gagal memuat pengumuman.</p>`;
-                    return;
-                }
-
-                if (!data || data.length === 0) {
-                    container.innerHTML = `<p class="ann-empty">Belum ada pengumuman.</p>`;
-                    return;
-                }
-
-                data.forEach(item => {
-                    const div = document.createElement("div");
-                    div.className = "ann-item";
-                    div.innerHTML = `
-                        <h4>${item.title}</h4>
-                        <p>${item.content}</p>
-                        <small>${new Date(item.created_at).toLocaleString()}</small>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (e) {
-                console.log(e);
-                container.innerHTML = `<p class="ann-empty">Terjadi kesalahan memuat pengumuman.</p>`;
-            }
-        });
-
-        document.getElementById("editBtn").onclick = () => {
-            document.getElementById("modal").style.display = "flex";
-
-            const user = JSON.parse(localStorage.getItem("user"));
-            document.getElementById("bioInput").value = user.bio || "";
-        };
-
-        function closeModal() {
-            document.getElementById("modal").style.display = "none";
-        }
-
-        async function saveProfile() {
-            const user = JSON.parse(localStorage.getItem("user"));
-            const file = document.getElementById("avatarInput").files[0];
-            const newBio = document.getElementById("bioInput").value;
-            let avatarUrl = user.avatar_url;
-
-            if (file) {
-
-                const compressed = await compressImage(file, 500, 0.7);
-
-                const fileName = `${user.id}.jpg`;
-
-                // Convert blob jadi file
-                const compressedFile = new File([compressed], fileName, {
-                    type: "image/jpeg"
-                });
-
-                const { error: uploadError } = await supabase.storage
-                    .from("avatars")
-                    .upload(fileName, compressedFile, {
-                        cacheControl: "3600",
-                        upsert: true,
-                        contentType: "image/jpeg"
-                    });
-
-                if (uploadError) {
-                    alert("Gagal upload foto!");
-                    console.log(uploadError);
-                    return;
-                }
-
-                const { data: publicUrlData } = supabase.storage
-                    .from("avatars")
-                    .getPublicUrl(fileName);
-
-                avatarUrl = publicUrlData.publicUrl;
-            }
-
-            document.getElementById("avatarInput").value = "";
-
-            // === Update database ===
-            const { data, error } = await supabase
-                .from("users")
-                .update({
-                    avatar_url: avatarUrl,
-                    bio: newBio
-                })
-                .eq("id", user.id)
-                .select()
-                .single();
-
-            if (error) {
-                alert("Gagal update profil!");
-                console.log(error);
-                return;
-            }
-
-            const { data: freshUser } = await supabase
-                .from("users")
-                .select("*")
-                .eq("id", user.id)
-                .single();
-
-            localStorage.setItem("user", JSON.stringify(freshUser));
-            alert("Profil berhasil diupdate!");
-            location.reload();
-
-        }
-        function compressImage(file, maxWidth = 500, quality = 0.7) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = e => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        const scale = maxWidth / img.width;
-                        canvas.width = maxWidth;
-                        canvas.height = img.height * scale;
-
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                        canvas.toBlob(
-                            blob => {
-                                if (!blob) return reject("Gagal compress!");
-                                resolve(blob);
-                            },
-                            "image/jpeg",
-                            quality // 0.1 - 1.0
-                        );
-                    };
-                };
-                reader.onerror = err => reject(err);
-            });
-        }
+    <script type="module">
+        import { initDashboard } from './js/dashboard.js';
+        initDashboard();
     </script>
 </body>
 

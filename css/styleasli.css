@@ -1677,3 +1677,274 @@ li.nav-locked a::after {
 .task-btn.done:hover {
     background: #009624;
 }
+
+/* DAHSBOARD STYLES*/
+
+/* --- INSTAGRAM CLONE STYLES --- */
+
+/* Container Utama biar tengah di Desktop */
+.ig-container {
+    max-width: 935px !important;
+    /* Lebar standar IG Web */
+    margin: 0 auto;
+    padding: 0;
+    color: white;
+    background: #000;
+    /* Dasar Hitam */
+    min-height: 100vh;
+}
+
+/* HEADER: Layout PP dan Stats */
+.ig-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 20px 0 20px;
+    gap: 20px;
+}
+
+/* Foto Profil */
+.ig-pp-section {
+    flex: 0 0 auto;
+}
+
+.ig-pp-ring {
+    width: 80px;
+    /* Ukuran Mobile */
+    height: 80px;
+    border-radius: 50%;
+    padding: 2px;
+    /* Gradient Story IG */
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.ig-pp-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #000;
+    /* Jarak antara ring dan foto */
+}
+
+/* Stats (Posts, Followers, Following) */
+.ig-stats-section {
+    display: flex;
+    flex: 1;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.ig-stat-num {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.ig-stat-label {
+    display: block;
+    font-size: 13px;
+    color: #dbdbdb;
+}
+
+/* BIO Section */
+.ig-bio-section {
+    padding: 0 20px 20px 20px;
+    font-size: 14px;
+}
+
+.ig-fullname {
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.ig-bio-text {
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+
+.ig-link a {
+    color: #e0f1ff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* TOMBOL EDIT PROFILE */
+.ig-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 15px 20px;
+}
+
+.ig-btn {
+    flex: 1;
+    background: #363636;
+    border: none;
+    color: #fff;
+    padding: 7px 0;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.ig-btn:hover {
+    background: #262626;
+}
+
+.ig-btn-icon {
+    background: #363636;
+    border: none;
+    color: #fff;
+    padding: 0 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* HIGHLIGHTS */
+.ig-highlights {
+    display: flex;
+    gap: 15px;
+    padding: 0 20px 20px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+}
+
+.ig-highlights::-webkit-scrollbar {
+    display: none;
+}
+
+.ig-hl-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 60px;
+}
+
+.ig-hl-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: #121212;
+}
+
+.ig-hl-item span {
+    font-size: 12px;
+}
+
+/* TABS (Grid Icon) */
+.ig-tabs {
+    display: flex;
+    border-top: 1px solid #262626;
+    border-bottom: 1px solid #262626;
+}
+
+.ig-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    color: #8e8e8e;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.ig-tab.active {
+    color: #fff;
+    border-bottom: 1px solid #fff;
+    /* Garis putih bawah icon */
+}
+
+/* GRID FEED */
+.ig-feed-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* 3 Kolom */
+    gap: 2px;
+    /* Jarak tipis khas IG */
+}
+
+.ig-post {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    /* Bikin Kotak Sempurna (Aspect Ratio 1:1) */
+    background: #262626;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.ig-post img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tampilan kalau gak ada foto (Text Post) */
+.ig-text-post {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Responsive Desktop Adjustments --- */
+@media (min-width: 768px) {
+    .ig-header {
+        padding: 40px 60px;
+        gap: 80px;
+        margin-bottom: 20px;
+    }
+
+    .ig-pp-ring {
+        width: 150px;
+        height: 150px;
+    }
+
+    .ig-stats-section {
+        justify-content: flex-start;
+        gap: 40px;
+        font-size: 18px;
+    }
+
+    .ig-stat-num {
+        font-size: 22px;
+    }
+
+    .ig-bio-section {
+        padding-left: 290px;
+        /* Geser bio ke kanan foto */
+        margin-top: -80px;
+        /* Naik ke sebelah foto */
+    }
+
+    .ig-actions {
+        padding-left: 290px;
+        justify-content: flex-start;
+        max-width: 600px;
+    }
+
+    .ig-btn {
+        flex: unset;
+        width: 120px;
+    }
+}
