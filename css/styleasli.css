@@ -1618,8 +1618,8 @@ li.nav-locked a::after {
 }
 
 .fab-main {
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
     border: none;
     color: white;
@@ -2163,7 +2163,6 @@ li.nav-locked a::after {
     border-radius: 16px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     min-height: 100px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     transition: 0.3s;
@@ -2474,8 +2473,8 @@ input:checked+.slider:before {
 /* FAB Container (Pojok Kanan Bawah) */
 .daily-fab-container {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px;
+    right: 90px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -2595,4 +2594,493 @@ input:checked+.slider:before {
 .edit-mode-on .config-panel {
     display: block;
     animation: popUp 0.3s forwards;
+}
+
+/* Badge Custom Mode */
+.bg-custom {
+    background: #FFD700;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Dashboard Styles */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+.user-profile-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+.profile-left {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+}
+
+.profile-image-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.profile-img-large {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+.online-status {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    background: #4cd964;
+    border-radius: 50%;
+    border: 3px solid #667eea;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.profile-username {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0 0 15px 0;
+}
+
+.profile-bio {
+    font-size: 1rem;
+    opacity: 0.8;
+    line-height: 1.5;
+    max-width: 500px;
+    margin: 0 0 20px 0;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    min-width: 300px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease, background 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-icon.pending {
+    background: #ff9500;
+}
+
+.stat-icon.bookmarks {
+    background: #5856d6;
+}
+
+.stat-icon.completed {
+    background: #34c759;
+}
+
+.stat-icon.materi {
+    background: #007aff;
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+/* Tabs */
+.dashboard-tabs {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.tab-header {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 20px;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.tab-btn.active {
+    color: #007aff;
+    background: white;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #007aff;
+}
+
+.tab-badge {
+    background: #ff3b30;
+    color: white;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 25px;
+    text-align: center;
+}
+
+.tab-content {
+    padding: 30px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.tab-subtitle {
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Tasks & Bookmarks Containers */
+.tasks-container,
+.bookmarks-container {
+    margin-top: 20px;
+}
+
+.task-item,
+.bookmark-item {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 4px solid #007aff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-item:hover,
+.bookmark-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.task-item.priority-high {
+    border-left-color: #ff3b30;
+}
+
+.task-item.priority-medium {
+    border-left-color: #ff9500;
+}
+
+.task-header,
+.bookmark-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.task-title,
+.bookmark-title {
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+.task-meta,
+.bookmark-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.task-actions,
+.bookmark-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #495057;
+    margin: 10px 0;
+}
+
+.empty-state p {
+    max-width: 400px;
+    margin: 0 auto 20px;
+}
+
+.btn-primary {
+    background: #007aff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #0056cc;
+}
+
+/* Quick Access */
+.quick-access {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.quick-access h3 {
+    margin: 0 0 25px 0;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.quick-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 15px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    text-decoration: none;
+    color: #495057;
+    transition: all 0.3s ease;
+}
+
+.quick-card:hover {
+    background: #007aff;
+    color: white;
+    transform: translateY(-5px);
+}
+
+.quick-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.quick-icon.subject {
+    background: #34c759;
+    color: white;
+}
+
+.quick-icon.assignment {
+    background: #ff9500;
+    color: white;
+}
+
+.quick-icon.schedule {
+    background: #5856d6;
+    color: white;
+}
+
+.quick-icon.grades {
+    background: #ff2d55;
+    color: white;
+}
+
+.quick-card:hover .quick-icon {
+    background: white;
+}
+
+.quick-card:hover .quick-icon.subject {
+    color: #34c759;
+}
+
+.quick-card:hover .quick-icon.assignment {
+    color: #ff9500;
+}
+
+.quick-card:hover .quick-icon.schedule {
+    color: #5856d6;
+}
+
+.quick-card:hover .quick-icon.grades {
+    color: #ff2d55;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-profile-card {
+        flex-direction: column;
+    }
+
+    .profile-left {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-image-container {
+        margin: 0 auto;
+    }
+
+    .profile-stats {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
+
+    .tab-header {
+        flex-direction: column;
+    }
+
+    .quick-access-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
