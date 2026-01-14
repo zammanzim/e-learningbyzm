@@ -43,8 +43,9 @@ const SubjectApp = {
         return userData ? JSON.parse(userData) : null;
     },
 
+    // Update baris 44
     updatePageTitle() {
-        document.title = this.state.subjectName;
+        document.title = this.state.subjectName.replace(/<[^>]*>/g, ''); // Strip HTML tags
         const pageTitle = document.getElementById("pageTitle");
         if (pageTitle) pageTitle.innerHTML = this.state.subjectName;
     },

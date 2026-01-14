@@ -103,7 +103,7 @@ function renderSidebar() {
             const isActive = currentPath.endsWith(itemUrl) ? "active" : "";
 
             // Icon Custom
-            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 20px; margin-left: 7px;">ᮘ</b>` :
+            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 15px; margin-left: 2px;">ᮔᮃ</b>` :
                 (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;
 
