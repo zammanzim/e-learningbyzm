@@ -56,12 +56,12 @@ function renderSidebar() {
             header: "Lessons",
             items: [
                 { text: "B. Indonesia", url: "bahasaindonesia.html", icon: "fa-book", badge: "UPDATE", badgeType: "badge-upd" },
-                { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-language", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-book-atlas", badge: "UPDATE", badgeType: "badge-upd" },
                 { text: "B. Sunda", url: "bahasasunda.html", icon: "fa-book", badge: "UPDATE", badgeType: "badge-upd" },
-                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-torii-gate", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-book", badge: "UPDATE", badgeType: "badge-upd" },
 
                 // CONTOH PEMAKAIAN BADGE:
-                { text: "Matematika", url: "matematika.html", icon: "fa-calculator", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Matematika", url: "matematika.html", icon: "fa-square-root-variable", badge: "UPDATE", badgeType: "badge-upd" },
                 { text: "Proipas", url: "proipas.html", icon: "fa-atom", badge: "UPDATE", badgeType: "badge-upd" },
 
                 { text: "Sejarah", url: "sejarah.html", icon: "fa-landmark", badge: "UPDATE", badgeType: "badge-upd" },
@@ -103,8 +103,8 @@ function renderSidebar() {
             const isActive = currentPath.endsWith(itemUrl) ? "active" : "";
 
             // Icon Custom
-            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 20px;">ᮘ</b>` :
-                (item.text === "B. Jepang") ? `<b style="margin-right: 20px;">ア</b>` :
+            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 20px; margin-left: 7px;">ᮘ</b>` :
+                (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;
 
             // Badge Logic

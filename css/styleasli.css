@@ -172,9 +172,7 @@ header {
     height: 100vh;
     background: rgba(10, 15, 25, 0.6);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
-    padding-top: 80px;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 80px 15px 77vh 15px;
     transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     z-index: 2000;
     overflow-y: auto;
@@ -233,7 +231,7 @@ header {
     padding-left: 20px;
 }
 
-.sidebar li:hover i {
+.sidebar li:hover i, .sidebar li:hover b {
     color: #00eaff;
     transform: scale(1.1);
 }
@@ -3084,3 +3082,12 @@ input:checked+.slider:before {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+#welcomeText {
+  color: #e9f4ff;
+  text-shadow:
+    0 0 4px #00d0ff,
+    0 0 8px #00aaff,
+    0 0 12px #00a6ff;
+}
+

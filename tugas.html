@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+    <style>
+        /* Layout Tengah Layar */
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            background-color: #f9f9f9; /* Warna background terang dikit */
+            font-family: sans-serif; /* Jaga-jaga kalau styleasli.css belum load */
+        }
+        .container-wip {
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 350px;
+            width: 90%;
+        }
+        
+        /* Gaya Teks */
+        h2 { 
+            margin-top: 1rem;
+            margin-bottom: 0.5rem; 
+            color: #333;
+        }
+        p { 
+            color: #777; 
+            margin-bottom: 2rem; 
+            line-height: 1.5;
+        }
+        
+        /* Gaya Tombol */
+        .btn-back {
+            display: inline-block;
+            padding: 12px 30px;
+            /* Ganti warna di bawah ini sesuai tema web lu */
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            transition: transform 0.2s ease;
+        }
+        .btn-back:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-wip">
+        <lottie-player 
+            src="https://assets10.lottiefiles.com/packages/lf20_C1H2Fj.json"  
+            background="transparent"  
+            speed="1"  
+            style="width: 180px; height: 180px; margin: 0 auto;"  
+            loop  
+            autoplay>
+        </lottie-player>
+        
+        <h2>Ups, Masih Dibangun! 🔨</h2>
+        <p>Halaman tugasnya lagi dikerjain sama kuli koding kita. Tunggu update selanjutnya ya!</p>
+        
+        <a href="index.html" class="btn-back">Oke, Balik Dulu</a>
+    </div>
+
+</body>
+</html>

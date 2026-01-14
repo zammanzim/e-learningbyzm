@@ -12,11 +12,12 @@ const SubjectApp = {
         bookmarks: []
     },
 
-    init(subjectId, subjectName, isLesson = false) {
+    init(subjectId, subjectName, title, isLesson = false) {
         if (typeof supabase === 'undefined') return;
 
         this.state.subjectId = subjectId;
         this.state.subjectName = subjectName;
+        this.state.title = title;
         this.state.isLessonMode = isLesson;
         this.state.user = this.getUserData();
 
@@ -45,12 +46,12 @@ const SubjectApp = {
     updatePageTitle() {
         document.title = this.state.subjectName;
         const pageTitle = document.getElementById("pageTitle");
-        if (pageTitle) pageTitle.innerText = this.state.subjectName;
+        if (pageTitle) pageTitle.innerHTML = this.state.subjectName;
     },
 
     updateWelcomeText() {
         const welcomeEl = document.getElementById("welcomeText");
-        if (welcomeEl) welcomeEl.innerText = `${this.state.subjectName}`;
+        if (welcomeEl) welcomeEl.innerHTML = `${this.state.subjectName}`;
     },
 
     setupAdminControls() {
@@ -193,7 +194,7 @@ const SubjectApp = {
     async loadAnnouncements() {
         const container = document.getElementById("announcements");
         if (!container) return;
-        container.innerHTML = "<h3>Materi & Pengumuman</h3><p style='color:#666; padding:20px;'>Memuat...</p>";
+        container.innerHTML = "<h3 style='margin-top: 30px;'>Materi & Pengumuman</h3><p style='color:#999; padding:20px;'>Loading Materi...</p>";
 
         try {
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
@@ -219,7 +220,7 @@ const SubjectApp = {
 
     renderAnnouncements() {
         const container = document.getElementById("announcements");
-        container.innerHTML = "<h3>Materi & Pengumuman</h3>";
+        container.innerHTML = "<h3 style='margin-top: 30px;'>Materi & Pengumuman</h3>";
 
         if (this.state.announcements.length === 0) {
             container.innerHTML += "<p style='color:#666; padding:20px;'>Belum ada materi</p>";
