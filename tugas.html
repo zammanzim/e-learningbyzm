@@ -1,80 +1,150 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
-
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
-    <style>
-        /* Layout Tengah Layar */
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            text-align: center;
-            background-color: #f9f9f9; /* Warna background terang dikit */
-            font-family: sans-serif; /* Jaga-jaga kalau styleasli.css belum load */
-        }
-        .container-wip {
-            background: #fff;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 350px;
-            width: 90%;
-        }
-        
-        /* Gaya Teks */
-        h2 { 
-            margin-top: 1rem;
-            margin-bottom: 0.5rem; 
-            color: #333;
-        }
-        p { 
-            color: #777; 
-            margin-bottom: 2rem; 
-            line-height: 1.5;
-        }
-        
-        /* Gaya Tombol */
-        .btn-back {
-            display: inline-block;
-            padding: 12px 30px;
-            /* Ganti warna di bawah ini sesuai tema web lu */
-            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
-            transition: transform 0.2s ease;
-        }
-        .btn-back:hover {
-            transform: translateY(-3px);
-        }
-    </style>
+    <title>Daftar Tugas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/visitor.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body>
 
-    <div class="container-wip">
-        <lottie-player 
-            src="https://assets10.lottiefiles.com/packages/lf20_C1H2Fj.json"  
-            background="transparent"  
-            speed="1"  
-            style="width: 180px; height: 180px; margin: 0 auto;"  
-            loop  
-            autoplay>
-        </lottie-player>
-        
-        <h2>Ups, Masih Dibangun! 🔨</h2>
-        <p>Halaman tugasnya lagi dikerjain sama kuli koding kita. Tunggu update selanjutnya ya!</p>
-        
-        <a href="index.html" class="btn-back">Oke, Balik Dulu</a>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
     </div>
 
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="page-title-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <i class="fa-solid fa-list-check" style="font-size: 24px; color: #00eaff;"></i>
+                <h1 style="font-size: 22px; margin: 0;">Daftar Tugas</h1>
+            </div>
+
+            <div id="userTaskProfile" class="daily-card-final glass-card-effect"
+                style="margin-bottom: 25px; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img id="userTaskPP" src="" class="header-pp"
+                        style="width: 65px; height: 65px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <h3 id="userTaskName" style="margin: 0; font-size: 18px; color: #fff;">...</h3>
+                        <div style="margin-top: 10px;">
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                                <span style="color: #aaa;">Status Penyelesaian</span>
+                                <span id="userTaskCount" style="color: #00eaff; font-weight: bold;">0/0</span>
+                            </div>
+                            <div
+                                style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                                <div id="userTaskBar"
+                                    style="width: 0%; height: 100%; background: linear-gradient(90deg, #00eaff, #007bff); transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div id="taskFilters" class="filter-group-wrapper">
+                <div id="filterSlider" class="filter-slider-bg"></div>
+
+                <button class="filter-btn-new active" onclick="filterTasks('all', this)">
+                    <i class="fa-solid fa-layer-group"></i> Semua Tugas
+                </button>
+
+                <button class="filter-btn-new" onclick="filterTasks('pending', this)">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Yang Belum Selesai
+                </button>
+            </div>
+
+            <div id="taskList" class="announcements">
+                <p style="text-align:center; padding:50px;">Mengambil daftar tugas...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailOverlay" class="detail-overlay">
+        <div class="glass-detail-box text-only-mode">
+            <span class="close-detail-btn" onclick="closeDetail()">&times;</span>
+            <div class="detail-info-section">
+                <div class="info-content-scroll">
+                    <h2 id="detailBigTxt"></h2>
+                    <h4 id="detailTitleTxt"></h4>
+                    <div id="detailContentTxt" class="detail-body-text"></div>
+                    <div id="detailSmallTxt" class="detail-footer-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tugas.js"></script>
 </body>
+
 </html>

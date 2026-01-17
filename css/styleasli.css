@@ -7,7 +7,9 @@
 
 html,
 body {
-    overflow: auto;
+    overflow-y: visible;
+    /* Pastikan visible agar sticky jalan */
+    overflow-x: clip;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -231,7 +233,8 @@ header {
     padding-left: 20px;
 }
 
-.sidebar li:hover i, .sidebar li:hover b {
+.sidebar li:hover i,
+.sidebar li:hover b {
     color: #00eaff;
     transform: scale(1.1);
 }
@@ -276,13 +279,13 @@ header {
 
 .badge-new {
     background: linear-gradient(135deg, #ffd32a 0%, #fffa65 100%);
-    color: black;
+    color: rgb(255, 255, 255);
     box-shadow: 0 2px 10px rgba(255, 211, 42, 0.4);
 }
 
 .badge-upd {
     background: linear-gradient(135deg, #0be881 0%, #00d2d3 100%);
-    color: black;
+    color: rgb(255, 255, 255);
     box-shadow: 0 2px 10px rgba(11, 232, 129, 0.4);
 }
 
@@ -690,15 +693,25 @@ i {
         text-align: left;
         margin-left: 270px;
         transition: margin-left 0.3s ease;
+        overflow: visible;
     }
 
-    .left-section,
+    .left-section {
+        flex: 1;
+        /* Tambahkan kode di bawah ini */
+        position: sticky;
+        top: 80px;
+        /* Jarak dari atas agar tidak tertutup header */
+        align-self: flex-start;
+        /* Wajib agar sticky jalan di flexbox */
+        z-index: 10;
+    }
+
     .right-section {
         flex: 1;
-    }
-
-    .right-section {
+        /* Opsional: buat daftar tugas sedikit lebih lebar */
         margin-top: 75px;
+        /* Reset margin top jika sebelumnya ada */
     }
 
     .sidebar {
@@ -1791,10 +1804,6 @@ li.nav-locked a::after {
     background: #009624;
 }
 
-/* DAHSBOARD STYLES*/
-
-/* --- INSTAGRAM CLONE STYLES --- */
-
 /* Container Utama biar tengah di Desktop */
 .ig-container {
     max-width: 935px !important;
@@ -2147,7 +2156,6 @@ li.nav-locked a::after {
     color: black;
 }
 
-
 /* 3 CARD UTAMA (GRID) */
 .top-cards-grid {
     display: grid;
@@ -2374,14 +2382,13 @@ li.nav-locked a::after {
 /* --- EDIT BUTTON (ADMIN) --- */
 .dc-edit-btn {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    /* Di kiri atas, biar ga tabrakan sama shortcut tugas di kanan */
+    top: 5px;
+    right: 80px;
     background: rgba(255, 152, 0, 0.2);
     border: 1px solid rgba(255, 152, 0, 0.5);
     color: #ff9800;
-    width: 35px;
-    height: 35px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     cursor: pointer;
     z-index: 20;
@@ -3084,10 +3091,176 @@ input:checked+.slider:before {
 }
 
 #welcomeText {
-  color: #e9f4ff;
-  text-shadow:
-    0 0 4px #00d0ff,
-    0 0 8px #00aaff,
-    0 0 12px #00a6ff;
+    color: #e9f4ff;
+    text-shadow:
+        0 0 4px #00d0ff,
+        0 0 8px #00aaff,
+        0 0 12px #00a6ff;
 }
 
+
+.task-shortcut-box {
+    position: relative;
+    /* Wajib agar badge bisa menempel di pojok */
+}
+
+.task-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    /* Merah */
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: none;
+    /* Sembunyi jika 0 */
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+    z-index: 5;
+    animation: popBadge 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popBadge {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* --- 2. FILTER SYSTEM (SLIDING INDICATOR) --- */
+.filter-group-wrapper {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    display: flex;
+    position: relative;
+    padding: 6px;
+    width: 100%;
+    max-width: 450px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.filter-slider-bg {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: calc(50% - 6px);
+    height: calc(100% - 12px);
+    background: #00eaff;
+    /* Neon Blue */
+    border-radius: 14px;
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: 0 0 25px rgba(0, 234, 255, 0.5);
+    z-index: 1;
+}
+
+.filter-group-wrapper.pending-active .filter-slider-bg {
+    transform: translateX(100%);
+}
+
+.filter-btn-new {
+    flex: 1;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 15px 0;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    z-index: 2;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.filter-btn-new.active {
+    color: #000000 !important;
+    /* Hitam agar kontras di atas biru neon */
+}
+
+/* --- 3. TASK CARD STATUS (BACKGROUND MODE) --- */
+
+/* 🟢 HIJAU (DONE) */
+.task-green-done {
+    background: linear-gradient(145deg, rgba(46, 213, 115, 0.15), rgba(0, 0, 0, 0.6)) !important;
+    border: 1px solid rgba(46, 213, 115, 0.25) !important;
+    opacity: 0.75;
+}
+
+/* 🟡 KUNING (PENDING) */
+.task-yellow-pending {
+    background: linear-gradient(145deg, rgba(255, 165, 2, 0.15), rgba(0, 0, 0, 0.5)) !important;
+    border: 1px solid rgba(255, 165, 2, 0.2) !important;
+}
+
+/* 🔴 MERAH (DEADLINE) */
+.task-red-deadline {
+    background: linear-gradient(145deg, rgba(255, 71, 87, 0.25), rgba(0, 0, 0, 0.6)) !important;
+    border: 1px solid rgba(255, 71, 87, 0.4) !important;
+    box-shadow: 0 0 30px rgba(255, 71, 87, 0.15);
+}
+
+/* Badge Deadline di dalam kartu */
+.task-red-deadline::after {
+    content: "DEADLINE";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #ff4757;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #ff4757;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+/* --- 4. MISC & ANIMATIONS --- */
+.empty-state {
+    text-align: center;
+    padding: 100px 20px;
+    opacity: 0.4;
+}
+
+.empty-state i {
+    font-size: 70px;
+    margin-bottom: 25px;
+    display: block;
+    background: linear-gradient(to bottom, #fff, transparent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@keyframes pulseRed {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+        text-shadow: 0 0 10px #ff4757;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

@@ -48,6 +48,7 @@ function renderSidebar() {
             items: [
                 { text: "Home", url: "homev2.html", icon: "fa-house" },
                 { text: "Announcement", url: "announcements.html", icon: "fa-bullhorn", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Daftar Tugas", url: "tugas.html", icon: "fa-solid fa-list-check", badge: "SOON", badgeType: "badge-soon" },
                 { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear", badge: "NEW", badgeType: "badge-new" },
                 { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
             ]

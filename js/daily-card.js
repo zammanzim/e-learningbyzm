@@ -1,7 +1,7 @@
 // --- GLOBAL VARIABLES ---
-window.dailyDrafts = {}; 
+window.dailyDrafts = {};
 window.isDailyEditing = false;
-window.editingDay = null; 
+window.editingDay = null;
 window.currentViewDay = null;
 
 async function initDailyCard() {
@@ -17,7 +17,7 @@ async function initDailyCard() {
     const cardId = 'dailyInfoCard';
     if (!document.getElementById(cardId)) {
         const isAdmin = user && (user.role === 'class_admin' || user.role === 'super_admin');
-        
+
         if (isAdmin && !document.getElementById('dailyFab')) {
             const fabHTML = `
                 <div id="dailyFab" class="daily-fab-container">
@@ -30,17 +30,17 @@ async function initDailyCard() {
 
         const cardHTML = `
             <div id="${cardId}" class="daily-card-final glass-card-effect">
-                <div class="final-header animate-pop-in">
-                    <div>
-                        <span class="final-badge" id="lblBadge">LOADING</span>
-                        <h2 class="final-day" id="lblHari">...</h2>
-                        <small class="final-date" id="lblTanggal">...</small>
-                    </div>
-                    <div class="task-shortcut-box" onclick="window.location.href='tugas.html'">
-                        <i class="fa-solid fa-clipboard-list"></i>
-                        <span>TUGAS</span>
-                    </div>
-                </div>
+        <div class="final-header animate-pop-in">
+            <div>
+                <span class="final-badge" id="lblBadge">LOADING</span>
+                <h2 class="final-day" id="lblHari">...</h2>
+                <small class="final-date" id="lblTanggal">...</small>
+            </div>
+            <div class="task-shortcut-box" onclick="window.location.href='tugas.html'">
+    <div id="taskBadge" class="task-badge">0</div> <i class="fa-solid fa-clipboard-list"></i>
+    <span>TUGAS</span>
+</div>
+        </div>
 
                 <div id="dcContentFinal" class="final-content">
                     <p style="text-align:center; padding:20px;">Mengambil Data...</p>
@@ -97,7 +97,7 @@ async function initDailyCard() {
         }
 
         const config = window.currentConfig;
-        
+
         // B. TENTUKAN HARI (Priority: CUSTOM > AUTO > MANUAL)
         const now = new Date();
         const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -117,18 +117,18 @@ async function initDailyCard() {
             // Mode Edit (Selalu menang)
             displayDay = window.editingDay;
             labelWaktu = (displayDay === 'CUSTOM') ? "EDIT CUSTOM" : "DRAFT MODE";
-        } 
+        }
         else if (config.is_custom) {
             // Mode Custom Aktif
             displayDay = 'CUSTOM';
             labelWaktu = "SPECIAL EVENT";
             fullDate = "Jadwal Khusus";
-        } 
+        }
         else if (config.is_auto) {
             // Mode Auto
             displayDay = autoDay;
             if (now.getHours() >= 15) labelWaktu = "BESOK";
-        } 
+        }
         else {
             // Mode Manual
             displayDay = config.forced_day;
@@ -141,7 +141,8 @@ async function initDailyCard() {
         // UI Update Header
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;
-        
+
+
         // Warna Badge
         if (displayDay === 'CUSTOM') badgeEl.className = 'final-badge bg-custom'; // Style khusus ntar
         else badgeEl.className = `final-badge ${labelWaktu === 'BESOK' ? 'bg-orange' : 'bg-cyan'}`;
@@ -173,13 +174,14 @@ async function initDailyCard() {
                 const isCustom = e.target.checked;
                 // Update Config Global
                 window.currentConfig.is_custom = isCustom;
-                
+
                 // Set Editing Day
                 if (window.isDailyEditing) saveToDraft(window.editingDay);
                 window.editingDay = isCustom ? 'CUSTOM' : (config.is_auto ? autoDay : config.forced_day);
-                
+
                 initDailyCard();
             };
+
 
             // LISTENER: AUTO TOGGLE
             autoTog.onchange = (e) => {
@@ -209,9 +211,9 @@ async function initDailyCard() {
         if (!scheduleData) {
             // Auto Create CUSTOM row if missing logic handled in SQL, but double check
             if (displayDay === 'CUSTOM') {
-                 contentEl.innerHTML = `<div class="dc-empty-state">Mode Custom Aktif.<br>Klik Edit untuk mengisi detail event.</div>`;
+                contentEl.innerHTML = `<div class="dc-empty-state">Mode Custom Aktif.<br>Klik Edit untuk mengisi detail event.</div>`;
             } else {
-                 contentEl.innerHTML = `<div class="dc-empty-state">Data Kosong.</div>`;
+                contentEl.innerHTML = `<div class="dc-empty-state">Data Kosong.</div>`;
             }
             if (window.isDailyEditing) applyEditMode(true);
             return;
@@ -234,7 +236,7 @@ async function initDailyCard() {
             scheduleData.lessons.split(/,|\n/).map(i => i.trim()).filter(i => i.length > 1).forEach((item, idx) => {
                 let [time, subject] = item.includes('-') ? item.split('-') : ["", item];
                 timelineHTML += `
-                    <div class="tl-item-final animate-slide-right" style="animation-delay:${idx*0.05}s">
+                    <div class="tl-item-final animate-slide-right" style="animation-delay:${idx * 0.05}s">
                         <div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div>
                         <div class="tl-time-final editable-text" data-type="time" oninput="autoSaveDraft()">${time.trim()}</div>
                         <div class="tl-marker-final"></div>
@@ -248,7 +250,7 @@ async function initDailyCard() {
         if (scheduleData.picket) {
             scheduleData.picket.split(/,|\n/).map(n => n.trim()).filter(n => n.length > 0).forEach((n, i) => {
                 picketHTML += `
-                    <div class="picket-pill animate-pop-up" style="animation-delay:${0.2+(i*0.05)}s">
+                    <div class="picket-pill animate-pop-up" style="animation-delay:${0.2 + (i * 0.05)}s">
                         <div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div>
                         <span class="editable-text" data-type="picket" oninput="autoSaveDraft()">${n}</span>
                     </div>`;
@@ -289,28 +291,60 @@ async function initDailyCard() {
 
         if (window.isDailyEditing) applyEditMode(true);
 
+        updateTaskBadge(user);
+
     } catch (e) { console.error("Error Init:", e); }
 }
 
+async function updateTaskBadge(user) {
+    try {
+        // Tambahkan filter .neq untuk mengecualikan materi dari halaman announcements
+        const { count: total } = await supabase
+            .from('subject_announcements')
+            .select('*', { count: 'exact', head: true })
+            .eq('class_id', user.class_id)
+            .neq('subject_id', 'announcements');
+
+        const { count: done } = await supabase
+            .from('user_progress')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+
+        const pending = (total || 0) - (done || 0);
+        const el = document.getElementById('taskBadge');
+
+        if (el) {
+            if (pending > 0) {
+                el.innerText = pending > 99 ? '99+' : pending;
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+    } catch (e) {
+        console.error("Badge error:", e);
+    }
+}
+
 // --- 3. DRAFT & AUTO SAVE ---
-window.autoSaveDraft = function() {
+window.autoSaveDraft = function () {
     if (window.isDailyEditing && window.editingDay) saveToDraft(window.editingDay);
 }
 
-window.saveToDraft = function(day) {
+window.saveToDraft = function (day) {
     if (!day) return;
     const user = JSON.parse(localStorage.getItem("user"));
-    
+
     let lessonArr = [];
     document.querySelectorAll('.tl-item-final').forEach(row => {
         const time = row.querySelector('[data-type="time"]')?.innerText.trim() || "";
         const subj = row.querySelector('[data-type="subject"]')?.innerText.trim() || "";
-        if(time || subj) lessonArr.push(`${time} - ${subj}`);
+        if (time || subj) lessonArr.push(`${time} - ${subj}`);
     });
 
     let picketArr = [];
-    document.querySelectorAll('.picket-pill span').forEach(el => { 
-        if(el.innerText.trim()) picketArr.push(el.innerText.trim()); 
+    document.querySelectorAll('.picket-pill span').forEach(el => {
+        if (el.innerText.trim()) picketArr.push(el.innerText.trim());
     });
 
     window.dailyDrafts[day] = {
@@ -323,15 +357,15 @@ window.saveToDraft = function(day) {
 }
 
 // --- 4. TOGGLE EDIT ---
-window.toggleDailyEditMode = function() {
+window.toggleDailyEditMode = function () {
     window.isDailyEditing = !window.isDailyEditing;
     const fab = document.getElementById('dailyFab');
     const card = document.getElementById('dailyInfoCard');
-    
+
     if (window.isDailyEditing) {
         // Auto Lock hari yang lagi tampil
         window.editingDay = window.currentViewDay;
-        
+
         fab.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;">
              <button class="fab-daily btn-save" onclick="saveAllDrafts()"><i class="fa-solid fa-check"></i></button>
              <button class="fab-daily btn-cancel" onclick="toggleDailyEditMode()"><i class="fa-solid fa-xmark"></i></button>
@@ -362,10 +396,10 @@ function applyEditMode(isActive) {
 }
 
 // --- 5. SAVE ALL (DB) ---
-window.saveAllDrafts = async function() {
+window.saveAllDrafts = async function () {
     const btn = document.querySelector('.btn-save');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-    
+
     const user = JSON.parse(localStorage.getItem("user"));
     const CLASS_ID = user.class_id;
 
@@ -379,10 +413,10 @@ window.saveAllDrafts = async function() {
     const currentForced = window.currentConfig.forced_day;
     const newForced = isCustom ? currentForced : (window.editingDay || currentForced);
 
-    await supabase.from('daily_config').upsert({ 
-        class_id: CLASS_ID, is_auto: isAuto, is_custom: isCustom, forced_day: newForced 
+    await supabase.from('daily_config').upsert({
+        class_id: CLASS_ID, is_auto: isAuto, is_custom: isCustom, forced_day: newForced
     });
-    
+
     // Refresh Config Lokal
     window.currentConfig.is_custom = isCustom;
     window.currentConfig.is_auto = isAuto;
@@ -401,17 +435,17 @@ window.saveAllDrafts = async function() {
     document.getElementById('dailyFab').innerHTML = `<button class="fab-daily btn-edit" onclick="toggleDailyEditMode()"><i class="fa-solid fa-pen"></i></button>`;
     document.getElementById('dailyInfoCard').classList.remove('edit-mode-on');
     applyEditMode(false);
-    if(typeof showPopup === 'function') showPopup("Data Tersimpan!", "success");
+    if (typeof showPopup === 'function') showPopup("Data Tersimpan!", "success");
     initDailyCard();
 }
 
-window.deleteItem = function(el) { el.parentElement.remove(); autoSaveDraft(); }
-window.addLessonRow = function() {
+window.deleteItem = function (el) { el.parentElement.remove(); autoSaveDraft(); }
+window.addLessonRow = function () {
     const div = document.createElement('div'); div.className = 'tl-item-final';
     div.innerHTML = `<div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div><div class="tl-time-final editable-text editable-active" contenteditable="true" data-type="time" oninput="autoSaveDraft()">00.00</div><div class="tl-marker-final"></div><div class="tl-subject-final editable-text editable-active" contenteditable="true" data-type="subject" oninput="autoSaveDraft()">Acara Baru</div>`;
     document.getElementById('timelineList').appendChild(div); autoSaveDraft();
 }
-window.addPicketRow = function() {
+window.addPicketRow = function () {
     const div = document.createElement('div'); div.className = 'picket-pill';
     div.innerHTML = `<div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div><span class="editable-text editable-active" contenteditable="true" data-type="picket" oninput="autoSaveDraft()">Nama</span>`;
     document.getElementById('picketList').appendChild(div); autoSaveDraft();
