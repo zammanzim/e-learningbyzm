@@ -224,7 +224,7 @@ const SubjectApp = {
         container.innerHTML = "<h3 style='margin-top: 30px;'>Materi & Pengumuman</h3>";
 
         if (this.state.announcements.length === 0) {
-            container.innerHTML += "<p style='color:#666; padding:20px;'>Belum ada materi</p>";
+            container.innerHTML += "<h3 style='color: #ff6200; padding:20px;'>Belum ada materi</h3>";
             return;
         }
         this.state.announcements.forEach((item) => {
@@ -491,7 +491,7 @@ const SubjectApp = {
             await this.uploadPhoto(card, file);
         };
     },
-
+ 
     async uploadPhoto(card, file) {
         const id = card.dataset.id;
         try {
@@ -608,6 +608,22 @@ const SubjectApp = {
                 modal.classList.add('hidden'); this.clearForm();
             };
         }
+
+        btnAdd.onclick = (e) => { 
+            e.preventDefault(); 
+            modal.classList.remove('hidden'); 
+            this.tempFiles = []; 
+            document.getElementById('previewContainer').innerHTML = ''; 
+
+            // Tambahkan ini biar footer otomatis keisi tanggal hari ini
+            const el = document.getElementById('addSmall');
+            if (el) el.value = new Date().toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        };
     },
 
     async handleNewFiles(files) {
@@ -727,17 +743,63 @@ const SubjectApp = {
     }
 };
 
+// File: js/subject-manager.js
+
+// Fungsi untuk mendapatkan tanggal format Indonesia (contoh: Minggu, 18 Januari 2026)
+function getTodayIndo() {
+    const d = new Date();
+    return d.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Update di dalam fungsi yang mereset/membuka modal tambah
+// Misalnya di fungsi showAddModal() atau sejenisnya:
+function showAddModal() {
+    // Reset field lain seperti biasa
+    document.getElementById('modalBig').value = '';
+    document.getElementById('modalTitle').value = '';
+    document.getElementById('modalContent').value = '';
+
+    // --- FITUR OTOMATIS TANGGAL ---
+    const footerInput = document.getElementById('modalSmall');
+    if (footerInput) {
+        footerInput.value = getTodayIndo(); // Terisi otomatis
+    }
+
+    // Tampilkan modal
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
 // --- GLOBAL VIEWER FUNCTIONS ---
 let currentViewerPhotos = [], currentViewerIndex = 0, mobileInfoTimer = null;
 function openDetail(data) {
     const overlay = document.getElementById('detailOverlay');
-    const box = document.querySelector('.glass-detail-box');
+    const infoSection = document.getElementById('detailInfoSection');
+    const toggleBtn = document.getElementById('toggleInfoBtn');
+    const isMobile = window.innerWidth <= 768;
+
+    // Set Teks
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
-    document.getElementById('detailContentTxt').innerText = data.content || '';
     document.getElementById('detailSmallTxt').innerText = data.small || '';
-    document.getElementById('mobBig').innerText = data.big_title || '';
-    document.getElementById('mobSub').innerText = data.title || '';
+
+    const contentTxt = document.getElementById('detailContentTxt');
+    contentTxt.innerText = data.content || '';
+    // Fix spasi paragraf di detail popup
+    contentTxt.style.whiteSpace = 'pre-wrap';
+
+    // Logika Animasi Mobile (Pakai class dari styleasli.css baris 751)
+    if (isMobile) {
+        if (infoSection) infoSection.classList.add('hidden-mobile'); // Slide Down
+        if (toggleBtn) toggleBtn.style.display = 'flex';
+    } else {
+        if (infoSection) infoSection.classList.remove('hidden-mobile'); // Tetap di samping (Desktop)
+        if (toggleBtn) toggleBtn.style.display = 'none';
+    }
 
     currentViewerPhotos = [];
     if (data.photo_url) {
@@ -745,23 +807,60 @@ function openDetail(data) {
         else { try { currentViewerPhotos = JSON.parse(data.photo_url); } catch { currentViewerPhotos = [data.photo_url]; } }
     }
 
-    box.classList.remove('text-only-mode');
     currentViewerIndex = 0;
     updateSliderUI();
     overlay.classList.add('active');
 }
 
 function closeDetail() { document.getElementById('detailOverlay').classList.remove('active'); }
+// File: js/subject-manager.js
+
 function updateSliderUI() {
     const imgEl = document.getElementById('detailImg');
     const nav = document.getElementById('sliderNavBtns');
-    if (currentViewerPhotos.length === 0) { imgEl.style.display = 'none'; nav.style.display = 'none'; return; }
+    if (!nav) return;
 
-    imgEl.style.display = 'block';
-    imgEl.src = currentViewerPhotos[currentViewerIndex];
-    document.getElementById('photoCounterTag').innerText = `${currentViewerIndex + 1}/${currentViewerPhotos.length}`;
-    nav.style.display = currentViewerPhotos.length > 1 ? 'block' : 'none';
+    if (currentViewerPhotos.length === 0) {
+        if (imgEl) imgEl.style.display = 'none';
+        nav.style.display = 'none';
+        return;
+    }
+
+    if (imgEl) {
+        imgEl.style.display = 'block';
+        imgEl.src = currentViewerPhotos[currentViewerIndex];
+    }
+
+    const tag = document.getElementById('photoCounterTag');
+    if (tag) tag.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;
+
+    const isMulti = currentViewerPhotos.length > 1;
+    nav.style.display = isMulti ? 'flex' : 'none';
+
+    if (isMulti) {
+        const btnPrev = nav.querySelector('.prev-btn');
+        const btnNext = nav.querySelector('.next-btn');
+        // Panah hilang di ujung foto sesuai instruksi
+        if (btnPrev) btnPrev.style.visibility = (currentViewerIndex === 0) ? 'hidden' : 'visible';
+        if (btnNext) btnNext.style.visibility = (currentViewerIndex === currentViewerPhotos.length - 1) ? 'hidden' : 'visible';
+    }
 }
 function nextSlide(e) { if (e) e.stopPropagation(); if (currentViewerIndex < currentViewerPhotos.length - 1) { currentViewerIndex++; updateSliderUI(); } }
 function prevSlide(e) { if (e) e.stopPropagation(); if (currentViewerIndex > 0) { currentViewerIndex--; updateSliderUI(); } }
-function showMobileInfo(e) { if (e) e.stopPropagation(); document.getElementById('detailInfoSection').classList.remove('hidden-mobile'); }
+function showMobileInfo(e) {
+    if (e) e.stopPropagation();
+    const info = document.getElementById('detailInfoSection');
+    const btn = document.getElementById('toggleInfoBtn');
+    // Animasi Naik: lepas class hidden-mobile
+    if (info) info.classList.remove('hidden-mobile');
+    if (btn) btn.style.display = 'none';
+}
+
+function toggleMobileInfo(e) {
+    if (e) e.stopPropagation();
+    const info = document.getElementById('detailInfoSection');
+    const btn = document.getElementById('toggleInfoBtn');
+    // Animasi Turun: pasang class hidden-mobile
+    if (info) info.classList.add('hidden-mobile');
+    if (btn) btn.style.display = 'flex';
+}

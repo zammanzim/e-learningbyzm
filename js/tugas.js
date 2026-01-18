@@ -105,13 +105,10 @@ function renderTasks(data) {
     const container = document.getElementById('taskList');
     if (!container) return;
     container.innerHTML = "";
-
     const total = allTasks.length;
 
     data.forEach((item) => {
         const isDone = doneIds.includes(String(item.id));
-
-        // Match deadline dengan normalisasi string
         const isDeadline = !isDone && deadlineSubjects.some(s =>
             normalize(item.subject_id).includes(s) ||
             normalize(item.big_title).includes(s)
@@ -120,46 +117,58 @@ function renderTasks(data) {
         const autoNumber = total - allTasks.indexOf(item);
         let statusClass = isDone ? 'task-green-done' : (isDeadline ? 'task-red-deadline' : 'task-yellow-pending');
 
-        // Foto Grid (Lessons Style)
+        // Logic Parsing Foto Identik Subject Manager
+        let photos = [];
+        if (item.photo_url) {
+            if (Array.isArray(item.photo_url)) photos = item.photo_url;
+            else if (typeof item.photo_url === 'string') {
+                try {
+                    if (item.photo_url.startsWith('[')) photos = JSON.parse(item.photo_url);
+                    else photos = [item.photo_url];
+                } catch (e) { photos = [item.photo_url]; }
+            }
+        }
+
         let photoHTML = '';
-        if (item.photos && item.photos.length > 0) {
-            const count = item.photos.length;
-            const gridClass = count >= 4 ? 'grid-4' : (count === 3 ? 'grid-3' : (count === 2 ? 'grid-2' : 'grid-1'));
-            let photoItems = '';
-            item.photos.slice(0, 4).forEach((url, i) => {
-                const isLast = i === 3 && count > 4;
-                photoItems += `
-                    <div class="photo-wrapper" onclick="event.stopPropagation(); window.openLightbox && window.openLightbox('${url}', ${JSON.stringify(item.photos)})">
-                        <img src="${url}" class="photo-item">
-                        ${isLast ? `<div class="more-overlay">+${count - 4}</div>` : ''}
+        if (photos.length > 0) {
+            let gridClass = `grid-${Math.min(photos.length, 4)}`;
+            let imgsHTML = photos.slice(0, 4).map((url, i) => {
+                const isLast = i === 3 && photos.length > 4;
+                return `
+                    <div class="photo-item photo-wrapper">
+                        <img src="${url}">
+                        ${isLast ? `<div class="more-overlay">+${photos.length - 4}</div>` : ''}
                     </div>`;
-            });
-            photoHTML = `<div class="photo-grid ${gridClass}">${photoItems}</div>`;
+            }).join('');
+            photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
         }
 
         const el = document.createElement('div');
-        el.className = `course-card clickable-card ${statusClass}`;
+        el.className = `course-card ${statusClass}`;
+        el.dataset.id = item.id;
+
+        // BLOKIR KLIK: openDetail hanya dipasang jika ada foto
+        if (photos.length > 0) {
+            el.classList.add('clickable-card');
+            el.onclick = () => openDetail(item);
+        } else {
+            el.style.cursor = 'default';
+        }
 
         el.innerHTML = `
-            ${photoHTML}
-                <h3 style="margin:5px 0; font-size: 20px;">${item.big_title}</h3>
-                <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
-                <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5;">${truncateText(item.content || '', 120)}</p>
-                ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
-                <div style="display:flex; justify-content:flex-end;">
-                    <button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
-                        ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
-                    </button>
-                </div>
-        `;
-        el.onclick = () => openDetail(item);
+    ${photoHTML}
+    <h3 style="margin:5px 0; font-size: 20px;">${item.big_title}</h3>
+    <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
+    <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5; white-space: pre-wrap;">${item.content}</p>
+    ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
+    <div style="display:flex; justify-content:flex-end;">
+        <button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
+            ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
+        </button>
+    </div>
+`;
         container.appendChild(el);
     });
-}
-
-function truncateText(text, limit) {
-    if (text.length <= limit) return text;
-    return text.substring(0, limit) + "...";
 }
 
 async function toggleStatus(e, id, btn) {
@@ -187,6 +196,21 @@ async function toggleStatus(e, id, btn) {
 function applyCurrentFilter() {
     if (currentFilter === 'pending') {
         const filtered = allTasks.filter(t => !doneIds.includes(String(t.id)));
+
+        // Urutkan: Deadline (merah) dulu, baru Pending (kuning)
+        filtered.sort((a, b) => {
+            const aIsDeadline = deadlineSubjects.some(s =>
+                normalize(a.subject_id).includes(s) || normalize(a.big_title).includes(s)
+            );
+            const bIsDeadline = deadlineSubjects.some(s =>
+                normalize(b.subject_id).includes(s) || normalize(b.big_title).includes(s)
+            );
+
+            if (aIsDeadline && !bIsDeadline) return -1; // a naik
+            if (!aIsDeadline && bIsDeadline) return 1;  // b naik
+            return 0; // Tetap urut terbaru (created_at DESC)
+        });
+
         renderTasks(filtered);
     } else {
         renderTasks(allTasks);
@@ -205,14 +229,3 @@ function filterTasks(type, btn) {
 
     applyCurrentFilter();
 }
-
-function openDetail(data) {
-    const overlay = document.getElementById('detailOverlay');
-    document.getElementById('detailBigTxt').innerText = data.big_title;
-    document.getElementById('detailTitleTxt').innerText = data.title;
-    document.getElementById('detailContentTxt').innerText = data.content;
-    document.getElementById('detailSmallTxt').innerText = data.small || '';
-    overlay.classList.add('active');
-}
-
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('active'); }

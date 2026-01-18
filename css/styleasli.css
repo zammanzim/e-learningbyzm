@@ -129,7 +129,6 @@ header {
     right: 15px;
     top: 58px;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
     padding: 10px 0;
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -274,18 +273,17 @@ header {
     background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
     color: white;
     box-shadow: 0 2px 10px rgba(255, 71, 87, 0.4);
-    animation: pulseRed 2s infinite;
 }
 
 .badge-new {
     background: linear-gradient(135deg, #ffd32a 0%, #fffa65 100%);
-    color: rgb(255, 255, 255);
+    color: rgb(255, 0, 251);
     box-shadow: 0 2px 10px rgba(255, 211, 42, 0.4);
 }
 
 .badge-upd {
     background: linear-gradient(135deg, #0be881 0%, #00d2d3 100%);
-    color: rgb(255, 255, 255);
+    color: rgb(255, 77, 0);
     box-shadow: 0 2px 10px rgba(11, 232, 129, 0.4);
 }
 
@@ -295,19 +293,42 @@ header {
     opacity: 0.8;
 }
 
-@keyframes pulseRed {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4);
-    }
-
-    70% {
-        box-shadow: 0 0 0 6px rgba(255, 71, 87, 0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
-    }
+.badge-info {
+    background: linear-gradient(135deg, #00cfe8 0%, #1dd1ff 100%);
+    color: black;
+    box-shadow: 0 2px 10px rgba(0, 207, 232, 0.4);
 }
+
+.badge-beta {
+    background: linear-gradient(135deg, #a55eea 0%, #d2a8ff 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(165, 94, 234, 0.4);
+}
+
+.badge-lock {
+    background: linear-gradient(135deg, #57606f 0%, #a4b0be 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(87, 96, 111, 0.4);
+}
+
+.badge-fix {
+    background: linear-gradient(135deg, #ff9f43 0%, #feca57 100%);
+    color: black;
+    box-shadow: 0 2px 10px rgba(255, 159, 67, 0.4);
+}
+
+.badge-today {
+    background: linear-gradient(135deg, #feca57 0%, #ffdd59 100%);
+    color: black;
+    box-shadow: 0 2px 10px rgba(254, 202, 87, 0.45);
+}
+
+.badge-task {
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(108, 92, 231, 0.4);
+}
+
 
 /* --- DESKTOP VIEW (Media Query Wajib Update) --- */
 @media (min-width: 1024px) {
@@ -338,7 +359,6 @@ header {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(3px);
     z-index: 1500;
     display: none;
     transition: opacity .25s ease;
@@ -511,7 +531,6 @@ i {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
     z-index: 9999;
     display: flex;
     justify-content: center;
@@ -698,20 +717,14 @@ i {
 
     .left-section {
         flex: 1;
-        /* Tambahkan kode di bawah ini */
         position: sticky;
         top: 80px;
-        /* Jarak dari atas agar tidak tertutup header */
         align-self: flex-start;
-        /* Wajib agar sticky jalan di flexbox */
-        z-index: 10;
     }
 
     .right-section {
         flex: 1;
-        /* Opsional: buat daftar tugas sedikit lebih lebar */
         margin-top: 75px;
-        /* Reset margin top jika sebelumnya ada */
     }
 
     .sidebar {
@@ -743,7 +756,7 @@ i {
     width: 100%;
     height: 100%;
     background: rgba(5, 5, 5, 0.85);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(2px);
     z-index: 3000;
     display: flex;
     justify-content: center;
@@ -766,8 +779,6 @@ i {
     background: rgba(30, 30, 30, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(0, 234, 255, 0.15);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
     padding: 30px;
     display: flex;
@@ -1175,8 +1186,9 @@ li.nav-locked a::after {
 }
 
 .slider-wrapper img {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 97%;
+    max-height: 97%;
+    border-radius: 16px;
 }
 
 .slider-nav-container {
@@ -1193,9 +1205,9 @@ li.nav-locked a::after {
     position: absolute;
     top: auto;
     transform: none;
-    bottom: 30px;
-    width: 50px;
-    height: 50px;
+    bottom: 15px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -1290,6 +1302,7 @@ li.nav-locked a::after {
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
+    border-radius: 20px;
 }
 
 .info-content-scroll {
@@ -1309,33 +1322,43 @@ li.nav-locked a::after {
 .info-content-scroll h4 {
     font-size: 16px;
     color: #00eaff;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     font-weight: normal;
 }
 
 .detail-body-text {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.7;
-    color: #ddd;
+    color: hsl(0, 0%, 95%);
     white-space: pre-wrap;
     flex: 1;
 }
 
 .detail-footer-text {
-    margin-top: 30px;
-    padding-top: 20px;
+    padding-top: 5px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     color: #888;
-    font-size: 12px;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.hide-desk {
+    background: #00eaff;
+    color: #000;
+    font-weight: bold;
+    padding: 12px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
 }
 
 .mobile-toggle-btn {
     position: absolute;
-    bottom: 30px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
-    background: #00eaff;
-    color: black;
+    background: #000000ad;
+    color: rgb(255, 255, 255);
     font-weight: bold;
     padding: 12px 25px;
     border-radius: 30px;
@@ -1412,7 +1435,6 @@ li.nav-locked a::after {
         left: 0;
         z-index: 1;
         background: transparent;
-        padding-bottom: 80px;
     }
 
     .detail-info-section {
@@ -1422,7 +1444,7 @@ li.nav-locked a::after {
         width: 100%;
         height: auto;
         max-height: 60%;
-        backdrop-filter: blur(10px);
+        background: #000000bb;
         border-top: 1px solid rgba(255, 255, 255, 0.2);
         z-index: 10;
         transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1548,7 +1570,6 @@ li.nav-locked a::after {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    backdrop-filter: blur(8px);
 }
 
 .uni-overlay.active {
@@ -2483,7 +2504,7 @@ input:checked+.slider:before {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    z-index: 9999;
+    z-index: 1;
 }
 
 /* Tombol Edit Bulat (Floating Action Button) */
@@ -2500,6 +2521,7 @@ input:checked+.slider:before {
     justify-content: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 0;
 }
 
 .fab-daily.btn-edit {
@@ -2512,9 +2534,6 @@ input:checked+.slider:before {
 
 .fab-daily.btn-cancel {
     background: #ff4757;
-    width: 45px;
-    height: 45px;
-    font-size: 16px;
 }
 
 .fab-daily:hover {
@@ -3145,7 +3164,6 @@ input:checked+.slider:before {
     position: relative;
     padding: 6px;
     width: 100%;
-    max-width: 450px;
     margin-bottom: 30px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
@@ -3263,4 +3281,48 @@ input:checked+.slider:before {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+@media (min-width: 1024px) {
+
+    .mobile-toggle-btn,
+    .hide-desk {
+        display: none;
+    }
+
+    .detail-info-section {
+        display: block;
+        position: relative;
+        width: 90%;
+        height: 100%;
+        background: rgba(20, 20, 20, 0.5);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Layout Flex: Gambar Kiri, Keterangan Kanan */
+    .glass-detail-box {
+        flex-direction: row;
+        max-width: 90%;
+        height: 90%;
+        overflow: hidden;
+    }
+
+    .detail-media-section {
+        flex: 2;
+        height: 100%;
+    }
+
+    .slider-wrapper img {
+        object-fit: contain;
+    }
+}
+
+.glow {
+    color: #00eaff;
+    font-weight: bold;
+    text-shadow:
+        0 0 5px #00eaff,
+        0 0 10px #00eaff,
+        0 0 20px #00cfff,
+        0 0 40px #009dff;
 }

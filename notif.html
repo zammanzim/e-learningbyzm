@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifikasi System</title>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
+    <style>
+        .notif-form-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <a href="dashboard.html" style="color:white; font-size: 20px;"><i class="fa-solid fa-arrow-left"></i></a>
+            <h2 id="pageTitle">Notifikasi</h2>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div id="adminArea" class="notif-form-section hidden">
+            <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-paper-plane"></i> Kirim Notifikasi Baru</h3>
+
+            <label class="dc-label-input">Target Penerima</label>
+            <select id="notifTarget" class="glass-input" onchange="toggleFilter()">
+                <option value="all">Semua Pengguna</option>
+                <option value="class">Per Kelas</option>
+                <option value="user">Per Siswa</option>
+            </select>
+
+            <div id="classFilter" class="hidden" style="margin-top: 10px;">
+                <label class="dc-label-input">Pilih Kelas</label>
+                <select id="targetClass" class="glass-input">
+                    <option value="X - RPL 1">X - RPL 1</option>
+                    <option value="X - RPL 2">X - RPL 2</option>
+                    <option value="X - RPL 3">X - RPL 3</option>
+                </select>
+            </div>
+
+            <div id="userFilter" class="hidden" style="margin-top: 10px;">
+                <label class="dc-label-input">Pilih Siswa</label>
+                <select id="targetUser" class="glass-input">
+                </select>
+            </div>
+
+            <label class="dc-label-input" style="margin-top: 15px;">Judul</label>
+            <input type="text" id="notifTitle" class="glass-input" placeholder="Masukkan judul...">
+
+            <label class="dc-label-input">Pesan</label>
+            <textarea id="notifBody" class="glass-input" placeholder="Tulis pesan..."></textarea>
+
+            <button class="btn-glass-save" style="margin-top: 15px; width: 100%;" onclick="sendNotif()">
+                <i class="fa-solid fa-share"></i> Kirim Notifikasi
+            </button>
+        </div>
+
+        <h3 style="margin-bottom: 20px;">Daftar Pesan</h3>
+        <div id="notifList">
+            <p style="text-align:center; opacity:0.5;">Memuat pesan...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) window.location.href = "index.html";
+
+        async function init() {
+            // Tampilkan form jika super_admin
+            if (user.role === 'super_admin') {
+                document.getElementById('adminArea').classList.remove('hidden');
+                loadUsers();
+            }
+            loadNotifs();
+        }
+
+        function toggleFilter() {
+            const val = document.getElementById('notifTarget').value;
+            document.getElementById('classFilter').classList.toggle('hidden', val !== 'class');
+            document.getElementById('userFilter').classList.toggle('hidden', val !== 'user');
+        }
+
+        async function loadUsers() {
+            const { data } = await supabase.from('users').select('id, nama').order('nama');
+            const sel = document.getElementById('targetUser');
+            if (data) {
+                data.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.innerText = u.nama;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        async function sendNotif() {
+            const title = document.getElementById('notifTitle').value;
+            const body = document.getElementById('notifBody').value;
+            const target = document.getElementById('notifTarget').value;
+            let targetId = null;
+
+            if (target === 'class') targetId = document.getElementById('targetClass').value;
+            if (target === 'user') targetId = document.getElementById('targetUser').value;
+
+            if (!title || !body) return alert("Isi judul & pesan!");
+
+            const { error } = await supabase.from('notifications').insert({
+                title: title,
+                body: body,
+                target_type: target,
+                target_id: targetId
+            });
+
+            if (!error) {
+                alert("Terkirim!");
+                location.reload();
+            }
+        }
+
+        async function loadNotifs() {
+            const container = document.getElementById('notifList');
+            // Logika filter: ambil yang buat 'all' ATAU kelas user ini ATAU id user ini
+            const { data, error } = await supabase
+                .from('notifications')
+                .select('*')
+                .or(`target_type.eq.all, and(target_type.eq.class,target_id.eq."${user.class_id}"), and(target_type.eq.user,target_id.eq.${user.id})`)
+                .order('created_at', { ascending: false });
+
+            if (error) return container.innerHTML = "<p>Gagal muat.</p>";
+
+            container.innerHTML = data.length === 0 ? "<p style='opacity:0.5; text-align:center;'>Tidak ada notifikasi.</p>" : "";
+
+            data.forEach(n => {
+                const el = document.createElement('div');
+                el.className = 'course-card task-yellow-pending';
+                el.innerHTML = `
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3 style="font-size:18px;">${n.title}</h3>
+                        <small style="opacity:0.6;">${new Date(n.created_at).toLocaleDateString('id-ID')}</small>
+                    </div>
+                    <p style="margin-top:10px; white-space:pre-wrap; color:#ddd;">${n.body}</p>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

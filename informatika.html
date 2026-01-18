@@ -3,13 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Informatika</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-clients.js"></script>
-    <script src="js/basicfeat.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/visitor.js"></script>
-    <script src="js/subject-manager.js"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/subject-manager.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/informatika.png" type="image/png">
@@ -127,14 +128,9 @@
         <div class="glass-detail-box">
             <span class="close-detail-btn" onclick="closeDetail()">&times;</span>
 
-            <div id="mobileHeader" class="mobile-header-overlay">
-                <h2 id="mobBig">JUDUL MATERI</h2>
-                <h4 id="mobSub">Sub Judul</h4>
-            </div>
-
             <div class="detail-media-section">
                 <div class="slider-wrapper">
-                    <img id="detailImg" src="" alt="Detail View">
+                    <img id="detailImg" src="">
 
                     <div id="sliderNavBtns" class="slider-nav-container">
                         <button class="glass-nav-btn prev-btn" onclick="prevSlide(event)">
@@ -145,22 +141,25 @@
                         </button>
                     </div>
 
+                    <div id="toggleInfoBtn" class="mobile-toggle-btn" onclick="showMobileInfo(event)">
+                        <i class="fa-solid fa-circle-info"></i> Lihat Deskripsi
+                    </div>
+
                     <div id="photoCounterTag" class="photo-counter-tag">1 / 1</div>
                 </div>
             </div>
 
             <div id="detailInfoSection" class="detail-info-section">
                 <div class="info-content-scroll">
-                    <h2 id="detailBigTxt" class="desktop-only-title">JUDUL BESAR</h2>
-                    <h4 id="detailTitleTxt" class="desktop-only-title">Sub Judul</h4>
+                    <h2 id="detailBigTxt"></h2>
+                    <h4 id="detailTitleTxt"></h4>
+                    <div id="detailContentTxt" class="detail-body-text"></div>
+                    <small id="detailSmallTxt" class="detail-footer-text"></small>
 
-                    <div id="detailContentTxt" class="detail-body-text">Isi konten...</div>
-                    <small id="detailSmallTxt" class="detail-footer-text">Footer text</small>
+                    <button class="hide-desk" onclick="toggleMobileInfo(event)">
+                        Sembunyikan <i class="fa-solid fa-chevron-down"></i>
+                    </button>
                 </div>
-            </div>
-
-            <div id="mobileToggleInfo" class="mobile-toggle-btn" onclick="showMobileInfo(event)">
-                <i class="fa-solid fa-circle-info"></i> Lihat Deskripsi
             </div>
         </div>
     </div>

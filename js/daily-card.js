@@ -76,7 +76,7 @@ async function initDailyCard() {
                         </div>
                     </div>
                 </div>
-                <div class="final-watermark">v20 Custom Mode</div>
+                <div class="final-watermark">v10 self update schedule</div>
             </div>
         `;
         const welcome = document.getElementById('welcomeText');

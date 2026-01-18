@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Tugas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-clients.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/visitor.js"></script>
-    <script src="js/basicfeat.js"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/subject-manager.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -81,9 +82,8 @@
 
     <div class="main-content">
         <div class="left-section">
-            <div class="page-title-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                <i class="fa-solid fa-list-check" style="font-size: 24px; color: #00eaff;"></i>
-                <h1 style="font-size: 22px; margin: 0;">Daftar Tugas</h1>
+            <div class="page-title-header glow" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <h1><i class="fa-solid fa-list-check" style="font-size: 26px;"></i> Daftar Tugas</h1>
             </div>
 
             <div id="userTaskProfile" class="daily-card-final glass-card-effect"
@@ -131,20 +131,46 @@
     </div>
 
     <div id="detailOverlay" class="detail-overlay">
-        <div class="glass-detail-box text-only-mode">
+        <div class="glass-detail-box">
             <span class="close-detail-btn" onclick="closeDetail()">&times;</span>
-            <div class="detail-info-section">
+
+            <div class="detail-media-section">
+                <div class="slider-wrapper">
+                    <img id="detailImg" src="">
+
+                    <div id="sliderNavBtns" class="slider-nav-container">
+                        <button class="glass-nav-btn prev-btn" onclick="prevSlide(event)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button class="glass-nav-btn next-btn" onclick="nextSlide(event)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div id="toggleInfoBtn" class="mobile-toggle-btn" onclick="showMobileInfo(event)">
+                        <i class="fa-solid fa-circle-info"></i> Lihat Deskripsi
+                    </div>
+
+                    <div id="photoCounterTag" class="photo-counter-tag">1 / 1</div>
+                </div>
+            </div>
+
+            <div id="detailInfoSection" class="detail-info-section">
                 <div class="info-content-scroll">
                     <h2 id="detailBigTxt"></h2>
                     <h4 id="detailTitleTxt"></h4>
                     <div id="detailContentTxt" class="detail-body-text"></div>
-                    <div id="detailSmallTxt" class="detail-footer-text"></div>
+                    <small id="detailSmallTxt" class="detail-footer-text"></small>
+
+                    <button class="hide-desk" onclick="toggleMobileInfo(event)">
+                        Sembunyikan <i class="fa-solid fa-chevron-down"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/tugas.js"></script>
+    <script src="js/tugas.js" defer></script>
 </body>
 
 </html>

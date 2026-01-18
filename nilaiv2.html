@@ -3,12 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nilai PSASI</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-clients.js"></script>
-    <script src="js/basicfeat.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/visitor.js"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/nilaipsasi.png" type="image/png">
@@ -243,9 +244,9 @@
 
     <div class="main-content">
         <div class="left-section">
-            <h1 style="color: #00eaff;"><i class="fa-solid fa-clipboard-check"></i> Nilai PSAS</h1>
-            <p style="opacity: 0.8; margin-bottom: 20px;">PSASI 25-26 • X-RPL 2</p>
-
+            <div class="glow">
+                <h1><i class="fa-solid fa-clipboard-check"></i> Nilai PSAS</h1>
+            </div>
             <div class="course-card">
                 <img id="pp" src="profpicture.png">
                 <div class="userInfo">
@@ -350,7 +351,7 @@
 
         document.addEventListener("DOMContentLoaded", async function () {
             if (typeof SubjectApp !== 'undefined') SubjectApp.init("nilai", "Nilai PSAS");
-            
+
             updateProfileUI(localUser);
             await loadData();
         });
