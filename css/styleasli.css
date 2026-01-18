@@ -3318,7 +3318,7 @@ input:checked+.slider:before {
 }
 
 .glow {
-    color: #00eaff;
+    color: #ffffff;
     font-weight: bold;
     text-shadow:
         0 0 5px #00eaff,

@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js" defer></script>
     <script src="js/basicfeat.js" defer></script>
-    <script src="js/auth.js" defer></script>
+    <script src="js/auth.js"></script>
     <script src="js/visitor.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -47,7 +47,6 @@
             if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
 
             document.getElementById('inputFullName').value = data.full_name || "-";
-            document.getElementById('inputOfficialNick').value = data.nickname || "-";
             document.getElementById('inputRole').value = (data.role || "student").toUpperCase();
             document.getElementById('inputShortName').value = data.short_name || "";
             document.getElementById('inputBio').value = data.bio || "";
@@ -164,7 +163,7 @@
         background: rgba(255, 255, 255, 0.05);
         /* Lebih gelap/abu */
         border-color: rgba(255, 255, 255, 0.05);
-        color: #666;
+        color: #cecece;
         /* Teks abu */
         cursor: not-allowed;
         font-style: italic;
@@ -175,11 +174,12 @@
         display: flex;
         align-items: center;
         gap: 20px;
+        justify-content: center;
     }
 
     .current-pp {
-        width: 80px;
-        height: 80px;
+        width: 160px;
+        height: 160px;
         border-radius: 50%;
         border: 2px solid #00eaff;
         object-fit: cover;
@@ -245,6 +245,13 @@
     .password-wrapper {
         position: relative;
     }
+
+    .ganti-foto {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
 </style>
 </head>
 
@@ -308,18 +315,26 @@
                 <h1><i class="fa-solid fa-user-gear"></i> Account Setting</h1>
             </div>
             <div class="course-card">
-                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Data Pribadi</h2>
+                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Data Akun</h2>
 
                 <div class="form-group">
-                    <label class="form-label">Foto Profil</label>
+                    <div class="ganti-foto">
+                        <label class="form-label">Foto Profil</label>
+                    </div>
                     <div class="pp-upload-area">
                         <img src="profpicture.png" id="previewPP" class="current-pp"
                             onerror="this.src='profpicture.png'">
                         <input type="file" id="inputPPFile" accept="image/*" style="display: none;"
                             onchange="previewImage(this)">
+                    </div>
+                    <div class="ganti-foto">
                         <label for="inputPPFile" class="file-upload-btn">
                             <i class="fa-solid fa-camera"></i> Ganti Foto
                         </label>
+                    </div>
+                    <div class="ganti-foto">
+                        <p style="font-size: 12px;"><i>*kamu bisa ganti foto langsung lewat sini tanpa harus chat admin
+                                lewat wa</i></p>
                     </div>
                 </div>
 
@@ -329,16 +344,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nama Pendek</label>
-                    <input type="text" id="inputOfficialNick" class="form-input" disabled placeholder="Memuat...">
-                </div>
-
-                <div class="form-group">
                     <label class="form-label">Role / Status</label>
                     <input type="text" id="inputRole" class="form-input" disabled placeholder="Memuat...">
                 </div>
-                <p style="color: red; margin: 0;"><i>Hanya admin yang bisa mengedit</i></p>
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 25px 0;">
+                <p style="color: rgb(255, 55, 0); margin-top: -10px;"><i>Hanya admin yang bisa mengedit data diatas!</i>
+                </p>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
 
                 <div class="form-group">
                     <label class="form-label" style="color:#00eaff;">Nama Panggilan (Tampilan)</label>
@@ -346,8 +357,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" style="color:#00eaff;">Bio Singkat</label>
-                    <input type="text" id="inputBio" class="form-input" placeholder="Tulis status/bio kamu...">
+                    <label class="form-label" style="color:#00eaff;">Bio</label>
+                    <input type="text" id="inputBio" class="form-input" placeholder="Kata katanya donk">
                 </div>
             </div>
         </div>
@@ -450,9 +461,6 @@
                     password: document.getElementById('inputPass').value.trim() || null
                 };
 
-                // Validasi: Username tidak boleh kosong
-                if (!updates.username) throw new Error("Username tidak boleh kosong!");
-
                 const { error: updateError } = await supabase
                     .from('users')
                     .update(updates)
@@ -470,7 +478,6 @@
 
             } catch (err) {
                 console.error("Save Error:", err);
-                // [REPLACED] alert -> showPopup (Error)
                 showPopup("❌ " + err.message, "error");
             } finally {
                 btn.innerHTML = originalText;
