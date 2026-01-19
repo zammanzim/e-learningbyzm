@@ -882,19 +882,35 @@ function closeDetail() {
 function updateSliderUI() {
     const imgEl = document.getElementById('detailImg');
     const nav = document.getElementById('sliderNavBtns');
-    if (!nav) return;
+    const wrapper = imgEl?.closest('.slider-wrapper'); // Ambil container gambar
+
+    if (!nav || !imgEl || !wrapper) return;
 
     if (currentViewerPhotos.length === 0) {
-        if (imgEl) imgEl.style.display = 'none';
+        imgEl.style.display = 'none';
         nav.style.display = 'none';
         return;
     }
 
-    if (imgEl) {
-        imgEl.style.display = 'block';
-        imgEl.src = currentViewerPhotos[currentViewerIndex];
-    }
+    // 1. Pasang status loading & sembunyiin gambar lama
+    wrapper.classList.add('loading');
 
+    // 2. Set gambar baru
+    imgEl.style.display = 'block';
+    imgEl.src = currentViewerPhotos[currentViewerIndex];
+
+    // 3. Lepas loading hanya saat gambar baru sudah siap tampil
+    imgEl.onload = () => {
+        wrapper.classList.remove('loading');
+    };
+
+    // Jaga-jaga kalau internet mati/gambar error
+    imgEl.onerror = () => {
+        wrapper.classList.remove('loading');
+        imgEl.src = 'icons/error-img.png'; // Ganti ke icon error lu kalau ada
+    };
+
+    // Update Counter & Navigasi
     const tag = document.getElementById('photoCounterTag');
     if (tag) tag.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;
 
@@ -904,7 +920,6 @@ function updateSliderUI() {
     if (isMulti) {
         const btnPrev = nav.querySelector('.prev-btn');
         const btnNext = nav.querySelector('.next-btn');
-        // Panah hilang di ujung foto sesuai instruksi
         if (btnPrev) btnPrev.style.visibility = (currentViewerIndex === 0) ? 'hidden' : 'visible';
         if (btnNext) btnNext.style.visibility = (currentViewerIndex === currentViewerPhotos.length - 1) ? 'hidden' : 'visible';
     }

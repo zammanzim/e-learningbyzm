@@ -1202,6 +1202,29 @@ li.nav-locked a::after {
     z-index: 25;
 }
 
+/* Spinner Loading */
+.slider-wrapper.loading::before {
+    content: "\f110";
+    /* FontAwesome Spinner */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    font-size: 30px;
+    color: #00eaff;
+    animation: fa-spin 1s infinite linear;
+    z-index: 5;
+}
+
+#detailImg {
+    transition: opacity 0.2s ease;
+    opacity: 1;
+}
+
+/* Sembunyiin gambar lama pas lagi loading */
+.slider-wrapper.loading #detailImg {
+    opacity: 0;
+}
+
 .glass-nav-btn {
     position: absolute;
     top: auto;
