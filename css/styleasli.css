@@ -14,6 +14,12 @@ body {
     -ms-overflow-style: none;
 }
 
+/* Kunci scroll body saat detail terbuka */
+body.no-scroll {
+    overflow: hidden !important;
+    height: 100vh;
+}
+
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar {
@@ -1442,13 +1448,14 @@ li.nav-locked a::after {
         bottom: 0;
         left: 0;
         width: 100%;
-        height: auto;
-        max-height: 60%;
-        background: #000000bb;
+        height: 50vh;
+        max-height: 50vh;
+        background: #000000e6;
         border-top: 1px solid rgba(255, 255, 255, 0.2);
         z-index: 10;
-        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        border-left: none;
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        border-radius: 20px 20px 0 0;
+        overflow: hidden;
     }
 
     .info-content-scroll {
@@ -1462,6 +1469,23 @@ li.nav-locked a::after {
 
     .detail-info-section.hidden-mobile {
         transform: translateY(100%);
+    }
+
+    .detail-info-section.full-screen {
+        height: 92vh;
+        max-height: 92vh;
+    }
+
+    .detail-info-section::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
     }
 
     .close-detail-btn {
@@ -3325,4 +3349,45 @@ input:checked+.slider:before {
         0 0 10px #00eaff,
         0 0 20px #00cfff,
         0 0 40px #009dff;
+}
+
+/* Styling Editor Tool */
+.btn-tool {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 234, 255, 0.3);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.btn-tool:hover {
+    background: #00eaff;
+    color: black;
+}
+
+/* Selector ini bakal nangkep format font baik di Modal maupun di Card */
+.editable font[size="5"],
+#addIsi font[size="5"] {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.editable font[size="3"],
+#addIsi font[size="3"] {
+    font-size: 20px;
+}
+
+.editable font[size="2"],
+#addIsi font[size="2"] {
+    font-size: 16px;
+}
+
+/* Styling khusus div content di card */
+.course-card div[data-field="content"] {
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: #ddd;
 }

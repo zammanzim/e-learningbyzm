@@ -80,13 +80,36 @@ const SubjectApp = {
     setupEventListeners() {
         const self = this;
 
-        // 1. [BARU] Tutup Detail Overlay saat klik background gelap
+        // 1. Handle Klik Background (Area Kosong)
         const detailOverlay = document.getElementById('detailOverlay');
         if (detailOverlay) {
             detailOverlay.onclick = (e) => {
-                // Cek apakah yang diklik benar-benar background (bukan isi konten)
+                // Hanya jalan kalau yang diklik bener-bener background-nya (area kosong)
                 if (e.target === detailOverlay) {
-                    detailOverlay.classList.remove('active');
+                    const info = document.getElementById('detailInfoSection');
+                    const isMobile = window.innerWidth <= 768;
+
+                    // Kalau di mobile dan sheet lagi nongol, turunin dulu
+                    if (isMobile && info && !info.classList.contains('hidden-mobile')) {
+                        toggleMobileInfo();
+                    } else {
+                        // Kalau sudah turun atau di desktop, baru tutup total overlay-nya
+                        closeDetail();
+                    }
+                }
+            };
+        }
+
+        // 2. Handle Klik Area Gambar/Media
+        const mediaSection = document.querySelector('.detail-media-section');
+        if (mediaSection) {
+            mediaSection.onclick = () => {
+                const info = document.getElementById('detailInfoSection');
+                const isMobile = window.innerWidth <= 768;
+
+                // Jika di mobile dan deskripsi lagi naik (setengah/full), klik gambar bakal nurunin deskripsi
+                if (isMobile && info && !info.classList.contains('hidden-mobile')) {
+                    toggleMobileInfo();
                 }
             };
         }
@@ -281,24 +304,25 @@ const SubjectApp = {
             taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Tandai Selesai'}</button>`;
         }
 
+        // [PENTING]: Ganti <p> jadi <div> agar Rich Text (HTML) bisa diedit dengan lancar
         card.innerHTML = `
-            <input type="file" class="photo-input" accept="image/*" style="display:none;">
-            <div class="drag-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; cursor:grab; padding: 10px; color: #00eaff; background: rgba(0,0,0,0.5); border-radius: 8px; touch-action: none; user-select: none;">
-                <i class="fa-solid fa-grip-vertical" style="font-size: 18px; pointer-events: none;"></i>
-            </div>
-            <button class="${btnClass}"><i class="${iconClass}"></i></button>
-            ${photoHTML}
-            <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
-            <h4 contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</h4>
-            <p contenteditable="false" spellcheck="false" class="editable" data-field="content">${content}</p>
-            <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
-            <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
-                ${taskBtnHTML} 
-                <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        `;
+        <input type="file" class="photo-input" accept="image/*" style="display:none;">
+        <div class="drag-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; cursor:grab; padding: 10px; color: #00eaff; background: rgba(0,0,0,0.5); border-radius: 8px; touch-action: none; user-select: none;">
+            <i class="fa-solid fa-grip-vertical" style="font-size: 18px; pointer-events: none;"></i>
+        </div>
+        <button class="${btnClass}"><i class="${iconClass}"></i></button>
+        ${photoHTML}
+        <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
+        <h4 contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</h4>
+        <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${content}</div>
+        <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
+        <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
+            ${taskBtnHTML} 
+            <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `;
         return card;
     },
 
@@ -491,7 +515,7 @@ const SubjectApp = {
             await this.uploadPhoto(card, file);
         };
     },
- 
+
     async uploadPhoto(card, file) {
         const id = card.dataset.id;
         try {
@@ -558,12 +582,20 @@ const SubjectApp = {
 
     async saveAnnouncement(card) {
         const id = card.dataset.id;
-        const getData = (field) => { const el = card.querySelector(`[data-field="${field}"]`); return el ? el.innerText.trim() : ""; };
+        const getData = (field) => {
+            const el = card.querySelector(`[data-field="${field}"]`);
+            if (!el) return "";
+            // Jika field deskripsi (content), ambil innerHTML-nya
+            return field === 'content' ? el.innerHTML : el.innerText.trim();
+        };
         try {
             await supabase.from("subject_announcements").update({
-                big_title: getData("big_title"), title: getData("title"), content: getData("content"), small: getData("small")
+                big_title: getData("big_title"),
+                title: getData("title"),
+                content: getData("content"),
+                small: getData("small")
             }).eq("id", id);
-            console.log("✅ Saved:", id);
+            console.log("✅ Saved with Formatting:", id);
         } catch (err) { console.error(err); }
     },
 
@@ -597,8 +629,11 @@ const SubjectApp = {
         if (btnSave) {
             btnSave.onclick = async () => {
                 const data = {
-                    big: document.getElementById('addJudul').value, tit: document.getElementById('addSubjudul').value,
-                    con: document.getElementById('addIsi').value, sml: document.getElementById('addSmall').value, files: this.tempFiles
+                    big: document.getElementById('addJudul').value,
+                    tit: document.getElementById('addSubjudul').value,
+                    con: document.getElementById('addIsi').innerHTML, // Ambil HTML-nya
+                    sml: document.getElementById('addSmall').value,
+                    files: this.tempFiles
                 };
                 if (!data.big) { showPopup("Judul wajib!", "error"); return; }
 
@@ -609,19 +644,19 @@ const SubjectApp = {
             };
         }
 
-        btnAdd.onclick = (e) => { 
-            e.preventDefault(); 
-            modal.classList.remove('hidden'); 
-            this.tempFiles = []; 
-            document.getElementById('previewContainer').innerHTML = ''; 
+        btnAdd.onclick = (e) => {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+            this.tempFiles = [];
+            document.getElementById('previewContainer').innerHTML = '';
 
             // Tambahkan ini biar footer otomatis keisi tanggal hari ini
             const el = document.getElementById('addSmall');
-            if (el) el.value = new Date().toLocaleDateString('id-ID', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            if (el) el.value = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
         };
     },
@@ -643,7 +678,7 @@ const SubjectApp = {
     clearForm() {
         document.getElementById('addJudul').value = '';
         document.getElementById('addSubjudul').value = '';
-        document.getElementById('addIsi').value = '';
+        document.getElementById('addIsi').innerHTML = ''; // Reset innerHTML
         document.getElementById('addSmall').value = '';
         document.getElementById('addFiles').value = '';
         document.getElementById('previewContainer').innerHTML = '';
@@ -690,6 +725,31 @@ const SubjectApp = {
             const addModal = document.getElementById('addModal');
             const isAddModalOpen = addModal && !addModal.classList.contains('hidden');
 
+            // [BARU] Shortcut Navigasi Detail & Foto (Desktop)
+            const detailOverlay = document.getElementById('detailOverlay');
+            const isDetailActive = detailOverlay && detailOverlay.classList.contains('active');
+
+            if (isDetailActive) {
+                if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
+                if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDetail();
+                    return; // Biar gak bentrok sama Escape modal
+                }
+                // Kalau detail lagi kebuka, kita batasi shortcut lain biar gak ganggu
+                if (e.key.startsWith('Arrow')) return;
+            }
+
+            // Shortcut Ukuran Teks (Rich Text) yang sebelumnya
+            if (e.ctrlKey && (e.key === 'j' || e.key === 'k' || e.key === 'l')) {
+                e.preventDefault();
+                if (e.key === 'j') formatText('5'); // Besar
+                if (e.key === 'k') formatText('3'); // Sedang
+                if (e.key === 'l') formatText('2'); // Kecil
+                return;
+            }
+
             if (e.ctrlKey && e.code === 'Enter') {
                 e.preventDefault();
                 if (isAddModalOpen) {
@@ -705,17 +765,15 @@ const SubjectApp = {
                     document.getElementById("addAnnouncementBtn")?.click();
                     setTimeout(() => document.getElementById('addJudul')?.focus(), 100);
                 }
-                document.getElementById('detailOverlay')?.classList.remove('active');
+                if (isDetailActive) closeDetail();
                 if (isAddModalOpen) {
                     document.getElementById('btnCancelAdd')?.click();
                 }
             }
 
-            if (e.key === 'Escape') {
-                document.getElementById('detailOverlay')?.classList.remove('active');
-                if (isAddModalOpen) {
-                    document.getElementById('btnCancelAdd')?.click();
-                }
+            // Escape Global (untuk modal)
+            if (e.key === 'Escape' && isAddModalOpen) {
+                document.getElementById('btnCancelAdd')?.click();
             }
         });
     },
@@ -778,41 +836,47 @@ function showAddModal() {
 let currentViewerPhotos = [], currentViewerIndex = 0, mobileInfoTimer = null;
 function openDetail(data) {
     const overlay = document.getElementById('detailOverlay');
-    const infoSection = document.getElementById('detailInfoSection');
-    const toggleBtn = document.getElementById('toggleInfoBtn');
-    const isMobile = window.innerWidth <= 768;
+    const info = document.getElementById('detailInfoSection');
+    const btn = document.getElementById('toggleInfoBtn');
+    const detailBox = overlay.querySelector('.glass-detail-box');
 
-    // Set Teks
+    // Set Content (Pake innerHTML sesuai perbaikan sebelumnya)
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
+    document.getElementById('detailContentTxt').innerHTML = data.content || '';
     document.getElementById('detailSmallTxt').innerText = data.small || '';
 
-    const contentTxt = document.getElementById('detailContentTxt');
-    contentTxt.innerText = data.content || '';
-    // Fix spasi paragraf di detail popup
-    contentTxt.style.whiteSpace = 'pre-wrap';
-
-    // Logika Animasi Mobile (Pakai class dari styleasli.css baris 751)
-    if (isMobile) {
-        if (infoSection) infoSection.classList.add('hidden-mobile'); // Slide Down
-        if (toggleBtn) toggleBtn.style.display = 'flex';
-    } else {
-        if (infoSection) infoSection.classList.remove('hidden-mobile'); // Tetap di samping (Desktop)
-        if (toggleBtn) toggleBtn.style.display = 'none';
-    }
-
-    currentViewerPhotos = [];
+    // Cek foto untuk Text Only Mode
+    let photos = [];
     if (data.photo_url) {
-        if (Array.isArray(data.photo_url)) currentViewerPhotos = data.photo_url;
-        else { try { currentViewerPhotos = JSON.parse(data.photo_url); } catch { currentViewerPhotos = [data.photo_url]; } }
+        try { photos = Array.isArray(data.photo_url) ? data.photo_url : JSON.parse(data.photo_url); }
+        catch { photos = [data.photo_url]; }
+    }
+    if (photos.length === 0) detailBox.classList.add('text-only-mode');
+    else detailBox.classList.remove('text-only-mode');
+
+    document.body.classList.add('no-scroll');
+    // Reset State Mobile
+    if (window.innerWidth <= 768) {
+        info.classList.add('hidden-mobile');
+        info.classList.remove('full-screen');
+        if (btn) btn.style.display = 'flex';
+        setupSwipeSheet(); // Aktifkan deteksi swipe
+    } else {
+        info.classList.remove('hidden-mobile', 'full-screen');
+        if (btn) btn.style.display = 'none';
     }
 
+    currentViewerPhotos = photos;
     currentViewerIndex = 0;
     updateSliderUI();
     overlay.classList.add('active');
 }
 
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('active'); }
+function closeDetail() {
+    document.getElementById('detailOverlay').classList.remove('active');
+    document.body.classList.remove('no-scroll');
+}
 // File: js/subject-manager.js
 
 function updateSliderUI() {
@@ -851,8 +915,9 @@ function showMobileInfo(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
     const btn = document.getElementById('toggleInfoBtn');
-    // Animasi Naik: lepas class hidden-mobile
-    if (info) info.classList.remove('hidden-mobile');
+
+    // Muncul setengah dulu
+    info.classList.remove('hidden-mobile');
     if (btn) btn.style.display = 'none';
 }
 
@@ -860,7 +925,68 @@ function toggleMobileInfo(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
     const btn = document.getElementById('toggleInfoBtn');
-    // Animasi Turun: pasang class hidden-mobile
-    if (info) info.classList.add('hidden-mobile');
+
+    // Animasi Turun: pasang class hidden-mobile dan lepas full-screen
+    if (info) {
+        info.classList.add('hidden-mobile');
+        info.classList.remove('full-screen');
+    }
     if (btn) btn.style.display = 'flex';
 }
+
+// Fungsi Global buat handle Rich Text
+function formatText(size) {
+    document.execCommand('fontSize', false, size);
+}
+
+let touchStartY = 0;
+function setupSwipeSheet() {
+    const info = document.getElementById('detailInfoSection');
+    const scrollableContent = info.querySelector('.info-content-scroll'); // Area teks
+    if (!info) return;
+
+    info.ontouchstart = (e) => {
+        touchStartY = e.touches[0].clientY;
+    };
+
+    info.ontouchmove = (e) => {
+        const touchY = e.touches[0].clientY;
+        const diff = touchStartY - touchY;
+
+        // Jika sedang men-swipe header sheet (bukan scroll teks di dalemnya)
+        // Atau jika sedang swipe ke atas untuk bikin full screen
+        if (diff > 10 && !info.classList.contains('full-screen')) {
+            e.preventDefault(); // Stop scroll body
+            info.classList.add('full-screen');
+        }
+
+        // Swipe bawah untuk kecilin/tutup
+        if (diff < -50) {
+            if (info.classList.contains('full-screen')) {
+                // Jika lagi full, balik ke setengah dulu kalau posisi scroll teks di paling atas
+                if (scrollableContent.scrollTop <= 0) {
+                    e.preventDefault();
+                    info.classList.remove('full-screen');
+                }
+            } else {
+                // Jika lagi setengah, langsung tutup
+                e.preventDefault();
+                toggleMobileInfo();
+            }
+        }
+    };
+}
+
+// Handler klik background buat nurunin sheet (IG Style)
+document.getElementById('detailOverlay').addEventListener('click', function (e) {
+    if (e.target === this) {
+        const info = document.getElementById('detailInfoSection');
+        if (window.innerWidth <= 768 && !info.classList.contains('hidden-mobile')) {
+            // Kalau lagi muncul, turunin dulu
+            toggleMobileInfo();
+        } else {
+            // Kalau udah turun atau di desktop, tutup detail
+            closeDetail();
+        }
+    }
+});
