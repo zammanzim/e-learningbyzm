@@ -63,6 +63,11 @@ async function initTugas() {
 
         if (err1 || err2) throw (err1 || err2);
 
+        if (typeof SubjectApp !== 'undefined') {
+            SubjectApp.setupShortcuts();
+            SubjectApp.setupEventListeners();
+        }
+
         allTasks = tasks || [];
 
         // 4. Sinkronisasi Progress (Hapus ID hantu agar hitungan normal)

@@ -80,20 +80,20 @@ const SubjectApp = {
     setupEventListeners() {
         const self = this;
 
-        // 1. Handle Klik Background (Area Kosong)
+        // Handle Klik Background (Area Kosong)
         const detailOverlay = document.getElementById('detailOverlay');
         if (detailOverlay) {
             detailOverlay.onclick = (e) => {
-                // Hanya jalan kalau yang diklik bener-bener background-nya (area kosong)
+                // Pastikan yang diklik bener-bener overlay hitamnya
                 if (e.target === detailOverlay) {
                     const info = document.getElementById('detailInfoSection');
                     const isMobile = window.innerWidth <= 768;
 
-                    // Kalau di mobile dan sheet lagi nongol, turunin dulu
                     if (isMobile && info && !info.classList.contains('hidden-mobile')) {
+                        // Jika sheet lagi muncul (setengah/full), turunin dulu ke bawah
                         toggleMobileInfo();
                     } else {
-                        // Kalau sudah turun atau di desktop, baru tutup total overlay-nya
+                        // Jika sudah di bawah atau di desktop, baru tutup total
                         closeDetail();
                     }
                 }
@@ -158,6 +158,24 @@ const SubjectApp = {
             if (taskBtn) {
                 e.preventDefault(); e.stopPropagation();
                 self.toggleTaskStatus(taskBtn.closest(".course-card"), taskBtn);
+            }
+
+            const scrollContent = document.querySelector('.info-content-scroll');
+            if (scrollContent) {
+                scrollContent.addEventListener('scroll', () => {
+                    const info = document.getElementById('detailInfoSection');
+                    const isMobile = window.innerWidth <= 768;
+
+                    // Hanya jalan di mobile, pas posisi setengah (bukan full), dan gak lagi hidden
+                    if (isMobile && info && !info.classList.contains('full-screen') && !info.classList.contains('hidden-mobile')) {
+                        // Cek jika scroll sudah sampai ujung bawah (toleransi 5px)
+                        const isAtBottom = scrollContent.scrollTop + scrollContent.clientHeight >= scrollContent.scrollHeight - 5;
+
+                        if (isAtBottom) {
+                            toggleSheetHeight(); // Panggil fungsi yang udah kita buat tadi buat naikin sheet
+                        }
+                    }
+                });
             }
         });
     },
@@ -861,7 +879,6 @@ function openDetail(data) {
         info.classList.add('hidden-mobile');
         info.classList.remove('full-screen');
         if (btn) btn.style.display = 'flex';
-        setupSwipeSheet(); // Aktifkan deteksi swipe
     } else {
         info.classList.remove('hidden-mobile', 'full-screen');
         if (btn) btn.style.display = 'none';
@@ -935,61 +952,47 @@ function showMobileInfo(e) {
     info.classList.remove('hidden-mobile');
     if (btn) btn.style.display = 'none';
 }
+// [BARU] Toggle antara Setengah dan Full Screen
+// [FIX] Fungsi Toggle Tinggi Sheet
+function toggleSheetHeight(e) {
+    if (e) e.stopPropagation();
+    const info = document.getElementById('detailInfoSection');
+    const btn = document.getElementById('sheetToggleBtn');
+    if (!info || !btn) return;
 
+    const icon = btn.querySelector('i');
+    const isFull = info.classList.contains('full-screen');
+
+    if (isFull) {
+        // Balik ke Setengah Layar
+        info.classList.remove('full-screen');
+        if (icon) icon.className = 'fa-solid fa-expand';
+    } else {
+        // Jadi Full Screen
+        info.classList.remove('hidden-mobile'); // Jaga-jaga kalau lagi hidden
+        info.classList.add('full-screen');
+        if (icon) icon.className = 'fa-solid fa-compress';
+    }
+}
+
+// [UPDATE] Pastikan icon reset pas ditutup
 function toggleMobileInfo(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
     const btn = document.getElementById('toggleInfoBtn');
+    const toggleIcon = document.querySelector('#sheetToggleBtn i');
 
-    // Animasi Turun: pasang class hidden-mobile dan lepas full-screen
     if (info) {
         info.classList.add('hidden-mobile');
         info.classList.remove('full-screen');
     }
     if (btn) btn.style.display = 'flex';
+    if (toggleIcon) toggleIcon.className = 'fa-solid fa-expand';
 }
 
 // Fungsi Global buat handle Rich Text
 function formatText(size) {
     document.execCommand('fontSize', false, size);
-}
-
-let touchStartY = 0;
-function setupSwipeSheet() {
-    const info = document.getElementById('detailInfoSection');
-    const scrollableContent = info.querySelector('.info-content-scroll'); // Area teks
-    if (!info) return;
-
-    info.ontouchstart = (e) => {
-        touchStartY = e.touches[0].clientY;
-    };
-
-    info.ontouchmove = (e) => {
-        const touchY = e.touches[0].clientY;
-        const diff = touchStartY - touchY;
-
-        // Jika sedang men-swipe header sheet (bukan scroll teks di dalemnya)
-        // Atau jika sedang swipe ke atas untuk bikin full screen
-        if (diff > 10 && !info.classList.contains('full-screen')) {
-            e.preventDefault(); // Stop scroll body
-            info.classList.add('full-screen');
-        }
-
-        // Swipe bawah untuk kecilin/tutup
-        if (diff < -50) {
-            if (info.classList.contains('full-screen')) {
-                // Jika lagi full, balik ke setengah dulu kalau posisi scroll teks di paling atas
-                if (scrollableContent.scrollTop <= 0) {
-                    e.preventDefault();
-                    info.classList.remove('full-screen');
-                }
-            } else {
-                // Jika lagi setengah, langsung tutup
-                e.preventDefault();
-                toggleMobileInfo();
-            }
-        }
-    };
 }
 
 // Handler klik background buat nurunin sheet (IG Style)

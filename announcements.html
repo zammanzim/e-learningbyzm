@@ -149,16 +149,25 @@
                 </div>
             </div>
 
-            <div id="detailInfoSection" class="detail-info-section">
+            <div id="detailInfoSection" class="detail-info-section hidden-mobile">
+                <div class="sheet-header-mobile">
+                    <button id="sheetToggleBtn" class="sheet-btn-left" onclick="toggleSheetHeight(event)">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+
+                    <div class="sheet-drag-indicator"
+                        style="width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 10px;"></div>
+
+                    <button class="sheet-btn-right" onclick="toggleMobileInfo(event)">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
                 <div class="info-content-scroll">
                     <h2 id="detailBigTxt"></h2>
                     <h4 id="detailTitleTxt"></h4>
                     <div id="detailContentTxt" class="detail-body-text"></div>
-                    <small id="detailSmallTxt" class="detail-footer-text"></small>
-
-                    <button class="hide-desk" onclick="toggleMobileInfo(event)">
-                        Sembunyikan <i class="fa-solid fa-chevron-down"></i>
-                    </button>
+                    <small id="detailSmallTxt" class="detail-footer-text" style="margin-bottom: 50px;"></small>
                 </div>
             </div>
         </div>

@@ -1268,14 +1268,14 @@ li.nav-locked a::after {
 
 .photo-counter-tag {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px;
+    left: 20px;
     padding: 5px 15px;
     border-radius: 20px;
     font-size: 12px;
     color: white;
     letter-spacing: 1px;
+    background: #0056cc;
 }
 
 /* --- PHOTO GRID OVERLAY (+X PHOTOS) --- */
@@ -1461,19 +1461,38 @@ li.nav-locked a::after {
         background: transparent;
     }
 
+    /* --- OPTIMASI TRANSISI SHEET (HARDWARE ACCELERATED) --- */
     .detail-info-section {
-        position: absolute;
+        position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 50vh;
-        max-height: 50vh;
-        background: #000000e6;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 10;
-        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        border-radius: 20px 20px 0 0;
-        overflow: hidden;
+        height: 85vh;
+        /* Tinggi pas full screen */
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-radius: 24px 24px 0 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+
+        /* Posisi Awal: Setengah layar (naik 45% dari bawah) */
+        transform: translate3d(0, 45%, 0);
+
+        /* Transisi Mulus (Cubic Bezier ala iOS) */
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        will-change: transform;
+    }
+
+    /* Keadaan Full Screen (Geser ke paling atas) */
+    .detail-info-section.full-screen {
+        transform: translate3d(0, 0, 0) !important;
+    }
+
+    /* Keadaan Sembunyi (Turun ke bawah layar) */
+    .detail-info-section.hidden-mobile {
+        transform: translate3d(0, 100%, 0) !important;
     }
 
     .info-content-scroll {
@@ -3428,4 +3447,68 @@ input:checked+.slider:before {
     padding: 4px 12px;
     border-radius: 6px;
     border: 1px solid rgba(0, 234, 255, 0.2);
+}
+
+/* --- OPTIMASI SHEET DESKRIPSI MOBILE --- */
+@media (max-width: 768px) {
+
+    /* Hilangkan bar swipe lama */
+    .detail-info-section::before {
+        display: none !important;
+    }
+
+    /* Header Baru di atas Sheet */
+    .sheet-header-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sheet-btn-left,
+    .sheet-btn-right {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .sheet-drag-indicator {
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+    }
+
+    /* Optimasi Lag: Pake transform & durasi pas */
+    .detail-info-section {
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+        will-change: transform;
+        /* Hint buat browser biar enteng */
+    }
+}
+
+@media (min-width: 769px) {
+
+    /* Header Baru di atas Sheet */
+    .sheet-header-mobile {
+        display: none;
+    }
+
+    .sheet-btn-left,
+    .sheet-btn-right {
+        display: none;
+    }
+
+    .sheet-drag-indicator {
+        display: none;
+    }
 }
