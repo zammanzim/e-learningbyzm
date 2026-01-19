@@ -100,8 +100,13 @@
             <input type="text" id="addSubjudul" class="glass-input" placeholder="Sub-judul (Opsional)"
                 spellcheck="false">
 
-            <textarea id="addIsi" class="glass-input" placeholder="Tulis isi pengumuman atau materi di sini..."
-                spellcheck="false"></textarea>
+            <div class="editor-toolbar" style="display:flex; gap:10px; margin-bottom: 8px;">
+                <button type="button" onclick="formatText('5')" class="btn-tool">Besar</button>
+                <button type="button" onclick="formatText('3')" class="btn-tool">Sedang</button>
+                <button type="button" onclick="formatText('2')" class="btn-tool">Kecil</button>
+            </div>
+            <div id="addIsi" contenteditable="true" class="glass-input" style="min-height: 150px; overflow-y: auto;">
+            </div>
 
             <input type="text" id="addSmall" class="glass-input" placeholder="Footer text (Opsional)"
                 style="font-size: 12px; opacity:0.8;" spellcheck="false">

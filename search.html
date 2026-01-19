@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Account</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div id="visitorTrigger" class="visitor-trigger">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">0</span>
+            </div>
+        </div>
+
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Hai, ...</span>
+            <img id="headerPP" class="header-pp">
+            <i class="fa-solid fa-caret-down"></i>
+        </div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <ul>
+                <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
+                <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="visitorOverlay" class="visitor-overlay">
+        <div class="visitor-popup">
+
+            <div class="popup-header">
+                <h3>Visitors</h3>
+                <span id="closeVisitorPopup" class="close-popup">&times;</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
+                    <p id="popupToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
+                    <p id="popupTotal">0</p>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h4 class="list-title">List of accounts that visited today</h4>
+                <div id="visitorList" class="visitor-list-container"></div>
+            </div>
+
+            <div class="admin-actions" style="margin-top: 20px;">
+                <button id="resetVisitorBtn" class="btn-reset-text">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="page-title-header glow" style="margin-bottom: 30px;">
+                <h1><i class="fa-solid fa-magnifying-glass"></i> Cari Akun Teman</h1>
+            </div>
+
+            <div class="glass-card-effect" style="padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchInput" class="glass-input" placeholder="Ketik nama atau username..."
+                        style="flex: 1;">
+                    <button onclick="searchUser()" class="btn-glass-save"
+                        style="flex: 0; padding: 0 25px;">Cari</button>
+                </div>
+            </div>
+
+            <div id="userResultList" class="announcements">
+                <p style="text-align: center; color: #aaa; padding: 40px;">Loading...
+                </p>
+            </div>
+        </div>
+
+        <div class="right-section">
+        </div>
+    </div>
+
+
+    <script src="js/search.js" defer></script>
+</body>
+
+</html>

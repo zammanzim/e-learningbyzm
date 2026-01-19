@@ -83,6 +83,8 @@ function updateProgressUI() {
     const done = doneIds.length;
     const countEl = document.getElementById('userTaskCount');
     const barEl = document.getElementById('userTaskBar');
+    const centerEl = document.getElementById('taskProgressCenter');
+    const motivEl = document.getElementById('taskMotivation');
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
     let grad = '', themeColor = '';
@@ -98,6 +100,31 @@ function updateProgressUI() {
     if (barEl) {
         barEl.style.width = percent + "%";
         barEl.style.background = grad;
+    }
+
+    // 1. Teks di tengah progress bar
+    if (centerEl) {
+        centerEl.innerText = `kamu sudah ngejain ${done} dari ${total} tugas`;
+    }
+
+    // 2. Logika Motivasi (URUTAN DIPERBAIKI)
+    if (motivEl) {
+        let msg = "";
+
+        // Cek dari yang paling tinggi dulu
+        if (percent === 100) {
+            msg = "dak rajin";
+        }
+        else if (percent > 50) {
+            msg = "kejaken kabeh kagok";
+        }
+        else {
+            // FIX: Munculkan pesan untuk yang di bawah 50%
+            msg = "kejaken tugas na, mun ngarasa entos pencet selesai";
+        }
+
+        motivEl.innerText = msg;
+        motivEl.style.color = themeColor;
     }
 }
 

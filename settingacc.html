@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan Akun</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/supabase-clients.js"></script>
     <script src="js/basicfeat.js" defer></script>
     <script src="js/auth.js"></script>
-    <script src="js/visitor.js" defer></script>
+    <script src="js/visitor.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/accountsetting.png" type="image/png">
@@ -17,31 +17,23 @@
 <script>
     let user = getUser();
 
-    // Jalankan saat load
     document.addEventListener("DOMContentLoaded", async () => {
-        if (!user) {
-            window.location.href = "index.html";
-            return;
-        }
+        if (!user) { window.location.href = "index.html"; return; }
         await refreshUserData();
         if (typeof logVisitor === 'function') logVisitor();
+        checkAccountSecurity(); // Cek keamanan saat baru buka
     });
 
-    // 2. LOAD DATA TERBARU
     async function refreshUserData() {
         try {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
+            const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
             if (error) throw error;
             if (!data) return;
 
             user = data;
             localStorage.setItem("user", JSON.stringify(data));
 
+            // Update UI
             const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "profpicture.png";
             if (document.getElementById('previewPP')) document.getElementById('previewPP').src = ppUrl;
             if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
@@ -56,15 +48,20 @@
             if (document.getElementById('headerName')) {
                 document.getElementById('headerName').innerText = `Hai, ${data.short_name || data.nickname || 'User'}`;
             }
-
-        } catch (err) {
-            console.error("Load Error:", err);
-        }
+        } catch (err) { console.error("Load Error:", err); }
     }
 
     async function saveChanges() {
         const btn = document.querySelector('.btn-save');
         const originalText = btn.innerHTML;
+        const usernameVal = document.getElementById('inputUser').value.trim();
+        const passwordVal = document.getElementById('inputPass').value.trim();
+
+        // [VALIDASI] Harus isi keduanya atau kosong keduanya (tapi disarankan isi)
+        if ((usernameVal && !passwordVal) || (!usernameVal && passwordVal)) {
+            showPopup("⚠️ Username dan Password harus diisi!", "error");
+            return;
+        }
 
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> MENYIMPAN...';
         btn.disabled = true;
@@ -77,13 +74,8 @@
                 const file = fileInput.files[0];
                 const compressedFile = await compressImage(file, 500, 0.7);
                 const fileName = `${user.id}.jpg`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from('avatars')
-                    .upload(fileName, compressedFile, { upsert: true });
-
+                const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, compressedFile, { upsert: true });
                 if (uploadError) throw uploadError;
-
                 const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
                 newAvatarUrl = `${publicUrlData.publicUrl}?v=${new Date().getTime()}`;
             }
@@ -92,30 +84,54 @@
                 avatar_url: newAvatarUrl,
                 short_name: document.getElementById('inputShortName').value.trim() || null,
                 bio: document.getElementById('inputBio').value.trim() || null,
-                username: document.getElementById('inputUser').value.trim() || null,
-                password: document.getElementById('inputPass').value.trim() || null
+                username: usernameVal || null,
+                password: passwordVal || null
             };
 
-            const { error: updateError } = await supabase
-                .from('users')
-                .update(updates)
-                .eq('id', user.id);
+            const { error: updateError } = await supabase.from('users').update(updates).eq('id', user.id);
+            if (updateError) throw updateError;
 
-            if (updateError) {
-                if (updateError.code === '23505') throw new Error("Username sudah digunakan!");
-                throw updateError;
-            }
-
-            alert("✅ Profil Berhasil Diupdate!");
+            showPopup("✅ Profil Berhasil Diupdate!", "success");
             await refreshUserData();
+            checkAccountSecurity(); // Langsung update banner tanpa refresh
 
         } catch (err) {
-            console.error("Save Error:", err);
-            alert("❌ " + err.message);
+            showPopup("❌ " + err.message, "error");
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
+    }
+
+    function checkAccountSecurity() {
+        const u = JSON.parse(localStorage.getItem("user"));
+        const warningEl = document.getElementById('accountWarning');
+        if (!u || !warningEl) return;
+
+        const hasUsn = u.username && u.username.trim() !== "";
+        const hasPw = u.password && u.password.trim() !== "";
+
+        if (!hasUsn || !hasPw) {
+            warningEl.style.display = 'flex';
+        } else {
+            warningEl.style.display = 'none'; // Sembunyikan kalau sudah lengkap
+        }
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('previewPP').src = e.target.result;
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function togglePass() {
+        const input = document.getElementById('inputPass');
+        const icon = document.querySelector('.toggle-pw');
+        const isPw = input.type === "password";
+        input.type = isPw ? "text" : "password";
+        icon.className = isPw ? 'fa-solid fa-eye-slash toggle-pw' : 'fa-solid fa-eye toggle-pw';
     }
 </script>
 <style>
@@ -252,6 +268,12 @@
         align-items: center;
         margin-top: 10px;
     }
+
+    /* Styling Banner Peringatan Akun */
+    .warning-banner {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.2);
+        background: #00eaff;
+    }
 </style>
 </head>
 
@@ -364,6 +386,11 @@
         </div>
 
         <div class="right-section">
+            <div id="accountWarning" class="warning-banner hidden"
+                style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff4757; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Buat username dan password buat akunmu! Biar ga bisa di login in orang lain.</span>
+            </div>
             <div class="course-card" style="margin-top: 0;">
                 <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> Akun Login</h2>
 
@@ -388,16 +415,6 @@
         </div>
     </div>
     <script>
-        // 3. PREVIEW IMAGE
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById('previewPP').src = e.target.result;
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
 
         // 4. COMPRESS IMAGE
         function compressImage(file, maxWidth = 500, quality = 0.7) {
@@ -422,81 +439,6 @@
                 };
                 reader.onerror = err => reject(err);
             });
-        }
-
-        // 5. SIMPAN PERUBAHAN
-        async function saveChanges() {
-            const btn = document.querySelector('.btn-save');
-            const originalText = btn.innerHTML;
-
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> MENYIMPAN...';
-            btn.disabled = true;
-
-            try {
-                const fileInput = document.getElementById('inputPPFile');
-                let newAvatarUrl = user.avatar_url;
-
-                // A. Upload Foto (jika ada file baru)
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const compressedFile = await compressImage(file, 500, 0.7);
-                    const fileName = `${user.id}.jpg`;
-
-                    const { error: uploadError } = await supabase.storage
-                        .from('avatars')
-                        .upload(fileName, compressedFile, { upsert: true });
-
-                    if (uploadError) throw uploadError;
-
-                    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-                    newAvatarUrl = `${publicUrlData.publicUrl}?v=${new Date().getTime()}`;
-                }
-
-                // B. Mapping Data & Fix Empty String
-                const updates = {
-                    avatar_url: newAvatarUrl,
-                    short_name: document.getElementById('inputShortName').value.trim() || null,
-                    bio: document.getElementById('inputBio').value.trim() || null,
-                    username: document.getElementById('inputUser').value.trim() || null,
-                    password: document.getElementById('inputPass').value.trim() || null
-                };
-
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update(updates)
-                    .eq('id', user.id);
-
-                if (updateError) {
-                    if (updateError.code === '23505') throw new Error("Username sudah digunakan!");
-                    throw updateError;
-                }
-
-                // [REPLACED] alert -> showPopup (Success)
-                showPopup("✅ Profil Berhasil Diupdate!", "success");
-
-                await refreshUserData();
-
-            } catch (err) {
-                console.error("Save Error:", err);
-                showPopup("❌ " + err.message, "error");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        function togglePass() {
-            const input = document.getElementById('inputPass');
-            const icon = document.querySelector('.toggle-pw');
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
         }
     </script>
 </body>

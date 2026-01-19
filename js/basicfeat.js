@@ -51,6 +51,7 @@ function renderSidebar() {
                 { text: "Daftar Tugas", url: "tugas.html", icon: "fa-solid fa-list-check", badge: "NEW", badgeType: "badge-beta" },
                 { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear", badge: "UPDATE", badgeType: "badge-upd" },
                 { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
+                { text: "Cari Akun", url: "search.html", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new"}
             ]
         },
         {
@@ -59,18 +60,18 @@ function renderSidebar() {
                 { text: "B. Indonesia", url: "bahasaindonesia.html", icon: "fa-book"},
                 { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-book-atlas"},
                 { text: "B. Sunda", url: "bahasasunda.html", icon: "fa-book"},
-                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-book", badge: "Today", badgeType: "badge-today" },
+                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-book", badge: "Task", badgeType: "badge-task" },
 
                 // CONTOH PEMAKAIAN BADGE:
                 { text: "Matematika", url: "matematika.html", icon: "fa-square-root-variable"},
                 { text: "Proipas", url: "proipas.html", icon: "fa-atom"},
 
                 { text: "Sejarah", url: "sejarah.html", icon: "fa-landmark"},
-                { text: "PABP", url: "pabp.html", icon: "fa-mosque", badge: "Today", badgeType: "badge-today" },
+                { text: "PABP", url: "pabp.html", icon: "fa-mosque" , badge: "Task", badgeType: "badge-task" },
                 { text: "PP", url: "pp.html", icon: "fa-scale-balanced"},
                 { text: "Seni Budaya", url: "senibudaya.html", icon: "fa-masks-theater"},
                 { text: "PJOK", url: "pjok.html", icon: "fa-person-running", badge: "Task", badgeType: "badge-task" },
-                { text: "Informatika", url: "informatika.html", icon: "fa-laptop", badge: "Today", badgeType: "badge-today"},
+                { text: "Informatika", url: "informatika.html", icon: "fa-laptop"},
                 { text: "BK", url: "bk.html", icon: "fa-heart-circle-check"},
 
                 // CONTOH 'SOON' (Materi belum siap)

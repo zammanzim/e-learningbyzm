@@ -391,11 +391,6 @@ header {
     margin: 20px 0;
     transition: all .3s ease;
     position: relative;
-    cursor: pointer;
-}
-
-.course-card:hover {
-    transform: scale(1.02);
 }
 
 .course-card.editable-mode {
@@ -1736,12 +1731,6 @@ li.nav-locked a::after {
 .course-card.clickable-card {
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Efek visual pas ditekan biar kerasa 'Responsive' */
-.course-card.clickable-card:active {
-    transform: scale(0.98);
-    background: rgba(0, 0, 0, 0.4);
 }
 
 /* --- UNIVERSAL POPUP UPDATES --- */
@@ -3390,4 +3379,30 @@ input:checked+.slider:before {
     white-space: pre-wrap;
     line-height: 1.5;
     color: #ddd;
+}
+
+/* Pembatas Kelas di Cari Akun */
+.class-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 30px 0 15px 5px;
+    color: #00eaff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.class-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0, 234, 255, 0.3), transparent);
+}
+
+.class-divider span {
+    background: rgba(0, 234, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 234, 255, 0.2);
 }
