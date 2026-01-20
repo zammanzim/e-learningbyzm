@@ -730,7 +730,7 @@
 
         // AUTO REDIRECT IF LOGGED IN
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user) window.location.href = "announcements.html";
+        if (user) window.location.href = "announcements";
 
         // VARIABLES
         let selectedClassId = null;
@@ -917,7 +917,7 @@
             // 2. Cek Password
             if (pwInput === selectedUserObj.password) {
                 localStorage.setItem("user", JSON.stringify(selectedUserObj));
-                window.location.href = "announcements.html";
+                window.location.href = "announcements";
             } else {
                 // Password Salah
                 pwInputEl.classList.add('error');
@@ -928,7 +928,7 @@
         function loginDirect() {
             if (!selectedUserObj) return;
             localStorage.setItem("user", JSON.stringify(selectedUserObj));
-            window.location.href = "announcements.html";
+            window.location.href = "announcements";
         }
 
         // Close modal when clicking outside

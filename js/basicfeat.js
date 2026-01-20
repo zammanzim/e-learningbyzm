@@ -46,38 +46,38 @@ function renderSidebar() {
         {
             header: "Main Menu",
             items: [
-                { text: "Home", url: "homev2.html", icon: "fa-house" },
-                { text: "Announcement", url: "announcements.html", icon: "fa-bullhorn", badge: "FIX", badgeType: "badge-fix" },
-                { text: "Daftar Tugas", url: "tugas.html", icon: "fa-solid fa-list-check", badge: "NEW", badgeType: "badge-beta" },
-                { text: "Account Setting", url: "settingacc.html", icon: "fa-solid fa-user-gear", badge: "UPDATE", badgeType: "badge-upd" },
-                { text: "Nilai PSASI 25-26", url: "nilaiv2.html", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
-                { text: "Cari Akun", url: "search.html", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new"}
+                { text: "Home", url: "homev2", icon: "fa-house" },
+                { text: "Announcement", url: "announcements", icon: "fa-bullhorn", badge: "FIX", badgeType: "badge-fix" },
+                { text: "Daftar Tugas", url: "tugas", icon: "fa-solid fa-list-check", badge: "NEW", badgeType: "badge-beta" },
+                { text: "Account Setting", url: "settingacc", icon: "fa-solid fa-user-gear", badge: "UPDATE", badgeType: "badge-upd" },
+                { text: "Nilai PSASI 25-26", url: "nilaiv2", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
+                { text: "Cari Akun", url: "search", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new"}
             ]
         },
         {
             header: "Lessons",
             items: [
-                { text: "B. Indonesia", url: "bahasaindonesia.html", icon: "fa-book"},
-                { text: "B. Inggris", url: "bahasainggris.html", icon: "fa-book-atlas"},
-                { text: "B. Sunda", url: "bahasasunda.html", icon: "fa-book"},
-                { text: "B. Jepang", url: "bahasajepang.html", icon: "fa-book", badge: "Task", badgeType: "badge-task" },
+                { text: "B. Indonesia", url: "bahasaindonesia", icon: "fa-book"},
+                { text: "B. Inggris", url: "bahasainggris", icon: "fa-book-atlas"},
+                { text: "B. Sunda", url: "bahasasunda", icon: "fa-book"},
+                { text: "B. Jepang", url: "bahasajepang", icon: "fa-book", badge: "Task", badgeType: "badge-task" },
 
                 // CONTOH PEMAKAIAN BADGE:
-                { text: "Matematika", url: "matematika.html", icon: "fa-square-root-variable"},
-                { text: "Proipas", url: "proipas.html", icon: "fa-atom"},
+                { text: "Matematika", url: "matematika", icon: "fa-square-root-variable"},
+                { text: "Proipas", url: "proipas", icon: "fa-atom"},
 
-                { text: "Sejarah", url: "sejarah.html", icon: "fa-landmark"},
-                { text: "PABP", url: "pabp.html", icon: "fa-mosque" , badge: "Task", badgeType: "badge-task" },
-                { text: "PP", url: "pp.html", icon: "fa-scale-balanced"},
-                { text: "Seni Budaya", url: "senibudaya.html", icon: "fa-masks-theater"},
-                { text: "PJOK", url: "pjok.html", icon: "fa-person-running", badge: "Task", badgeType: "badge-task" },
-                { text: "Informatika", url: "informatika.html", icon: "fa-laptop"},
-                { text: "BK", url: "bk.html", icon: "fa-heart-circle-check"},
+                { text: "Sejarah", url: "sejarah", icon: "fa-landmark"},
+                { text: "PABP", url: "pabp", icon: "fa-mosque" , badge: "Task", badgeType: "badge-task" },
+                { text: "PP", url: "pp", icon: "fa-scale-balanced"},
+                { text: "Seni Budaya", url: "senibudaya", icon: "fa-masks-theater"},
+                { text: "PJOK", url: "pjok", icon: "fa-person-running", badge: "Task", badgeType: "badge-task" },
+                { text: "Informatika", url: "informatika", icon: "fa-laptop"},
+                { text: "BK", url: "bk", icon: "fa-heart-circle-check"},
 
                 // CONTOH 'SOON' (Materi belum siap)
-                { text: "DASPROG 1", url: "dpr1.html", icon: "fa-laptop-code"},
-                { text: "DASPROG 2", url: "dpr2.html", icon: "fa-microchip", badge: "task", badgeType: "badge-task" },
-                { text: "DASPROG 3", url: "dpr3.html", icon: "fa-palette"},
+                { text: "DASPROG 1", url: "dpr1", icon: "fa-laptop-code"},
+                { text: "DASPROG 2", url: "dpr2", icon: "fa-microchip", badge: "task", badgeType: "badge-task" },
+                { text: "DASPROG 3", url: "dpr3", icon: "fa-palette"},
             ]
         }
     ];
@@ -87,8 +87,8 @@ function renderSidebar() {
             header: "Admin Panel",
             color: "#ffd700",
             items: [
-                { text: "Input Nilai PSAS", url: "admin-nilai.html", icon: "fa-pen-to-square" },
-                { text: "Monitor Nilai PSAS", url: "admin-monitor.html", icon: "fa-users-viewfinder" }
+                { text: "Input Nilai PSAS", url: "admin-nilai", icon: "fa-pen-to-square" },
+                { text: "Monitor Nilai PSAS", url: "admin-monitor", icon: "fa-users-viewfinder" }
             ]
         });
     }
@@ -168,9 +168,9 @@ document.addEventListener("click", (e) => {
     }
 });
 
-function goDashboard() { window.location.href = "dashboard.html"; }
-function goProfile() { window.location.href = "settingacc.html"; }
-function logout() { if (confirm("Yakin mau logout?")) { localStorage.clear(); window.location.href = "index.html"; } }
+function goDashboard() { window.location.href = "dashboard"; }
+function goProfile() { window.location.href = "settingacc"; }
+function logout() { { localStorage.clear(); window.location.href = ""; } }
 
 // ==========================================
 // 5. UNIVERSAL POPUP SYSTEM

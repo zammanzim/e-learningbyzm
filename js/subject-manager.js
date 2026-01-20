@@ -22,7 +22,7 @@ const SubjectApp = {
         this.state.user = this.getUserData();
 
         if (!this.state.user) {
-            window.location.href = "index.html";
+            window.location.href = "index";
             return;
         }
 
@@ -629,6 +629,7 @@ const SubjectApp = {
     initAdd() {
         const modal = document.getElementById('addModal');
         const btnAdd = document.getElementById('addAnnouncementBtn');
+        if (!modal || !btnAdd) return; // Safety check
         const btnSave = document.getElementById('btnSaveAdd');
         const btnCancel = document.getElementById('btnCancelAdd');
         const dropZone = document.getElementById('dropZone');

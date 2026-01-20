@@ -4,7 +4,7 @@ let searchTimer; // Untuk handle jeda (debounce)
 
 async function initSearchPage() {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { window.location.href = 'index.html'; return; }
+    if (!user) { window.location.href = 'index'; return; }
 
     // Sync Header Profil
     const headerName = document.getElementById('headerName');

@@ -1,13 +1,13 @@
 // auth.js - CLEAN VERSION
 document.addEventListener("DOMContentLoaded", async () => {
-    const isPublicPage = window.location.pathname.includes("index.html");
+    const isPublicPage = window.location.pathname.includes("index");
     if (isPublicPage) return;
 
     const user = getUser();
     if (user) {
         await autoFetchUser();
     } else {
-        window.location.href = "index.html";
+        window.location.href = "index";
     }
 });
 
@@ -42,6 +42,6 @@ async function autoFetchUser() {
 function logout() {
     {
         localStorage.clear();
-        window.location.href = "index.html";
+        window.location.href = "index";
     }
 }

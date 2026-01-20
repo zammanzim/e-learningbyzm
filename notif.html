@@ -25,7 +25,7 @@
 <body>
     <header>
         <div class="header-left">
-            <a href="dashboard.html" style="color:white; font-size: 20px;"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="dashboard" style="color:white; font-size: 20px;"><i class="fa-solid fa-arrow-left"></i></a>
             <h2 id="pageTitle">Notifikasi</h2>
         </div>
     </header>
@@ -77,7 +77,7 @@
     <script src="js/supabase-clients.js" defer></script>
     <script>
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user) window.location.href = "index.html";
+        if (!user) window.location.href = "index";
 
         async function init() {
             // Tampilkan form jika super_admin

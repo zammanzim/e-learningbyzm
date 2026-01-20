@@ -1,7 +1,7 @@
 export async function initDashboard() {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
-        window.location.href = 'index.html';
+        window.location.href = 'index';
         return;
     }
 
@@ -158,7 +158,7 @@ async function loadUnfinishedTasks(user) {
                     <i class="fa-solid fa-clipboard-check"></i>
                     <h3>Tidak ada tugas yang belum selesai</h3>
                     <p>Semua tugas telah diselesaikan. Kerja bagus!</p>
-                    <button class="btn-primary" onclick="window.location.href='subjects.html'">
+                    <button class="btn-primary" onclick="window.location.href='subjects'">
                         <i class="fa-solid fa-book-open"></i> Pelajari Materi Baru
                     </button>
                 </div>
@@ -201,7 +201,7 @@ async function loadBookmarks(user) {
                             <span><i class="fa-solid fa-tag"></i> Materi</span>
                         </div>
                         <div class="bookmark-actions">
-                            <button class="btn-small" onclick="window.location.href='${item.subject_id}.html'">
+                            <button class="btn-small" onclick="window.location.href='${item.subject_id}'">
                                 <i class="fa-solid fa-external-link"></i> Buka Materi
                             </button>
                             <button class="btn-small btn-remove" onclick="removeBookmark('${bookmark.id}')">
@@ -219,7 +219,7 @@ async function loadBookmarks(user) {
                     <i class="fa-solid fa-bookmark"></i>
                     <h3>Belum ada bookmark</h3>
                     <p>Tambahkan bookmark pada materi yang ingin disimpan untuk nanti</p>
-                    <button class="btn-primary" onclick="window.location.href='library.html'">
+                    <button class="btn-primary" onclick="window.location.href='library'">
                         <i class="fa-solid fa-magnifying-glass"></i> Jelajahi Materi
                     </button>
                 </div>

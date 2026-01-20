@@ -13,7 +13,7 @@ function normalize(str) {
 
 async function initTugas() {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { window.location.href = 'index.html'; return; }
+    if (!user) { window.location.href = 'index'; return; }
 
     // Set Profil di Card
     document.getElementById('userTaskName').innerText = user.full_name;

@@ -36,7 +36,7 @@ async function initDailyCard() {
                 <h2 class="final-day" id="lblHari">...</h2>
                 <small class="final-date" id="lblTanggal">...</small>
             </div>
-            <div class="task-shortcut-box" onclick="window.location.href='tugas.html'">
+            <div class="task-shortcut-box" onclick="window.location.href='tugas'">
     <div id="taskBadge" class="task-badge">0</div> <i class="fa-solid fa-clipboard-list"></i>
     <span>TUGAS</span>
 </div>
