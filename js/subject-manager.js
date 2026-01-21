@@ -150,7 +150,8 @@ const SubjectApp = {
             // Handle Card Actions
             if (e.target.closest(".delete-btn")) { e.preventDefault(); self.deleteAnnouncement(e.target.closest(".course-card")); }
             if (e.target.closest(".bookmark-btn")) { e.preventDefault(); self.toggleBookmark(e.target.closest(".course-card")); }
-            if (e.target.closest(".upload-photo-btn")) { e.preventDefault(); self.triggerPhotoUpload(e.target.closest(".course-card")); }
+            // Ganti class ke .card-photo-placeholder karena class .upload-photo-btn nggak ada di template
+            if (e.target.closest(".card-photo-placeholder")) { e.preventDefault(); self.triggerPhotoUpload(e.target.closest(".course-card")); }
             if (e.target.closest(".delete-photo-btn")) { e.preventDefault(); self.deletePhoto(e.target.closest(".course-card")); }
 
             // Handle Task Checklist
@@ -310,6 +311,8 @@ const SubjectApp = {
         } else {
             card.classList.remove('clickable-card');
             card.style.cursor = "default";
+            // Tambahin placeholder biar ada elemen yang bisa diklik pas edit mode
+            photoHTML = `<div class="card-photo-placeholder" style="display:none;"><i class="fa-solid fa-image"></i><p>Klik Upload Foto</p></div>`;
         }
 
         const isSaved = this.state.bookmarks.includes(String(data.id));
@@ -405,31 +408,53 @@ const SubjectApp = {
         });
 
         this.state.isToggling = false;
-        if (this.state.editMode) this.enableDragDrop();
-        else this.disableDragDrop();
     },
 
+    // File: js/subject-manager.js
+
     setupDragEvents(card, handle) {
-        handle.onmousedown = (e) => { card.draggable = true; };
+        handle.onmousedown = () => { card.draggable = true; };
         handle.onmouseup = () => { card.draggable = false; };
-        handle.oncontextmenu = (e) => { e.preventDefault(); return false; };
 
         card.ondragstart = (e) => {
             e.dataTransfer.effectAllowed = "move";
-            card.classList.add("dragging");
-            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'none');
-        };
 
-        card.ondragend = (e) => {
-            card.classList.remove("dragging");
-            card.draggable = false;
-            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'auto');
-            this.updateDisplayOrder();
+            // Kasih delay dikit biar bayangan drag-nya kebentuk dulu sebelum class dragging dipasang
+            setTimeout(() => {
+                card.classList.add("dragging");
+            }, 0);
+
+            // Matiin interaksi teks biar gak ganggu
+            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'none');
         };
 
         card.ondragover = (e) => {
             e.preventDefault();
+            this.handleAutoScroll(e.clientY);
             this.handleDragOverLogic(e.clientY);
+
+            // Biar smooth, kita cari elemen yang lagi di-drag
+            const dragging = document.querySelector(".dragging");
+            const afterElement = this.getDragAfterElement(document.getElementById("announcements"), e.clientY);
+            const container = document.getElementById("announcements");
+
+            if (afterElement == null) {
+                container.appendChild(dragging);
+            } else {
+                container.insertBefore(dragging, afterElement);
+            }
+        };
+
+        card.ondragend = (e) => {
+            // Hapus class dragging biar balik normal
+            card.classList.remove("dragging");
+            card.draggable = false;
+
+            clearTimeout(this.scrollTimer);
+            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'auto');
+
+            // Simpan urutan baru ke DB
+            this.updateDisplayOrder();
         };
 
         let longPressTimer;
@@ -469,10 +494,12 @@ const SubjectApp = {
         };
     },
 
+    // File: js/subject-manager.js
+
     handleAutoScroll(y) {
-        clearInterval(this.scrollTimer);
-        const threshold = 100;
-        const speed = 10;
+        clearTimeout(this.scrollTimer); // Ganti jadi clearTimeout
+        const threshold = 100; // Jarak dari ujung layar buat mulai scroll (pixel)
+        const speed = 15;
 
         if (y < threshold) {
             window.scrollBy(0, -speed);
@@ -490,8 +517,6 @@ const SubjectApp = {
         const afterElement = this.getDragAfterElement(container, y);
         if (afterElement == null) {
             if (dragging.nextSibling) container.appendChild(dragging);
-        } else {
-            if (afterElement !== dragging.nextSibling) container.insertBefore(dragging, afterElement);
         }
     },
 

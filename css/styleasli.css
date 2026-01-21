@@ -1638,16 +1638,39 @@ li.nav-locked a::after {
 }
 
 .uni-box {
-    background: rgba(30, 30, 30, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 40px rgba(0, 234, 255, 0.15);
+    background: linear-gradient(135deg,
+            rgba(0, 180, 220, 0.28),
+            /* kiri atas */
+            rgba(10, 20, 35, 0.85)
+            /* kanan bawah */
+        );
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    border: 1px solid rgba(120, 220, 255, 0.25);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(0, 200, 255, 0.25);
+
+    border-radius: 18px;
     padding: 30px;
-    border-radius: 20px;
     text-align: center;
     max-width: 320px;
     width: 90%;
     transform: scale(0.8);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.uni-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.12),
+            rgba(255, 255, 255, 0.02));
+    pointer-events: none;
 }
 
 .uni-overlay.active .uni-box {
@@ -3227,24 +3250,42 @@ input:checked+.slider:before {
 
 /* --- 3. TASK CARD STATUS (BACKGROUND MODE) --- */
 
-/* 🟢 HIJAU (DONE) */
+/* --- 3. TASK CARD STATUS (VIBRANT GRADIENT) --- */
+
+/* 🟢 HIJAU (DONE) - Lebih Terang & Solid */
 .task-green-done {
-    background: linear-gradient(145deg, rgba(46, 213, 115, 0.15), rgba(0, 0, 0, 0.6)) !important;
-    border: 1px solid rgba(46, 213, 115, 0.25) !important;
-    opacity: 0.75;
+    background: linear-gradient(145deg, rgba(46, 213, 115, 0.4), rgba(10, 20, 15, 0.9)) !important;
+    border: 2px solid #2ed573 !important;
+    box-shadow: 0 5px 15px rgba(46, 213, 115, 0.2);
+    opacity: 1 !important;
+    /* Hapus opacity 0.75 biar gak pudar */
 }
 
-/* 🟡 KUNING (PENDING) */
+/* 🟡 KUNING (PENDING) - Kuning Emas Nyala */
 .task-yellow-pending {
-    background: linear-gradient(145deg, rgba(255, 165, 2, 0.15), rgba(0, 0, 0, 0.5)) !important;
-    border: 1px solid rgba(255, 165, 2, 0.2) !important;
+    background: linear-gradient(145deg, rgba(255, 211, 42, 0.35), rgba(20, 20, 10, 0.9)) !important;
+    border: 2px solid #ffd32a !important;
+    box-shadow: 0 5px 15px rgba(255, 211, 42, 0.15);
 }
 
-/* 🔴 MERAH (DEADLINE) */
+/* 🔴 MERAH (DEADLINE) - Merah Gahar */
 .task-red-deadline {
-    background: linear-gradient(145deg, rgba(255, 71, 87, 0.25), rgba(0, 0, 0, 0.6)) !important;
-    border: 1px solid rgba(255, 71, 87, 0.4) !important;
-    box-shadow: 0 0 30px rgba(255, 71, 87, 0.15);
+    background: linear-gradient(145deg, rgba(255, 71, 87, 0.5), rgba(20, 10, 10, 0.9)) !important;
+    border: 2px solid #ff4757 !important;
+    box-shadow: 0 0 30px rgba(255, 71, 87, 0.3);
+}
+
+/* Update Warna Teks di dalam Kartu biar makin kontras */
+.task-green-done h3 {
+    color: #2ed573;
+}
+
+.task-yellow-pending h3 {
+    color: #ffd32a;
+}
+
+.task-red-deadline h3 {
+    color: #ff4757;
 }
 
 /* Badge Deadline di dalam kartu */
@@ -3255,9 +3296,90 @@ input:checked+.slider:before {
     right: 20px;
     font-size: 9px;
     font-weight: 900;
-    color: #ff4757;
-    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    background: rgb(255, 0, 0);
     border: 1px solid #ff4757;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+.task-yellow-pending::after {
+    content: "TUGAS";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #000000;
+    background: rgb(255, 255, 0);
+    border: 1px solid #f0ff47;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+.task-green-done::after {
+    content: "SELESAI";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #ffffff;
+    background: rgb(0, 255, 0);
+    border: 1px solid #00ff40;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+.tugasket1 {
+    max-width: fit-content;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #ffffff;
+    background: rgb(255, 0, 0);
+    border: 1px solid #ff4757;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+.tugasket2 {
+    max-width: fit-content;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #000000;
+    background: rgb(255, 255, 0);
+    border: 1px solid #f0ff47;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    animation: pulseRed 2s infinite;
+}
+
+.tugasket3 {
+    max-width: fit-content;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #ffffff;
+    background: rgb(0, 255, 0);
+    border: 1px solid #00ff40;
     padding: 4px 10px;
     border-radius: 6px;
     letter-spacing: 1px;
@@ -3471,4 +3593,18 @@ input:checked+.slider:before {
     .sheet-drag-indicator {
         display: none;
     }
+}
+
+/* Style pas kartu lagi di-drag (Google Forms Look) */
+.course-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    border: 2px dashed #00eaff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    z-index: 100;
+}
+
+.course-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
