@@ -171,4 +171,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     renderVisitorStats();
+
+    logVisitor();
+    renderVisitorStats();
+
+    // Aktifkan fungsi realtime yang baru dibuat
+    initVisitorRealtime();
 });
+
+// Tambahkan fungsi ini di js/visitor.js
+
+function initVisitorRealtime() {
+    // Pastikan variabel 'user' dan 'supabase' sudah tersedia dari context sebelumnya
+    const user = _getVisitorUser();
+    if (!user || typeof supabase === 'undefined') return;
+
+    console.log("📡 Realtime Visitor Aktif...");
+
+    // Berlangganan perubahan pada tabel 'visitors'
+    supabase
+        .channel('visitor_changes')
+        .on(
+            'postgres_changes',
+            {
+                event: '*', // Menyimak semua kejadian (INSERT, UPDATE, DELETE)
+                schema: 'public',
+                table: 'visitors',
+                filter: `class_id=eq.${user.class_id}` // Hanya pantau perubahan di kelas user sendiri
+            },
+            (payload) => {
+                console.log('🔔 Perubahan terdeteksi:', payload);
+                // Panggil fungsi render yang sudah ada di visitor.js untuk update UI
+                renderVisitorStats();
+            }
+        )
+        .subscribe();
+}

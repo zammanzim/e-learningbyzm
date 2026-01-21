@@ -51,33 +51,33 @@ function renderSidebar() {
                 { text: "Daftar Tugas", url: "tugas", icon: "fa-solid fa-list-check", badge: "NEW", badgeType: "badge-beta" },
                 { text: "Account Setting", url: "settingacc", icon: "fa-solid fa-user-gear", badge: "UPDATE", badgeType: "badge-upd" },
                 { text: "Nilai PSASI 25-26", url: "nilaiv2", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
-                { text: "Cari Akun", url: "search", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new"}
+                { text: "Cari Akun", url: "search", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new" }
             ]
         },
         {
             header: "Lessons",
             items: [
-                { text: "B. Indonesia", url: "bahasaindonesia", icon: "fa-book"},
-                { text: "B. Inggris", url: "bahasainggris", icon: "fa-book-atlas"},
-                { text: "B. Sunda", url: "bahasasunda", icon: "fa-book"},
+                { text: "B. Indonesia", url: "bahasaindonesia", icon: "fa-book" },
+                { text: "B. Inggris", url: "bahasainggris", icon: "fa-book-atlas" },
+                { text: "B. Sunda", url: "bahasasunda", icon: "fa-book" },
                 { text: "B. Jepang", url: "bahasajepang", icon: "fa-book", badge: "Task", badgeType: "badge-task" },
 
                 // CONTOH PEMAKAIAN BADGE:
-                { text: "Matematika", url: "matematika", icon: "fa-square-root-variable"},
-                { text: "Proipas", url: "proipas", icon: "fa-atom"},
+                { text: "Matematika", url: "matematika", icon: "fa-square-root-variable" },
+                { text: "Proipas", url: "proipas", icon: "fa-atom" },
 
-                { text: "Sejarah", url: "sejarah", icon: "fa-landmark"},
-                { text: "PABP", url: "pabp", icon: "fa-mosque" , badge: "Task", badgeType: "badge-task" },
-                { text: "PP", url: "pp", icon: "fa-scale-balanced"},
-                { text: "Seni Budaya", url: "senibudaya", icon: "fa-masks-theater"},
+                { text: "Sejarah", url: "sejarah", icon: "fa-landmark" },
+                { text: "PABP", url: "pabp", icon: "fa-mosque", badge: "Task", badgeType: "badge-task" },
+                { text: "PP", url: "pp", icon: "fa-scale-balanced" },
+                { text: "Seni Budaya", url: "senibudaya", icon: "fa-masks-theater" },
                 { text: "PJOK", url: "pjok", icon: "fa-person-running", badge: "Task", badgeType: "badge-task" },
-                { text: "Informatika", url: "informatika", icon: "fa-laptop"},
-                { text: "BK", url: "bk", icon: "fa-heart-circle-check"},
+                { text: "Informatika", url: "informatika", icon: "fa-laptop" },
+                { text: "BK", url: "bk", icon: "fa-heart-circle-check" },
 
                 // CONTOH 'SOON' (Materi belum siap)
-                { text: "DASPROG 1", url: "dpr1", icon: "fa-laptop-code"},
+                { text: "DASPROG 1", url: "dpr1", icon: "fa-laptop-code" },
                 { text: "DASPROG 2", url: "dpr2", icon: "fa-microchip", badge: "task", badgeType: "badge-task" },
-                { text: "DASPROG 3", url: "dpr3", icon: "fa-palette"},
+                { text: "DASPROG 3", url: "dpr3", icon: "fa-palette" },
             ]
         }
     ];
@@ -143,15 +143,20 @@ function toggleMenu() {
         sidebar.classList.toggle("closed");
         document.querySelector(".main-content")?.classList.toggle("shifted");
     } else {
-        sidebar.classList.toggle("open");
-        hamburger.classList.toggle("active");
-        if (sidebar.classList.contains("open")) {
+        const isOpen = sidebar.classList.contains("open");
+        if (!isOpen) {
+            sidebar.classList.add("open");
+            hamburger.classList.add("active");
             overlay.classList.add("show");
             overlay.onclick = toggleMenu;
             document.body.style.overflow = "hidden";
+            history.pushState({ type: 'overlay', target: 'sidebar' }, ''); // Catat di history
         } else {
+            sidebar.classList.remove("open");
+            hamburger.classList.remove("active");
             overlay.classList.remove("show");
             document.body.style.overflow = "";
+            // Jangan pushState di sini, popstate yang akan menangani jika user mencet back
         }
     }
 }
@@ -306,3 +311,64 @@ window.closePopup = function () {
     const overlay = document.getElementById('uniOverlay');
     if (overlay) overlay.click();
 };
+
+// --- NAVIGATION CONTROLLER (Back & Esc) ---
+window.addEventListener('popstate', () => {
+    closeActiveOverlays(false); // Tutup tanpa pindah history lagi
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const active = getActiveOverlay();
+        if (active) history.back(); // Trigger popstate
+    }
+});
+
+function getActiveOverlay() {
+    return document.querySelector('.detail-overlay.active, .modal-overlay:not(.hidden), .uni-overlay.active, .visitor-overlay.active, #sidebar.open');
+}
+
+function closeActiveOverlays(shouldGoBack = true) {
+    // 1. Detail Overlay
+    const detail = document.getElementById('detailOverlay');
+    if (detail?.classList.contains('active')) {
+        if (typeof closeDetail === 'function') closeDetail();
+        else detail.classList.remove('active');
+        return;
+    }
+    // 2. Add Modal
+    const addModal = document.getElementById('addModal');
+    if (addModal && !addModal.classList.contains('hidden')) {
+        addModal.classList.add('hidden');
+        if (typeof SubjectApp !== 'undefined') SubjectApp.clearForm();
+        return;
+    }
+    // 3. Universal Popup (showPopup)
+    const uni = document.getElementById('uniOverlay');
+    if (uni?.classList.contains('active')) {
+        if (typeof closePopup === 'function') closePopup();
+        return;
+    }
+    // 4. Visitor Overlay
+    const visitor = document.getElementById('visitorOverlay');
+    if (visitor?.classList.contains('active')) {
+        visitor.classList.remove('active');
+        return;
+    }
+    // 5. Sidebar (Mobile)
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar?.classList.contains('open')) {
+        toggleMenu();
+        return;
+    }
+}
+
+// Tambahkan pemicu history untuk Visitor Overlay (jika ada script bukanya)
+document.getElementById('visitorTrigger')?.addEventListener('click', () => {
+    const v = document.getElementById('visitorOverlay');
+    v.classList.add('active');
+    history.pushState({ type: 'overlay', target: 'visitor' }, '');
+});
+document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
+    if (document.getElementById('visitorOverlay').classList.contains('active')) history.back();
+});

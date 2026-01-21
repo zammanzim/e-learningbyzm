@@ -17,7 +17,6 @@ body {
 /* Kunci scroll body saat detail terbuka */
 body.no-scroll {
     overflow: hidden !important;
-    height: 100vh;
 }
 
 html::-webkit-scrollbar,
@@ -97,7 +96,6 @@ header {
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
-    transition: background 0.3s;
 }
 
 .visitor-trigger:hover {
@@ -777,6 +775,7 @@ i {
 .glass-modal-box {
     width: 90%;
     max-width: 500px;
+    max-height: 90vh;
     background: rgba(30, 30, 30, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(0, 234, 255, 0.15);
@@ -2152,11 +2151,10 @@ li.nav-locked a::after {
     margin-top: 25px;
     background: rgba(15, 15, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
+    border-radius: 16px;
     padding: 25px;
     position: relative;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 50px rgb(255, 130, 52);
     color: white;
 }
 
@@ -2188,24 +2186,24 @@ li.nav-locked a::after {
 }
 
 .final-date {
-    color: #888;
-    font-size: 14px;
+    color: #b5b5b5;
+    font-size: 16px;
     font-weight: 500;
 }
 
-/* KOTAK SHORTCUT TUGAS (POJOK KANAN) */
 .task-shortcut-box {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     width: 70px;
     height: 70px;
-    border-radius: 16px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: 0.3s;
+    box-shadow: 0px 10px 50px #0056cc;
 }
 
 .task-shortcut-box i {
@@ -2224,7 +2222,7 @@ li.nav-locked a::after {
     background: #00eaff;
     border-color: #00eaff;
     transform: translateY(-3px);
-    box-shadow: 0 5px 20px rgba(0, 234, 255, 0.4);
+    box-shadow: 0px 10px 50px #0056cc;
 }
 
 .task-shortcut-box:hover i,
@@ -2232,11 +2230,9 @@ li.nav-locked a::after {
     color: black;
 }
 
-/* 3 CARD UTAMA (GRID) */
 .top-cards-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    /* 3 Kolom Sejajar */
     gap: 10px;
 }
 
@@ -2245,19 +2241,8 @@ li.nav-locked a::after {
     border-radius: 16px;
     display: flex;
     flex-direction: column;
-    min-height: 100px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     transition: 0.3s;
     border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.info-card-dynamic:hover {
-    transform: translateY(-5px);
-}
-
-.card-icon {
-    font-size: 20px;
-    margin-bottom: 10px;
 }
 
 .card-label {
@@ -2305,12 +2290,13 @@ li.nav-locked a::after {
     gap: 15px;
     min-height: 40px;
     position: relative;
+    margin-left: 10px;
     /* Opacity diatur animasi nanti */
 }
 
 .tl-time-final {
     font-family: monospace;
-    font-size: 13px;
+    font-size: 16px;
     color: #00eaff;
     width: 45px;
     text-align: right;
@@ -2320,7 +2306,7 @@ li.nav-locked a::after {
 
 .tl-marker-final {
     width: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     position: relative;
 }
 
@@ -2337,7 +2323,7 @@ li.nav-locked a::after {
 }
 
 .tl-subject-final {
-    font-size: 14px;
+    font-size: 17px;
     color: #ddd;
     padding-bottom: 20px;
     font-weight: 500;
@@ -2352,7 +2338,6 @@ li.nav-locked a::after {
 
 .picket-pill {
     flex: 1 1 30%;
-    /* Minimal lebar 30% container */
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
@@ -2453,31 +2438,6 @@ li.nav-locked a::after {
         margin-bottom: 0;
         font-size: 24px;
     }
-}
-
-/* --- EDIT BUTTON (ADMIN) --- */
-.dc-edit-btn {
-    position: absolute;
-    top: 5px;
-    right: 80px;
-    background: rgba(255, 152, 0, 0.2);
-    border: 1px solid rgba(255, 152, 0, 0.5);
-    color: #ff9800;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-
-.dc-edit-btn:hover {
-    background: #ff9800;
-    color: white;
-    transform: rotate(15deg);
 }
 
 /* --- FORM STYLING --- */

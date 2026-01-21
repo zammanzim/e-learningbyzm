@@ -669,13 +669,12 @@ const SubjectApp = {
             this.tempFiles = [];
             document.getElementById('previewContainer').innerHTML = '';
 
-            // Tambahkan ini biar footer otomatis keisi tanggal hari ini
+            // Tambahkan ini
+            history.pushState({ type: 'overlay', target: 'addModal' }, '');
+
             const el = document.getElementById('addSmall');
             if (el) el.value = new Date().toLocaleDateString('id-ID', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
             });
         };
     },
@@ -873,8 +872,6 @@ function openDetail(data) {
     }
     if (photos.length === 0) detailBox.classList.add('text-only-mode');
     else detailBox.classList.remove('text-only-mode');
-
-    document.body.classList.add('no-scroll');
     // Reset State Mobile
     if (window.innerWidth <= 768) {
         info.classList.add('hidden-mobile');
@@ -889,11 +886,11 @@ function openDetail(data) {
     currentViewerIndex = 0;
     updateSliderUI();
     overlay.classList.add('active');
+    history.pushState({ type: 'overlay', target: 'detail' }, '');
 }
 
 function closeDetail() {
     document.getElementById('detailOverlay').classList.remove('active');
-    document.body.classList.remove('no-scroll');
 }
 // File: js/subject-manager.js
 

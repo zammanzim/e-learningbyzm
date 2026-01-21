@@ -14,25 +14,25 @@
     <script src="js/subject-manager.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
 </head>
 
 <body>
-    
+
 
     <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <div class="main-content">
         <div class="left-section">
-            <div class="page-title-header glow"
-                style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div class="glow">
                 <h1><i class="fa-solid fa-list-check" style="font-size: 26px;"></i> Daftar Tugas</h1>
             </div>
 
-            <div id="userTaskProfile" class="daily-card-final glass-card-effect"
+            <div id="userTaskProfile" class="daily-card-final"
                 style="margin-bottom: 25px; padding: 20px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <img id="userTaskPP" src="" class="header-pp"
+                    <img id="userTaskPP" src=""
                         style="width: 65px; height: 65px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
                     <div style="flex: 1;">
                         <h3 id="userTaskName" style="margin: 0; font-size: 18px; color: #fff;">...</h3>
@@ -52,11 +52,13 @@
                                 </div>
                             </div>
                             <p id="taskMotivation"
-                                style="margin-top: 10px; font-size: 12px; font-weight: 600; text-align: center; min-height: 18px;">
+                                style="margin-top: 10px; font-size: 12px; font-weight: 600; text-align: center; min-height: 18px; margin-bottom: 20px;">
                             </p>
                         </div>
                     </div>
                 </div>
+                <small style="font-size: 10px;">*Pencet tombol "Selesai?" biar tugas yang sudah dan belum tersortir
+                rapi, dan untuk menghargai dev.</small>
             </div>
         </div>
 
