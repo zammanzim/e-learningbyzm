@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - User Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+    <style>
+        .admin-stat-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mini-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+            margin-top: 10px;
+            color: #ccc;
+        }
+
+        .info-item b {
+            color: #00eaff;
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .progress-mini-wrapper {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-mini-bar {
+            height: 100%;
+            background: #0be881;
+            transition: width 0.5s;
+        }
+
+        .last-act {
+            font-size: 11px;
+            color: #ff9f43;
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-users-gear"></i> User Monitor</h1>
+                <p style="color: #aaa;">Pantau progres dan aktivitas seluruh anggota kelas.</p>
+            </div>
+
+            <div class="daily-card-final animate-pop-in" style="margin-top: 20px;">
+                <div class="top-cards-grid">
+                    <div class="info-card-dynamic" style="border: 1px solid #00eaff;">
+                        <span class="card-label">Total Siswa</span>
+                        <span class="card-val" id="totalStudents">0</span>
+                    </div>
+                    <div class="info-card-dynamic" style="border: 1px solid #0be881;">
+                        <span class="card-label">Rata-rata Progres</span>
+                        <span class="card-val" id="avgProgress">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #00eaff;"><i class="fa-solid fa-address-book"></i> Member List</h3>
+                <input type="text" id="adminSearchUser" class="glass-input" placeholder="Cari nama..."
+                    style="width: 150px; padding: 8px;">
+            </div>
+
+            <div id="adminUserList">
+                <p style="text-align: center; padding: 50px; color: #aaa;">Sedang menyinkronkan data kelas...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin-monitor.js" defer></script>
+</body>
+
+</html>

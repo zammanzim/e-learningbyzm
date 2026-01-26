@@ -1989,7 +1989,10 @@
         <button class="mp-close" id="mpClose">✕</button>
 
         <audio id="mpAudio" preload="metadata"></audio>
+
     </div>
+
+    
     <script type="module" visitor>
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -2480,6 +2483,7 @@
         document.querySelectorAll('.up, .down, .left, .right')
             .forEach(el => observer.observe(el));
     </script>
+
 </body>
 
 </html>

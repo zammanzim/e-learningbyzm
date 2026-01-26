@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Progres</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+</head>
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-medal"></i> Pencapaian Kamu</h1>
+            </div>
+            
+            <div class="daily-card-final animate-pop-in" style="margin-bottom: 25px;">
+                <div class="final-header">
+                    <div>
+                        <span class="final-badge bg-cyan">STATISTIK</span>
+                        <h2 class="final-day">PROGRES BELAJAR</h2>
+                        <small class="final-date" id="dateNow"></small>
+                    </div>
+                    <div class="task-shortcut-box" onclick="window.location.href='tugas'">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>TUGAS</span>
+                    </div>
+                </div>
+                
+                <div class="top-cards-grid">
+                    <div class="info-card-dynamic" style="background: linear-gradient(135deg, #00eaff, #007bff); color: black;">
+                        <span class="card-label">Tugas Selesai</span>
+                        <span class="card-val" id="totalDone">0</span>
+                    </div>
+                    <div class="info-card-dynamic" style="background: rgba(255,255,255,0.1); border: 1px solid #00eaff;">
+                        <span class="card-label">Total Materi</span>
+                        <span class="card-val" id="totalMateri">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <h3 style="margin-bottom: 15px; color: #00eaff;"><i class="fa-solid fa-clock-rotate-left"></i> Daftar Tugas yang Beres</h3>
+            <div id="completedTaskList" class="announcements">
+                <p style="text-align:center; padding:50px; color: #aaa;">Memuat riwayat...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/progress-logic.js" defer></script>
+</body>
+</html>

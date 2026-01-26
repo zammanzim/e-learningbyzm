@@ -1,4 +1,3 @@
-// auth.js - CLEAN VERSION
 document.addEventListener("DOMContentLoaded", async () => {
     const isPublicPage = window.location.pathname.includes("index");
     if (isPublicPage) return;
