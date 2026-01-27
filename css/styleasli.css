@@ -42,6 +42,12 @@ body {
     }
 }
 
+@media (pointer: coarse) {
+    body {
+        background-attachment: scroll !important;
+    }
+}
+
 header {
     background-color: transparent;
     color: #fff;
