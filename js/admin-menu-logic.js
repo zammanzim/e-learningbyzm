@@ -1,5 +1,5 @@
 // js/admin-menu-logic.js
-
+let allMenuData = [];
 document.addEventListener('DOMContentLoaded', () => {
     setupClassDropdown();
     loadClassMenus();
@@ -30,18 +30,15 @@ async function loadClassMenus() {
     if (classId !== 'all') query = query.eq('class_id', classId);
 
     const { data, error } = await query;
-    if (error) return;
+    if (error) return alert("Gagal ambil data!");
 
-    allMenuData = data;
     container.innerHTML = "";
-
     if (data.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color: #888; padding: 40px;'>Data tidak ditemukan.</p>";
+        container.innerHTML = "<p style='text-align:center; color: #888; padding: 40px;'>Data kosong.</p>";
         return;
     }
 
     if (classId === 'all') {
-        // --- TAMPILAN SEMUA KELAS ---
         const grouped = data.reduce((acc, item) => {
             if (!acc[item.class_id]) acc[item.class_id] = [];
             acc[item.class_id].push(item);
@@ -49,35 +46,36 @@ async function loadClassMenus() {
         }, {});
 
         for (const [id, menus] of Object.entries(grouped)) {
-            container.innerHTML += `<h2 style="color: #ffd700; font-size: 14px; margin: 25px 0 10px 0; border-bottom: 1px solid rgba(255,215,0,0.2); text-transform:uppercase;"> 
-                <i class="fa-solid fa-users"></i> Kelas ID: ${id}</h2>`;
+            const groupHeader = document.createElement('div');
+            groupHeader.innerHTML = `<h2 style="color: #ffd700; font-size: 15px; margin: 25px 0 10px 0; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 5px;">
+                <i class="fa-solid fa-users"></i> KELAS ID: ${id}</h2>`;
+            container.appendChild(groupHeader);
             menus.forEach(item => container.appendChild(createMenuItemElement(item)));
         }
     } else {
-        // --- TAMPILAN PER KELAS (DENGAN KATEGORI ADMIN) ---
+        const main = data.filter(i => i.menu_group === 'main');
+        const lesson = data.filter(i => i.menu_group === 'lessons');
         const adminItems = data.filter(i => i.menu_group === 'admin');
-        const mainItems = data.filter(i => i.menu_group === 'main');
-        const lessonItems = data.filter(i => i.menu_group === 'lessons');
 
-        // 1. Munculin Kelompok Admin Panel
+        // Fungsi pembantu agar tidak pakai innerHTML +=
+        const renderHeader = (text, color) => {
+            const h3 = document.createElement('h3');
+            h3.style.cssText = `color: ${color}; margin: 20px 0 10px 0; font-size: 13px; opacity:0.8;`;
+            h3.innerText = text;
+            container.appendChild(h3);
+        };
+
         if (adminItems.length > 0) {
-            container.innerHTML += `<h3 style="color: #ffd700; margin-bottom:10px; font-size: 13px; opacity:0.8;">
-                <i class="fa-solid fa-user-shield"></i> ADMIN PANEL</h3>`;
+            renderHeader("ADMIN PANEL", "#ff4757");
             adminItems.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
-
-        // 2. Munculin Kelompok Main Menu
-        if (mainItems.length > 0) {
-            container.innerHTML += `<h3 style="color: #00eaff; margin: 20px 0 10px 0; font-size: 13px; opacity:0.8;">
-                <i class="fa-solid fa-house"></i> MAIN MENU</h3>`;
-            mainItems.forEach(i => container.appendChild(createMenuItemElement(i)));
+        if (main.length > 0) {
+            renderHeader("MAIN MENU", "#ffd700");
+            main.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
-
-        // 3. Munculin Kelompok Lessons
-        if (lessonItems.length > 0) {
-            container.innerHTML += `<h3 style="color: #fff; margin: 20px 0 10px 0; font-size: 13px; opacity:0.8;">
-                <i class="fa-solid fa-book-open"></i> LESSONS</h3>`;
-            lessonItems.forEach(i => container.appendChild(createMenuItemElement(i)));
+        if (lesson.length > 0) {
+            renderHeader("LESSONS", "#00eaff");
+            lesson.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
     }
 }
@@ -190,7 +188,27 @@ function resetForm() {
 }
 
 async function deleteMenu(id) {
-    if (!confirm("Hapus mapel ini?")) return;
-    const { error } = await supabase.from('subjects_config').delete().eq('id', id);
-    if (!error) loadClassMenus();
+    // 1. Cari data materi buat ditampilin namanya di popup
+    const item = allMenuData.find(m => String(m.id) === String(id));
+    const itemName = item ? item.subject_name : "materi ini";
+
+    // 2. Panggil popup universal dengan mode 'confirm'
+    const yakin = await showPopup(`Yakin mau hapus <b>${itemName}</b>?<br>Data ini bakal ilang permanen dari database!`, "confirm");
+
+    // 3. Jika user klik 'Ya' (yakin === true)
+    if (yakin) {
+        const { error } = await supabase
+            .from('subjects_config')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            if (window.showPopup) showPopup("Gagal hapus: " + error.message, "error");
+        } else {
+            if (window.showPopup) showPopup("Materi berhasil dihapus!", "success");
+
+            // 4. Refresh daftar menu setelah berhasil hapus
+            loadClassMenus();
+        }
+    }
 }

@@ -35,6 +35,9 @@ function syncHeaderProfile() {
 // ==========================================
 // 3. UNIFIED SIDEBAR RENDERER
 // ==========================================
+// ==========================================
+// 3. UNIFIED SIDEBAR RENDERER (FIXED PATH)
+// ==========================================
 async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
@@ -44,6 +47,12 @@ async function renderSidebar() {
 
     const role = user.role;
     const CLASS_ID = String(user.class_id);
+
+    // --- DETEKSI LOKASI FOLDER ---
+    const isInAdminFolder = window.location.pathname.includes('/admiii/');
+    const rootPrefix = isInAdminFolder ? '../' : ''; // Kalau di admin, mau ke root harus ../
+    const adminPrefix = isInAdminFolder ? '' : 'admiii/'; // Kalau di root, mau ke admin harus admin/
+    // ----------------------------
 
     // 1. Ambil SEMUA menu dari database
     const { data: allConfigs, error } = await supabase
@@ -55,21 +64,20 @@ async function renderSidebar() {
     if (error) return;
 
     // 2. Filter berdasarkan Grup
-    const adminItems = allConfigs.filter(m => m.menu_group === 'admin');
-    const mainItems = allConfigs.filter(m => m.menu_group === 'main');
-    const lessonItems = allConfigs.filter(m => m.menu_group === 'lessons');
+    const adminItemsFromDB = allConfigs.filter(m => m.menu_group === 'admin');
+    const mainItemsFromDB = allConfigs.filter(m => m.menu_group === 'main');
+    const lessonItemsFromDB = allConfigs.filter(m => m.menu_group === 'lessons');
 
     let menuGroups = [];
 
-    // --- LOGIK BARU: Admin Panel dari DB ---
-    // Hanya muncul jika user adalah admin DAN ada datanya di DB
-    if ((role === 'class_admin' || role === 'super_admin') && adminItems.length > 0) {
+    // --- Admin Panel ---
+    if ((role === 'class_admin' || role === 'super_admin') && adminItemsFromDB.length > 0) {
         menuGroups.push({
             header: "Admin Panel",
             color: "#ffd700",
-            items: adminItems.map(m => ({
+            items: adminItemsFromDB.map(m => ({
                 text: m.subject_name,
-                url: m.subject_id,
+                url: adminPrefix + m.subject_id, // Tambah prefix admin
                 icon: m.icon,
                 badge: m.badge,
                 badgeType: m.badge_type
@@ -77,13 +85,13 @@ async function renderSidebar() {
         });
     }
 
-    // Main Menu
-    if (mainItems.length > 0) {
+    // --- Main Menu ---
+    if (mainItemsFromDB.length > 0) {
         menuGroups.push({
             header: "Main Menu",
-            items: mainItems.map(m => ({
+            items: mainItemsFromDB.map(m => ({
                 text: m.subject_name,
-                url: m.subject_id,
+                url: rootPrefix + m.subject_id, // Tambah prefix root
                 icon: m.icon,
                 badge: m.badge,
                 badgeType: m.badge_type
@@ -91,13 +99,13 @@ async function renderSidebar() {
         });
     }
 
-    // Lessons
-    if (lessonItems.length > 0) {
+    // --- Lessons ---
+    if (lessonItemsFromDB.length > 0) {
         menuGroups.push({
             header: "Lessons",
-            items: lessonItems.map(L => ({
+            items: lessonItemsFromDB.map(L => ({
                 text: L.subject_name,
-                url: `subject?id=${L.subject_id}`,
+                url: `${rootPrefix}subject?id=${L.subject_id}`, // Tambah prefix root
                 icon: L.icon,
                 badge: L.badge,
                 badgeType: L.badge_type
@@ -105,31 +113,28 @@ async function renderSidebar() {
         });
     }
 
-    // Tambah Menu Manager khusus Super Admin (Tetap Statis karena ini jantung sistem)
+    // --- Menu Manager khusus Super Admin ---
     if (role === 'super_admin') {
-        const adminIndex = menuGroups.findIndex(g => g.header === "Admin Panel");
-        const targetGroup = adminIndex !== -1 ? menuGroups[adminIndex] : null;
-
+        const adminGroup = menuGroups.find(g => g.header === "Admin Panel");
         const menuMgr = {
             text: "Menu Manager",
-            url: "admin-menu",
+            url: adminPrefix + "admin-menu", // Tambah prefix admin
             icon: "fa-solid fa-gears",
             badge: "SYSTEM",
             badgeType: "badge-hot"
         };
 
-        if (targetGroup) {
-            targetGroup.items.push(menuMgr);
+        if (adminGroup) {
+            adminGroup.items.push(menuMgr);
         } else {
             menuGroups.unshift({ header: "System", items: [menuMgr] });
         }
     }
 
-    // 4. GENERATE HTML (Pakai logic asli lu biar gak berantakan)
     // 4. GENERATE HTML
     const currentPath = window.location.pathname.toLowerCase();
     const urlParams = new URLSearchParams(window.location.search);
-    const currentId = urlParams.get('id')?.toLowerCase(); // Ambil ?id=... jika ada
+    const currentId = urlParams.get('id')?.toLowerCase();
 
     let htmlContent = "";
 
@@ -141,18 +146,17 @@ async function renderSidebar() {
             const itemUrl = item.url.toLowerCase();
             let isActive = "";
 
-            // --- LOGIC BARU UNTUK MENU ACTIVE ---
+            // --- LOGIC MENU ACTIVE ---
             if (itemUrl.includes('id=')) {
-                // Jika menu adalah Lesson (punya ?id=)
                 const itemId = itemUrl.split('id=')[1];
                 if (currentId === itemId) isActive = "active";
             } else {
-                // Jika menu adalah Main Menu (file biasa seperti announcements)
-                if (currentPath.endsWith(itemUrl)) isActive = "active";
+                // Biar akurat, kita cek bagian akhir path-nya aja
+                const fileName = itemUrl.split('/').pop();
+                if (currentPath.endsWith(fileName)) isActive = "active";
             }
-            // ------------------------------------
 
-            // Icon Custom (B. Sunda & B. Jepang)
+            // Icon Custom
             let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 15px; margin-left: 2px;">ᮔᮃ</b>` :
                 (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;
@@ -172,7 +176,6 @@ async function renderSidebar() {
 
     sidebar.innerHTML = htmlContent;
 
-    // Auto scroll ke menu aktif
     const activeItem = sidebar.querySelector(".active");
     if (activeItem) {
         setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);

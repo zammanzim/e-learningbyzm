@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
+    const isInAdmin = window.location.pathname.includes("/admin/");
+    const pathPrefix = isInAdmin ? "../" : "";
+
     const isPublicPage = window.location.pathname.includes("index");
     if (isPublicPage) return;
 
@@ -6,7 +9,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (user) {
         await autoFetchUser();
     } else {
-        window.location.href = "index";
+        // Biar kalau gak login pas di folder admin, gak mental ke admin/index
+        window.location.href = pathPrefix + "index";
     }
 });
 
@@ -38,59 +42,72 @@ async function autoFetchUser() {
     return data;
 }
 
-// ==========================================
-// UPDATE FUNGSI LOGOUT (DENGAN PEMBATASAN)
-// ==========================================
-// ==========================================
-// UPDATE FINAL LOGOUT DENGAN DYNAMIC TRACKER
-// ==========================================
 async function logout() {
-    // 1. Inisialisasi Tanggal & Tracker
+    // 1. Ambil data user untuk cek role & class_id
+    const user = getUser();
+    const isSuperAdmin = user && user.role === 'super_admin';
+    const classId = user ? user.class_id : null;
+
+    // 2. Inisialisasi Tanggal & Tracker
     const today = new Date().toISOString().split('T')[0];
     let tracker = JSON.parse(localStorage.getItem("logout_tracker")) || { date: today, count: 0 };
 
-    // 2. Reset hitungan kalau ganti hari
+    // Reset hitungan kalau ganti hari
     if (tracker.date !== today) {
         tracker = { date: today, count: 0 };
     }
 
-    // 3. Hitung Sisa Kuota (Flow: 0 logout -> 2 kali, 1 logout -> 1 kali, 2 logout -> 0 kali)
+    // 3. Hitung Sisa Kuota (Flow: 0 logout -> 2 kali sisa)
     const remaining = Math.max(0, 2 - tracker.count);
 
-    // 4. POPUP KONFIRMASI (Tetap muncul meski sisa 0)
-    const pesan = `
-        Yakin mau logout? <br>
-        Kamu hanya bisa logout <b>${remaining} kali lagi</b>.
-    `;
+    // 4. Tentukan Pesan Popup berdasarkan Role
+    let pesan = "";
+    if (isSuperAdmin) {
+        pesan = "Yakin mau logout, Super Admin? <br><small style='opacity:0.7'>Kamu punya akses tak terbatas.</small>";
+    } else {
+        pesan = `
+            Yakin mau logout? <br>
+            Kamu hanya bisa logout <b>${remaining} kali lagi</b>.
+        `;
+    }
+
     const yakin = await showPopup(pesan, "confirm");
 
-    const batas = `Kamu udah gabisa logout lagi hari ini. Suruh siapa logout terus.
-        <br><br>
-        <a href="https://wa.me/6283851088843" target="_blank" style="color: #00eaff; text-decoration: none; font-size: 12px;">
-            <i class="fa-solid fa-circle-question"></i> Butuh bantuan?
-        </a>`
-
     if (yakin) {
-        // 5. CEK APAKAH BENERAN ADA SISA?
-        if (remaining > 0) {
+        // 5. CEK APAKAH BOLEH LOGOUT? (Super Admin selalu boleh)
+        if (isSuperAdmin || remaining > 0) {
             try {
-                const user = JSON.parse(localStorage.getItem("user"));
-                const classId = user ? user.class_id : null;
+                // Deteksi folder untuk redirect yang bener (Path Guard)
+                const isInAdmin = window.location.pathname.includes('/admin/');
+                const prefix = isInAdmin ? '../' : '';
 
-                // Update hitungan tracker
-                tracker.count += 1;
-                localStorage.setItem("logout_tracker", JSON.stringify(tracker));
+                // Update hitungan tracker HANYA jika bukan Super Admin
+                if (!isSuperAdmin) {
+                    tracker.count += 1;
+                    localStorage.setItem("logout_tracker", JSON.stringify(tracker));
+                }
 
-                // Hapus data login saja (Jangan .clear() biar tracker gak ilang)
+                // Hapus data login
                 localStorage.removeItem("user");
 
-                // Redirect balik ke login dengan ID kelas
-                window.location.href = classId ? `index?id=${classId}` : "index";
+                // Redirect balik ke login dengan ID kelas (Pastikan bukan "nan")
+                const targetId = (classId && classId !== "undefined" && !isNaN(classId)) ? classId : "";
+                const finalUrl = targetId ? `index?id=${targetId}` : "index";
+
+                window.location.href = prefix + finalUrl;
             } catch (e) {
                 console.error("Logout Error:", e);
-                window.location.href = "index";
+                // Fallback jika terjadi error
+                const isInAdmin = window.location.pathname.includes('/admin/');
+                window.location.href = (isInAdmin ? "../" : "") + "index";
             }
         } else {
+            // Jika kuota habis (hanya user biasa)
+            const batas = `Kamu udah gabisa logout lagi hari ini.
+                <br><br>
+                <a href="https://wa.me/6283851088843" target="_blank" style="color: #00eaff; text-decoration: none; font-size: 12px;">
+                    <i class="fa-solid fa-circle-question"></i> Butuh bantuan?
+                </a>`;
             setTimeout(() => {
                 showPopup(batas, "error");
             }, 300);
