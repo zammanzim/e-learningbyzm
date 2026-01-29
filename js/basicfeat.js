@@ -35,65 +35,102 @@ function syncHeaderProfile() {
 // ==========================================
 // 3. UNIFIED SIDEBAR RENDERER
 // ==========================================
-function renderSidebar() {
+async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
     const user = JSON.parse(localStorage.getItem("user"));
-    const role = user ? user.role : "student";
+    if (!user) return;
 
-    let menuGroups = [
-        {
-            header: "Main Menu",
-            items: [
-                { text: "Home", url: "homev2", icon: "fa-house" },
-                { text: "Announcement", url: "announcements", icon: "fa-bullhorn", badge: "FIX", badgeType: "badge-fix" },
-                { text: "Daftar Tugas", url: "tugas", icon: "fa-solid fa-list-check", badge: "NEW", badgeType: "badge-beta" },
-                { text: "Account Setting", url: "settingacc", icon: "fa-solid fa-user-gear", badge: "UPDATE", badgeType: "badge-upd" },
-                { text: "Nilai PSASI 25-26", url: "nilaiv2", icon: "fa-clipboard-check", badge: "HOT", badgeType: "badge-hot" },
-                { text: "Cari Akun", url: "search", icon: "fa-solid fa-search", badge: "NEW", badgeType: "badge-new" }
-            ]
-        },
-        {
-            header: "Lessons",
-            items: [
-                { text: "B. Indonesia", url: "bahasaindonesia", icon: "fa-book" },
-                { text: "B. Inggris", url: "bahasainggris", icon: "fa-book-atlas" },
-                { text: "B. Sunda", url: "bahasasunda", icon: "fa-book" },
-                { text: "B. Jepang", url: "bahasajepang", icon: "fa-book", badge: "Task", badgeType: "badge-task" },
+    const role = user.role;
+    const CLASS_ID = String(user.class_id);
 
-                // CONTOH PEMAKAIAN BADGE:
-                { text: "Matematika", url: "matematika", icon: "fa-square-root-variable" },
-                { text: "Proipas", url: "proipas", icon: "fa-atom" },
+    // 1. Ambil SEMUA menu dari database
+    const { data: allConfigs, error } = await supabase
+        .from('subjects_config')
+        .select('*')
+        .eq('class_id', CLASS_ID)
+        .order('display_order', { ascending: true });
 
-                { text: "Sejarah", url: "sejarah", icon: "fa-landmark" },
-                { text: "PABP", url: "pabp", icon: "fa-mosque", badge: "Task", badgeType: "badge-task" },
-                { text: "PP", url: "pp", icon: "fa-scale-balanced" },
-                { text: "Seni Budaya", url: "senibudaya", icon: "fa-masks-theater" },
-                { text: "PJOK", url: "pjok", icon: "fa-person-running", badge: "Task", badgeType: "badge-task" },
-                { text: "Informatika", url: "informatika", icon: "fa-laptop" },
-                { text: "BK", url: "bk", icon: "fa-heart-circle-check" },
+    if (error) return;
 
-                // CONTOH 'SOON' (Materi belum siap)
-                { text: "DASPROG 1", url: "dpr1", icon: "fa-laptop-code" },
-                { text: "DASPROG 2", url: "dpr2", icon: "fa-microchip", badge: "task", badgeType: "badge-task" },
-                { text: "DASPROG 3", url: "dpr3", icon: "fa-palette" },
-            ]
-        }
-    ];
+    // 2. Filter berdasarkan Grup
+    const adminItems = allConfigs.filter(m => m.menu_group === 'admin');
+    const mainItems = allConfigs.filter(m => m.menu_group === 'main');
+    const lessonItems = allConfigs.filter(m => m.menu_group === 'lessons');
 
-    if (role === 'class_admin' || role === 'super_admin') {
-        menuGroups.unshift({
+    let menuGroups = [];
+
+    // --- LOGIK BARU: Admin Panel dari DB ---
+    // Hanya muncul jika user adalah admin DAN ada datanya di DB
+    if ((role === 'class_admin' || role === 'super_admin') && adminItems.length > 0) {
+        menuGroups.push({
             header: "Admin Panel",
             color: "#ffd700",
-            items: [
-                { text: "Input Nilai PSAS", url: "admin-nilai", icon: "fa-pen-to-square" },
-                { text: "Monitor Nilai PSAS", url: "admin-monitor", icon: "fa-users-viewfinder" }
-            ]
+            items: adminItems.map(m => ({
+                text: m.subject_name,
+                url: m.subject_id,
+                icon: m.icon,
+                badge: m.badge,
+                badgeType: m.badge_type
+            }))
         });
     }
 
+    // Main Menu
+    if (mainItems.length > 0) {
+        menuGroups.push({
+            header: "Main Menu",
+            items: mainItems.map(m => ({
+                text: m.subject_name,
+                url: m.subject_id,
+                icon: m.icon,
+                badge: m.badge,
+                badgeType: m.badge_type
+            }))
+        });
+    }
+
+    // Lessons
+    if (lessonItems.length > 0) {
+        menuGroups.push({
+            header: "Lessons",
+            items: lessonItems.map(L => ({
+                text: L.subject_name,
+                url: `subject?id=${L.subject_id}`,
+                icon: L.icon,
+                badge: L.badge,
+                badgeType: L.badge_type
+            }))
+        });
+    }
+
+    // Tambah Menu Manager khusus Super Admin (Tetap Statis karena ini jantung sistem)
+    if (role === 'super_admin') {
+        const adminIndex = menuGroups.findIndex(g => g.header === "Admin Panel");
+        const targetGroup = adminIndex !== -1 ? menuGroups[adminIndex] : null;
+
+        const menuMgr = {
+            text: "Menu Manager",
+            url: "admin-menu",
+            icon: "fa-solid fa-gears",
+            badge: "SYSTEM",
+            badgeType: "badge-hot"
+        };
+
+        if (targetGroup) {
+            targetGroup.items.push(menuMgr);
+        } else {
+            menuGroups.unshift({ header: "System", items: [menuMgr] });
+        }
+    }
+
+    // 4. GENERATE HTML (Pakai logic asli lu biar gak berantakan)
+    // 4. GENERATE HTML
     const currentPath = window.location.pathname.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentId = urlParams.get('id')?.toLowerCase(); // Ambil ?id=... jika ada
+
     let htmlContent = "";
 
     menuGroups.forEach(group => {
@@ -102,33 +139,44 @@ function renderSidebar() {
 
         group.items.forEach(item => {
             const itemUrl = item.url.toLowerCase();
-            const isActive = currentPath.endsWith(itemUrl) ? "active" : "";
+            let isActive = "";
 
-            // Icon Custom
+            // --- LOGIC BARU UNTUK MENU ACTIVE ---
+            if (itemUrl.includes('id=')) {
+                // Jika menu adalah Lesson (punya ?id=)
+                const itemId = itemUrl.split('id=')[1];
+                if (currentId === itemId) isActive = "active";
+            } else {
+                // Jika menu adalah Main Menu (file biasa seperti announcements)
+                if (currentPath.endsWith(itemUrl)) isActive = "active";
+            }
+            // ------------------------------------
+
+            // Icon Custom (B. Sunda & B. Jepang)
             let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 15px; margin-left: 2px;">ᮔᮃ</b>` :
                 (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;
 
-            // Badge Logic
-            let badgeHtml = "";
-            if (item.badge) {
-                badgeHtml = `<span class="sidebar-badge ${item.badgeType || 'badge-new'}">${item.badge}</span>`;
-            }
+            let badgeHtml = item.badge ? `<span class="sidebar-badge ${item.badgeType || 'badge-new'}">${item.badge}</span>` : "";
 
             htmlContent += `
-                <li class="${isActive}">
-  <a href="${item.url}">
-                        ${iconHtml} ${item.text}
-                    </a>
-                    ${badgeHtml}
-                </li>`;
+            <li class="${isActive}">
+                <a href="${item.url}">
+                    ${iconHtml} ${item.text}
+                </a>
+                ${badgeHtml}
+            </li>`;
         });
         htmlContent += `</ul>`;
     });
 
     sidebar.innerHTML = htmlContent;
+
+    // Auto scroll ke menu aktif
     const activeItem = sidebar.querySelector(".active");
-    if (activeItem) setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+    if (activeItem) {
+        setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+    }
 }
 
 // ==========================================
@@ -175,7 +223,6 @@ document.addEventListener("click", (e) => {
 
 function goDashboard() { window.location.href = "dashboard"; }
 function goProfile() { window.location.href = "settingacc"; }
-function logout() { { localStorage.clear(); window.location.href = ""; } }
 
 // ==========================================
 // 5. UNIVERSAL POPUP SYSTEM

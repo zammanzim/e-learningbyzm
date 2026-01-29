@@ -243,9 +243,23 @@ const SubjectApp = {
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
             if (this.state.user && this.state.user.class_id) query = query.eq("class_id", this.state.user.class_id);
 
-            const { data, error } = await query.order("display_order", { ascending: true }).order("created_at", { ascending: true });
-            if (error) throw error;
-            this.state.announcements = data || [];
+            const cacheKey = `announcements_${this.state.subjectId}`;
+            let data, error;
+            try {
+                const res = await query.order("display_order", { ascending: true }).order("created_at", { ascending: true });
+                data = res.data; error = res.error;
+                if (error) throw error;
+                this.state.announcements = data || [];
+                try { localStorage.setItem(cacheKey, JSON.stringify(this.state.announcements)); } catch (e) { /* ignore storage errors */ }
+            } catch (err) {
+                console.error("Load announcements failed, using cache if available:", err);
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try { this.state.announcements = JSON.parse(cached); } catch (e) { this.state.announcements = []; }
+                } else {
+                    throw err; // biarkan catch luar tangani UI error
+                }
+            }
 
             if (this.state.isLessonMode) {
                 const { data: prog } = await supabase.from("user_progress").select("announcement_id").eq("user_id", this.state.user.id);

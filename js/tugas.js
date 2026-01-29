@@ -70,10 +70,10 @@ async function initTugas() {
 
         allTasks = tasks || [];
 
-        // 4. Sinkronisasi Progress (Hapus ID hantu agar hitungan normal)
+        // Di tugas.js, ubah bagian sinkronisasi progress:
         const validTaskIds = allTasks.map(t => String(t.id));
         doneIds = (progress || [])
-            .map(p => String(p.announcement_id))
+            .map(p => String(p.announcement_id)) // Paksa jadi String
             .filter(id => validTaskIds.includes(id));
 
         updateProgressUI();
