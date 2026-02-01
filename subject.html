@@ -63,7 +63,8 @@
             const config = data[0];
 
             const fullTitleHtml = `<h3><i class="fa-solid ${config.icon}"></i> ${config.subject_name}</h3>`;
-            const isLesson = config.menu_group === 'lessons';
+            const isLesson = config.menu_group === 'lessons' &&
+            config.menu_group !== 'tesmenubaru';
 
             // Inisialisasi aplikasi dengan data dari database
             SubjectApp.init(config.subject_id, fullTitleHtml, config.subject_name, isLesson);
