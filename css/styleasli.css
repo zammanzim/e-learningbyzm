@@ -2365,16 +2365,16 @@ li.nav-locked a::after {
 }
 
 .picket-pill {
+    position: relative;
+    /* WAJIB TAMBAH INI */
     flex: 1 1 30%;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
     padding: 12px 10px;
-    /* Padding Gede */
     border-radius: 12px;
     text-align: center;
     font-size: 16px;
-    /* Font Gede */
     font-weight: 600;
     transition: 0.2s;
 }
@@ -2624,27 +2624,43 @@ input:checked+.slider:before {
     border-color: #00eaff;
 }
 
-/* Hapus Item Button (X) */
 .btn-del-inline {
-    position: absolute;
-    right: -10px;
-    top: -10px;
-    background: #ff4757;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    font-size: 10px;
     display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    display: none;
-    /* Default hidden */
 }
 
 .edit-mode-on .btn-del-inline {
-    display: flex;
+    display: flex !important;
+    /* Paksa muncul pas mode edit */
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    background: #ff4757;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Placeholder untuk contenteditable */
+.editable-text:empty:before {
+    content: attr(data-placeholder);
+    color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    display: block;
+}
+
+/* Pastikan kolom tetep punya lebar minimal biar bisa diklik pas kosong */
+.tl-time-final:empty,
+.tl-subject-final:empty,
+.picket-pill span:empty {
+    min-width: 50px;
+    display: inline-block;
 }
 
 /* Area Toggle Config (Muncul pas edit doang) */
@@ -3612,4 +3628,45 @@ input:checked+.slider:before {
 
 .course-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-edit-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.action-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    font-size: 22px;
+}
+
+.action-btn.edit:hover {
+    background: #ff9800;
+    border-color: #ff9800;
+}
+
+.action-btn.save {
+    background: #2ed573;
+    border-color: #2ed573;
+}
+
+.action-btn.cancel {
+    background: #ff4757;
+    border-color: #ff4757;
 }
