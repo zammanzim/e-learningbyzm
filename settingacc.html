@@ -34,7 +34,7 @@
             localStorage.setItem("user", JSON.stringify(data));
 
             // Update UI
-            const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "profpicture.png";
+            const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "../icons/profpicture.png";
             if (document.getElementById('previewPP')) document.getElementById('previewPP').src = ppUrl;
             if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
 
@@ -344,8 +344,8 @@
                         <label class="form-label">Foto Profil</label>
                     </div>
                     <div class="pp-upload-area">
-                        <img src="profpicture.png" id="previewPP" class="current-pp"
-                            onerror="this.src='profpicture.png'">
+                        <img src="../icons/profpicture.png" id="previewPP" class="current-pp"
+                            onerror="this.src='../icons/profpicture.png'">
                         <input type="file" id="inputPPFile" accept="image/*" style="display: none;"
                             onchange="previewImage(this)">
                     </div>

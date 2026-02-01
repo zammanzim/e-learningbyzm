@@ -28,7 +28,7 @@ function syncHeaderProfile() {
             headerName.innerText = `Hai, ${user.short_name || user.nickname || 'User'}`;
         }
         if (headerPP) {
-            headerPP.src = user.avatar_url || "profpicture.png";
+            headerPP.src = user.avatar_url || "../icons/profpicture.png";
         }
     } catch (e) { console.error("Sync Profile Error:", e); }
 }
@@ -67,6 +67,7 @@ async function renderSidebar() {
     const adminItemsFromDB = allConfigs.filter(m => m.menu_group === 'admin');
     const mainItemsFromDB = allConfigs.filter(m => m.menu_group === 'main');
     const lessonItemsFromDB = allConfigs.filter(m => m.menu_group === 'lessons');
+    const tesmenuDB = allConfigs.filter(m => m.menu_group === 'tesmenubaru');
 
     let menuGroups = [];
 
@@ -104,6 +105,19 @@ async function renderSidebar() {
         menuGroups.push({
             header: "Lessons",
             items: lessonItemsFromDB.map(L => ({
+                text: L.subject_name,
+                url: `${rootPrefix}subject?id=${L.subject_id}`, // Tambah prefix root
+                icon: L.icon,
+                badge: L.badge,
+                badgeType: L.badge_type
+            }))
+        });
+    }
+
+    if (tesmenuDB.length > 0) {
+        menuGroups.push({
+            header: "tesmenuDB",
+            items: tesmenuDB.map(L => ({
                 text: L.subject_name,
                 url: `${rootPrefix}subject?id=${L.subject_id}`, // Tambah prefix root
                 icon: L.icon,

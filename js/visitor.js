@@ -107,7 +107,7 @@ async function renderVisitorStats() {
                 const item = document.createElement('div');
                 item.className = 'visitor-item';
                 item.innerHTML = `
-                    <img src="${u.avatar_url || 'profpicture.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                    <img src="${u.avatar_url || '../icons/profpicture.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
                     <div style="flex:1; margin-left:10px;">
                         <div style="font-size:13px; font-weight:bold;">${u.nickname || u.full_name || 'User'}</div>
                         <div style="font-size:11px; color:#aaa;">

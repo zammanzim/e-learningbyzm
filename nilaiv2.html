@@ -248,7 +248,7 @@
                 <h1><i class="fa-solid fa-clipboard-check"></i> Nilai PSAS</h1>
             </div>
             <div class="course-card">
-                <img id="pp" src="profpicture.png">
+                <img id="pp" src="">
                 <div class="userInfo">
                     <p id="uname" style="margin:0; font-weight:bold;">@username</p>
                     <h3 id="name" style="margin:0; opacity:0.8;">Loading...</h3>
@@ -361,7 +361,7 @@
             if (document.getElementById('name')) document.getElementById('name').innerText = user.full_name || display;
             if (document.getElementById('uname')) document.getElementById('uname').innerText = `@${user.username}`;
 
-            const ppUrl = user.avatar_url || 'profpicture.png';
+            const ppUrl = user.avatar_url || '../icons/profpicture.png';
             if (document.getElementById('pp')) document.getElementById('pp').src = ppUrl;
         }
 
@@ -502,7 +502,7 @@
                 const color = getDynamicColor(siswa.average);
                 return `
             <div class="podium ${cls}">
-                <img src="studentsprofile/${siswa.nama_siswa}.jpg" class="pp-top" onerror="this.src='profpicture.png'">
+                <img src="studentsprofile/${siswa.nama_siswa}.jpg" class="pp-top" onerror="this.src='../icons/profpicture.png'">
                 <div style="font-weight:bold; margin-top:5px; font-size:13px;">${siswa.nama_siswa}</div>
                 
                 <div style="font-size:14px; margin-top:2px; color:${color}; font-weight:bold; text-shadow: 0 0 5px ${color};">

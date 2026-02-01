@@ -16,8 +16,8 @@ async function initTugas() {
     if (!user) { window.location.href = 'index'; return; }
 
     // Set Profil di Card
-    document.getElementById('userTaskName').innerText = user.full_name;
-    document.getElementById('userTaskPP').src = user.avatar_url || 'images/default-avatar.png';
+    document.getElementById('userTaskName').innerText = user.nickname;
+    document.getElementById('userTaskPP').src = user.avatar_url || '../icons/profpicture.png';
 
     try {
         // 1. Tentukan Hari Target Deadline (Logika jam 15:00)

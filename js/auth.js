@@ -78,7 +78,7 @@ async function logout() {
         if (isSuperAdmin || remaining > 0) {
             try {
                 // Deteksi folder untuk redirect yang bener (Path Guard)
-                const isInAdmin = window.location.pathname.includes('/admin/');
+                const isInAdmin = window.location.pathname.includes('/admiii/');
                 const prefix = isInAdmin ? '../' : '';
 
                 // Update hitungan tracker HANYA jika bukan Super Admin

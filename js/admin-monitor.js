@@ -52,7 +52,7 @@ async function initAdminMonitor() {
 
             card.innerHTML = `
                 <div style="display: flex; gap: 15px; align-items: flex-start;">
-                    <img src="${u.avatar_url || 'profpicture.png'}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
+                    <img src="${u.avatar_url || '../icons/profpicture.png'}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
                     <div style="flex: 1;">
                         <h3 style="margin: 0; font-size: 16px;">${u.full_name} <span class="mini-badge badge-beta">${u.role}</span></h3>
                         <p style="font-size: 11px; color: #00eaff; margin: 2px 0;">@${u.username || 'n/a'}</p>
