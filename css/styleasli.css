@@ -27,19 +27,19 @@ body {
     font-family: Arial, sans-serif;
     color: #ffffff;
     /* Pastikan minimal setinggi layar */
-    min-height: 100vh; 
-    
+    min-height: 100vh;
+
     background-image:
         linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(180deg, #006b83 0%, #005e73 35%, #028ea7 75%, #019196 100%);
-    
+
     /* Grid 1 & 2 diulang (repeat), Gradien warna tidak (no-repeat) */
     background-repeat: repeat, repeat, no-repeat;
-    
+
     /* Ukuran Grid tetap, Ukuran gradien warna jadi cover */
-    background-size: 40px 40px, 40px 40px, cover; 
-    
+    background-size: 40px 40px, 40px 40px, cover;
+
     background-attachment: fixed;
 }
 
@@ -396,6 +396,15 @@ header {
     margin: 20px 0;
     transition: all .3s ease;
     position: relative;
+    /* TAMBAHKAN INI */
+    max-width: 100%;
+    /* Biar gak lebih dari layar */
+    word-wrap: break-word;
+    /* Patahkan kata panjang */
+    overflow-wrap: anywhere;
+    /* Pastikan teks gak maksa keluar layar */
+    word-break: break-word;
+    /* Support browser lebih luas */
 }
 
 .course-card.editable-mode {
