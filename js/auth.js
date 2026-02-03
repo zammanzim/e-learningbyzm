@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    const isInAdmin = window.location.pathname.includes("/admin/");
+    const isInAdmin = window.location.pathname.includes("/admiii/");
     const pathPrefix = isInAdmin ? "../" : "";
 
     const isPublicPage = window.location.pathname.includes("index");
@@ -98,7 +98,7 @@ async function logout() {
             } catch (e) {
                 console.error("Logout Error:", e);
                 // Fallback jika terjadi error
-                const isInAdmin = window.location.pathname.includes('/admin/');
+                const isInAdmin = window.location.pathname.includes('/admiii/');
                 window.location.href = (isInAdmin ? "../" : "") + "index";
             }
         } else {

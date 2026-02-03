@@ -119,7 +119,7 @@ async function renderSidebar() {
             header: "tesmenuDB",
             items: tesmenuDB.map(L => ({
                 text: L.subject_name,
-                url: `${rootPrefix}subject?id=${L.subject_id}`, // Tambah prefix root
+                url: rootPrefix + L.subject_id, // Tambah prefix root
                 icon: L.icon,
                 badge: L.badge,
                 badgeType: L.badge_type

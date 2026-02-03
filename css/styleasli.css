@@ -8,13 +8,11 @@
 html,
 body {
     overflow-y: visible;
-    /* Pastikan visible agar sticky jalan */
     overflow-x: clip;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
-/* Kunci scroll body saat detail terbuka */
 body.no-scroll {
     overflow: hidden !important;
 }
@@ -28,24 +26,21 @@ body::-webkit-scrollbar,
 body {
     font-family: Arial, sans-serif;
     color: #ffffff;
+    /* Pastikan minimal setinggi layar */
+    min-height: 100vh; 
+    
     background-image:
         linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(180deg, #006b83 0%, #005e73 35%, #028ea7 75%, #019196 100%);
-    background-size: 40px 40px, 40px 40px, 100% 100%;
+    
+    /* Grid 1 & 2 diulang (repeat), Gradien warna tidak (no-repeat) */
+    background-repeat: repeat, repeat, no-repeat;
+    
+    /* Ukuran Grid tetap, Ukuran gradien warna jadi cover */
+    background-size: 40px 40px, 40px 40px, cover; 
+    
     background-attachment: fixed;
-}
-
-@media (max-width: 768px) {
-    body {
-        background-attachment: scroll;
-    }
-}
-
-@media (pointer: coarse) {
-    body {
-        background-attachment: scroll !important;
-    }
 }
 
 header {
@@ -556,7 +551,6 @@ i {
     border-radius: 20px;
     padding: 25px;
     border: 1px solid #1e293b;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     text-align: center;
     color: white;
     font-family: sans-serif;
@@ -783,7 +777,7 @@ i {
     max-height: 90vh;
     background: rgba(30, 30, 30, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 40px rgba(0, 234, 255, 0.15);
+    box-shadow: 0 0 40px rgba(0, 234, 255, 0.3);
     border-radius: 24px;
     padding: 30px;
     display: flex;
