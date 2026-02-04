@@ -35,9 +35,6 @@ function syncHeaderProfile() {
 // ==========================================
 // 3. UNIFIED SIDEBAR RENDERER
 // ==========================================
-// ==========================================
-// 3. UNIFIED SIDEBAR RENDERER (FIXED PATH)
-// ==========================================
 async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
@@ -50,9 +47,10 @@ async function renderSidebar() {
 
     // --- DETEKSI LOKASI FOLDER ---
     const isInAdminFolder = window.location.pathname.includes('/admiii/');
-    const rootPrefix = isInAdminFolder ? '../' : ''; // Kalau di admin, mau ke root harus ../
-    const adminPrefix = isInAdminFolder ? '' : 'admiii/'; // Kalau di root, mau ke admin harus admin/
-    // ----------------------------
+    const rootPrefix = isInAdminFolder ? '../' : '';
+    const adminPrefix = isInAdminFolder ? '' : 'admiii/';
+
+    let hasNewNotification = false; // Penanda global untuk titik merah hamburger
 
     // 1. Ambil SEMUA menu dari database
     const { data: allConfigs, error } = await supabase
@@ -63,22 +61,30 @@ async function renderSidebar() {
 
     if (error) return;
 
-    // 2. Filter berdasarkan Grup
+    // --- FUNGSI CEK BADGE (UNTUK TITIK MERAH) ---
+    const checkNotification = (item) => {
+        const badge = item.badge ? item.badge.toUpperCase() : '';
+        if (badge === 'NEW') {
+            hasNewNotification = true;
+        }
+    };
+
+    // 2. Filter berdasarkan Grup dan Cek Notifikasi
     const adminItemsFromDB = allConfigs.filter(m => m.menu_group === 'admin');
     const mainItemsFromDB = allConfigs.filter(m => m.menu_group === 'main');
     const lessonItemsFromDB = allConfigs.filter(m => m.menu_group === 'lessons');
-    const tesmenuDB = allConfigs.filter(m => m.menu_group === 'tesmenubaru');
 
     let menuGroups = [];
 
     // --- Admin Panel ---
     if ((role === 'class_admin' || role === 'super_admin') && adminItemsFromDB.length > 0) {
+        adminItemsFromDB.forEach(checkNotification);
         menuGroups.push({
             header: "Admin Panel",
             color: "#ffd700",
             items: adminItemsFromDB.map(m => ({
                 text: m.subject_name,
-                url: adminPrefix + m.subject_id, // Tambah prefix admin
+                url: adminPrefix + m.subject_id,
                 icon: m.icon,
                 badge: m.badge,
                 badgeType: m.badge_type
@@ -88,11 +94,12 @@ async function renderSidebar() {
 
     // --- Main Menu ---
     if (mainItemsFromDB.length > 0) {
+        mainItemsFromDB.forEach(checkNotification);
         menuGroups.push({
             header: "Main Menu",
             items: mainItemsFromDB.map(m => ({
                 text: m.subject_name,
-                url: rootPrefix + m.subject_id, // Tambah prefix root
+                url: rootPrefix + m.subject_id,
                 icon: m.icon,
                 badge: m.badge,
                 badgeType: m.badge_type
@@ -102,24 +109,12 @@ async function renderSidebar() {
 
     // --- Lessons ---
     if (lessonItemsFromDB.length > 0) {
+        lessonItemsFromDB.forEach(checkNotification);
         menuGroups.push({
             header: "Lessons",
             items: lessonItemsFromDB.map(L => ({
                 text: L.subject_name,
-                url: `${rootPrefix}subject?id=${L.subject_id}`, // Tambah prefix root
-                icon: L.icon,
-                badge: L.badge,
-                badgeType: L.badge_type
-            }))
-        });
-    }
-
-    if (tesmenuDB.length > 0) {
-        menuGroups.push({
-            header: "tesmenuDB",
-            items: tesmenuDB.map(L => ({
-                text: L.subject_name,
-                url: rootPrefix + L.subject_id, // Tambah prefix root
+                url: `${rootPrefix}subject?id=${L.subject_id}`,
                 icon: L.icon,
                 badge: L.badge,
                 badgeType: L.badge_type
@@ -132,16 +127,22 @@ async function renderSidebar() {
         const adminGroup = menuGroups.find(g => g.header === "Admin Panel");
         const menuMgr = {
             text: "Menu Manager",
-            url: adminPrefix + "admin-menu", // Tambah prefix admin
+            url: adminPrefix + "admin-menu",
             icon: "fa-solid fa-gears",
             badge: "SYSTEM",
             badgeType: "badge-hot"
         };
+        if (adminGroup) adminGroup.items.push(menuMgr);
+        else menuGroups.unshift({ header: "System", items: [menuMgr] });
+    }
 
-        if (adminGroup) {
-            adminGroup.items.push(menuMgr);
+    // --- UPDATE STATUS HAMBURGER ---
+    const hamburger = document.getElementById('hamburger');
+    if (hamburger) {
+        if (hasNewNotification) {
+            hamburger.classList.add('has-notif'); // Tambah titik merah
         } else {
-            menuGroups.unshift({ header: "System", items: [menuMgr] });
+            hamburger.classList.remove('has-notif'); // Hapus titik merah
         }
     }
 
@@ -160,17 +161,16 @@ async function renderSidebar() {
             const itemUrl = item.url.toLowerCase();
             let isActive = "";
 
-            // --- LOGIC MENU ACTIVE ---
+            // Logic Menu Active
             if (itemUrl.includes('id=')) {
                 const itemId = itemUrl.split('id=')[1];
                 if (currentId === itemId) isActive = "active";
             } else {
-                // Biar akurat, kita cek bagian akhir path-nya aja
                 const fileName = itemUrl.split('/').pop();
                 if (currentPath.endsWith(fileName)) isActive = "active";
             }
 
-            // Icon Custom
+            // Icon & Badge Rendering
             let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 15px; margin-left: 2px;">ᮔᮃ</b>` :
                 (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
                     `<i class="fa-solid ${item.icon}"></i>`;

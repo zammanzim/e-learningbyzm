@@ -93,6 +93,45 @@ header {
     transform: translateY(-9px) rotate(-45deg);
 }
 
+/* Pastikan container menu punya posisi relative */
+.sidebar li {
+    position: relative !important;
+    display: block;
+    width: 100%;
+}
+
+/* Titik Merah Personal di sebelah KANAN menu */
+.sidebar-dot {
+    width: 9px;
+    height: 9px;
+    background-color: #ff4757;
+    /* Merah Neon */
+    border-radius: 50%;
+    position: absolute;
+    right: 20px;
+    /* Jarak dari kanan */
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.8);
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Titik Merah di Hamburger (Garis Tiga) */
+.hamburger.has-notif::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff4757;
+    border-radius: 50%;
+    border: 2px solid #005e73;
+    box-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
+    z-index: 4001;
+}
+
 .visitor-trigger {
     display: flex;
     align-items: center;
