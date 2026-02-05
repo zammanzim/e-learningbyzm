@@ -14,7 +14,7 @@ body {
 }
 
 body.no-scroll {
-    overflow: hidden !important;
+    overflow: hidden;
 }
 
 html::-webkit-scrollbar,
@@ -95,7 +95,7 @@ header {
 
 /* Pastikan container menu punya posisi relative */
 .sidebar li {
-    position: relative !important;
+    position: relative;
     display: block;
     width: 100%;
 }
@@ -473,7 +473,7 @@ header {
 .course-card small {
     display: block;
     margin-top: 0;
-    color: #a2a2a2;
+    color: #dadada;
 }
 
 .course-card p[data-field="content"] {
@@ -790,7 +790,7 @@ i {
     }
 
     .sidebar-overlay {
-        display: none !important;
+        display: none;
     }
 }
 
@@ -997,7 +997,7 @@ li.nav-locked:hover {
 
 li.nav-locked a {
     pointer-events: none;
-    color: #ccc !important;
+    color: #ccc;
 }
 
 li.nav-locked a::after {
@@ -1198,7 +1198,7 @@ li.nav-locked a::after {
         position: relative;
         top: auto;
         bottom: auto;
-        transform: none !important;
+        transform: none;
         max-height: 100%;
         backdrop-filter: none;
         border-top: none;
@@ -1211,7 +1211,7 @@ li.nav-locked a::after {
     /* === INI YANG PENTING === */
     /* Paksa Judul Desktop Muncul di Mobile khusus Text Mode */
     .glass-detail-box.text-only-mode .desktop-only-title {
-        display: block !important;
+        display: block;
     }
 
     /* Tombol close pindah ke dalam box biar rapi */
@@ -1527,18 +1527,18 @@ li.nav-locked a::after {
         transform: translate3d(0, 45%, 0);
 
         /* Transisi Mulus (Cubic Bezier ala iOS) */
-        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
         will-change: transform;
     }
 
     /* Keadaan Full Screen (Geser ke paling atas) */
     .detail-info-section.full-screen {
-        transform: translate3d(0, 0, 0) !important;
+        transform: translate3d(0, 0, 0);
     }
 
     /* Keadaan Sembunyi (Turun ke bawah layar) */
     .detail-info-section.hidden-mobile {
-        transform: translate3d(0, 100%, 0) !important;
+        transform: translate3d(0, 100%, 0);
     }
 
     .info-content-scroll {
@@ -1661,7 +1661,7 @@ li.nav-locked a::after {
 
 /* Sembunyikan saat Edit Mode */
 .editable-mode .bookmark-btn {
-    display: none !important;
+    display: none;
 }
 
 /* === UNIVERSAL POPUP SYSTEM === */
@@ -1951,7 +1951,7 @@ li.nav-locked a::after {
 
 /* Container Utama biar tengah di Desktop */
 .ig-container {
-    max-width: 935px !important;
+    max-width: 935px;
     /* Lebar standar IG Web */
     margin: 0 auto;
     padding: 0;
@@ -2671,7 +2671,7 @@ input:checked+.slider:before {
 }
 
 .edit-mode-on .btn-del-inline {
-    display: flex !important;
+    display: flex;
     /* Paksa muncul pas mode edit */
     position: absolute;
     right: -8px;
@@ -3307,8 +3307,7 @@ input:checked+.slider:before {
 }
 
 .filter-btn-new.active {
-    color: #000000 !important;
-    /* Hitam agar kontras di atas biru neon */
+    color: #000000;
 }
 
 /* --- 3. TASK CARD STATUS (BACKGROUND MODE) --- */
@@ -3317,24 +3316,24 @@ input:checked+.slider:before {
 
 /* 🟢 HIJAU (DONE) - Lebih Terang & Solid */
 .task-green-done {
-    background: linear-gradient(145deg, rgba(46, 213, 115, 0.4), rgba(10, 20, 15, 0.9)) !important;
-    border: 2px solid #2ed573 !important;
+    background: linear-gradient(145deg, rgba(46, 213, 115, 0.8), rgba(10, 20, 15, 0.5));
+    border: 2px solid #2ed573;
     box-shadow: 0 5px 15px rgba(46, 213, 115, 0.2);
-    opacity: 1 !important;
+    opacity: 1;
     /* Hapus opacity 0.75 biar gak pudar */
 }
 
 /* 🟡 KUNING (PENDING) - Kuning Emas Nyala */
 .task-yellow-pending {
-    background: linear-gradient(145deg, rgba(255, 211, 42, 0.35), rgba(20, 20, 10, 0.9)) !important;
-    border: 2px solid #ffd32a !important;
+    background: linear-gradient(145deg, rgba(255, 211, 42, 0.6), rgba(20, 20, 10, 0.5));
+    border: 2px solid #ffd32a;
     box-shadow: 0 5px 15px rgba(255, 211, 42, 0.15);
 }
 
 /* 🔴 MERAH (DEADLINE) - Merah Gahar */
 .task-red-deadline {
-    background: linear-gradient(145deg, rgba(255, 71, 87, 0.5), rgba(20, 10, 10, 0.9)) !important;
-    border: 2px solid #ff4757 !important;
+    background: linear-gradient(145deg, rgba(255, 71, 87, 0.8), rgba(20, 10, 10, 0.5));
+    border: 2px solid #ff4757;
     box-shadow: 0 0 30px rgba(255, 71, 87, 0.3);
 }
 
@@ -3599,7 +3598,7 @@ input:checked+.slider:before {
 
     /* Hilangkan bar swipe lama */
     .detail-info-section::before {
-        display: none !important;
+        display: none;
     }
 
     /* Header Baru di atas Sheet */
@@ -3635,7 +3634,7 @@ input:checked+.slider:before {
 
     /* Optimasi Lag: Pake transform & durasi pas */
     .detail-info-section {
-        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         will-change: transform;
         /* Hint buat browser biar enteng */
     }
@@ -3711,4 +3710,57 @@ input:checked+.slider:before {
 .action-btn.cancel {
     background: #ff4757;
     border-color: #ff4757;
+}
+
+/* Warna Kartu Custom */
+.color-red {
+    background: linear-gradient(145deg, rgba(255, 0, 21, 0.7), rgba(15, 10, 10, 0.3));
+    border: 1px solid #ff4757;
+}
+
+.color-yellow {
+    background: linear-gradient(145deg, rgba(255, 204, 0, 0.7), rgba(15, 15, 10, 0.3));
+    border: 1px solid #ffd32a;
+}
+
+.color-green {
+    background: linear-gradient(145deg, rgba(46, 213, 115, 0.7), rgba(10, 15, 12, 0.3));
+    border: 1px solid #01ff6b;
+}
+
+.color-blue {
+    background: linear-gradient(145deg, rgba(0, 234, 255, 0.7), rgba(10, 15, 20, 0.3));
+    border: 1px solid #00eaff;
+}
+
+.color-purple {
+    background: linear-gradient(145deg, rgba(195, 0, 255, 0.7), rgba(15, 10, 20, 0.3));
+    border: 1px solid #8000ff;
+}
+
+/* Tambahan Warna Kartu Baru */
+.color-orange {
+    background: linear-gradient(145deg, rgba(255, 159, 67, 0.4), rgba(15, 12, 10, 0.9)) !important;
+    border: 1px solid #ff9f43 !important;
+}
+
+.color-pink {
+    background: linear-gradient(145deg, rgba(255, 159, 243, 0.4), rgba(15, 10, 15, 0.9)) !important;
+    border: 1px solid #ff9ff3 !important;
+}
+
+.color-brown {
+    background: linear-gradient(145deg, rgba(139, 69, 19, 0.4), rgba(15, 12, 10, 0.9)) !important;
+    border: 1px solid #8b4513 !important;
+}
+
+/* Warna Ungu (Jika belum ada) */
+.color-purple {
+    background: linear-gradient(145deg, rgba(165, 94, 234, 0.4), rgba(15, 10, 20, 0.9)) !important;
+    border: 1px solid #a55eea !important;
+}
+
+.color-opt.active {
+    outline: 3px solid #00eaff;
+    transform: scale(1.1);
 }

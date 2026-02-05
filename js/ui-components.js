@@ -75,6 +75,20 @@ const UIComponents = {
                 </div>
                 <div id="addIsi" contenteditable="true" class="glass-input" style="min-height: 150px; overflow-y: auto;"></div>
                 <input type="text" id="addSmall" class="glass-input" placeholder="Footer text" style="font-size: 12px; opacity:0.8;">
+<div class="color-picker-container" style="margin-top: 15px;">
+    <label style="font-size: 12px; color: #aaa; margin-bottom: 8px; display: block;">Warna Kartu:</label>
+    <div id="addColors" class="color-options" style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <div class="color-opt active" data-color="default" style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid white; cursor: pointer; background: rgba(0,0,0,0.3);"></div>
+    <div class="color-opt" data-color="red" style="width: 22px; height: 22px; border-radius: 50%; background: #ff4757; cursor: pointer;"></div>
+    <div class="color-opt" data-color="orange" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9f43; cursor: pointer;"></div>
+    <div class="color-opt" data-color="yellow" style="width: 22px; height: 22px; border-radius: 50%; background: #ffd32a; cursor: pointer;"></div>
+    <div class="color-opt" data-color="green" style="width: 22px; height: 22px; border-radius: 50%; background: #2ed573; cursor: pointer;"></div>
+    <div class="color-opt" data-color="blue" style="width: 22px; height: 22px; border-radius: 50%; background: #00eaff; cursor: pointer;"></div>
+    <div class="color-opt" data-color="purple" style="width: 22px; height: 22px; border-radius: 50%; background: #a55eea; cursor: pointer;"></div>
+    <div class="color-opt" data-color="pink" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9ff3; cursor: pointer;"></div>
+    <div class="color-opt" data-color="brown" style="width: 22px; height: 22px; border-radius: 50%; background: #8b4513; cursor: pointer;"></div>
+</div>
+</div>
                 <div id="dropZone" class="drop-area">
                     <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
                     <div class="drop-text"><b>Click to upload</b> or drag photos here</div>
@@ -123,7 +137,6 @@ const UIComponents = {
     }
 };
 
-// Inisialisasi UI secepat mungkin
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => UIComponents.inject());
 } else {

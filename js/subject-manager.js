@@ -9,7 +9,8 @@ const SubjectApp = {
         completedTasks: [],
         announcements: [],
         tempFiles: [],
-        bookmarks: []
+        bookmarks: [],
+        selectedColor: 'default',
     },
 
     init(subjectId, subjectName, title, isLesson = false) {
@@ -290,7 +291,6 @@ const SubjectApp = {
 
     createCardElement(data) {
         const card = document.createElement("div");
-        card.className = "course-card";
         card.dataset.id = data.id;
         card.style.position = "relative";
         card.draggable = false;
@@ -299,6 +299,13 @@ const SubjectApp = {
         const title = data.title || "";
         const content = data.content || "";
         const small = data.small || "";
+
+        // Tentukan class warna dari DB
+        const colorClass = data.card_color && data.card_color !== 'default' ? `color-${data.card_color}` : "";
+        card.className = `course-card ${colorClass}`;
+
+        // DEFINISI isAdmin BIAR GAK ERROR "NOT DEFINED"
+        const isAdmin = this.state.user && (this.state.user.role === 'class_admin' || this.state.user.role === 'super_admin');
 
         let photoHTML = "";
         let photos = [];
@@ -325,7 +332,6 @@ const SubjectApp = {
         } else {
             card.classList.remove('clickable-card');
             card.style.cursor = "default";
-            // Tambahin placeholder biar ada elemen yang bisa diklik pas edit mode
             photoHTML = `<div class="card-photo-placeholder" style="display:none;"><i class="fa-solid fa-image"></i><p>Klik Upload Foto</p></div>`;
         }
 
@@ -336,10 +342,22 @@ const SubjectApp = {
         let taskBtnHTML = "";
         if (this.state.isLessonMode) {
             const isDone = this.state.completedTasks.includes(String(data.id));
-            taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Tandai Selesai'}</button>`;
+            taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}</button>`;
         }
 
-        // [PENTING]: Ganti <p> jadi <div> agar Rich Text (HTML) bisa diedit dengan lancar
+        const colorTools = `
+<div class="card-color-tools" style="display:none; gap:5px; align-items:center; background:rgba(0,0,0,0.3); padding:5px 8px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'default')" style="width:14px; height:14px; border-radius:50%; background:#333; border:1px solid white; cursor:pointer;" title="Default"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'red')" style="width:14px; height:14px; border-radius:50%; background:#ff4757; cursor:pointer;" title="Merah"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'orange')" style="width:14px; height:14px; border-radius:50%; background:#ff9f43; cursor:pointer;" title="Jingga"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'yellow')" style="width:14px; height:14px; border-radius:50%; background:#ffd32a; cursor:pointer;" title="Kuning"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'green')" style="width:14px; height:14px; border-radius:50%; background:#2ed573; cursor:pointer;" title="Hijau"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'blue')" style="width:14px; height:14px; border-radius:50%; background:#00eaff; cursor:pointer;" title="Biru"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'purple')" style="width:14px; height:14px; border-radius:50%; background:#a55eea; cursor:pointer;" title="Ungu"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'pink')" style="width:14px; height:14px; border-radius:50%; background:#ff9ff3; cursor:pointer;" title="Pink"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'brown')" style="width:14px; height:14px; border-radius:50%; background:#8b4513; cursor:pointer;" title="Coklat"></div>
+</div>`;
+
         card.innerHTML = `
         <input type="file" class="photo-input" accept="image/*" style="display:none;">
         <div class="drag-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; cursor:grab; padding: 10px; color: #00eaff; background: rgba(0,0,0,0.5); border-radius: 8px; touch-action: none; user-select: none;">
@@ -351,14 +369,42 @@ const SubjectApp = {
         <h4 contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</h4>
         <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${content}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
-        <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
-            ${taskBtnHTML} 
-            <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
-                <i class="fa-solid fa-trash"></i>
-            </button>
+        
+        <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+            <div style="flex-shrink: 0;">
+                ${taskBtnHTML} 
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1;">
+                ${isAdmin ? colorTools : ''}
+
+                <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;" onclick="SubjectApp.deleteAnnouncement(this.closest('.course-card'))">
+                    <i class="fa-solid fa-trash" style="margin-right:0;"></i>
+                </button>
+            </div>
         </div>
     `;
         return card;
+    },
+
+
+    async changeCardColor(id, color) {
+        const card = document.querySelector(`.course-card[data-id="${id}"]`);
+        if (!card) return;
+
+        // Hapus SEMUA class warna yang mungkin ada
+        card.classList.remove('color-red', 'color-orange', 'color-yellow', 'color-green', 'color-blue', 'color-purple', 'color-pink', 'color-brown');
+
+        // Tambah warna baru jika bukan default
+        if (color !== 'default') card.classList.add(`color-${color}`);
+
+        try {
+            const { error } = await supabase.from("subject_announcements").update({ card_color: color }).eq("id", id);
+            if (error) throw error;
+        } catch (err) {
+            console.error("Gagal update warna:", err);
+            showPopup("Gagal menyimpan warna ke database", "error");
+        }
     },
 
     async toggleEditMode() {
@@ -389,6 +435,7 @@ const SubjectApp = {
         cards.forEach(card => {
             const fields = card.querySelectorAll(".editable");
             const deleteBtn = card.querySelector(".delete-btn");
+            const colorTools = card.querySelector(".card-color-tools");
             const dragHandle = card.querySelector(".drag-handle");
             const placeholder = card.querySelector(".card-photo-placeholder");
             const deletePhotoBtn = card.querySelector(".delete-photo-btn");
@@ -402,6 +449,7 @@ const SubjectApp = {
                 });
 
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
+                if (colorTools) colorTools.style.display = "flex";
                 if (dragHandle) {
                     dragHandle.style.display = "block";
                     this.setupDragEvents(card, dragHandle);
@@ -414,6 +462,7 @@ const SubjectApp = {
                 fields.forEach(f => f.contentEditable = "false");
 
                 if (deleteBtn) deleteBtn.style.display = "none";
+                if (colorTools) colorTools.style.display = "none";
                 if (dragHandle) dragHandle.style.display = "none";
                 if (placeholder) placeholder.style.display = "none";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "none";
@@ -684,15 +733,28 @@ const SubjectApp = {
         dropZone.ondragleave = () => dropZone.classList.remove('dragover');
         dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); this.handleNewFiles(e.dataTransfer.files); };
 
+        const colorOpts = document.querySelectorAll('#addColors .color-opt');
+        colorOpts.forEach(opt => {
+            opt.onclick = () => {
+                colorOpts.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                this.state.selectedColor = opt.dataset.color;
+            };
+        });
+
+        // File: js/subject-manager.js
+
         if (btnSave) {
             btnSave.onclick = async () => {
                 const data = {
                     big: document.getElementById('addJudul').value,
                     tit: document.getElementById('addSubjudul').value,
-                    con: document.getElementById('addIsi').innerHTML, // Ambil HTML-nya
+                    con: document.getElementById('addIsi').innerHTML,
                     sml: document.getElementById('addSmall').value,
-                    files: this.tempFiles
+                    files: this.tempFiles,
+                    cardColor: this.state.selectedColor
                 };
+
                 if (!data.big) { showPopup("Judul wajib!", "error"); return; }
 
                 btnSave.innerHTML = 'Sending...'; btnSave.disabled = true;
@@ -753,6 +815,7 @@ const SubjectApp = {
             subject_id: this.state.subjectId, class_id: this.state.user.class_id,
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
+            card_color: d.cardColor,
             display_order: this.state.announcements.length + 1
         });
         if (!error) location.reload();
@@ -858,9 +921,6 @@ const SubjectApp = {
     }
 };
 
-// File: js/subject-manager.js
-
-// Fungsi untuk mendapatkan tanggal format Indonesia (contoh: Minggu, 18 Januari 2026)
 function getTodayIndo() {
     const d = new Date();
     return d.toLocaleDateString('id-ID', {
@@ -871,25 +931,19 @@ function getTodayIndo() {
     });
 }
 
-// Update di dalam fungsi yang mereset/membuka modal tambah
-// Misalnya di fungsi showAddModal() atau sejenisnya:
 function showAddModal() {
-    // Reset field lain seperti biasa
     document.getElementById('modalBig').value = '';
     document.getElementById('modalTitle').value = '';
     document.getElementById('modalContent').value = '';
 
-    // --- FITUR OTOMATIS TANGGAL ---
     const footerInput = document.getElementById('modalSmall');
     if (footerInput) {
-        footerInput.value = getTodayIndo(); // Terisi otomatis
+        footerInput.value = getTodayIndo();
     }
 
-    // Tampilkan modal
     document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
-// --- GLOBAL VIEWER FUNCTIONS ---
 let currentViewerPhotos = [], currentViewerIndex = 0, mobileInfoTimer = null;
 function openDetail(data) {
     const overlay = document.getElementById('detailOverlay');
@@ -897,13 +951,11 @@ function openDetail(data) {
     const btn = document.getElementById('toggleInfoBtn');
     const detailBox = overlay.querySelector('.glass-detail-box');
 
-    // Set Content (Pake innerHTML sesuai perbaikan sebelumnya)
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
     document.getElementById('detailContentTxt').innerHTML = data.content || '';
     document.getElementById('detailSmallTxt').innerText = data.small || '';
 
-    // Cek foto untuk Text Only Mode
     let photos = [];
     if (data.photo_url) {
         try { photos = Array.isArray(data.photo_url) ? data.photo_url : JSON.parse(data.photo_url); }
@@ -911,7 +963,6 @@ function openDetail(data) {
     }
     if (photos.length === 0) detailBox.classList.add('text-only-mode');
     else detailBox.classList.remove('text-only-mode');
-    // Reset State Mobile
     if (window.innerWidth <= 768) {
         info.classList.add('hidden-mobile');
         info.classList.remove('full-screen');
@@ -931,12 +982,11 @@ function openDetail(data) {
 function closeDetail() {
     document.getElementById('detailOverlay').classList.remove('active');
 }
-// File: js/subject-manager.js
 
 function updateSliderUI() {
     const imgEl = document.getElementById('detailImg');
     const nav = document.getElementById('sliderNavBtns');
-    const wrapper = imgEl?.closest('.slider-wrapper'); // Ambil container gambar
+    const wrapper = imgEl?.closest('.slider-wrapper');
 
     if (!nav || !imgEl || !wrapper) return;
 
@@ -946,25 +996,20 @@ function updateSliderUI() {
         return;
     }
 
-    // 1. Pasang status loading & sembunyiin gambar lama
     wrapper.classList.add('loading');
 
-    // 2. Set gambar baru
     imgEl.style.display = 'block';
     imgEl.src = currentViewerPhotos[currentViewerIndex];
 
-    // 3. Lepas loading hanya saat gambar baru sudah siap tampil
     imgEl.onload = () => {
         wrapper.classList.remove('loading');
     };
 
-    // Jaga-jaga kalau internet mati/gambar error
     imgEl.onerror = () => {
         wrapper.classList.remove('loading');
-        imgEl.src = 'icons/error-img.png'; // Ganti ke icon error lu kalau ada
+        imgEl.src = 'icons/error-img.png';
     };
 
-    // Update Counter & Navigasi
     const tag = document.getElementById('photoCounterTag');
     if (tag) tag.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;
 
@@ -985,12 +1030,10 @@ function showMobileInfo(e) {
     const info = document.getElementById('detailInfoSection');
     const btn = document.getElementById('toggleInfoBtn');
 
-    // Muncul setengah dulu
     info.classList.remove('hidden-mobile');
     if (btn) btn.style.display = 'none';
 }
-// [BARU] Toggle antara Setengah dan Full Screen
-// [FIX] Fungsi Toggle Tinggi Sheet
+
 function toggleSheetHeight(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
@@ -1001,18 +1044,15 @@ function toggleSheetHeight(e) {
     const isFull = info.classList.contains('full-screen');
 
     if (isFull) {
-        // Balik ke Setengah Layar
         info.classList.remove('full-screen');
         if (icon) icon.className = 'fa-solid fa-expand';
     } else {
-        // Jadi Full Screen
-        info.classList.remove('hidden-mobile'); // Jaga-jaga kalau lagi hidden
+        info.classList.remove('hidden-mobile');
         info.classList.add('full-screen');
         if (icon) icon.className = 'fa-solid fa-compress';
     }
 }
 
-// [UPDATE] Pastikan icon reset pas ditutup
 function toggleMobileInfo(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
@@ -1027,20 +1067,16 @@ function toggleMobileInfo(e) {
     if (toggleIcon) toggleIcon.className = 'fa-solid fa-expand';
 }
 
-// Fungsi Global buat handle Rich Text
 function formatText(size) {
     document.execCommand('fontSize', false, size);
 }
 
-// Handler klik background buat nurunin sheet (IG Style)
 document.getElementById('detailOverlay').addEventListener('click', function (e) {
     if (e.target === this) {
         const info = document.getElementById('detailInfoSection');
         if (window.innerWidth <= 768 && !info.classList.contains('hidden-mobile')) {
-            // Kalau lagi muncul, turunin dulu
             toggleMobileInfo();
         } else {
-            // Kalau udah turun atau di desktop, tutup detail
             closeDetail();
         }
     }
