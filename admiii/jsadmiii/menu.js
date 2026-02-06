@@ -5,16 +5,46 @@ document.addEventListener('DOMContentLoaded', () => {
     loadClassMenus();
 });
 
+async function autoCalculateOrder() {
+    const editId = document.getElementById('editId').value;
+    const classId = document.getElementById('mClassId').value;
+    const group = document.getElementById('mGroup').value;
+
+    // Hanya jalan otomatis jika sedang "Tambah Baru" (bukan edit)
+    if (editId || !classId || !group) return;
+
+    const { data, error } = await supabase
+        .from('subjects_config')
+        .select('display_order')
+        .eq('class_id', classId)
+        .eq('menu_group', group)
+        .order('display_order', { ascending: false })
+        .limit(1);
+
+    if (!error) {
+        const nextOrder = (data && data.length > 0) ? (data[0].display_order + 1) : 1;
+        document.getElementById('mOrder').value = nextOrder;
+    }
+}
+
 async function setupClassDropdown() {
-    const select = document.getElementById('targetClassId');
-    const { data } = await supabase.from('subjects_config').select('class_id');
+    const filterSelect = document.getElementById('targetClassId');
+    const formSelect = document.getElementById('mClassId');
+
+    const { data } = await supabase.from('classes').select('id, name').order('id');
     if (data) {
-        const uniqueClasses = [...new Set(data.map(item => item.class_id))].sort((a, b) => a - b);
-        uniqueClasses.forEach(id => {
-            const opt = document.createElement('option');
-            opt.value = id;
-            opt.innerText = `Kelas ID: ${id}`;
-            select.appendChild(opt);
+        data.forEach(cls => {
+            // Dropdown Filter
+            const optF = document.createElement('option');
+            optF.value = cls.id;
+            optF.innerText = `🌍 ${cls.name}`;
+            filterSelect.appendChild(optF);
+
+            // Dropdown Form
+            const optS = document.createElement('option');
+            optS.value = cls.id;
+            optS.innerText = cls.name;
+            formSelect.appendChild(optS);
         });
     }
 }
@@ -83,11 +113,17 @@ async function loadClassMenus() {
 function createMenuItemElement(item) {
     const div = document.createElement('div');
     div.className = "subject-item animate-slide-right";
+
+    // Logika menampilkan badge jika ada
+    const badgeHtml = item.badge
+        ? `<span class="${item.badge_type}" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(255,255,255,0.2);">${item.badge}</span>`
+        : '';
+
     div.innerHTML = `
         <div class="subject-info">
             <i class="fa-solid ${item.icon || 'fa-question'}" style="color: #00eaff; width: 25px; text-align: center;"></i>
             <div>
-                <h4 style="margin: 0; font-size: 14px;">${item.subject_name}</h4>
+                <h4 style="margin: 0; font-size: 14px;">${item.subject_name} ${badgeHtml}</h4>
                 <small style="color: #888;">/${item.subject_id} • Order: ${item.display_order}</small>
             </div>
         </div>
@@ -121,9 +157,10 @@ function editMenu(item) {
     document.getElementById('mOrder').value = item.display_order;
     document.getElementById('mGroup').value = item.menu_group;
     document.getElementById('btnReset').style.display = "block";
+    document.getElementById('mBadge').value = item.badge || "";
+    document.getElementById('mBadgeType').value = item.badge_type || "";
 
     previewIcon(item.icon);
-    // Auto scroll ke atas (untuk mobile)
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -138,7 +175,9 @@ async function saveMenu() {
         subject_id: document.getElementById('mSubjectId').value,
         icon: document.getElementById('mIcon').value,
         display_order: parseInt(document.getElementById('mOrder').value),
-        menu_group: document.getElementById('mGroup').value
+        menu_group: document.getElementById('mGroup').value,
+        badge: document.getElementById('mBadge').value,        // Tambahkan ini
+        badge_type: document.getElementById('mBadgeType').value // Tambahkan ini
     };
 
     if (!payload.class_id || !payload.subject_name) {
@@ -165,24 +204,19 @@ async function saveMenu() {
 
 // 2. Fungsi Reset yang Tidak "Lupa Ingatan"
 function resetForm() {
-    // Kembalikan judul form
     document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus"></i> Tambah Materi`;
-
-    // Reset field input kecuali Class ID (biar gak ngetik ulang)
     document.getElementById('editId').value = "";
     document.getElementById('mSubjectName').value = "";
     document.getElementById('mSubjectId').value = "";
     document.getElementById('mIcon').value = "fa-book";
     document.getElementById('mOrder').value = "1";
+    document.getElementById('mBadge').value = "";       // Reset badge (dari update sebelumnya)
+    document.getElementById('mBadgeType').value = "";
     document.getElementById('btnReset').style.display = "none";
 
-    // PENTING: Ambil nilai dari dropdown filter untuk mengisi field Class ID di form
+    // PENTING: Set dropdown form sesuai dengan filter yang aktif
     const filterValue = document.getElementById('targetClassId').value;
-    if (filterValue !== 'all') {
-        document.getElementById('mClassId').value = filterValue;
-    } else {
-        document.getElementById('mClassId').value = "";
-    }
+    document.getElementById('mClassId').value = (filterValue !== 'all') ? filterValue : "";
 
     previewIcon("fa-book");
 }

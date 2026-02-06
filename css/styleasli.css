@@ -26,20 +26,13 @@ body::-webkit-scrollbar,
 body {
     font-family: Arial, sans-serif;
     color: #ffffff;
-    /* Pastikan minimal setinggi layar */
     min-height: 100vh;
-
     background-image:
         linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(180deg, #006b83 0%, #005e73 35%, #028ea7 75%, #019196 100%);
-
-    /* Grid 1 & 2 diulang (repeat), Gradien warna tidak (no-repeat) */
     background-repeat: repeat, repeat, no-repeat;
-
-    /* Ukuran Grid tetap, Ukuran gradien warna jadi cover */
     background-size: 40px 40px, 40px 40px, cover;
-
     background-attachment: fixed;
 }
 
@@ -93,43 +86,10 @@ header {
     transform: translateY(-9px) rotate(-45deg);
 }
 
-/* Pastikan container menu punya posisi relative */
 .sidebar li {
     position: relative;
     display: block;
     width: 100%;
-}
-
-/* Titik Merah Personal di sebelah KANAN menu */
-.sidebar-dot {
-    width: 9px;
-    height: 9px;
-    background-color: #ff4757;
-    /* Merah Neon */
-    border-radius: 50%;
-    position: absolute;
-    right: 20px;
-    /* Jarak dari kanan */
-    top: 50%;
-    transform: translateY(-50%);
-    box-shadow: 0 0 10px rgba(255, 71, 87, 0.8);
-    z-index: 10;
-    pointer-events: none;
-}
-
-/* Titik Merah di Hamburger (Garis Tiga) */
-.hamburger.has-notif::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    right: -5px;
-    width: 10px;
-    height: 10px;
-    background-color: #ff4757;
-    border-radius: 50%;
-    border: 2px solid #005e73;
-    box-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
-    z-index: 4001;
 }
 
 .visitor-trigger {
@@ -380,26 +340,20 @@ header {
 }
 
 
-/* --- DESKTOP VIEW (Media Query Wajib Update) --- */
 @media (min-width: 1024px) {
     .sidebar {
         left: 0;
-        /* Di Desktop selalu muncul */
         width: 270px;
         background: transparent;
-        /* Bisa transparan atau warna solid tergantung selera */
         backdrop-filter: none;
-        /* Hemat resource di desktop */
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         padding-top: 80px;
     }
 
     .main-content {
         margin-left: 270px;
-        /* Geser konten utama */
     }
 
-    /* Kalo tombol close ada di desktop, sembunyiin */
     .closebtn {
         display: none;
     }
@@ -1731,12 +1685,12 @@ li.nav-locked a::after {
 
 .uni-icon.success {
     color: #00eaff;
-    drop-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+    filter: drop-shadow(0 0 15px rgba(0, 234, 255, 0.5));
 }
 
 .uni-icon.error {
     color: #ff4757;
-    drop-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
+    filter: drop-shadow(0 0 15px rgba(255, 71, 87, 0.5));
 }
 
 .uni-icon.info {
@@ -1849,8 +1803,7 @@ li.nav-locked a::after {
 /* Tipe Confirm (Warning) - Kuning */
 .uni-icon.warning {
     color: #ffd700;
-    /* Emas/Kuning */
-    drop-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
     animation: pulseWarning 2s infinite;
 }
 
@@ -3460,6 +3413,7 @@ input:checked+.slider:before {
     margin-bottom: 25px;
     display: block;
     background: linear-gradient(to bottom, #fff, transparent);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -3763,4 +3717,56 @@ input:checked+.slider:before {
 .color-opt.active {
     outline: 3px solid #00eaff;
     transform: scale(1.1);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: rgba(255, 255, 255, 0.1);
+    background-image: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.1) 0px,
+            rgba(255, 255, 255, 0.2) 40px,
+            rgba(255, 255, 255, 0.1) 80px);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 8px;
+}
+
+.sk-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.sk-title {
+    height: 22px;
+    width: 60%;
+    margin-bottom: 15px;
+}
+
+.sk-text {
+    height: 14px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.sk-text.short {
+    width: 40%;
+}
+
+.sk-media {
+    height: 120px;
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 12px;
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
     <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
@@ -25,8 +27,10 @@
 
             <div class="course-card animate-pop-in">
                 <h3 style="color: #00eaff; margin-bottom: 15px;">Mulai Diskusi Baru</h3>
-                <input type="text" id="topicTitle" class="glass-input" placeholder="Judul Diskusi..." style="margin-bottom: 10px;">
-                <textarea id="topicContent" class="glass-input" placeholder="Apa yang ingin kamu tanyain?" style="min-height: 100px; margin-bottom: 15px;"></textarea>
+                <input type="text" id="topicTitle" class="glass-input" placeholder="Judul Diskusi..."
+                    style="margin-bottom: 10px;">
+                <textarea id="topicContent" class="glass-input" placeholder="Apa yang ingin kamu tanyain?"
+                    style="min-height: 100px; margin-bottom: 15px;"></textarea>
                 <button onclick="postNewTopic()" class="btn-glass-save" style="width: 100%;">
                     <i class="fa-solid fa-paper-plane"></i> Posting
                 </button>
@@ -36,11 +40,35 @@
         <div class="right-section">
             <h3 style="margin-bottom: 15px; color: #00eaff;"><i class="fa-solid fa-list"></i> Diskusi Kelas</h3>
             <div id="forumList" class="announcements">
-                <p style="text-align:center; padding:50px; color: #aaa;">Memuat diskusi...</p>
+                <div class="sk-card">
+                    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
+                        <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                        <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                    </div>
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                </div>
+                <div class="sk-card">
+                    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
+                        <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                        <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                    </div>
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                </div>
+                <div class="sk-card">
+                    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
+                        <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                        <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                    </div>
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="js/forum.js" defer></script>
 </body>
+
 </html>

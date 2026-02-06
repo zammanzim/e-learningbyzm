@@ -137,6 +137,24 @@ const UIComponents = {
     }
 };
 
+const SkeletonUI = {
+    render(containerId, count = 3) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            html += `
+            <div class="sk-card">
+                <div class="skeleton sk-title"></div>
+                <div class="skeleton sk-text"></div>
+                <div class="skeleton sk-text" style="width: 80%;"></div>
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => UIComponents.inject());
 } else {

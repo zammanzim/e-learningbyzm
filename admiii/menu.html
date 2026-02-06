@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Menu Manager</title>
+    <title>Menu Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ui-components.js" defer></script>
@@ -124,12 +124,18 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>ID Kelas</label>
-                        <input type="text" id="mClassId" class="glass-input" placeholder="Misal: 5">
+                        <label>Pilih Kelas</label>
+                        <select id="mClassId" class="glass-input" onchange="autoCalculateOrder()">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>Urutan</label>
-                        <input type="number" id="mOrder" class="glass-input" value="1">
+                        <label>Grup Menu</label>
+                        <select id="mGroup" class="glass-input" onchange="autoCalculateOrder()">
+                            <option value="lessons">Lessons (Materi)</option>
+                            <option value="main">Main Menu (Navigasi)</option>
+                            <option value="admin">Admin Panel (Khusus Admin)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -153,21 +159,32 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top:12px">
-                    <label>Grup Menu</label>
-                    <select id="mGroup" class="glass-input">
-                        <option value="lessons">Lessons (Materi)</option>
-                        <option value="main">Main Menu (Navigasi)</option>
-                        <option value="admin">Admin Panel (Khusus Admin)</option>
-                    </select>
+                <div style="display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; margin-top: 12px;">
+                    <div class="form-group">
+                        <label>Urutan</label>
+                        <input type="number" id="mOrder" class="glass-input" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Badge Text</label>
+                        <input type="text" id="mBadge" class="glass-input" placeholder="HOT">
+                    </div>
+                    <div class="form-group">
+                        <label>Badge Style</label>
+                        <select id="mBadgeType" class="glass-input">
+                            <option value="">Polos</option>
+                            <option value="badge-fix">Fix</option>
+                            <option value="badge-beta">Beta</option>
+                            <option value="badge-upd">Update</option>
+                            <option value="badge-hot">Hot</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button id="btnReset" onclick="resetForm()" class="btn-glass-cancel"
                         style="flex: 1; display:none;">Batal</button>
-                    <button type="button" onclick="saveMenu()" class="btn-glass-save" style="flex: 2;">
-                        Simpan Perubahan
-                    </button>
+                    <button type="button" onclick="saveMenu()" class="btn-glass-save" style="flex: 2;">Simpan
+                        Perubahan</button>
                 </div>
             </div>
         </div>
@@ -180,7 +197,7 @@
         </div>
     </div>
 
-    <script src="../js/admin-menu-logic.js" defer></script>
+    <script src="jsadmiii/menu.js" defer></script>
 </body>
 
 </html>

@@ -127,7 +127,7 @@ async function renderSidebar() {
         const adminGroup = menuGroups.find(g => g.header === "Admin Panel");
         const menuMgr = {
             text: "Menu Manager",
-            url: adminPrefix + "admin-menu",
+            url: adminPrefix + "menu",
             icon: "fa-solid fa-gears",
             badge: "SYSTEM",
             badgeType: "badge-hot"
