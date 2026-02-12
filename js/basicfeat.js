@@ -33,7 +33,7 @@ function syncHeaderProfile() {
     } catch (e) { console.error("Sync Profile Error:", e); }
 }
 // ==========================================
-// 3. UNIFIED SIDEBAR RENDERER
+// 3. UNIFIED SIDEBAR RENDERER (SWR + FIX ICON)
 // ==========================================
 async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
@@ -42,145 +42,121 @@ async function renderSidebar() {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) return;
 
-    const role = user.role;
     const CLASS_ID = String(user.class_id);
+    const CACHE_KEY = `sidebar_cache_${CLASS_ID}`;
 
-    // --- DETEKSI LOKASI FOLDER ---
+    // 1. Ambil data dari Cache (Stale)
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+        try {
+            processAndRenderSidebar(JSON.parse(cachedData), user);
+        } catch (e) { console.error("Cache Parse Error"); }
+    }
+
+    // 2. Revalidate (Ambil data segar dari Supabase)
+    try {
+        const { data: freshData, error } = await supabase
+            .from('subjects_config')
+            .select('*')
+            .eq('class_id', CLASS_ID)
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+
+        // 3. Bandingkan data. Jika beda / cache kosong, update & simpan
+        const freshDataString = JSON.stringify(freshData);
+        if (freshDataString !== cachedData) {
+            localStorage.setItem(CACHE_KEY, freshDataString);
+            processAndRenderSidebar(freshData, user);
+            console.log("Sidebar: Data refreshed from server.");
+        }
+    } catch (err) {
+        console.error("Fetch Sidebar Error:", err);
+    }
+}
+
+function processAndRenderSidebar(allConfigs, user) {
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar || !allConfigs) return;
+
+    const role = user.role;
     const isInAdminFolder = window.location.pathname.includes('/admiii/');
     const rootPrefix = isInAdminFolder ? '../' : '';
     const adminPrefix = isInAdminFolder ? '' : 'admiii/';
 
-    let hasNewNotification = false; // Penanda global untuk titik merah hamburger
-
-    // 1. Ambil SEMUA menu dari database
-    const { data: allConfigs, error } = await supabase
-        .from('subjects_config')
-        .select('*')
-        .eq('class_id', CLASS_ID)
-        .order('display_order', { ascending: true });
-
-    if (error) return;
-
-    // --- FUNGSI CEK BADGE (UNTUK TITIK MERAH) ---
-    const checkNotification = (item) => {
-        const badge = item.badge ? item.badge.toUpperCase() : '';
-        if (badge === 'NEW') {
-            hasNewNotification = true;
-        }
-    };
-
-    // 2. Filter berdasarkan Grup dan Cek Notifikasi
-    const adminItemsFromDB = allConfigs.filter(m => m.menu_group === 'admin');
-    const mainItemsFromDB = allConfigs.filter(m => m.menu_group === 'main');
-    const lessonItemsFromDB = allConfigs.filter(m => m.menu_group === 'lessons');
+    // 1. Filter Grup (Admin, Main, Lessons)
+    const adminItems = allConfigs.filter(m => m.menu_group === 'admin');
+    const mainItems = allConfigs.filter(m => m.menu_group === 'main');
+    const lessonItems = allConfigs.filter(m => m.menu_group === 'lessons');
 
     let menuGroups = [];
 
-    // --- Admin Panel ---
-    if ((role === 'class_admin' || role === 'super_admin') && adminItemsFromDB.length > 0) {
-        adminItemsFromDB.forEach(checkNotification);
+    if ((role === 'class_admin' || role === 'super_admin') && adminItems.length > 0) {
         menuGroups.push({
-            header: "Admin Panel",
-            color: "#ffd700",
-            items: adminItemsFromDB.map(m => ({
-                text: m.subject_name,
-                url: adminPrefix + m.subject_id,
-                icon: m.icon,
-                badge: m.badge,
-                badgeType: m.badge_type
-            }))
+            header: "Admin Panel", color: "#ffd700",
+            items: adminItems.map(m => ({ ...m, url: adminPrefix + m.subject_id }))
         });
     }
 
-    // --- Main Menu ---
-    if (mainItemsFromDB.length > 0) {
-        mainItemsFromDB.forEach(checkNotification);
+    if (mainItems.length > 0) {
         menuGroups.push({
             header: "Main Menu",
-            items: mainItemsFromDB.map(m => ({
-                text: m.subject_name,
-                url: rootPrefix + m.subject_id,
-                icon: m.icon,
-                badge: m.badge,
-                badgeType: m.badge_type
-            }))
+            items: mainItems.map(m => ({ ...m, url: rootPrefix + m.subject_id }))
         });
     }
 
-    // --- Lessons ---
-    if (lessonItemsFromDB.length > 0) {
-        lessonItemsFromDB.forEach(checkNotification);
+    if (lessonItems.length > 0) {
         menuGroups.push({
             header: "Lessons",
-            items: lessonItemsFromDB.map(L => ({
-                text: L.subject_name,
-                url: `${rootPrefix}subject?id=${L.subject_id}`,
-                icon: L.icon,
-                badge: L.badge,
-                badgeType: L.badge_type
-            }))
+            items: lessonItems.map(L => ({ ...L, url: `${rootPrefix}subject?id=${L.subject_id}` }))
         });
     }
 
-    // --- Menu Manager khusus Super Admin ---
+    // Menu Manager khusus Super Admin
     if (role === 'super_admin') {
-        const adminGroup = menuGroups.find(g => g.header === "Admin Panel");
-        const menuMgr = {
-            text: "Menu Manager",
-            url: adminPrefix + "menu",
-            icon: "fa-solid fa-gears",
-            badge: "SYSTEM",
-            badgeType: "badge-hot"
-        };
-        if (adminGroup) adminGroup.items.push(menuMgr);
-        else menuGroups.unshift({ header: "System", items: [menuMgr] });
+        const mgr = { subject_name: "Menu Manager", url: adminPrefix + "menu", icon: "fa-solid fa-gears", badge: "SYSTEM", badge_type: "badge-hot" };
+        const adminGrp = menuGroups.find(g => g.header === "Admin Panel");
+        if (adminGrp) adminGrp.items.push(mgr);
+        else menuGroups.unshift({ header: "System", items: [mgr] });
     }
 
-    // --- UPDATE STATUS HAMBURGER ---
-    const hamburger = document.getElementById('hamburger');
-    if (hamburger) {
-        if (hasNewNotification) {
-            hamburger.classList.add('has-notif'); // Tambah titik merah
-        } else {
-            hamburger.classList.remove('has-notif'); // Hapus titik merah
-        }
-    }
+    // 2. Update Titik Merah Hamburger
+    const hasNew = allConfigs.some(m => m.badge?.toUpperCase() === 'NEW');
+    document.getElementById('hamburger')?.classList.toggle('has-notif', hasNew);
 
-    // 4. GENERATE HTML
+    // 3. GENERATE HTML
     const currentPath = window.location.pathname.toLowerCase();
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentId = urlParams.get('id')?.toLowerCase();
+    const currentId = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
 
     let htmlContent = "";
-
     menuGroups.forEach(group => {
-        const headerStyle = group.color ? `style="color:${group.color}; margin-top:0px;"` : "";
+        const headerStyle = group.color ? `style="color:${group.color};"` : "";
         htmlContent += `<h3 ${headerStyle}>${group.header}</h3><ul>`;
 
         group.items.forEach(item => {
             const itemUrl = item.url.toLowerCase();
             let isActive = "";
 
-            // Logic Menu Active
+            // Logic Active Menu
             if (itemUrl.includes('id=')) {
-                const itemId = itemUrl.split('id=')[1];
-                if (currentId === itemId) isActive = "active";
+                if (currentId === itemUrl.split('id=')[1]) isActive = "active";
             } else {
-                const fileName = itemUrl.split('/').pop();
-                if (currentPath.endsWith(fileName)) isActive = "active";
+                if (currentPath.endsWith(itemUrl.split('/').pop())) isActive = "active";
             }
 
-            // Icon & Badge Rendering
-            let iconHtml = (item.text === "B. Sunda") ? `<b style="margin-right: 15px; margin-left: 2px;">ᮔᮃ</b>` :
-                (item.text === "B. Jepang") ? `<b style="margin-right: 20px; margin-left: 7px;">漢</b>` :
-                    `<i class="fa-solid ${item.icon}"></i>`;
+            // --- LOGIC FIX ICON ---
+            let iconClass = item.icon || "fa-solid fa-book";
+            // Jika di DB lupa kasih 'fa-solid', kita tambahin otomatis
+            if (iconClass && !iconClass.includes(" ")) {
+                iconClass = `fa-solid ${iconClass}`;
+            }
 
-            let badgeHtml = item.badge ? `<span class="sidebar-badge ${item.badgeType || 'badge-new'}">${item.badge}</span>` : "";
+            const badgeHtml = item.badge ? `<span class="sidebar-badge ${item.badge_type || 'badge-new'}">${item.badge}</span>` : "";
 
             htmlContent += `
             <li class="${isActive}">
                 <a href="${item.url}">
-                    ${iconHtml} ${item.text}
+                    <i class="${iconClass}"></i> <span>${item.subject_name}</span>
                 </a>
                 ${badgeHtml}
             </li>`;
@@ -190,6 +166,7 @@ async function renderSidebar() {
 
     sidebar.innerHTML = htmlContent;
 
+    // Scroll otomatis ke menu yang aktif
     const activeItem = sidebar.querySelector(".active");
     if (activeItem) {
         setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);

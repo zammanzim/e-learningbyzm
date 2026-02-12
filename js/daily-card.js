@@ -230,13 +230,31 @@ async function initDailyCard() {
 }
 
 async function updateTaskBadge(user) {
+    const cacheKey = `task_badge_${user.id}`;
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey));
+
+    // Kalau data masih ada dan belum lewat 5 menit, pake yang lama aja
+    if (cached && (Date.now() - cached.time < 5 * 60 * 1000)) {
+        renderBadgeUI(cached.count);
+        return;
+    }
+
     try {
         const { count: total } = await supabase.from('subject_announcements').select('*', { count: 'exact', head: true }).eq('class_id', user.class_id).neq('subject_id', 'announcements');
         const { count: done } = await supabase.from('user_progress').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
         const pending = (total || 0) - (done || 0);
-        const el = document.getElementById('taskBadge');
-        if (el) { el.innerText = pending > 99 ? '99+' : pending; el.style.display = pending > 0 ? 'flex' : 'none'; }
+
+        sessionStorage.setItem(cacheKey, JSON.stringify({ count: pending, time: Date.now() }));
+        renderBadgeUI(pending);
     } catch (e) { console.error("Badge error:", e); }
+}
+
+function renderBadgeUI(pending) {
+    const el = document.getElementById('taskBadge');
+    if (el) {
+        el.innerText = pending > 99 ? '99+' : pending;
+        el.style.display = pending > 0 ? 'flex' : 'none';
+    }
 }
 
 window.autoSaveDraft = function () { if (window.isDailyEditing && window.editingDay) saveToDraft(window.editingDay); }
@@ -309,11 +327,11 @@ window.saveAllDrafts = async function () {
 
     // ... (Sisa kode simpan jadwal tetap sama) ...
     if (draftsArray.length > 0) {
-        for (let draft of draftsArray) {
-            const { data: existing } = await supabase.from('daily_schedules').select('id').eq('class_id', CLASS_ID).eq('day_name', draft.day_name).single();
-            if (existing) await supabase.from('daily_schedules').update(draft).eq('id', existing.id);
-            else await supabase.from('daily_schedules').insert(draft);
-        }
+        const { error: upsertError } = await supabase
+            .from('daily_schedules')
+            .upsert(draftsArray, { onConflict: 'class_id, day_name' }); // Pastikan ada unique constraint di DB
+
+        if (upsertError) throw upsertError;
     }
 
     window.dailyDrafts = {}; window.isDailyEditing = false; window.editingDay = null;

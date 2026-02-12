@@ -23,7 +23,7 @@ const SubjectApp = {
         this.state.user = this.getUserData();
 
         if (!this.state.user) {
-            window.location.href = "index";
+            window.location.href = "login";
             return;
         }
 
@@ -416,22 +416,26 @@ const SubjectApp = {
         const cards = document.querySelectorAll(".course-card");
 
         if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Tunggu animasi sebentar biar smooth
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         this.state.editMode = !this.state.editMode;
 
+        // 1. UPDATE UI TOMBOL (FAB)
         if (toggleBtn && container) {
             if (this.state.editMode) {
                 container.classList.add("active");
-                toggleBtn.classList.remove("state-edit"); toggleBtn.classList.add("state-done");
+                toggleBtn.className = "fab-main state-done";
                 toggleBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
             } else {
                 container.classList.remove("active");
-                toggleBtn.classList.remove("state-done"); toggleBtn.classList.add("state-edit");
+                toggleBtn.className = "fab-main state-edit";
                 toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
             }
         }
 
+        // 2. UPDATE SEMUA KARTU (UI Mode)
         cards.forEach(card => {
             const fields = card.querySelectorAll(".editable");
             const deleteBtn = card.querySelector(".delete-btn");
@@ -442,64 +446,115 @@ const SubjectApp = {
 
             if (this.state.editMode) {
                 card.classList.add("editable-mode");
-                card.draggable = false;
                 fields.forEach(f => {
                     f.contentEditable = "true";
                     f.style.pointerEvents = "auto";
                 });
-
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
+
+                // --- BAGIAN KRUSIAL: AKTIFKAN DRAG ---
                 if (dragHandle) {
                     dragHandle.style.display = "block";
-                    this.setupDragEvents(card, dragHandle);
+                    this.setupDragEvents(card, dragHandle); // Panggil fungsi drag di sini!
                 }
+
                 if (placeholder) placeholder.style.display = "block";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
             } else {
+                // ... (logika else tetap sama untuk sembunyikan kontrol)
                 card.classList.remove("editable-mode");
-                card.draggable = false;
                 fields.forEach(f => f.contentEditable = "false");
-
                 if (deleteBtn) deleteBtn.style.display = "none";
                 if (colorTools) colorTools.style.display = "none";
                 if (dragHandle) dragHandle.style.display = "none";
                 if (placeholder) placeholder.style.display = "none";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "none";
-                this.saveAnnouncement(card);
+
+                // Matikan attribute draggable saat keluar mode edit
+                card.draggable = false;
             }
         });
 
+        // 3. SIMPAN DATA (Hanya saat keluar dari mode edit)
+        if (!this.state.editMode) {
+            await this.saveAllChanges();
+        }
+
         this.state.isToggling = false;
+    },
+
+    async saveAllChanges() {
+        const toggleBtn = document.getElementById("toggleEditMode");
+        const originalHTML = toggleBtn.innerHTML; // Simpan icon centang
+
+        // 1. Kasih animasi loading pas proses simpan
+        toggleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        toggleBtn.disabled = true;
+
+        // ... (logic ambil data updates kamu tetap sama) ...
+        const cards = document.querySelectorAll(".course-card");
+        const updates = Array.from(cards).map((card, index) => {
+            const id = card.dataset.id;
+            const getVal = (f) => card.querySelector(`[data-field="${f}"]`)?.innerText.trim() || "";
+            const getContent = () => card.querySelector(`[data-field="content"]`)?.innerHTML || "";
+
+            return {
+                id: id,
+                display_order: index + 1,
+                big_title: getVal("big_title"),
+                title: getVal("title"),
+                content: getContent(),
+                small: getVal("small"),
+                subject_id: this.state.subjectId,
+                class_id: this.state.user.class_id
+            };
+        });
+
+        try {
+            const { error } = await supabase
+                .from("subject_announcements")
+                .upsert(updates, { onConflict: 'id' });
+
+            if (error) throw error;
+
+            // 2. Berhasil! Balikin tombol ke icon edit
+            console.log("✅ All changes saved!");
+            if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
+        } catch (err) {
+            console.error("Save failed:", err);
+            showPopup("Gagal simpan data!", "error");
+        } finally {
+            // Balikin tombol ke keadaan normal
+            toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+            toggleBtn.disabled = false;
+        }
     },
 
     // File: js/subject-manager.js
 
     setupDragEvents(card, handle) {
+        // 1. Draggable hanya aktif pas handle ditekan (biar gak ganggu seleksi teks)
         handle.onmousedown = () => { card.draggable = true; };
         handle.onmouseup = () => { card.draggable = false; };
 
         card.ondragstart = (e) => {
             e.dataTransfer.effectAllowed = "move";
-
-            // Kasih delay dikit biar bayangan drag-nya kebentuk dulu sebelum class dragging dipasang
-            setTimeout(() => {
-                card.classList.add("dragging");
-            }, 0);
-
-            // Matiin interaksi teks biar gak ganggu
+            setTimeout(() => card.classList.add("dragging"), 0);
+            // Matikan pointer events biar teks gak ganggu proses drag
             card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'none');
         };
 
         card.ondragover = (e) => {
             e.preventDefault();
-            this.handleAutoScroll(e.clientY);
-            this.handleDragOverLogic(e.clientY);
-
-            // Biar smooth, kita cari elemen yang lagi di-drag
-            const dragging = document.querySelector(".dragging");
-            const afterElement = this.getDragAfterElement(document.getElementById("announcements"), e.clientY);
             const container = document.getElementById("announcements");
+            const dragging = document.querySelector(".dragging");
+            if (!dragging) return;
+
+            this.handleAutoScroll(e.clientY);
+
+            // Cari posisi kartu di bawah kursor
+            const afterElement = this.getDragAfterElement(container, e.clientY);
 
             if (afterElement == null) {
                 container.appendChild(dragging);
@@ -508,15 +563,12 @@ const SubjectApp = {
             }
         };
 
-        card.ondragend = (e) => {
-            // Hapus class dragging biar balik normal
+        card.ondragend = () => {
             card.classList.remove("dragging");
             card.draggable = false;
-
-            clearTimeout(this.scrollTimer);
             card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'auto');
 
-            // Simpan urutan baru ke DB
+            // Simpan urutan baru otomatis ke Supabase (Bulk Upsert)
             this.updateDisplayOrder();
         };
 
@@ -598,16 +650,41 @@ const SubjectApp = {
 
     async updateDisplayOrder() {
         const cards = document.querySelectorAll(".course-card");
-        const updates = [];
-        cards.forEach((card, index) => {
-            const id = card.dataset.id;
-            if (id) updates.push({ id: id, display_order: index + 1 });
-        });
+
+        // 1. Map data ke array of objects dengan kolom minimal tapi lengkap
+        const updates = Array.from(cards).map((card, index) => ({
+            id: card.dataset.id,            // Primary Key wajib ada
+            display_order: index + 1,       // Urutan baru
+            subject_id: this.state.subjectId, // Sertakan ini buat jaga-jaga RLS
+            class_id: this.state.user.class_id // Sertakan ini agar RLS mengizinkan akses
+        }));
+
+        if (updates.length === 0) return;
+
         try {
-            for (const update of updates) {
-                await supabase.from("subject_announcements").update({ display_order: update.display_order }).eq("id", update.id);
+            // 2. Kirim sekaligus (Bulk Upsert)
+            const { error } = await supabase
+                .from("subject_announcements")
+                .upsert(updates, {
+                    onConflict: 'id', // Kasih tau Supabase kalau ID sama, timpa aja (UPDATE)
+                    ignoreDuplicates: false
+                });
+
+            if (error) {
+                console.error("❌ Upsert Error:", error.message);
+                if (typeof showPopup === 'function') showPopup("Gagal simpan urutan: " + error.message, "error");
+                throw error;
             }
-        } catch (err) { console.error(err); }
+
+            console.log("✅ Urutan berhasil disinkronisasi ke cloud.");
+
+            // 3. Update cache lokal biar gak balik lagi urutannya pas reload
+            const cacheKey = `announcements_${this.state.subjectId}`;
+            localStorage.setItem(cacheKey, JSON.stringify(this.state.announcements));
+
+        } catch (err) {
+            console.error("Fatal Error saat reorder:", err);
+        }
     },
 
     triggerPhotoUpload(card) {

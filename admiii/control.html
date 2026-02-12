@@ -114,7 +114,7 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const user = JSON.parse(localStorage.getItem("user"));
             if (!user || !user.role.includes('admin')) {
-                window.location.href = "index";
+                window.location.href = "login";
                 return;
             }
             await loadInitialData();

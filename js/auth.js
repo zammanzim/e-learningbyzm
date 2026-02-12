@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const isInAdmin = window.location.pathname.includes("/admiii/");
     const pathPrefix = isInAdmin ? "../" : "";
 
-    const isPublicPage = window.location.pathname.includes("index");
+    const isPublicPage = window.location.pathname.includes("login");
     if (isPublicPage) return;
 
     const user = getUser();
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await autoFetchUser();
     } else {
         // Biar kalau gak login pas di folder admin, gak mental ke admin/index
-        window.location.href = pathPrefix + "index";
+        window.location.href = pathPrefix + "login";
     }
 });
 
@@ -30,16 +30,35 @@ async function autoFetchUser() {
     const oldUser = getUser();
     if (!oldUser) return;
 
-    const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", oldUser.id)
-        .single();
+    // --- LOGIC JEDA WAKTU (1 JAM) ---
+    const lastSync = localStorage.getItem("last_user_sync");
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000; // 1 jam dalam milidetik
 
-    if (error || !data) return;
+    // Kalau baru aja sinkron kurang dari 1 jam yang lalu, gausah narik data lagi
+    if (lastSync && (now - parseInt(lastSync) < oneHour)) {
+        console.log("⚡ Skip sync: Data user masih fresh (kurang dari 1 jam).");
+        return oldUser;
+    }
 
-    localStorage.setItem("user", JSON.stringify(data));
-    return data;
+    try {
+        const { data, error } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", oldUser.id)
+            .single();
+
+        if (error || !data) return;
+
+        // Update data user dan catat waktu sinkronisasi terbaru
+        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("last_user_sync", now.toString());
+
+        console.log("🔄 Data user berhasil diperbarui dari database.");
+        return data;
+    } catch (err) {
+        console.error("Gagal auto-fetch:", err);
+    }
 }
 
 async function logout() {
@@ -92,14 +111,14 @@ async function logout() {
 
                 // Redirect balik ke login dengan ID kelas (Pastikan bukan "nan")
                 const targetId = (classId && classId !== "undefined" && !isNaN(classId)) ? classId : "";
-                const finalUrl = targetId ? `index?id=${targetId}` : "index";
+                const finalUrl = targetId ? `login?id=${targetId}` : "login";
 
                 window.location.href = prefix + finalUrl;
             } catch (e) {
                 console.error("Logout Error:", e);
                 // Fallback jika terjadi error
                 const isInAdmin = window.location.pathname.includes('/admiii/');
-                window.location.href = (isInAdmin ? "../" : "") + "index";
+                window.location.href = (isInAdmin ? "../" : "") + "login";
             }
         } else {
             // Jika kuota habis (hanya user biasa)

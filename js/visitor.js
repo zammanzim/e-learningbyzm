@@ -127,83 +127,93 @@ async function renderVisitorStats() {
 // ==========================================
 // 3. EVENT LISTENERS & AUTO RUNNER
 // ==========================================
+let visitorChannel = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     const user = _getVisitorUser();
-
-    setTimeout(() => {
-        if (typeof logVisitor === 'function') logVisitor();
-    }, 1000);
+    if (!user) return;
 
     const trigger = document.getElementById("visitorTrigger");
     const overlay = document.getElementById("visitorOverlay");
     const closeBtn = document.getElementById("closeVisitorPopup");
-    const resetBtn = document.getElementById("resetVisitorBtn");
+    const resetBtn = document.getElementById("resetVisitorBtn"); // Ambil di sini
 
-    if (trigger) trigger.onclick = () => { overlay?.classList.add("show"); renderVisitorStats(); };
-    if (closeBtn) closeBtn.onclick = () => overlay?.classList.remove("show");
-    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("show"); };
+    // 1. Logic Buka Popup
+    if (trigger) {
+        trigger.onclick = () => {
+            overlay?.classList.add("show");
+            renderVisitorStats();
 
-    // --- LOGIC RESET MANUAL (ADMIN ONLY) ---
-    if (resetBtn) {
-        resetBtn.onclick = async () => {
-            const yakin = await showPopup("Yakin ingin mereset data visitor hari ini?", "confirm");
-            if (!yakin) return;
-
-            // [UBAH] Reset semua yang 'visible' menjadi 'hidden'
-            // Tidak peduli jam berapa, pokoknya kosongkan list "Today"
-            const { error } = await supabase
-                .from('visitors')
-                .update({ is_visible: false })
-                .eq('class_id', user.class_id)
-                .eq('is_visible', true); // Hanya reset yang sedang tampil
-
-            if (!error) {
-                await showPopup("Visitor berhasil direset!", "success");
-                renderVisitorStats();
-            } else {
-                await showPopup("Gagal reset data: " + error.message, "error");
+            const canSeeRealtime = user.role === 'super_admin' || user.role === 'class_admin';
+            if (canSeeRealtime && !visitorChannel) {
+                visitorChannel = initVisitorRealtime();
             }
         };
     }
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape" && overlay?.classList.contains("show")) overlay.classList.remove("show");
-    });
+    // 2. Logic Tutup Popup
+    const closeAction = () => {
+        overlay?.classList.remove("show");
+        if (visitorChannel) {
+            visitorChannel.unsubscribe();
+            visitorChannel = null;
+        }
+    };
 
-    renderVisitorStats();
+    if (closeBtn) closeBtn.onclick = closeAction;
+    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeAction(); };
 
+    // 3. LOGIC RESET VISITOR (ADMIN ONLY) - Sekarang di dalam scope
+    if (resetBtn) {
+        resetBtn.onclick = async () => {
+            // Cek role user yang sudah di-define di awal DOMContentLoaded
+            if (user.role !== 'class_admin' && user.role !== 'super_admin') return;
+
+            const yakin = await showPopup("Bersihkan list pengunjung hari ini?", "confirm");
+
+            if (yakin) {
+                resetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
+                try {
+                    const { error } = await supabase
+                        .from('visitors')
+                        .update({ is_visible: false })
+                        .eq('class_id', user.class_id);
+
+                    if (error) throw error;
+
+                    showPopup("List pengunjung telah di-reset!", "success");
+                    renderVisitorStats();
+                } catch (err) {
+                    console.error("Reset Error:", err);
+                    showPopup("Gagal reset data", "error");
+                } finally {
+                    resetBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)';
+                }
+            }
+        };
+    }
+
+    // Jalankan awal
     logVisitor();
     renderVisitorStats();
-
-    // Aktifkan fungsi realtime yang baru dibuat
-    initVisitorRealtime();
 });
 
-// Tambahkan fungsi ini di js/visitor.js
-
+// Fungsi ini tetep di luar gak papa karena dipanggil di dalam scope di atas
 function initVisitorRealtime() {
-    // Pastikan variabel 'user' dan 'supabase' sudah tersedia dari context sebelumnya
     const user = _getVisitorUser();
-    if (!user || typeof supabase === 'undefined') return;
+    if (!user || typeof supabase === 'undefined') return null;
 
-    console.log("📡 Realtime Visitor Aktif...");
-
-    // Berlangganan perubahan pada tabel 'visitors'
-    supabase
+    const channel = supabase
         .channel('visitor_changes')
-        .on(
-            'postgres_changes',
-            {
-                event: '*', // Menyimak semua kejadian (INSERT, UPDATE, DELETE)
-                schema: 'public',
-                table: 'visitors',
-                filter: `class_id=eq.${user.class_id}` // Hanya pantau perubahan di kelas user sendiri
-            },
-            (payload) => {
-                console.log('🔔 Perubahan terdeteksi:', payload);
-                // Panggil fungsi render yang sudah ada di visitor.js untuk update UI
-                renderVisitorStats();
-            }
-        )
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'visitors',
+            filter: `class_id=eq.${user.class_id}`
+        }, () => {
+            renderVisitorStats();
+        })
         .subscribe();
+
+    return channel;
 }

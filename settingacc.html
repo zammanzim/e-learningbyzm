@@ -18,7 +18,7 @@
     let user = getUser();
 
     document.addEventListener("DOMContentLoaded", async () => {
-        if (!user) { window.location.href = "index"; return; }
+        if (!user) { window.location.href = "login"; return; }
         await refreshUserData();
         if (typeof logVisitor === 'function') logVisitor();
         checkAccountSecurity(); // Cek keamanan saat baru buka
