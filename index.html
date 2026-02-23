@@ -62,9 +62,6 @@
 
 <body>
 
-    <div class="sidebar" id="sidebar"></div>
-    <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
     <div class="main-content">
         <div class="minimal-loader">
             <div class="spinner"></div>
@@ -82,13 +79,13 @@
 
                     // Redirect sesuai kondisi login
                     if (session) {
-                        window.location.href = 'announcements.html';
+                        window.location.href = 'announcements';
                     } else {
-                        window.location.href = 'login.html';
+                        window.location.href = 'login';
                     }
                 } catch (e) {
                     // Kalau error/jaringan bapuk, lempar ke login aja
-                    window.location.href = 'login.html';
+                    window.location.href = 'login';
                 }
             }, 1000);
         };

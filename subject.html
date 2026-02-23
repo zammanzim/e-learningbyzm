@@ -52,13 +52,6 @@
                 return;
             }
 
-            // Cek apakah ada datanya di dalam array
-            if (!data || data.length === 0) {
-                console.warn("Data tidak ditemukan di database, menggunakan mode fallback/hardcode.");
-                // Jika tidak ada di DB, kamu bisa jalankan default di sini
-                return;
-            }
-
             // Jika ada banyak (duplikat), ambil yang pertama saja
             const config = data[0];
 

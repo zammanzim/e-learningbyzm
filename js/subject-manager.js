@@ -794,16 +794,19 @@ const SubjectApp = {
     initAdd() {
         const modal = document.getElementById('addModal');
         const btnAdd = document.getElementById('addAnnouncementBtn');
-        if (!modal || !btnAdd) return; // Safety check
+        if (!modal || !btnAdd) return;
+
         const btnSave = document.getElementById('btnSaveAdd');
         const btnCancel = document.getElementById('btnCancelAdd');
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('addFiles');
 
+        // List warna yang tersedia (sesuai data-color di HTML)
+        const availableColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'];
+
         if (!btnAdd) return;
         btnAdd.onclick = (e) => { e.preventDefault(); modal.classList.remove('hidden'); this.tempFiles = []; document.getElementById('previewContainer').innerHTML = ''; };
         if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); this.clearForm(); };
-
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => this.handleNewFiles(e.target.files);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
@@ -847,13 +850,26 @@ const SubjectApp = {
             this.tempFiles = [];
             document.getElementById('previewContainer').innerHTML = '';
 
-            // Tambahkan ini
+            // --- LOGIKA RANDOM COLOR ---
+            // Pilih warna acak dari list
+            const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+            this.state.selectedColor = randomColor;
+
+            // Update UI Pilihan Warna di Modal agar sinkron
+            const colorOpts = document.querySelectorAll('#addColors .color-opt');
+            colorOpts.forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.dataset.color === randomColor) {
+                    opt.classList.add('active');
+                }
+            });
+
+            // Catat history untuk tombol back mobile
             history.pushState({ type: 'overlay', target: 'addModal' }, '');
 
+            // Set otomatis tanggal hari ini di footer modal
             const el = document.getElementById('addSmall');
-            if (el) el.value = new Date().toLocaleDateString('id-ID', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            });
+            if (el) el.value = getTodayIndo();
         };
     },
 
