@@ -18,6 +18,7 @@ async function logVisitor() {
 
     try {
         const currentPage = document.title || "Unknown Page";
+        if (currentPage.toLowerCase().includes("loading")) return;
         const now = new Date();
 
         // Cari data user ini (kapanpun terakhir dia masuk)
@@ -70,35 +71,40 @@ async function renderVisitorStats() {
     if (!user) return;
 
     try {
-        // Hitung Total (Semua User Unik di Kelas Ini)
-        const { data: totalData } = await supabase.from('visitors')
-            .select('user_id')
+        // OPTIMASI: Minta database hitung total unik, jangan tarik semua baris!
+        const { count: totalCount, error: errTotal } = await supabase
+            .from('visitors')
+            .select('user_id', { count: 'exact', head: true })
             .eq('class_id', user.class_id);
 
-        // Hitung "Hari Ini" (Hanya yang is_visible: true)
-        // [UBAH] Tidak ada lagi filter .gte('visited_at', ...)
-        const { data: todayData, error: errToday } = await supabase.from('visitors')
+        // Ambil data pengunjung yang aktif (is_visible)
+        const { data: todayData, error: errToday } = await supabase
+            .from('visitors')
             .select('user_id, visited_at, last_page, user:users (full_name, avatar_url, nickname)')
             .eq('class_id', user.class_id)
-            .eq('is_visible', true) // Kuncinya disini: Hanya yang visible
+            .eq('is_visible', true)
             .order('visited_at', { ascending: false });
 
-        if (errToday) console.error("Stats Render Error:", errToday);
-        if (!totalData || !todayData) return;
+        if (errToday || errTotal) {
+            console.error("Stats Render Error:", errToday || errTotal);
+            return;
+        }
 
-        const uniqueTotal = new Set(totalData.map(v => v.user_id)).size;
+        // Deduplikasi user di sisi client (tetap diperlukan agar list rapi)
         const uniqueTodayMap = new Map();
-
-        // Filter duplikasi user di sisi client (jaga-jaga)
         todayData.forEach(v => {
             if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v);
         });
 
-        // Update UI Elements
-        if (document.getElementById("headerVisitorCount")) document.getElementById("headerVisitorCount").innerText = uniqueTodayMap.size;
-        if (document.getElementById("popupToday")) document.getElementById("popupToday").innerText = uniqueTodayMap.size;
-        if (document.getElementById("popupTotal")) document.getElementById("popupTotal").innerText = uniqueTotal;
+        // Update UI Berdasarkan ID yang ada di HTML kamu
+        if (document.getElementById("headerVisitorCount"))
+            document.getElementById("headerVisitorCount").innerText = uniqueTodayMap.size;
+        if (document.getElementById("popupToday"))
+            document.getElementById("popupToday").innerText = uniqueTodayMap.size;
+        if (document.getElementById("popupTotal"))
+            document.getElementById("popupTotal").innerText = totalCount || 0;
 
+        // Render List Pengunjung ke Modal
         const listEl = document.getElementById("visitorList");
         if (listEl) {
             listEl.innerHTML = uniqueTodayMap.size === 0 ? '<p style="color:#aaa; font-size:12px;">Belum ada yang mampir.</p>' : '';
@@ -118,6 +124,7 @@ async function renderVisitorStats() {
             });
         }
 
+        // Tampilkan tombol reset hanya untuk admin
         const adminActions = document.querySelector(".admin-actions");
         if (adminActions) adminActions.style.display = (user.role === 'class_admin' || user.role === 'super_admin') ? 'block' : 'none';
 
