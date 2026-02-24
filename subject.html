@@ -45,7 +45,8 @@
             const { data, error } = await supabase
                 .from('subjects_config')
                 .select('*')
-                .eq('subject_id', subjectId); // Hapus .single() di sini dulu untuk tes
+                .eq('subject_id', subjectId)
+                .limit(1)
 
             if (error) {
                 console.error("Supabase Error:", error.message);

@@ -84,20 +84,33 @@ function processAndRenderSidebar(allConfigs, user) {
     const rootPrefix = isInAdminFolder ? '../' : '';
     const adminPrefix = isInAdminFolder ? '' : 'admiii/';
 
-    // 1. Filter Grup (Admin, Main, Lessons)
+    // 1. Filter Grup Berdasarkan menu_group dari Database
+    const systemItems = allConfigs.filter(m => m.menu_group === 'system');
     const adminItems = allConfigs.filter(m => m.menu_group === 'admin');
     const mainItems = allConfigs.filter(m => m.menu_group === 'main');
     const lessonItems = allConfigs.filter(m => m.menu_group === 'lessons');
 
     let menuGroups = [];
 
+    // --- GRUP 1: SYSTEM MENU (Hanya untuk Super Admin) ---
+    if (role === 'super_admin' && systemItems.length > 0) {
+        menuGroups.push({
+            header: "System Menu",
+            color: "#00eaff", // Warna khusus biru neon
+            items: systemItems.map(m => ({ ...m, url: adminPrefix + m.subject_id }))
+        });
+    }
+
+    // --- GRUP 2: ADMIN PANEL (Untuk Super Admin & Class Admin) ---
     if ((role === 'class_admin' || role === 'super_admin') && adminItems.length > 0) {
         menuGroups.push({
-            header: "Admin Panel", color: "#ffd700",
+            header: "Admin Panel",
+            color: "#ffd700", // Warna emas
             items: adminItems.map(m => ({ ...m, url: adminPrefix + m.subject_id }))
         });
     }
 
+    // --- GRUP 3: MAIN MENU (Untuk Semua User) ---
     if (mainItems.length > 0) {
         menuGroups.push({
             header: "Main Menu",
@@ -105,6 +118,7 @@ function processAndRenderSidebar(allConfigs, user) {
         });
     }
 
+    // --- GRUP 4: LESSONS (Untuk Semua User) ---
     if (lessonItems.length > 0) {
         menuGroups.push({
             header: "Lessons",
@@ -112,19 +126,7 @@ function processAndRenderSidebar(allConfigs, user) {
         });
     }
 
-    // Menu Manager khusus Super Admin
-    if (role === 'super_admin') {
-        const mgr = { subject_name: "Menu Manager", url: adminPrefix + "menu", icon: "fa-solid fa-gears", badge: "SYSTEM", badge_type: "badge-hot" };
-        const adminGrp = menuGroups.find(g => g.header === "Admin Panel");
-        if (adminGrp) adminGrp.items.push(mgr);
-        else menuGroups.unshift({ header: "System", items: [mgr] });
-    }
-
-    // 2. Update Titik Merah Hamburger
-    const hasNew = allConfigs.some(m => m.badge?.toUpperCase() === 'NEW');
-    document.getElementById('hamburger')?.classList.toggle('has-notif', hasNew);
-
-    // 3. GENERATE HTML
+    // 2. Generate HTML (Logika Render Tetap Sama)
     const currentPath = window.location.pathname.toLowerCase();
     const currentId = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
 
@@ -137,18 +139,16 @@ function processAndRenderSidebar(allConfigs, user) {
             const itemUrl = item.url.toLowerCase();
             let isActive = "";
 
-            // Logic Active Menu
+            // Logic Active Menu: Cek ID di URL atau akhiran Path
             if (itemUrl.includes('id=')) {
                 if (currentId === itemUrl.split('id=')[1]) isActive = "active";
             } else {
                 if (currentPath.endsWith(itemUrl.split('/').pop())) isActive = "active";
             }
 
-            // --- LOGIC FIX ICON ---
             let iconClass = item.icon || "fa-solid fa-book";
-            // Jika di DB lupa kasih 'fa-solid', kita tambahin otomatis
             if (iconClass && !iconClass.includes(" ")) {
-                iconClass = `fa-solid ${iconClass}`;
+                iconClass = `fa-solid ${iconClass}`; // Fix icon otomatis
             }
 
             const badgeHtml = item.badge ? `<span class="sidebar-badge ${item.badge_type || 'badge-new'}">${item.badge}</span>` : "";

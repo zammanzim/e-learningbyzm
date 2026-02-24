@@ -194,7 +194,7 @@ async function initDailyCard() {
 
         let timelineHTML = '';
         if (scheduleData.lessons) {
-            scheduleData.lessons.split(/,|\n/).map(i => i.trim()).filter(i => i.length > 1).forEach((item, idx) => {
+            scheduleData.lessons.split(/;|\n/).map(i => i.trim()).filter(i => i.length > 1).forEach((item, idx) => {
                 let [time, subject] = item.includes('-') ? item.split('-') : ["", item];
                 timelineHTML += `<div class="tl-item-final animate-slide-right" style="animation-delay:${idx * 0.05}s"><div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div><div class="tl-time-final editable-text" data-type="time" oninput="autoSaveDraft()">${time.trim()}</div><div class="tl-marker-final"></div><div class="tl-subject-final editable-text" data-type="subject" oninput="autoSaveDraft()">${subject.trim()}</div></div>`;
             });
@@ -202,7 +202,7 @@ async function initDailyCard() {
 
         let picketHTML = '';
         if (scheduleData.picket) {
-            scheduleData.picket.split(/,|\n/).map(n => n.trim()).filter(n => n.length > 0).forEach((n, i) => {
+            scheduleData.picket.split(/;|\n/).map(n => n.trim()).filter(n => n.length > 0).forEach((n, i) => {
                 picketHTML += `<div class="picket-pill animate-pop-up" style="animation-delay:${0.2 + (i * 0.05)}s"><div class="btn-del-inline" onclick="deleteItem(this)"><i class="fa-solid fa-xmark"></i></div><span class="editable-text" data-type="picket" oninput="autoSaveDraft()">${n}</span></div>`;
             });
         }
@@ -270,7 +270,15 @@ window.saveToDraft = function (day) {
     });
     let picketArr = [];
     document.querySelectorAll('.picket-pill span').forEach(el => { if (el.innerText.trim()) picketArr.push(el.innerText.trim()); });
-    window.dailyDrafts[day] = { day_name: day, class_id: user.class_id, uniform: document.querySelector('[data-type="uniform"]')?.innerText.trim() || "-", activity: document.querySelector('[data-type="activity"]')?.innerText.trim() || "-", notes: document.querySelector('[data-type="notes"]')?.innerText.trim() || "-", lessons: lessonArr.join(', '), picket: picketArr.join(', ') };
+    window.dailyDrafts[day] = {
+        day_name: day,
+        class_id: user.class_id,
+        uniform: document.querySelector('[data-type="uniform"]')?.innerText.trim() || "-",
+        activity: document.querySelector('[data-type="activity"]')?.innerText.trim() || "-",
+        notes: document.querySelector('[data-type="notes"]')?.innerText.trim() || "-",
+        lessons: lessonArr.join('; '),
+        picket: picketArr.join('; ')
+    };
 }
 
 window.toggleDailyEditMode = function () {
