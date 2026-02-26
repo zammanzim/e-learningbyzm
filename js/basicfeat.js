@@ -445,3 +445,25 @@ document.addEventListener('click', async (e) => {
         if (box) box.style.display = 'none';
     }
 });
+
+// ===== PWA INSTALL UI =====
+
+// tampilkan tombol saat ready
+window.addEventListener('pwa-ready', () => {
+    const box = document.getElementById('installBox');
+    if (box) box.style.display = 'block';
+});
+
+// klik tombol → install
+document.addEventListener('click', async (e) => {
+    if (e.target && e.target.id === 'installBtn') {
+        if (!window.__pwaPrompt) return;
+
+        window.__pwaPrompt.prompt();
+        await window.__pwaPrompt.userChoice;
+        window.__pwaPrompt = null;
+
+        const box = document.getElementById('installBox');
+        if (box) box.style.display = 'none';
+    }
+});
