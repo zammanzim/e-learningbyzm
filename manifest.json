@@ -1,6 +1,6 @@
 {
-    "name": "PWA Test Zam",
-    "short_name": "PWAZam",
+    "name": "e-Learningzm",
+    "short_name": "elearning",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#0f172a",
