@@ -86,6 +86,7 @@ async function loadClassMenus() {
         const main = data.filter(i => i.menu_group === 'main');
         const lesson = data.filter(i => i.menu_group === 'lessons');
         const adminItems = data.filter(i => i.menu_group === 'admin');
+        const systemItems = data.filter(i => i.menu_group === 'system');
 
         // Fungsi pembantu agar tidak pakai innerHTML +=
         const renderHeader = (text, color) => {
@@ -94,6 +95,11 @@ async function loadClassMenus() {
             h3.innerText = text;
             container.appendChild(h3);
         };
+
+        if (systemItems.length > 0) {
+            renderHeader("SYSTEM MENU (GLOBAL)", "#00eaff");
+            systemItems.forEach(i => container.appendChild(createMenuItemElement(i)));
+        }
 
         if (adminItems.length > 0) {
             renderHeader("ADMIN PANEL", "#ff4757");
@@ -245,4 +251,71 @@ async function deleteMenu(id) {
             loadClassMenus();
         }
     }
+}
+
+// 1. Koleksi Ikon yang lebih lengkap
+const ICON_LIBRARY = [
+    'fa-book', 'fa-book-open', 'fa-calculator', 'fa-language', 'fa-flask', 'fa-palette',
+    'fa-microscope', 'fa-earth-americas', 'fa-dna', 'fa-laptop-code', 'fa-music', 'fa-medal',
+    'fa-bullhorn', 'fa-clipboard-list', 'fa-calendar-days', 'fa-message', 'fa-comments',
+    'fa-gears', 'fa-user-shield', 'fa-users-gear', 'fa-user-group', 'fa-shield-halved',
+    'fa-house', 'fa-folder-open', 'fa-link', 'fa-circle-question', 'fa-star', 'fa-fire',
+    'fa-graduation-cap', 'fa-vial', 'fa-brain', 'fa-atom', 'fa-shapes', 'fa-pen-nib', 'fa-list-check', 'fa-user-gear', 'fa-search'
+];
+
+// 2. Fungsi buka Modal
+// 2. Fungsi buka Modal (Lebih Galak)
+function openIconPicker() {
+    const modal = document.getElementById('iconPickerModal');
+    if (!modal) return console.error("Modal tidak ditemukan!");
+
+    // Tambah class 'show' biar sinkron sama CSS template
+    modal.classList.add('show'); 
+    
+    // Paksa muncul pakai inline style buat overwrite CSS yang bandel
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+
+    document.getElementById('searchIconInput').value = ''; // Reset search
+    renderIconGrid(ICON_LIBRARY);
+    
+    console.log("Icon Picker Opened!"); // Cek di console buat mastiin fungsi jalan
+}
+
+function closeIconPicker() {
+    const modal = document.getElementById('iconPickerModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+}
+
+// 3. Fungsi Render Grid Ikon (Bisa buat filter juga)
+function renderIconGrid(list) {
+    const grid = document.getElementById('iconGrid');
+    grid.innerHTML = '';
+
+    list.forEach(icon => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-glass-icon-select';
+        btn.style.cssText = "background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:8px; color:white; cursor:pointer; font-size:20px; transition:0.3s;";
+        btn.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+
+        btn.onclick = () => {
+            document.getElementById('mIcon').value = icon; // Masuk ke input hidden
+            document.getElementById('iconPreview').innerHTML = `<i class="fa-solid ${icon}"></i>`; // Update preview
+            closeIconPicker();
+        };
+
+        btn.onmouseover = () => btn.style.background = 'rgba(0, 234, 255, 0.2)';
+        btn.onmouseout = () => btn.style.background = 'rgba(255,255,255,0.05)';
+        grid.appendChild(btn);
+    });
+}
+
+// 4. Fungsi Search Ikon (Biar gak pusing nyari)
+function filterIcons(query) {
+    const filtered = ICON_LIBRARY.filter(icon =>
+        icon.toLowerCase().includes(query.toLowerCase())
+    );
+    renderIconGrid(filtered);
 }

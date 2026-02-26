@@ -97,6 +97,26 @@
                 width: 100%;
             }
         }
+
+        #iconPreview {
+            display: inline-flex;
+            width: 45px;
+            height: 45px;
+            background: rgba(0, 234, 255, 0.1);
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #00eaff;
+            cursor: pointer;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            transition: 0.3s;
+        }
+
+        #iconPreview:hover {
+            background: rgba(0, 234, 255, 0.2);
+            transform: scale(1.05);
+            border-color: #00eaff;
+        }
     </style>
 </head>
 
@@ -134,7 +154,8 @@
                         <select id="mGroup" class="glass-input" onchange="autoCalculateOrder()">
                             <option value="lessons">Lessons (Materi)</option>
                             <option value="main">Main Menu (Navigasi)</option>
-                            <option value="admin">Admin Panel (Khusus Admin)</option>
+                            <option value="admin">Admin Panel (Kelas)</option>
+                            <option value="system">System Menu (Super Admin)</option>
                         </select>
                     </div>
                 </div>
@@ -151,11 +172,14 @@
                 </div>
 
                 <div class="form-group" style="margin-top:12px">
-                    <label>Icon (FontAwesome)</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="mIcon" class="glass-input" placeholder="fa-book"
-                            oninput="previewIcon(this.value)">
-                        <div id="iconPreview"><i class="fa-solid fa-book"></i></div>
+                    <label>Icon (Klik Kotak Biru untuk Pilih)</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="mIcon" class="glass-input" placeholder="fa-book" readonly
+                            style="cursor: default; opacity: 0.8;">
+
+                        <div id="iconPreview" onclick="openIconPicker()" title="Klik untuk pilih ikon">
+                            <i class="fa-solid fa-book"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -193,6 +217,25 @@
             <h3 style="color: #00eaff; margin-bottom: 20px;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</h3>
             <div id="menuListContainer">
                 <p style="text-align: center; color: #888; padding: 40px;">Memuat data...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="iconPickerModal" class="sidebar-overlay"
+        style="display:none; align-items:center; justify-content:center; z-index: 9999; background: rgba(0,0,0,0.8);">
+        <div class="admin-box"
+            style="width: 90%; max-width: 500px; background: #1a1a1a; max-height: 80vh; overflow-y: auto; border: 1px solid #00eaff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="color:#00eaff; margin:0;"><i class="fa-solid fa-icons"></i> Pilih Ikon</h3>
+                <button onclick="closeIconPicker()" class="btn-action"
+                    style="font-size:24px; color: #ff4757;">&times;</button>
+            </div>
+
+            <input type="text" id="searchIconInput" class="glass-input" placeholder="Cari ikon... (misal: book, gear)"
+                oninput="filterIcons(this.value)" style="margin-bottom:15px; width: 100%;">
+
+            <div id="iconGrid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px;">
             </div>
         </div>
     </div>

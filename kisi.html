@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisi-Kisi PTS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/kisi.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* CSS khusus countdown tag */
+        .countdown-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-file-shield"></i> Kisi-Kisi PTS</h1>
+                <p style="color: #aaa; font-size: 13px;">Warna otomatis berdasarkan jadwal ujian.</p>
+            </div>
+            <div id="kisiContainer" class="announcements">
+            </div>
+        </div>
+        <div class="right-section">
+            <div id="adminControls"></div>
+        </div>
+    </div>
+</body>
+
+</html>

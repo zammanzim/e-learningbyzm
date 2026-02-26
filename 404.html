@@ -6,48 +6,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Error</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-clients.js" defer></script>
-  <script src="js/ui-components.js" defer></script>
-  <script src="js/basicfeat.js" defer></script>
-  <script src="js/auth.js" defer></script>
-  <script src="js/visitor.js" defer></script>
-  <script src="js/subject-manager.js" defer></script>
-  <link rel="stylesheet" href="css/styleasli.css">
+  <script src="../js/supabase-clients.js" defer></script>
+  <script src="../js/ui-components.js" defer></script>
+  <script src="../js/basicfeat.js" defer></script>
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/visitor.js" defer></script>
+  <script src="../js/subject-manager.js" defer></script>
+  <link rel="stylesheet" href="../css/styleasli.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="icon" href="icons/announcements.png" type="image/png">
 </head>
 
-<body>
+<body style="overflow: hidden; display: flex; justify-content: center; align-items: center;">
 
   <div class="sidebar" id="sidebar"></div>
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-  <div class="main-content" style="min-height:100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;"
-            >
 
-    <div class="course-card animate-pop-up" style="text-align:center">
+  <div class="course-card animate-pop-up" style="text-align:center">
 
-      <i class="fa-solid fa-circle-exclamation uni-icon error" style="font-size:72px; margin-bottom:15px;"></i>
+    <i class="fa-solid fa-circle-exclamation uni-icon error" style="font-size:72px; margin-bottom:15px;"></i>
 
-      <h2 style="margin-bottom:8px;">404 — Halaman Tidak Ditemukan</h2>
+    <h2 style="margin-bottom:8px;">404 — Halaman Tidak Ditemukan</h2>
 
-      <p style="opacity:.85; line-height:1.6;">
-        Mungkin halaman belum selesai dibuat,<br>
-        atau bisa jadi link salah.
-      </p>
+    <p style="opacity:.85; line-height:1.6;">
+      Mungkin halaman belum selesai dibuat,<br>
+      atau bisa jadi link salah.
+    </p>
 
-      <div style="margin-top:25px; display:flex; justify-content:center; gap:12px;">
-        <a href="announcements" class="uni-btn" style="text-decoration: none;">
-          <i class="fa-solid fa-house"></i> Beranda
-        </a>
-        <button class="uni-btn-cancel" onclick="history.back()">
-          <i class="fa-solid fa-arrow-left"></i> Kembali
-        </button>
-      </div>
-
+    <div style="margin-top:25px; display:flex; justify-content:center; gap:12px;">
+      <a href="announcements" class="uni-btn" style="text-decoration: none;">
+        <i class="fa-solid fa-house"></i> Beranda
+      </a>
+      <button class="uni-btn-cancel" onclick="history.back()">
+        <i class="fa-solid fa-arrow-left"></i> Kembali
+      </button>
     </div>
 
   </div>
