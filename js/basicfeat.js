@@ -413,3 +413,35 @@ document.getElementById('visitorTrigger')?.addEventListener('click', () => {
 document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
     if (document.getElementById('visitorOverlay').classList.contains('active')) history.back();
 });
+
+// ===== PWA SW REGISTER =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .catch(() => { });
+    });
+}
+
+// ===== PWA INSTALL HANDLER =====
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    const box = document.getElementById('installBox');
+    if (box) box.style.display = 'block';
+});
+
+document.addEventListener('click', async (e) => {
+    if (e.target.id === 'installBtn') {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+
+        const box = document.getElementById('installBox');
+        if (box) box.style.display = 'none';
+    }
+});
