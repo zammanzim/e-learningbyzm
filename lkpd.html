@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKPD Bab ...</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/subject-manager.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1 id="lkpdTitle">LKPD BAB ...</h1>
+            </div>
+            
+            <div id="groupInfoCard" class="daily-card-final" style="margin-top: 20px; padding: 20px;">
+                <div class="final-badge bg-cyan">PENGERJA BAB INI</div>
+                <h2 id="assignedGroupName" class="final-day" style="font-size: 24px; margin-top: 10px;">Memuat...</h2>
+                <div id="memberList" class="picket-grid-big" style="margin-top: 15px;">
+                    </div>
+                <div id="accessStatus" style="margin-top: 20px; font-size: 13px; color: #aaa;">
+                    <i class="fa-solid fa-circle-info"></i> Mengecek hak akses...
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div id="galleryTop"></div> <div id="announcements"></div> <div id="editControls"></div>
+        </div>
+    </div>
+
+    <script src="js/lkpd-manager.js" defer></script>
+</body>
+</html>

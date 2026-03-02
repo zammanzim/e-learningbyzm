@@ -39,7 +39,10 @@ async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    const user = JSON.parse(localStorage.getItem("user"));
+    let user;
+    try {
+        user = JSON.parse(localStorage.getItem("user"));
+    } catch (e) { return; }
     if (!user) return;
 
     const CLASS_ID = String(user.class_id);
@@ -63,12 +66,11 @@ async function renderSidebar() {
 
         if (error) throw error;
 
-        // 3. Bandingkan data. Jika beda / cache kosong, update & simpan
+        // Bandingkan data. Jika beda / cache kosong, update & simpan
         const freshDataString = JSON.stringify(freshData);
         if (freshDataString !== cachedData) {
             localStorage.setItem(CACHE_KEY, freshDataString);
             processAndRenderSidebar(freshData, user);
-            console.log("Sidebar: Data refreshed from server.");
         }
     } catch (err) {
         console.error("Fetch Sidebar Error:", err);
@@ -221,31 +223,6 @@ function goProfile() { window.location.href = "settingacc"; }
 // ==========================================
 // 5. UNIVERSAL POPUP SYSTEM
 // ==========================================
-function showPopup(msg, type = 'info') {
-    let overlay = document.getElementById('uniOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'uniOverlay';
-        overlay.className = 'uni-overlay';
-        overlay.innerHTML = `
-            <div class="uni-box">
-                <div id="uniIcon" class="uni-icon"></div>
-                <p id="uniMsg" class="uni-msg"></p>
-                <button class="uni-btn" onclick="closePopup()">OK</button>
-            </div>`;
-        document.body.appendChild(overlay);
-        overlay.onclick = (e) => { if (e.target === overlay) closePopup(); }
-    }
-    const iconEl = document.getElementById('uniIcon');
-    const msgEl = document.getElementById('uniMsg');
-    msgEl.innerText = msg;
-    iconEl.className = 'uni-icon ' + type;
-    iconEl.innerHTML = type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' :
-        type === 'error' ? '<i class="fa-solid fa-circle-xmark"></i>' :
-            '<i class="fa-solid fa-circle-info"></i>';
-    setTimeout(() => overlay.classList.add('active'), 10);
-}
-
 window.showPopup = function (msg, type = 'info') {
     return new Promise((resolve) => {
         // 1. Bersihkan popup lama jika ada
@@ -414,56 +391,28 @@ document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
     if (document.getElementById('visitorOverlay').classList.contains('active')) history.back();
 });
 
-// ===== PWA SW REGISTER =====
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .catch(() => { });
-    });
-}
-
 // ===== PWA INSTALL HANDLER =====
-let deferredPrompt = null;
-
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    deferredPrompt = e;
+    window.__pwaPrompt = e;
 
     const box = document.getElementById('installBox');
     if (box) box.style.display = 'block';
 });
 
-document.addEventListener('click', async (e) => {
-    if (e.target.id === 'installBtn') {
-        if (!deferredPrompt) return;
-
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-
-        const box = document.getElementById('installBox');
-        if (box) box.style.display = 'none';
-    }
-});
-
-// ===== PWA INSTALL UI =====
-
-// tampilkan tombol saat ready
 window.addEventListener('pwa-ready', () => {
     const box = document.getElementById('installBox');
     if (box) box.style.display = 'block';
 });
 
-// klik tombol → install
 document.addEventListener('click', async (e) => {
-    if (e.target && e.target.id === 'installBtn') {
-        if (!window.__pwaPrompt) return;
+    if (e.target?.id !== 'installBtn') return;
+    if (!window.__pwaPrompt) return;
 
-        window.__pwaPrompt.prompt();
-        await window.__pwaPrompt.userChoice;
-        window.__pwaPrompt = null;
+    window.__pwaPrompt.prompt();
+    await window.__pwaPrompt.userChoice;
+    window.__pwaPrompt = null;
 
-        const box = document.getElementById('installBox');
-        if (box) box.style.display = 'none';
-    }
+    const box = document.getElementById('installBox');
+    if (box) box.style.display = 'none';
 });

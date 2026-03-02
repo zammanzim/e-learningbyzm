@@ -11,8 +11,18 @@ function normalize(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
+// ===== PWA SW REGISTER =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { });
+    });
+}
+
 async function initTugas() {
-    const user = JSON.parse(localStorage.getItem("user"));
+    let user;
+    try {
+        user = JSON.parse(localStorage.getItem("user"));
+    } catch (e) { user = null; }
     if (!user) { window.location.href = 'index'; return; }
 
     // Set Profil di Card
@@ -49,25 +59,20 @@ async function initTugas() {
         }
 
         // 3. Ambil Tugas: Urutkan Terbaru di Atas (created_at DESC)
-        const { data: tasks, error: err1 } = await supabase
-            .from('subject_announcements')
-            .select('*')
-            .eq('class_id', user.class_id)
-            .neq('subject_id', 'announcements')
-            .neq('subject_id', 'akuhutajakus')
-            .order('created_at', { ascending: false });
+        const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
+            supabase.from('subject_announcements')
+                .select('*')
+                .eq('class_id', user.class_id)
+                .neq('subject_id', 'announcements')
+                .neq('subject_id', 'akuhutajakus')
+                .order('created_at', { ascending: false }),
 
-        const { data: progress, error: err2 } = await supabase
-            .from('user_progress')
-            .select('announcement_id')
-            .eq('user_id', user.id);
+            supabase.from('user_progress')
+                .select('announcement_id')
+                .eq('user_id', user.id)
+        ]);
 
         if (err1 || err2) throw (err1 || err2);
-
-        if (typeof SubjectApp !== 'undefined') {
-            SubjectApp.setupShortcuts();
-            SubjectApp.setupEventListeners();
-        }
 
         allTasks = tasks || [];
 
@@ -206,7 +211,12 @@ function renderTasks(data) {
 
 async function toggleStatus(e, id, btn) {
     e.stopPropagation();
-    const user = JSON.parse(localStorage.getItem("user"));
+    let user;
+    try {
+        user = JSON.parse(localStorage.getItem("user"));
+    } catch (err) { return; }
+    if (!user) return;
+
     const isDone = btn.classList.contains('done');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 

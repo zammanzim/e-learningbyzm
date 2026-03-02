@@ -37,7 +37,6 @@ async function autoFetchUser() {
 
     // Kalau baru aja sinkron kurang dari 1 jam yang lalu, gausah narik data lagi
     if (lastSync && (now - parseInt(lastSync) < oneHour)) {
-        console.log("⚡ Skip sync: Data user masih fresh (kurang dari 1 jam).");
         return oldUser;
     }
 

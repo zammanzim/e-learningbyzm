@@ -27,7 +27,6 @@ const SubjectApp = {
             return;
         }
 
-        console.log("✅ Subject loaded:", subjectName);
 
         this.updatePageTitle();
         this.updateWelcomeText();
@@ -39,9 +38,14 @@ const SubjectApp = {
     },
 
     getUserData() {
-        if (typeof getUser === 'function') return getUser();
-        const userData = localStorage.getItem("user");
-        return userData ? JSON.parse(userData) : null;
+        try {
+            if (typeof getUser === 'function') return getUser();
+            const userData = localStorage.getItem("user");
+            return userData ? JSON.parse(userData) : null;
+        } catch (e) {
+            console.error("Failed to parse user data:", e);
+            return null;
+        }
     },
 
     // Update baris 44
@@ -75,9 +79,6 @@ const SubjectApp = {
         }
     },
 
-    // ==========================================
-    // [UPDATE] EVENT LISTENERS (Background Click)
-    // ==========================================
     setupEventListeners() {
         const self = this;
 
@@ -85,48 +86,55 @@ const SubjectApp = {
         const detailOverlay = document.getElementById('detailOverlay');
         if (detailOverlay) {
             detailOverlay.onclick = (e) => {
-                // Pastikan yang diklik bener-bener overlay hitamnya
                 if (e.target === detailOverlay) {
                     const info = document.getElementById('detailInfoSection');
                     const isMobile = window.innerWidth <= 768;
-
                     if (isMobile && info && !info.classList.contains('hidden-mobile')) {
-                        // Jika sheet lagi muncul (setengah/full), turunin dulu ke bawah
                         toggleMobileInfo();
                     } else {
-                        // Jika sudah di bawah atau di desktop, baru tutup total
                         closeDetail();
                     }
                 }
             };
         }
 
-        // 2. Handle Klik Area Gambar/Media
+        // Handle Klik Area Gambar/Media
         const mediaSection = document.querySelector('.detail-media-section');
         if (mediaSection) {
             mediaSection.onclick = () => {
                 const info = document.getElementById('detailInfoSection');
                 const isMobile = window.innerWidth <= 768;
-
-                // Jika di mobile dan deskripsi lagi naik (setengah/full), klik gambar bakal nurunin deskripsi
                 if (isMobile && info && !info.classList.contains('hidden-mobile')) {
                     toggleMobileInfo();
                 }
             };
         }
 
-        // 2. [BARU] Tutup Modal Tambah Materi saat klik background gelap
+        // Tutup Modal Tambah Materi saat klik background gelap
         const addModal = document.getElementById('addModal');
         if (addModal) {
             addModal.onclick = (e) => {
                 if (e.target === addModal) {
                     addModal.classList.add('hidden');
-                    self.clearForm(); // Opsional: Reset form
+                    self.clearForm();
                 }
             };
         }
 
-        // 3. Global Click Handler
+        // FIX: Scroll listener dipasang SEKALI di sini, bukan di dalam click handler
+        const scrollContent = document.querySelector('.info-content-scroll');
+        if (scrollContent) {
+            scrollContent.addEventListener('scroll', () => {
+                const info = document.getElementById('detailInfoSection');
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile && info && !info.classList.contains('full-screen') && !info.classList.contains('hidden-mobile')) {
+                    const isAtBottom = scrollContent.scrollTop + scrollContent.clientHeight >= scrollContent.scrollHeight - 5;
+                    if (isAtBottom) toggleSheetHeight();
+                }
+            });
+        }
+
+        // Global Click Handler
         document.addEventListener("click", function (e) {
             // Handle Klik Kartu
             const card = e.target.closest(".course-card");
@@ -136,7 +144,7 @@ const SubjectApp = {
                     e.target.closest("button") ||
                     e.target.closest("input") ||
                     e.target.closest(".delete-photo-btn") ||
-                    e.target.closest(".drag-handle");
+                    e.target.closest(".reorder-handle");
 
                 if (!isInteractive) {
                     const id = card.dataset.id;
@@ -151,7 +159,6 @@ const SubjectApp = {
             // Handle Card Actions
             if (e.target.closest(".delete-btn")) { e.preventDefault(); self.deleteAnnouncement(e.target.closest(".course-card")); }
             if (e.target.closest(".bookmark-btn")) { e.preventDefault(); self.toggleBookmark(e.target.closest(".course-card")); }
-            // Ganti class ke .card-photo-placeholder karena class .upload-photo-btn nggak ada di template
             if (e.target.closest(".card-photo-placeholder")) { e.preventDefault(); self.triggerPhotoUpload(e.target.closest(".course-card")); }
             if (e.target.closest(".delete-photo-btn")) { e.preventDefault(); self.deletePhoto(e.target.closest(".course-card")); }
 
@@ -160,24 +167,6 @@ const SubjectApp = {
             if (taskBtn) {
                 e.preventDefault(); e.stopPropagation();
                 self.toggleTaskStatus(taskBtn.closest(".course-card"), taskBtn);
-            }
-
-            const scrollContent = document.querySelector('.info-content-scroll');
-            if (scrollContent) {
-                scrollContent.addEventListener('scroll', () => {
-                    const info = document.getElementById('detailInfoSection');
-                    const isMobile = window.innerWidth <= 768;
-
-                    // Hanya jalan di mobile, pas posisi setengah (bukan full), dan gak lagi hidden
-                    if (isMobile && info && !info.classList.contains('full-screen') && !info.classList.contains('hidden-mobile')) {
-                        // Cek jika scroll sudah sampai ujung bawah (toleransi 5px)
-                        const isAtBottom = scrollContent.scrollTop + scrollContent.clientHeight >= scrollContent.scrollHeight - 5;
-
-                        if (isAtBottom) {
-                            toggleSheetHeight(); // Panggil fungsi yang udah kita buat tadi buat naikin sheet
-                        }
-                    }
-                });
             }
         });
     },
@@ -263,11 +252,15 @@ const SubjectApp = {
             }
 
             if (this.state.isLessonMode) {
-                const { data: prog } = await supabase.from("user_progress").select("announcement_id").eq("user_id", this.state.user.id);
-                if (prog) this.state.completedTasks = prog.map(p => String(p.announcement_id));
+                // FIX: Jalankan progress + bookmarks bersamaan, bukan sekuensial
+                const [progressRes] = await Promise.all([
+                    supabase.from("user_progress").select("announcement_id").eq("user_id", this.state.user.id),
+                    this.loadBookmarks()
+                ]);
+                if (progressRes.data) this.state.completedTasks = progressRes.data.map(p => String(p.announcement_id));
+            } else {
+                await this.loadBookmarks();
             }
-
-            await this.loadBookmarks();
             this.renderAnnouncements();
 
         } catch (err) {
@@ -360,8 +353,13 @@ const SubjectApp = {
 
         card.innerHTML = `
         <input type="file" class="photo-input" accept="image/*" style="display:none;">
-        <div class="drag-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; cursor:grab; padding: 10px; color: #00eaff; background: rgba(0,0,0,0.5); border-radius: 8px; touch-action: none; user-select: none;">
-            <i class="fa-solid fa-grip-vertical" style="font-size: 18px; pointer-events: none;"></i>
+        <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; display:none; flex-direction:column; gap:4px;">
+            <button class="move-up-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'up')" style="background:rgba(0,234,255,0.15); border:1px solid rgba(0,234,255,0.3); color:#00eaff; width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-chevron-up" style="pointer-events:none;"></i>
+            </button>
+            <button class="move-down-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'down')" style="background:rgba(0,234,255,0.15); border:1px solid rgba(0,234,255,0.3); color:#00eaff; width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-chevron-down" style="pointer-events:none;"></i>
+            </button>
         </div>
         <button class="${btnClass}"><i class="${iconClass}"></i></button>
         ${photoHTML}
@@ -440,7 +438,7 @@ const SubjectApp = {
             const fields = card.querySelectorAll(".editable");
             const deleteBtn = card.querySelector(".delete-btn");
             const colorTools = card.querySelector(".card-color-tools");
-            const dragHandle = card.querySelector(".drag-handle");
+            const reorderHandle = card.querySelector(".reorder-handle");
             const placeholder = card.querySelector(".card-photo-placeholder");
             const deletePhotoBtn = card.querySelector(".delete-photo-btn");
 
@@ -452,26 +450,17 @@ const SubjectApp = {
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
-
-                // --- BAGIAN KRUSIAL: AKTIFKAN DRAG ---
-                if (dragHandle) {
-                    dragHandle.style.display = "block";
-                    this.setupDragEvents(card, dragHandle); // Panggil fungsi drag di sini!
-                }
-
+                if (reorderHandle) reorderHandle.style.display = "flex";
                 if (placeholder) placeholder.style.display = "block";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
             } else {
-                // ... (logika else tetap sama untuk sembunyikan kontrol)
                 card.classList.remove("editable-mode");
                 fields.forEach(f => f.contentEditable = "false");
                 if (deleteBtn) deleteBtn.style.display = "none";
                 if (colorTools) colorTools.style.display = "none";
-                if (dragHandle) dragHandle.style.display = "none";
+                if (reorderHandle) reorderHandle.style.display = "none";
                 if (placeholder) placeholder.style.display = "none";
                 if (deletePhotoBtn) deletePhotoBtn.style.display = "none";
-
-                // Matikan attribute draggable saat keluar mode edit
                 card.draggable = false;
             }
         });
@@ -479,6 +468,8 @@ const SubjectApp = {
         // 3. SIMPAN DATA (Hanya saat keluar dari mode edit)
         if (!this.state.editMode) {
             await this.saveAllChanges();
+        } else {
+            this.updateArrowButtons();
         }
 
         this.state.isToggling = false;
@@ -519,7 +510,6 @@ const SubjectApp = {
             if (error) throw error;
 
             // 2. Berhasil! Balikin tombol ke icon edit
-            console.log("✅ All changes saved!");
             if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
@@ -531,121 +521,33 @@ const SubjectApp = {
         }
     },
 
-    // File: js/subject-manager.js
-
-    setupDragEvents(card, handle) {
-        // 1. Draggable hanya aktif pas handle ditekan (biar gak ganggu seleksi teks)
-        handle.onmousedown = () => { card.draggable = true; };
-        handle.onmouseup = () => { card.draggable = false; };
-
-        card.ondragstart = (e) => {
-            e.dataTransfer.effectAllowed = "move";
-            setTimeout(() => card.classList.add("dragging"), 0);
-            // Matikan pointer events biar teks gak ganggu proses drag
-            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'none');
-        };
-
-        card.ondragover = (e) => {
-            e.preventDefault();
-            const container = document.getElementById("announcements");
-            const dragging = document.querySelector(".dragging");
-            if (!dragging) return;
-
-            this.handleAutoScroll(e.clientY);
-
-            // Cari posisi kartu di bawah kursor
-            const afterElement = this.getDragAfterElement(container, e.clientY);
-
-            if (afterElement == null) {
-                container.appendChild(dragging);
-            } else {
-                container.insertBefore(dragging, afterElement);
-            }
-        };
-
-        card.ondragend = () => {
-            card.classList.remove("dragging");
-            card.draggable = false;
-            card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'auto');
-
-            // Simpan urutan baru otomatis ke Supabase (Bulk Upsert)
-            this.updateDisplayOrder();
-        };
-
-        let longPressTimer;
-        let isDraggingMobile = false;
-        let startY = 0;
-
-        handle.ontouchstart = (e) => {
-            if (e.cancelable) e.preventDefault();
-            startY = e.touches[0].clientY;
-            longPressTimer = setTimeout(() => {
-                isDraggingMobile = true;
-                if (navigator.vibrate) navigator.vibrate(50);
-                card.classList.add("dragging");
-                card.classList.add("mobile-drag-active");
-                card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'none');
-            }, 300);
-        };
-
-        handle.ontouchmove = (e) => {
-            if (!isDraggingMobile) { clearTimeout(longPressTimer); return; }
-            if (e.cancelable) e.preventDefault();
-            const touch = e.touches[0];
-            this.handleAutoScroll(touch.clientY);
-            this.handleDragOverLogic(touch.clientY);
-        };
-
-        handle.ontouchend = () => {
-            clearTimeout(longPressTimer);
-            clearInterval(this.scrollTimer);
-            if (isDraggingMobile) {
-                isDraggingMobile = false;
-                card.classList.remove("dragging");
-                card.classList.remove("mobile-drag-active");
-                card.querySelectorAll('.editable').forEach(el => el.style.pointerEvents = 'auto');
-                this.updateDisplayOrder();
-            }
-        };
-    },
-
-    // File: js/subject-manager.js
-
-    handleAutoScroll(y) {
-        clearTimeout(this.scrollTimer); // Ganti jadi clearTimeout
-        const threshold = 100; // Jarak dari ujung layar buat mulai scroll (pixel)
-        const speed = 15;
-
-        if (y < threshold) {
-            window.scrollBy(0, -speed);
-            this.scrollTimer = setTimeout(() => this.handleAutoScroll(y), 16);
-        } else if (y > window.innerHeight - threshold) {
-            window.scrollBy(0, speed);
-            this.scrollTimer = setTimeout(() => this.handleAutoScroll(y), 16);
-        }
-    },
-
-    handleDragOverLogic(y) {
+    moveCard(card, direction) {
         const container = document.getElementById("announcements");
-        const dragging = document.querySelector(".dragging");
-        if (!dragging) return;
-        const afterElement = this.getDragAfterElement(container, y);
-        if (afterElement == null) {
-            if (dragging.nextSibling) container.appendChild(dragging);
+        const cards = [...container.querySelectorAll(".course-card")];
+        const index = cards.indexOf(card);
+
+        if (direction === 'up' && index > 0) {
+            container.insertBefore(card, cards[index - 1]);
+        } else if (direction === 'down' && index < cards.length - 1) {
+            container.insertBefore(cards[index + 1], card);
+        } else {
+            return; // Sudah di ujung, gak perlu ngapa-ngapain
         }
+
+        // Update tombol panah (disable kalau udah di ujung)
+        this.updateArrowButtons();
+        this.updateDisplayOrder();
     },
 
-    getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll(".course-card:not(.dragging)")];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    updateArrowButtons() {
+        const container = document.getElementById("announcements");
+        const cards = [...container.querySelectorAll(".course-card")];
+        cards.forEach((card, i) => {
+            const upBtn = card.querySelector(".move-up-btn");
+            const downBtn = card.querySelector(".move-down-btn");
+            if (upBtn) upBtn.style.opacity = i === 0 ? '0.3' : '1';
+            if (downBtn) downBtn.style.opacity = i === cards.length - 1 ? '0.3' : '1';
+        });
     },
 
     async updateDisplayOrder() {
@@ -676,7 +578,6 @@ const SubjectApp = {
                 throw error;
             }
 
-            console.log("✅ Urutan berhasil disinkronisasi ke cloud.");
 
             // 3. Update cache lokal biar gak balik lagi urutannya pas reload
             const cacheKey = `announcements_${this.state.subjectId}`;
@@ -778,7 +679,6 @@ const SubjectApp = {
                 content: getData("content"),
                 small: getData("small")
             }).eq("id", id);
-            console.log("✅ Saved with Formatting:", id);
         } catch (err) { console.error(err); }
     },
 
@@ -914,26 +814,13 @@ const SubjectApp = {
         if (!error) location.reload();
     },
 
-    enableDragDrop() {
-        const cards = document.querySelectorAll(".course-card");
-        const self = this;
-        cards.forEach(card => {
-            card.ondragstart = (e) => self.handleDragStart(e);
-            card.ondragover = (e) => self.handleDragOver(e);
-            card.ondrop = (e) => self.handleDrop(e);
-            card.ondragend = (e) => self.handleDragEnd(e);
-        });
-    },
 
-    disableDragDrop() {
-        const cards = document.querySelectorAll(".course-card");
-        cards.forEach(card => {
-            card.ondragstart = null; card.ondragover = null;
-            card.ondrop = null; card.ondragend = null;
-        });
-    },
 
     setupShortcuts() {
+        // Guard: pastikan listener hanya dipasang sekali
+        if (this._shortcutsInitialized) return;
+        this._shortcutsInitialized = true;
+
         document.addEventListener('keydown', (e) => {
             const addModal = document.getElementById('addModal');
             const isAddModalOpen = addModal && !addModal.classList.contains('hidden');
@@ -1024,20 +911,7 @@ function getTodayIndo() {
     });
 }
 
-function showAddModal() {
-    document.getElementById('modalBig').value = '';
-    document.getElementById('modalTitle').value = '';
-    document.getElementById('modalContent').value = '';
-
-    const footerInput = document.getElementById('modalSmall');
-    if (footerInput) {
-        footerInput.value = getTodayIndo();
-    }
-
-    document.getElementById('modalOverlay').classList.remove('hidden');
-}
-
-let currentViewerPhotos = [], currentViewerIndex = 0, mobileInfoTimer = null;
+let currentViewerPhotos = [], currentViewerIndex = 0;
 function openDetail(data) {
     const overlay = document.getElementById('detailOverlay');
     const info = document.getElementById('detailInfoSection');
@@ -1163,14 +1037,3 @@ function toggleMobileInfo(e) {
 function formatText(size) {
     document.execCommand('fontSize', false, size);
 }
-
-document.getElementById('detailOverlay').addEventListener('click', function (e) {
-    if (e.target === this) {
-        const info = document.getElementById('detailInfoSection');
-        if (window.innerWidth <= 768 && !info.classList.contains('hidden-mobile')) {
-            toggleMobileInfo();
-        } else {
-            closeDetail();
-        }
-    }
-});

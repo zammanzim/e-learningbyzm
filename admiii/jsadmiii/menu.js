@@ -280,7 +280,6 @@ function openIconPicker() {
     document.getElementById('searchIconInput').value = ''; // Reset search
     renderIconGrid(ICON_LIBRARY);
     
-    console.log("Icon Picker Opened!"); // Cek di console buat mastiin fungsi jalan
 }
 
 function closeIconPicker() {
