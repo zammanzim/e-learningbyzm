@@ -64,6 +64,7 @@ async function initTugas() {
                 .select('*')
                 .eq('class_id', user.class_id)
                 .neq('subject_id', 'announcements')
+                .neq('subject_id', 'kisi-kisi')
                 .neq('subject_id', 'akuhutajakus')
                 .order('created_at', { ascending: false }),
 
