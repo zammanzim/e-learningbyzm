@@ -8,7 +8,12 @@ const PSTS_DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis'];
 let kisiScheduleMap = {};  // { Senin: ['bindonesia', 'mtk', ...], ... }
 let kisiFilter = 'all';    // currently selected subject filter
 
-// ── Helpers ──────────────────────────────────────────────────
+// Kata-kata yang bukan nama pelajaran, di-skip dari schedule
+const KISI_BLACKLIST = [
+    'sudahadadisekolah', 'istirahat', 'upacara', 'senampagi', 'senam',
+    'pulang', 'sholat', 'shalat', 'jumatan', 'makan', 'ishoma', 'ekskul',
+    'ekstrakurikuler', 'pembiasaan', 'literasi', 'bersih', 'piket'
+];
 
 function _kisiNorm(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
@@ -51,7 +56,7 @@ function _getDayForItem(item) {
     if (subject.length < 2) return null;
     for (const day of PSTS_DAYS) {
         const daySubjects = kisiScheduleMap[day] || [];
-        if (daySubjects.some(s => s.length > 1 && (subject.includes(s) || s.includes(subject)))) {
+        if (daySubjects.some(s => s.norm.length > 1 && (subject.includes(s.norm) || s.norm.includes(subject)))) {
             return day;
         }
     }
@@ -67,9 +72,41 @@ window.renderKisiList = function () {
     container.innerHTML = '';
 
     // ── Subject filter dropdown ──────────────────────────────
-    const subjects = [...new Set(
-        items.map(k => _extractSubject(k.big_title || '')).filter(Boolean)
-    )];
+    // Subjects yang PUNYA kisi-kisi
+    const availableSubjects = new Set(
+        items.map(k => _kisiNorm(_extractSubject(k.big_title || ''))).filter(Boolean)
+    );
+
+    // Semua pelajaran dari jadwal (Senin-Kamis), dikumpulkan unik
+    const allScheduledSubjects = [];
+    const seenNorm = new Set();
+    PSTS_DAYS.forEach(day => {
+        (kisiScheduleMap[day] || []).forEach(entry => {
+            if (!seenNorm.has(entry.norm) && entry.norm.length > 1) {
+                seenNorm.add(entry.norm);
+                const matchedItem = items.find(k => _kisiNorm(_extractSubject(k.big_title || '')) === entry.norm);
+                const displayName = matchedItem ? _extractSubject(matchedItem.big_title) : entry.display;
+                allScheduledSubjects.push({ norm: entry.norm, display: displayName, hasKisi: availableSubjects.has(entry.norm) });
+            }
+        });
+    });
+
+    // Tambahkan pelajaran yang punya kisi-kisi tapi tidak ada di jadwal (edge case)
+    items.forEach(k => {
+        const norm = _kisiNorm(_extractSubject(k.big_title || ''));
+        if (norm && !seenNorm.has(norm)) {
+            seenNorm.add(norm);
+            allScheduledSubjects.push({ norm, display: _extractSubject(k.big_title), hasKisi: true });
+        }
+    });
+
+    const optionsHTML = allScheduledSubjects.map(s => {
+        if (s.hasKisi) {
+            return `<option value="${s.norm}">${s.display}</option>`;
+        } else {
+            return `<option value="${s.norm}" disabled style="color:rgba(255,255,255,0.3);">${s.display} (belum ada)</option>`;
+        }
+    }).join('');
 
     const filterBar = document.createElement('div');
     filterBar.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:22px;';
@@ -82,7 +119,7 @@ window.renderKisiList = function () {
                    border-radius:20px; font-size:13px; outline:none; cursor:pointer;
                    appearance:none; -webkit-appearance:none;">
             <option value="all">Semua Pelajaran</option>
-            ${subjects.map(s => `<option value="${_kisiNorm(s)}">${s}</option>`).join('')}
+            ${optionsHTML}
         </select>
     `;
     container.appendChild(filterBar);
@@ -179,7 +216,59 @@ window.renderKisiList = function () {
     // Restore selected filter value (since we rebuild the whole DOM)
     const sel = document.getElementById('kisiSubjectFilter');
     if (sel) sel.value = kisiFilter;
+
+    // ── Update info box dengan daftar kisi-kisi yang tersedia ──
+    _renderKisiInfoList(SubjectApp.state.announcements);
 };
+
+function _renderKisiInfoList(items) {
+    const infoBox = document.getElementById('kisiInfoList');
+    if (!infoBox) return;
+
+    // Set subject yang PUNYA kisi-kisi
+    const hasKisiSet = new Set(
+        (items || []).map(k => _kisiNorm(_extractSubject(k.big_title || ''))).filter(Boolean)
+    );
+
+    const dayOrder = _getDayOrder();
+    let html = '';
+
+    dayOrder.forEach(function (day) {
+        const schedSubjects = kisiScheduleMap[day] || [];
+        if (schedSubjects.length === 0) return;
+
+        const isFirst = html === '';
+        html += '<div style="margin-top:' + (isFirst ? '0' : '12px') + ';">';
+        html += '<div style="font-size:10px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">' + day + '</div>';
+        html += '<div style="display:flex; flex-direction:column; gap:5px;">';
+
+        schedSubjects.forEach(function (entry) {
+            const hasKisi = hasKisiSet.has(entry.norm);
+            const matchedItem = (items || []).find(k => _kisiNorm(_extractSubject(k.big_title || '')) === entry.norm);
+            const displayName = matchedItem ? _extractSubject(matchedItem.big_title) : entry.display;
+
+            if (hasKisi) {
+                const normSubject = entry.norm;
+                html += '<div onclick="kisiFilter=\'' + normSubject + '\'; renderKisiList(); document.querySelector(\'.right-section\').scrollIntoView({behavior:\'smooth\'});"'
+                    + ' style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.06); border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.08);"'
+                    + ' onmouseover="this.style.background=\'rgba(0,234,255,0.1)\'; this.style.borderColor=\'rgba(0,234,255,0.3)\'"'
+                    + ' onmouseout="this.style.background=\'rgba(255,255,255,0.06)\'; this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
+                    + '<i class="fa-solid fa-file-lines" style="color:#00eaff; font-size:11px; flex-shrink:0;"></i>'
+                    + '<span style="font-size:12px; color:#e0e0e0; font-weight:500;">' + displayName + '</span>'
+                    + '</div>';
+            } else {
+                html += '<div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.02); border-radius:10px; cursor:not-allowed; border:1px solid rgba(255,255,255,0.04);">'
+                    + '<i class="fa-regular fa-file-lines" style="color:rgba(255,255,255,0.2); font-size:11px; flex-shrink:0;"></i>'
+                    + '<span style="font-size:12px; color:rgba(255,255,255,0.25); font-weight:400;">' + displayName + '</span>'
+                    + '</div>';
+            }
+        });
+
+        html += '</div></div>';
+    });
+
+    infoBox.innerHTML = html || '<p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">Belum ada kisi-kisi.</p>';
+}
 
 // ── Init ─────────────────────────────────────────────────────
 
@@ -187,12 +276,39 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 1. Patch SubjectApp.renderAnnouncements BEFORE init() is called.
     SubjectApp.renderAnnouncements = window.renderKisiList;
 
-    // 2. After delete, re-render so empty day sections clean up properly.
-    const _origDelete = SubjectApp.deleteAnnouncement.bind(SubjectApp);
+    // 2. Override delete — fix string vs number id mismatch, then re-render + re-apply edit mode
     SubjectApp.deleteAnnouncement = async function (card) {
-        await _origDelete(card);
+        if (!await showPopup("Hapus materi ini?", "confirm")) return;
+        const id = card.dataset.id;
+        await supabase.from("subject_announcements").delete().eq("id", id);
+        // Fix: paksa string comparison biar item beneran ke-filter dari state
+        SubjectApp.state.announcements = SubjectApp.state.announcements.filter(a => String(a.id) !== String(id));
+        showPopup("Terhapus!", "success");
         window.renderKisiList();
+        // Re-apply edit mode ke card-card baru kalau masih dalam mode edit
+        if (SubjectApp.state.editMode) _reapplyEditMode();
     };
+
+    // Helper: re-apply edit mode ke semua card setelah renderKisiList
+    function _reapplyEditMode() {
+        document.querySelectorAll(".course-card").forEach(function (card) {
+            card.classList.add("editable-mode");
+            card.querySelectorAll(".editable").forEach(function (f) {
+                f.contentEditable = "true";
+                f.style.pointerEvents = "auto";
+            });
+            const deleteBtn = card.querySelector(".delete-btn");
+            const colorTools = card.querySelector(".card-color-tools");
+            const reorderHandle = card.querySelector(".reorder-handle");
+            const placeholder = card.querySelector(".card-photo-placeholder");
+            const deletePhotoBtn = card.querySelector(".delete-photo-btn");
+            if (deleteBtn) deleteBtn.style.display = "inline-block";
+            if (colorTools) colorTools.style.display = "flex";
+            if (reorderHandle) reorderHandle.style.display = "flex";
+            if (placeholder) placeholder.style.display = "block";
+            if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
+        });
+    }
 
     // 3. Fetch PSTS schedule (Senin-Kamis) for day mapping.
     let user = null;
@@ -209,16 +325,15 @@ document.addEventListener('DOMContentLoaded', async function () {
             kisiScheduleMap = {};
             (schedules || []).forEach(function (s) {
                 // Format: "07.30 - 08.30 - PABP; 10.00 - 11.00 - Bahasa Indonesia"
-                // Pakai ';' sebagai pemisah, subject = bagian setelah '-' terakhir
                 kisiScheduleMap[s.day_name] = (s.lessons || '')
                     .split(';')
                     .map(function (raw) {
                         raw = raw.trim();
                         const dashIdx = raw.lastIndexOf('-');
                         const name = dashIdx !== -1 ? raw.substring(dashIdx + 1).trim() : raw;
-                        return _kisiNorm(name);
+                        return { norm: _kisiNorm(name), display: name };
                     })
-                    .filter(function (n) { return n.length > 1; });
+                    .filter(function (n) { return n.norm.length > 1 && !KISI_BLACKLIST.some(b => n.norm.includes(b)); });
             });
         } catch (e) {
             console.error('Gagal ambil jadwal kisi-kisi:', e);
@@ -232,4 +347,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         'Kisi-Kisi PSTS',
         false  // isLessonMode = false -> no task/selesai button
     );
+
+    // 5. Patch toggleEditMode — setelah masuk edit mode, apply ke kisi cards
+    const _origToggle = SubjectApp.toggleEditMode.bind(SubjectApp);
+    SubjectApp.toggleEditMode = async function () {
+        await _origToggle();
+        if (SubjectApp.state.editMode) _reapplyEditMode();
+    };
 });
