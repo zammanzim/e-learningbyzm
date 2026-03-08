@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,22 @@
     <script src="js/subject-manager.js" defer></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Tambahkan di dalam tag <style> lkpd.html */
+        #galleryTop img {
+            transition: transform 0.3s ease;
+            max-height: 500px;
+            /* Batasi tinggi agar tidak terlalu panjang */
+            object-fit: contain;
+            background: #1a1a1c;
+        }
+
+        #galleryTop img:hover {
+            transform: scale(1.01);
+        }
+    </style>
 </head>
+
 <body>
     <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
@@ -21,14 +37,14 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1 id="lkpdTitle">LKPD BAB ...</h1>
+                <h1 id="welcomeText">LKPD ...</h1>
             </div>
-            
+
             <div id="groupInfoCard" class="daily-card-final" style="margin-top: 20px; padding: 20px;">
-                <div class="final-badge bg-cyan">PENGERJA BAB INI</div>
+                <div class="final-badge bg-cyan">Dikerjakan Oleh :</div>
                 <h2 id="assignedGroupName" class="final-day" style="font-size: 24px; margin-top: 10px;">Memuat...</h2>
                 <div id="memberList" class="picket-grid-big" style="margin-top: 15px;">
-                    </div>
+                </div>
                 <div id="accessStatus" style="margin-top: 20px; font-size: 13px; color: #aaa;">
                     <i class="fa-solid fa-circle-info"></i> Mengecek hak akses...
                 </div>
@@ -36,10 +52,13 @@
         </div>
 
         <div class="right-section">
-            <div id="galleryTop"></div> <div id="announcements"></div> <div id="editControls"></div>
+            <div id="galleryTop"></div>
+            <div id="announcements"></div>
+            <div id="editControls"></div>
         </div>
     </div>
 
     <script src="js/lkpd-manager.js" defer></script>
 </body>
+
 </html>

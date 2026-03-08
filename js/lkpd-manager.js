@@ -9,14 +9,14 @@ const LKPDManager = {
 
     async init() {
         if (!this.state.chapterId || !this.state.user) return;
-        
+
         // 1. Ambil data Kelompok yang ditugaskan buat Bab ini
         await this.checkAccess();
-        
+
         // 2. Load Soal pake SubjectApp (Materi dikasih prefix misal: lkpd1, lkpd2)
         const subjectKey = `lkpd${this.state.chapterId}`;
-        SubjectApp.init(subjectKey, `BAB ${this.state.chapterId}`, `LKPD Bab ${this.state.chapterId}`, false);
-        
+        SubjectApp.init(subjectKey, `LKPD Pertemuan ${this.state.chapterId}`, `LKPD Pertemuan ${this.state.chapterId}`, false);
+
         // 3. Inject Form Jawaban ke tiap kartu soal
         this.setupAnswerObserver();
     },
@@ -32,7 +32,7 @@ const LKPDManager = {
         if (data) {
             this.state.groupData = data;
             document.getElementById('assignedGroupName').innerText = data.group_name;
-            
+
             // Render Member Piller
             const members = data.members.split(';').map(m => m.trim());
             const listEl = document.getElementById('memberList');
@@ -63,23 +63,32 @@ const LKPDManager = {
         }, 500);
     },
 
+    // Cari fungsi ini di js/lkpd-manager.js dan sesuaikan
     renderAnswerFields(cards) {
-        cards.forEach(card => {
+        cards.forEach((card, index) => {
+            // --- LOGIKA BARU: Cek kalau ini kartu pertama ---
+            if (index === 0) {
+                // Tambahkan sedikit style biar kartu pertama (gambar LKPD) tampil lebih bersih
+                card.style.border = "1px solid rgba(0, 234, 255, 0.3)";
+                return; // Skip, jangan lanjut ke bawah (jangan kasih form)
+            }
+            // -----------------------------------------------
+
             const id = card.dataset.id;
             const inputHTML = `
-                <div class="lkpd-answer-container" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);">
-                    <label style="font-size: 12px; color: #00eaff; font-weight: bold; display: block; margin-bottom: 8px;">
-                        <i class="fa-solid fa-reply"></i> JAWABAN KELOMPOK:
-                    </label>
-                    <div id="ans-${id}" 
-                         class="glass-input lkpd-input-area" 
-                         contenteditable="${this.state.canEdit}" 
-                         data-placeholder="Ketik jawaban kelompok di sini..."
-                         style="min-height: 80px; ${!this.state.canEdit ? 'opacity: 0.7; cursor: not-allowed;' : ''}"></div>
-                    ${this.state.canEdit ? `<button onclick="LKPDManager.saveAnswer('${id}')" class="btn-glass-save" style="margin-top: 10px; padding: 8px 15px; font-size: 12px;">Simpan Jawaban</button>` : ''}
-                </div>
-            `;
-            // Masukin form jawaban sebelum footer/small di kartu
+            <div class="lkpd-answer-container" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                <label style="font-size: 12px; color: #00eaff; font-weight: bold; display: block; margin-bottom: 8px;">
+                    <i class="fa-solid fa-reply"></i> JAWABAN KELOMPOK:
+                </label>
+                <div id="ans-${id}" 
+                     class="glass-input lkpd-input-area" 
+                     contenteditable="${this.state.canEdit}" 
+                     data-placeholder="Ketik jawaban kelompok di sini..."
+                     style="min-height: 80px; ${!this.state.canEdit ? 'opacity: 0.7; cursor: not-allowed;' : ''}"></div>
+                ${this.state.canEdit ? `<button onclick="LKPDManager.saveAnswer('${id}')" class="btn-glass-save" style="margin-top: 10px; padding: 8px 15px; font-size: 12px;">Simpan Jawaban</button>` : ''}
+            </div>
+        `;
+
             const small = card.querySelector('small');
             if (small) small.insertAdjacentHTML('beforebegin', inputHTML);
             else card.innerHTML += inputHTML;
@@ -102,7 +111,7 @@ const LKPDManager = {
         if (!error) {
             btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan!';
             btn.style.background = '#2ed573';
-            setTimeout(() => { 
+            setTimeout(() => {
                 btn.innerHTML = 'Simpan Jawaban';
                 btn.style.background = '#00eaff';
             }, 2000);

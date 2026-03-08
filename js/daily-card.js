@@ -103,12 +103,20 @@ async function initDailyCard() {
     </div>
     <div class="header-right-group">
         ${editActionHTML}
+        <div class="task-shortcut-box" onclick="window.location.href='kisi-kisi'">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <span>KISI - KISI</span>
+        </div>
+    </div>`;
+
+    /*<div class="header-right-group">
+        ${editActionHTML}
         <div class="task-shortcut-box" onclick="window.location.href='tugas'">
             <div id="taskBadge" class="task-badge">0</div>
             <i class="fa-solid fa-clipboard-list"></i>
             <span>TUGAS</span>
         </div>
-    </div>`;
+    </div>*/
 
     // --- 2. LOGIC DATA ---
     try {
@@ -201,12 +209,12 @@ async function initDailyCard() {
         }
 
         const dailyColors = {
-            'Senin':  'linear-gradient(135deg, #ff4757, #ff6b81)',
+            'Senin': 'linear-gradient(135deg, #ff4757, #ff6b81)',
             'Selasa': 'linear-gradient(135deg, #5f27cd, #341f97)',
-            'Rabu':   'linear-gradient(135deg, #0be881, #00d2d3)',
-            'Kamis':  'linear-gradient(135deg, #ffa502, #ff7f50)',
-            'Jumat':  'linear-gradient(135deg, #ffffff, #dcdde1)',
-            'Sabtu':  'linear-gradient(135deg, #ff9ff3, #feca57)',
+            'Rabu': 'linear-gradient(135deg, #0be881, #00d2d3)',
+            'Kamis': 'linear-gradient(135deg, #ffa502, #ff7f50)',
+            'Jumat': 'linear-gradient(135deg, #ffffff, #dcdde1)',
+            'Sabtu': 'linear-gradient(135deg, #ff9ff3, #feca57)',
             'Minggu': 'linear-gradient(135deg, #54a0ff, #00d2d3)',
             'CUSTOM': 'linear-gradient(135deg, #FFD700, #FFA500)'
         };
@@ -217,8 +225,8 @@ async function initDailyCard() {
         if (scheduleData.lessons) {
             // Split HANYA pakai ; — newline dari data lama juga ditangani
             scheduleData.lessons.split(';').map(i => i.trim()).filter(i => i.length > 1).forEach((item, idx) => {
-                const dashIdx = item.indexOf('-');
-                const time    = dashIdx !== -1 ? item.substring(0, dashIdx).trim() : '';
+                const dashIdx = item.lastIndexOf('-'); // Gunakan lastIndexOf agar memotong di '-' yang paling akhir
+                const time = dashIdx !== -1 ? item.substring(0, dashIdx).trim() : '';
                 const subject = dashIdx !== -1 ? item.substring(dashIdx + 1).trim() : item.trim();
                 timelineHTML += `
                 <div class="tl-item-final animate-slide-right" style="animation-delay:${idx * 0.05}s">
@@ -294,7 +302,7 @@ async function initDailyCard() {
 async function updateTaskBadge(user) {
     const cacheKey = `task_badge_${user.id}`;
     let cached = null;
-    try { cached = JSON.parse(sessionStorage.getItem(cacheKey)); } catch (e) {}
+    try { cached = JSON.parse(sessionStorage.getItem(cacheKey)); } catch (e) { }
 
     if (cached && (Date.now() - cached.time < 5 * 60 * 1000)) {
         renderBadgeUI(cached.count);
@@ -357,13 +365,13 @@ window.saveToDraft = function (day) {
     });
 
     window.dailyDrafts[day] = {
-        day_name:  day,
-        class_id:  user.class_id,
-        uniform:   cleanText(document.querySelector('[data-type="uniform"]'))  || '-',
-        activity:  cleanText(document.querySelector('[data-type="activity"]')) || '-',
-        notes:     cleanText(document.querySelector('[data-type="notes"]'))    || '-',
-        lessons:   lessonArr.join('; '),
-        picket:    picketArr.join('; ')
+        day_name: day,
+        class_id: user.class_id,
+        uniform: cleanText(document.querySelector('[data-type="uniform"]')) || '-',
+        activity: cleanText(document.querySelector('[data-type="activity"]')) || '-',
+        notes: cleanText(document.querySelector('[data-type="notes"]')) || '-',
+        lessons: lessonArr.join('; '),
+        picket: picketArr.join('; ')
     };
 };
 
@@ -397,11 +405,11 @@ function applyEditMode(isActive) {
     });
 
     // Null-safe: elemen ini hanya ada setelah scheduleData ter-render
-    const btnLesson   = document.getElementById('btnAddLesson');
-    const btnPicket   = document.getElementById('btnAddPicket');
+    const btnLesson = document.getElementById('btnAddLesson');
+    const btnPicket = document.getElementById('btnAddPicket');
     const configPanel = document.getElementById('dailyConfigPanel');
-    if (btnLesson)   btnLesson.style.display   = isActive ? 'block' : 'none';
-    if (btnPicket)   btnPicket.style.display   = isActive ? 'block' : 'none';
+    if (btnLesson) btnLesson.style.display = isActive ? 'block' : 'none';
+    if (btnPicket) btnPicket.style.display = isActive ? 'block' : 'none';
     if (configPanel) configPanel.style.display = isActive ? 'block' : 'none';
 }
 
@@ -433,23 +441,23 @@ window.saveAllDrafts = async function () {
     saveToDraft(window.editingDay);
     const draftsArray = Object.values(window.dailyDrafts);
 
-    const isCustom      = document.getElementById('editCustomToggle').checked;
-    const isAuto        = document.getElementById('editAutoToggle').checked;
+    const isCustom = document.getElementById('editCustomToggle').checked;
+    const isAuto = document.getElementById('editAutoToggle').checked;
     const currentForced = window.currentConfig.forced_day;
-    const newForced     = isCustom ? currentForced : (window.editingDay || currentForced);
+    const newForced = isCustom ? currentForced : (window.editingDay || currentForced);
 
     try {
         await supabase.from('daily_config').upsert({
-            class_id:     CLASS_ID,
-            is_auto:      isAuto,
-            is_custom:    isCustom,
-            forced_day:   newForced,
+            class_id: CLASS_ID,
+            is_auto: isAuto,
+            is_custom: isCustom,
+            forced_day: newForced,
             custom_title: isCustom ? newTitle : window.currentConfig.custom_title
         });
 
         window.currentConfig.custom_title = isCustom ? newTitle : window.currentConfig.custom_title;
-        window.currentConfig.is_custom    = isCustom;
-        window.currentConfig.is_auto      = isAuto;
+        window.currentConfig.is_custom = isCustom;
+        window.currentConfig.is_auto = isAuto;
 
         if (draftsArray.length > 0) {
             const { error: upsertError } = await supabase
@@ -458,9 +466,9 @@ window.saveAllDrafts = async function () {
             if (upsertError) throw upsertError;
         }
 
-        window.dailyDrafts    = {};
+        window.dailyDrafts = {};
         window.isDailyEditing = false;
-        window.editingDay     = null;
+        window.editingDay = null;
 
         if (typeof showPopup === 'function') showPopup('Data Tersimpan!', 'success');
         initDailyCard();

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisi-Kisi PSTS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/subject-manager.js" defer></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- ===== LEFT SECTION ===== -->
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-clipboard-list" style="font-size: 26px;"></i> Kisi-Kisi PSTS</h1>
+            </div>
+
+            <div class="daily-card-final" style="margin-bottom: 25px; padding: 20px;">
+                <h3 style="margin: 0 0 14px; font-size: 16px;">
+                    <i class="fa-solid fa-circle-info" style="color:#00eaff; margin-right:6px;"></i>
+                    Info
+                </h3>
+                <p style="font-size: 13px; color: #ccc; line-height: 1.7; margin: 0;">
+                    Kisi-kisi PSTS dikelompokkan otomatis per hari (<b>Senin – Kamis</b>)
+                    berdasarkan jadwal harian. Kisi - kisi hari ini otomatis ada di paling atas, dan kisi - kisi yang sudah lewat bakal tertanda selesai di paling bawah.
+                </p>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 14px 0;">
+                <div style="font-size: 13px; color: #ccc; line-height: 1.7; margin: 0;">Hanya baru ada beberapa kisi -
+                    kisi. Jika ada kisi kisi baru <a href="https://wa.me/6283851088843" style="text-decoration: none; color: #00eaff; font-weight: 500;"> hubungi admin</a></div>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT SECTION ===== -->
+        <div class="right-section">
+
+            <!-- Announcements container — SubjectApp renders here, then kisi-kisi.js re-renders with day groups -->
+            <div id="announcements" class="announcements">
+                <!-- Skeleton loading -->
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+            </div>
+
+            <!-- Admin FAB + controls injected here by SubjectApp.setupAdminControls() -->
+            <div id="editControls"></div>
+        </div>
+    </div>
+
+    <!-- kisi-kisi.js must load AFTER subject-manager.js — patches SubjectApp.renderAnnouncements -->
+    <script src="js/kisi-kisi.js" defer></script>
+
+</body>
+
+</html>

@@ -260,7 +260,7 @@ const ICON_LIBRARY = [
     'fa-bullhorn', 'fa-clipboard-list', 'fa-calendar-days', 'fa-message', 'fa-comments',
     'fa-gears', 'fa-user-shield', 'fa-users-gear', 'fa-user-group', 'fa-shield-halved',
     'fa-house', 'fa-folder-open', 'fa-link', 'fa-circle-question', 'fa-star', 'fa-fire',
-    'fa-graduation-cap', 'fa-vial', 'fa-brain', 'fa-atom', 'fa-shapes', 'fa-pen-nib', 'fa-list-check', 'fa-user-gear', 'fa-search'
+    'fa-graduation-cap', 'fa-vial', 'fa-brain', 'fa-atom', 'fa-shapes', 'fa-pen-nib', 'fa-list-check', 'fa-user-gear', 'fa-search', "fa-file-lines"
 ];
 
 // 2. Fungsi buka Modal

@@ -2319,12 +2319,12 @@ li.nav-locked a::after {
 
 .tl-time-final {
     font-family: monospace;
-    font-size: 16px;
+    font-size: 14px;
     color: #00eaff;
-    width: 45px;
     text-align: right;
-    padding-top: 2px;
+    padding-top: 6px;
     flex-shrink: 0;
+    text-align: left;
 }
 
 .tl-marker-final {
@@ -3762,4 +3762,20 @@ input:checked+.slider:before {
     width: 100%;
     margin-bottom: 15px;
     border-radius: 12px;
+}
+
+.lkpd-table-task {
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.lkpd-table-task td[contenteditable="false"] {
+    color: #888;
+    font-weight: bold;
+}
+
+.lkpd-table-task td:focus {
+    background: rgba(0, 234, 255, 0.05);
+    outline: none;
 }
