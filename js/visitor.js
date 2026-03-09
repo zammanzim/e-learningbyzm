@@ -90,11 +90,27 @@ async function renderVisitorStats() {
             return;
         }
 
-        // Deduplikasi user di sisi client (tetap diperlukan agar list rapi)
+        // Deduplikasi user di sisi client
         const uniqueTodayMap = new Map();
         todayData.forEach(v => {
             if (!uniqueTodayMap.has(v.user_id)) uniqueTodayMap.set(v.user_id, v);
         });
+
+        // Fetch nickname untuk guest (user_id yang join-nya null)
+        const guestIds = [...uniqueTodayMap.values()]
+            .filter(v => !v.user && String(v.user_id).startsWith('guest_'))
+            .map(v => v.user_id);
+
+        const guestMap = new Map();
+        if (guestIds.length > 0) {
+            try {
+                const { data: guestRows } = await supabase
+                    .from('guests')
+                    .select('id, nickname')
+                    .in('id', guestIds);
+                (guestRows || []).forEach(g => guestMap.set(g.id, g.nickname));
+            } catch (e) { /* silent fail */ }
+        }
 
         // Update UI Berdasarkan ID yang ada di HTML kamu
         if (document.getElementById("headerVisitorCount"))
@@ -110,12 +126,23 @@ async function renderVisitorStats() {
             listEl.innerHTML = uniqueTodayMap.size === 0 ? '<p style="color:#aaa; font-size:12px;">Belum ada yang mampir.</p>' : '';
             uniqueTodayMap.forEach(v => {
                 const u = v.user || {};
+                const isGuest = !v.user && String(v.user_id).startsWith('guest_');
+                const nickname = isGuest
+                    ? (guestMap.get(v.user_id) || 'Tamu')
+                    : (u.nickname || u.full_name || 'User');
+                const avatar = u.avatar_url || '../icons/profpicture.png';
+
                 const item = document.createElement('div');
                 item.className = 'visitor-item';
                 item.innerHTML = `
-                    <img src="${u.avatar_url || '../icons/profpicture.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                    <div style="position:relative; flex-shrink:0;">
+                        <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                        ${isGuest ? '<span style="position:absolute;bottom:-2px;right:-2px;font-size:9px;background:#7c3aed;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;">👤</span>' : ''}
+                    </div>
                     <div style="flex:1; margin-left:10px;">
-                        <div style="font-size:13px; font-weight:bold;">${u.nickname || u.full_name || 'User'}</div>
+                        <div style="font-size:13px; font-weight:bold;">
+                            ${nickname}${isGuest ? ' <span style="font-size:10px;color:#a78bfa;font-weight:400;">(tamu)</span>' : ''}
+                        </div>
                         <div style="font-size:11px; color:#aaa;">
                             <span style="color:#00eaff">${v.last_page || "Muter-muter"}</span> • ${new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                         </div>

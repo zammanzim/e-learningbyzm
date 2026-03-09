@@ -4,6 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Class App">
+    <link rel="apple-touch-icon" href="icons/announcements.png">
     <title>Portal Akses</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js" defer></script>
@@ -181,15 +189,13 @@
 
         .slider-content {
             display: flex;
-            width: 300%;
-            /* Ditambah jadi 300% karena ada 3 slide */
+            width: 400%;
             height: 100%;
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .slide-step {
-            width: 33.333%;
-            /* Tiap slide mengambil 1/3 bagian */
+            width: 25%;
             padding: 10px 5px;
             display: flex;
             flex-direction: column;
@@ -197,11 +203,15 @@
 
         /* Logic posisi slider */
         .slider-content.step-1 {
-            transform: translateX(-33.333%);
+            transform: translateX(-25%);
         }
 
         .slider-content.step-2 {
-            transform: translateX(-66.666%);
+            transform: translateX(-50%);
+        }
+
+        .slider-content.step-3 {
+            transform: translateX(-75%);
         }
 
         /* Style tambahan untuk Welcome Screen */
@@ -707,6 +717,32 @@
             background: rgba(0, 234, 255, 0.05);
             box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);
         }
+
+        /* --- GUEST BUTTON --- */
+        .btn-guest {
+            width: 100%;
+            padding: 15px;
+            background: rgba(167, 139, 250, 0.08);
+            border: 1.5px solid rgba(167, 139, 250, 0.3);
+            border-radius: 16px;
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-guest:hover {
+            background: rgba(167, 139, 250, 0.15);
+            border-color: rgba(167, 139, 250, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(167, 139, 250, 0.2);
+        }
     </style>
 </head>
 
@@ -758,6 +794,17 @@
                         </div>
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin: 20px 0 5px;">
+                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+                        <span style="font-size:11px; color:rgba(255,255,255,0.3); white-space:nowrap;">atau</span>
+                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+                    </div>
+
+                    <button class="btn-guest" onclick="goToGuestStep()">
+                        <i class="fa-solid fa-user-secret"></i>
+                        <span>Masuk sebagai Tamu</span>
+                    </button>
                 </div>
 
                 <!-- STEP 2: Pilih Nama & Login -->
@@ -811,6 +858,65 @@
                                 <span>MASUK SEKARANG</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Guest -->
+                <div class="slide-step">
+
+                    <!-- State A: Returning guest (hidden by default, shown via JS) -->
+                    <div id="guestReturning" style="display:none; text-align:center; animation: fadeIn 0.5s ease;">
+                        <div style="font-size: 50px; margin: 10px 0 14px;">
+                            <i class="fa-solid fa-hand-wave"
+                                style="background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                        </div>
+                        <h3 style="font-size: 22px; margin-bottom: 6px;">Haii, <b id="returningGuestName"
+                                style="color:#a78bfa;">Tamu</b>!</h3>
+                        <p
+                            style="font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 24px; line-height: 1.6;">
+                            Kamu udah pernah masuk sebagai tamu sebelumnya.
+                        </p>
+                        <button class="btn-neon" onclick="loginAsGuest(true)"
+                            style="background: linear-gradient(90deg, #a78bfa, #7c3aed); margin-bottom: 12px;">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>MASUK LAGI</span>
+                        </button>
+                        <button onclick="showNewGuestForm()"
+                            style="width:100%; padding:12px; background:transparent; border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; color:rgba(255,255,255,0.4); font-size:13px; cursor:pointer; font-family:'Poppins',sans-serif; transition: all 0.3s;">
+                            Ganti nama / masuk baru
+                        </button>
+                    </div>
+
+                    <!-- State B: New guest form -->
+                    <div id="guestNew">
+                        <div style="text-align:center; margin: 10px 0 25px;">
+                            <div style="font-size: 50px; margin-bottom: 12px;">
+                                <i class="fa-solid fa-user-secret"
+                                    style="background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            </div>
+                            <h3 style="font-size: 20px; margin-bottom: 8px;">Masuk sebagai Tamu</h3>
+                            <p style="font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6;">
+                                Kamu akan masuk ke kelas <b style="color:#a78bfa;">X - RPL 2</b>.<br>
+                                Nama opsional, bisa dikosongkan.
+                            </p>
+                        </div>
+                        <div class="input-wrapper" style="margin-bottom: 8px;">
+                            <i class="fa-solid fa-signature" style="color: #a78bfa;"></i>
+                            <input id="guestNameInput" class="input-box" placeholder="Nama kamu (opsional)"
+                                maxlength="30" style="border-color: rgba(167,139,250,0.3);"
+                                onfocus="this.style.borderColor='#a78bfa'; this.style.boxShadow='0 0 0 3px rgba(167,139,250,0.15)'"
+                                onblur="this.style.borderColor='rgba(167,139,250,0.3)'; this.style.boxShadow='none'"
+                                onkeydown="if(event.key==='Enter') loginAsGuest()">
+                        </div>
+                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-bottom: 20px; padding-left: 4px;">
+                            <i class="fa-solid fa-clock" style="margin-right:4px;"></i> Data tamu otomatis hilang
+                            setelah 3 hari tidak aktif.
+                        </p>
+                        <button class="btn-neon" onclick="loginAsGuest()"
+                            style="background: linear-gradient(90deg, #a78bfa, #7c3aed);">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>MASUK SEKARANG</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -909,7 +1015,14 @@
 
         // Update fungsi goBack yang lama
         function goBack() {
-            if (currentStep === 2) {
+            if (currentStep === 3) {
+                // Kembali dari guest ke pilih kelas
+                currentStep = 1;
+                document.getElementById('mainSlider').classList.remove('step-3');
+                document.getElementById('mainSlider').classList.add('step-1');
+                document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
+                document.getElementById('guestNameInput').value = '';
+            } else if (currentStep === 2) {
                 // Kembali ke pilih kelas
                 currentStep = 1;
                 document.getElementById('mainSlider').classList.remove('step-2');
@@ -1229,6 +1342,81 @@
                 item.style.display = name.includes(term) ? 'flex' : 'none';
             });
         }
+
+        // ── GUEST FLOW ──────────────────────────────────────────────
+
+        function goToGuestStep() {
+            currentStep = 3;
+            document.getElementById('mainSlider').classList.remove('step-1', 'step-2');
+            document.getElementById('mainSlider').classList.add('step-3');
+            document.getElementById('headerSubtitle').innerText = "Masuk sebagai Tamu";
+            document.getElementById('globalBackBtn').classList.add('show');
+
+            // Cek apakah pernah masuk sebagai tamu
+            const prevGuest = _getPrevGuest();
+            if (prevGuest) {
+                document.getElementById('returningGuestName').innerText = prevGuest.nickname || 'Tamu';
+                document.getElementById('guestReturning').style.display = 'block';
+                document.getElementById('guestNew').style.display = 'none';
+            } else {
+                document.getElementById('guestReturning').style.display = 'none';
+                document.getElementById('guestNew').style.display = 'block';
+                setTimeout(() => document.getElementById('guestNameInput').focus(), 400);
+            }
+        }
+
+        function showNewGuestForm() {
+            document.getElementById('guestReturning').style.display = 'none';
+            document.getElementById('guestNew').style.display = 'block';
+            document.getElementById('guestNew').style.animation = 'fadeIn 0.4s ease';
+            setTimeout(() => document.getElementById('guestNameInput').focus(), 100);
+        }
+
+        function _getPrevGuest() {
+            try { return JSON.parse(localStorage.getItem('prevGuest')); } catch (e) { return null; }
+        }
+
+        async function loginAsGuest(useExisting = false) {
+            let guestObj;
+
+            if (useExisting) {
+                // Pakai data tamu lama
+                guestObj = _getPrevGuest();
+            } else {
+                const rawName = document.getElementById('guestNameInput').value.trim();
+                const nickname = rawName || 'Tamu';
+                const guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+                guestObj = { id: guestId, nickname, class_id: 2, role: 'guest', avatar_url: null };
+            }
+
+            // Update last_seen di Supabase
+            try {
+                await supabase.from('guests').upsert({
+                    id: guestObj.id,
+                    nickname: guestObj.nickname,
+                    class_id: 2,
+                    last_seen: new Date().toISOString()
+                });
+            } catch (e) { console.warn('Guest upsert failed:', e); }
+
+            // Simpan ke localStorage — user session + riwayat tamu
+            localStorage.setItem('user', JSON.stringify(guestObj));
+            localStorage.setItem('prevGuest', JSON.stringify(guestObj));
+            window.location.href = 'announcements';
+        }
+
+        // Hapus guest yang sudah 3 hari tidak aktif (dipanggil saat halaman login dibuka)
+        async function cleanupOldGuests() {
+            try {
+                const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+                await supabase.from('guests').delete().lt('last_seen', threeDaysAgo);
+            } catch (e) { /* silent fail */ }
+        }
+
+        // Jalankan cleanup saat halaman login dibuka
+        document.addEventListener('DOMContentLoaded', () => {
+            cleanupOldGuests();
+        });
     </script>
 </body>
 

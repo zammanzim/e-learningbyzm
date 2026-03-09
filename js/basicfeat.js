@@ -1,4 +1,15 @@
 // ==========================================
+// PWA — SERVICE WORKER REGISTER (GLOBAL)
+// ==========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[PWA] SW terdaftar:', reg.scope))
+            .catch(err => console.warn('[PWA] SW gagal:', err));
+    });
+}
+
+// ==========================================
 // 1. AUTO RUN SAAT HALAMAN DIMUAT
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
