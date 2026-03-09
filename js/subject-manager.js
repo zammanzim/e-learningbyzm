@@ -992,6 +992,41 @@ function updateSliderUI() {
 }
 function nextSlide(e) { if (e) e.stopPropagation(); if (currentViewerIndex < currentViewerPhotos.length - 1) { currentViewerIndex++; updateSliderUI(); } }
 function prevSlide(e) { if (e) e.stopPropagation(); if (currentViewerIndex > 0) { currentViewerIndex--; updateSliderUI(); } }
+
+// ── Swipe gesture untuk detail photo viewer ──────────────────
+(function initSwipe() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isSwiping = false;
+
+    document.addEventListener('touchstart', function (e) {
+        const overlay = document.getElementById('detailOverlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+        if (currentViewerPhotos.length <= 1) return;
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isSwiping = true;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+        if (!isSwiping) return;
+        isSwiping = false;
+
+        const overlay = document.getElementById('detailOverlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+        if (currentViewerPhotos.length <= 1) return;
+
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+
+        // Minimal 50px horizontal, dan lebih horizontal dari vertikal
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+        if (dx < 0) nextSlide();  // geser kiri → foto berikutnya
+        else prevSlide();          // geser kanan → foto sebelumnya
+    }, { passive: true });
+})();
 function showMobileInfo(e) {
     if (e) e.stopPropagation();
     const info = document.getElementById('detailInfoSection');
