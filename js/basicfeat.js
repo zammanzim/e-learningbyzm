@@ -402,28 +402,4 @@ document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
     if (document.getElementById('visitorOverlay').classList.contains('active')) history.back();
 });
 
-// ===== PWA INSTALL HANDLER =====
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    window.__pwaPrompt = e;
-
-    const box = document.getElementById('installBox');
-    if (box) box.style.display = 'block';
-});
-
-window.addEventListener('pwa-ready', () => {
-    const box = document.getElementById('installBox');
-    if (box) box.style.display = 'block';
-});
-
-document.addEventListener('click', async (e) => {
-    if (e.target?.id !== 'installBtn') return;
-    if (!window.__pwaPrompt) return;
-
-    window.__pwaPrompt.prompt();
-    await window.__pwaPrompt.userChoice;
-    window.__pwaPrompt = null;
-
-    const box = document.getElementById('installBox');
-    if (box) box.style.display = 'none';
-});
+// ===== PWA INSTALL — dihandle langsung di announcements.html =====

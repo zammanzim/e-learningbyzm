@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" href="icons/announcements.png">
     <script>
         window.__pwaPrompt = null;
-        window.addEventListener('beforeinstallprompt', function(e) {
+        window.addEventListener('beforeinstallprompt', function (e) {
             e.preventDefault();
             window.__pwaPrompt = e;
             window.dispatchEvent(new Event('pwa-ready'));
@@ -41,18 +41,177 @@
             <h2 id="welcomeText"></h2>
         </div>
         <div class="right-section">
-            <div id="announcements">
+
+            <!-- PWA INSTALL CARD -->
+            <div id="pwaInstallCard" class="course-card" style="
+                border: 1.5px solid rgba(0, 234, 255, 0.25);
+                background: linear-gradient(135deg, rgba(0,234,255,0.07) 0%, rgba(0,0,0,0.35) 100%);
+                margin: 0 0 20px 0;
+                transition: all 0.5s ease;
+            ">
+                <!-- State: Belum install -->
+                <div id="pwaCardDefault">
+                    <h3 style="margin: 0 0 6px 0; font-size: 18px; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:22px;">📲</span> Coba install aplikasi yok
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.65); font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+                        Sekarang e-learning bisa berbentuk aplikasi, gak akan makan penyimpanan sedikit pun. Jadi coba
+                        yuk install!
+                    </p>
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button id="installBtn" style="
+                            background: linear-gradient(90deg, #00eaff, #007bff);
+                            color: #000;
+                            font-weight: 700;
+                            border: none;
+                            padding: 10px 22px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            letter-spacing: 0.3px;
+                            transition: opacity 0.2s;
+                        " onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                            Install Sekarang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- State: Sudah install -->
+                <div id="pwaCardInstalled" style="display:none; text-align:center; padding: 10px 0;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                    <h3 style="margin: 0 0 6px 0; font-size: 18px; color: #0be881;">Makasiii udah nginstall aplikasiinya
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 13px;">cek di homescreen yaa 🏠</p>
+                </div>
             </div>
-            <div id="installBox" style="display:none; margin-top:16px;">
-                <button id="installBtn" class="btn-primary">
-                    📲 Pasang Aplikasi
-                </button>
+            <!-- END PWA INSTALL CARD -->
+
+            <div id="announcements">
             </div>
             <div id="editControls"></div>
         </div>
     </div>
 
     <script src="js/daily-card.js" defer></script>
+
+    <script>
+        // ==========================================
+        // PWA INSTALL CARD LOGIC
+        // ==========================================
+        (function () {
+            const STORAGE_KEY = 'pwa_installed';
+
+            function showInstalledState() {
+                const card = document.getElementById('pwaInstallCard');
+                const def = document.getElementById('pwaCardDefault');
+                const done = document.getElementById('pwaCardInstalled');
+                if (!card) return;
+
+                card.style.background = 'linear-gradient(135deg, rgba(11,232,129,0.12) 0%, rgba(0,0,0,0.35) 100%)';
+                card.style.border = '1.5px solid rgba(11,232,129,0.35)';
+                if (def) def.style.display = 'none';
+                if (done) done.style.display = 'block';
+            }
+
+            function hideCard() {
+                // Kalau udah installed, card tetap keliatan tapi dalam state hijau
+                // Kalau browser ga support PWA install, sembunyiin aja
+                const card = document.getElementById('pwaInstallCard');
+                if (card) card.style.display = 'none';
+            }
+
+            // 1. Cek apakah udah pernah install sebelumnya
+            if (localStorage.getItem(STORAGE_KEY) === 'true') {
+                document.addEventListener('DOMContentLoaded', showInstalledState);
+                return;
+            }
+
+            // 2. Cek apakah udah jalan sebagai PWA (standalone)
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                document.addEventListener('DOMContentLoaded', () => {
+                    localStorage.setItem(STORAGE_KEY, 'true');
+                    showInstalledState();
+                });
+                return;
+            }
+
+            // 3. Tangkap event beforeinstallprompt (sudah dihandle di head, tinggal listen)
+            let deferredPrompt = null;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                deferredPrompt = e;
+                // Card tetap visible — ini defaultnya
+            });
+
+            // 4. Kalau browser ga trigger beforeinstallprompt sama sekali setelah load,
+            //    berarti ga bisa install (misal: udah install atau browser ga support)
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    if (!deferredPrompt && !window.__pwaPrompt) {
+                        // Kemungkinan udah install — sembunyiin card
+                        hideCard();
+                    }
+                }, 3000);
+            });
+
+            // 5. Tombol Install diklik
+            document.addEventListener('click', async (e) => {
+                if (e.target?.id !== 'installBtn') return;
+
+                const prompt = deferredPrompt || window.__pwaPrompt;
+                if (!prompt) return;
+
+                prompt.prompt();
+                const { outcome } = await prompt.userChoice;
+
+                // Track ke Supabase
+                try {
+                    const user = JSON.parse(localStorage.getItem('user') || 'null');
+                    if (user && typeof supabase !== 'undefined') {
+                        await supabase.from('pwa_installs').insert({
+                            user_id: user.id,
+                            full_name: user.full_name || null,
+                            nickname: user.nickname || user.short_name || null,
+                            class_id: String(user.class_id),
+                            outcome: outcome // 'accepted' atau 'dismissed'
+                        });
+                    }
+                } catch (trackErr) {
+                    console.warn('[PWA] Gagal track install:', trackErr);
+                }
+
+                if (outcome === 'accepted') {
+                    localStorage.setItem(STORAGE_KEY, 'true');
+                    showInstalledState();
+                }
+
+                deferredPrompt = null;
+                window.__pwaPrompt = null;
+            });
+
+            // 6. Event kalau berhasil install dari browser sendiri
+            window.addEventListener('appinstalled', async () => {
+                localStorage.setItem(STORAGE_KEY, 'true');
+                showInstalledState();
+
+                // Track appinstalled (install dari browser, bukan tombol)
+                try {
+                    const user = JSON.parse(localStorage.getItem('user') || 'null');
+                    if (user && typeof supabase !== 'undefined') {
+                        await supabase.from('pwa_installs').insert({
+                            user_id: user.id,
+                            full_name: user.full_name || null,
+                            nickname: user.nickname || user.short_name || null,
+                            class_id: String(user.class_id),
+                            outcome: 'accepted'
+                        });
+                    }
+                } catch (trackErr) {
+                    console.warn('[PWA] Gagal track appinstalled:', trackErr);
+                }
+            });
+        })();
+    </script>
 
     <script type="module">
         SubjectApp.init('announcements', '<h3><i class="fa-solid fa-bullhorn"></i> Class Announcements</h3>', 'Class Announcements', false); 
