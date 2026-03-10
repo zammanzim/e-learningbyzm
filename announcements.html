@@ -76,13 +76,6 @@
                     </div>
                 </div>
 
-                <!-- State: Sudah install -->
-                <div id="pwaCardInstalled" style="display:none; text-align:center; padding: 10px 0;">
-                    <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
-                    <h3 style="margin: 0 0 6px 0; font-size: 18px; color: #0be881;">Makasiii udah nginstall aplikasiinya
-                    </h3>
-                    <p style="color: rgba(255,255,255,0.6); font-size: 13px;">cek di homescreen yaa 🏠</p>
-                </div>
             </div>
             <!-- END PWA INSTALL CARD -->
 
@@ -96,65 +89,51 @@
 
     <script>
         // ==========================================
-        // PWA INSTALL CARD LOGIC
+        // PWA INSTALL CARD LOGIC — Source of truth: Supabase
         // ==========================================
         (function () {
-            const STORAGE_KEY = 'pwa_installed';
+            let deferredPrompt = null;
 
-            function showInstalledState() {
-                const card = document.getElementById('pwaInstallCard');
-                const def = document.getElementById('pwaCardDefault');
-                const done = document.getElementById('pwaCardInstalled');
-                if (!card) return;
-
-                card.style.background = 'linear-gradient(135deg, rgba(11,232,129,0.12) 0%, rgba(0,0,0,0.35) 100%)';
-                card.style.border = '1.5px solid rgba(11,232,129,0.35)';
-                if (def) def.style.display = 'none';
-                if (done) done.style.display = 'block';
-            }
+            // Tangkap beforeinstallprompt sesegera mungkin
+            window.addEventListener('beforeinstallprompt', (e) => {
+                deferredPrompt = e;
+            });
 
             function hideCard() {
-                // Kalau udah installed, card tetap keliatan tapi dalam state hijau
-                // Kalau browser ga support PWA install, sembunyiin aja
                 const card = document.getElementById('pwaInstallCard');
                 if (card) card.style.display = 'none';
             }
 
-            // 1. Cek apakah udah pernah install sebelumnya
-            if (localStorage.getItem(STORAGE_KEY) === 'true') {
-                document.addEventListener('DOMContentLoaded', showInstalledState);
-                return;
+            // Cek Supabase: apakah user ini sudah accepted?
+            async function checkAndRenderCard() {
+                if (typeof supabase === 'undefined') {
+                    setTimeout(checkAndRenderCard, 200);
+                    return;
+                }
+
+                let user;
+                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { }
+                if (!user) { hideCard(); return; }
+
+                try {
+                    const { data } = await supabase
+                        .from('pwa_installs')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .eq('outcome', 'accepted')
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (data) hideCard();
+                    // Kalau null = belum install, card tetap tampil
+                } catch (e) {
+                    console.warn('[PWA] Gagal cek status install:', e);
+                }
             }
 
-            // 2. Cek apakah udah jalan sebagai PWA (standalone)
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-                document.addEventListener('DOMContentLoaded', () => {
-                    localStorage.setItem(STORAGE_KEY, 'true');
-                    showInstalledState();
-                });
-                return;
-            }
+            document.addEventListener('DOMContentLoaded', checkAndRenderCard);
 
-            // 3. Tangkap event beforeinstallprompt (sudah dihandle di head, tinggal listen)
-            let deferredPrompt = null;
-
-            window.addEventListener('beforeinstallprompt', (e) => {
-                deferredPrompt = e;
-                // Card tetap visible — ini defaultnya
-            });
-
-            // 4. Kalau browser ga trigger beforeinstallprompt sama sekali setelah load,
-            //    berarti ga bisa install (misal: udah install atau browser ga support)
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    if (!deferredPrompt && !window.__pwaPrompt) {
-                        // Kemungkinan udah install — sembunyiin card
-                        hideCard();
-                    }
-                }, 3000);
-            });
-
-            // 5. Tombol Install diklik
+            // Tombol Install diklik
             document.addEventListener('click', async (e) => {
                 if (e.target?.id !== 'installBtn') return;
 
@@ -164,47 +143,48 @@
                 prompt.prompt();
                 const { outcome } = await prompt.userChoice;
 
-                // Track ke Supabase
+                // Simpan/update ke Supabase
                 try {
                     const user = JSON.parse(localStorage.getItem('user') || 'null');
                     if (user && typeof supabase !== 'undefined') {
-                        await supabase.from('pwa_installs').insert({
+                        await supabase.from('pwa_installs').upsert({
                             user_id: user.id,
                             full_name: user.full_name || null,
                             nickname: user.nickname || user.short_name || null,
                             class_id: String(user.class_id),
-                            outcome: outcome // 'accepted' atau 'dismissed'
-                        });
+                            outcome: outcome,
+                            installed_at: new Date().toISOString()
+                        }, { onConflict: 'user_id' });
                     }
                 } catch (trackErr) {
                     console.warn('[PWA] Gagal track install:', trackErr);
                 }
 
                 if (outcome === 'accepted') {
-                    localStorage.setItem(STORAGE_KEY, 'true');
-                    showInstalledState();
+                    hideCard();
+                    showPopup('makasiii udah install aplikasinyaa. cek homescreen yaaa 🏠', 'success');
+                } else {
+                    showPopup('install dong, da moal nanaon', 'error');
                 }
 
                 deferredPrompt = null;
                 window.__pwaPrompt = null;
             });
 
-            // 6. Event kalau berhasil install dari browser sendiri
+            // Install dari banner browser (bukan tombol)
             window.addEventListener('appinstalled', async () => {
-                localStorage.setItem(STORAGE_KEY, 'true');
-                showInstalledState();
-
-                // Track appinstalled (install dari browser, bukan tombol)
+                hideCard();
                 try {
                     const user = JSON.parse(localStorage.getItem('user') || 'null');
                     if (user && typeof supabase !== 'undefined') {
-                        await supabase.from('pwa_installs').insert({
+                        await supabase.from('pwa_installs').upsert({
                             user_id: user.id,
                             full_name: user.full_name || null,
                             nickname: user.nickname || user.short_name || null,
                             class_id: String(user.class_id),
-                            outcome: 'accepted'
-                        });
+                            outcome: 'accepted',
+                            installed_at: new Date().toISOString()
+                        }, { onConflict: 'user_id' });
                     }
                 } catch (trackErr) {
                     console.warn('[PWA] Gagal track appinstalled:', trackErr);
