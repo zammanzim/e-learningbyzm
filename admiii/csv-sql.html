@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV → SQL Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js" defer></script>
+    <script src="../js/ui-components.js" defer></script>
+    <script src="../js/basicfeat.js" defer></script>
+    <script src="../js/auth.js" defer></script>
+    <script src="../js/visitor.js" defer></script>
+    <link rel="stylesheet" href="../css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Class App">
+    <link rel="apple-touch-icon" href="icons/csv-sql.png">
+
+    <style>
+        /* ── PAGE-SPECIFIC ─────────────────────────────────── */
+
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #00eaff;
+            margin-bottom: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            font-size: 0.8125rem;
+            color: rgba(255,255,255,0.75);
+            font-weight: 600;
+        }
+
+        .form-group input {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 0.5rem;
+            color: #fff;
+            padding: 0.65rem 0.875rem;
+            font-size: 0.9375rem;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+            width: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group input:focus {
+            border-color: #00eaff;
+            background: rgba(0,234,255,0.05);
+        }
+
+        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+        .drop-zone {
+            border: 2px dashed rgba(0,234,255,0.35);
+            border-radius: 0.75rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(0,234,255,0.03);
+            position: relative;
+            margin-top: 0.5rem;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #00eaff;
+            background: rgba(0,234,255,0.07);
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drop-zone-icon { font-size: 2.2rem; color: #00eaff; margin-bottom: 0.5rem; opacity: 0.7; }
+        .drop-zone-text { font-size: 0.9rem; color: rgba(255,255,255,0.6); }
+        .drop-zone-text strong { color: #00eaff; }
+        .drop-zone-hint { font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.3rem; }
+
+        /* ── FILE LIST ── */
+        .file-list {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.875rem;
+        }
+
+        .file-list.show { display: flex; }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .file-row-icon { color: #00eaff; font-size: 0.9rem; flex-shrink: 0; }
+
+        .file-row-name {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.65);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        .file-row input {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 0.375rem;
+            color: #fff;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.8rem;
+            outline: none;
+            font-family: Arial, sans-serif;
+            transition: border-color 0.2s;
+            width: 11rem;
+            flex-shrink: 0;
+        }
+
+        .file-row input:focus { border-color: #00eaff; }
+        .file-row input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .file-row-remove {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.2rem;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .file-row-remove:hover { color: #ff4757; }
+
+        .btn-convert {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #00b4d8, #00eaff);
+            color: #000;
+            border: none;
+            border-radius: 0.6rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-convert:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(0,234,255,0.35);
+        }
+
+        .btn-convert:active { transform: translateY(0); }
+
+        .output-section { display: none; }
+        .output-section.show { display: block; }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.875rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .stat-chip {
+            background: rgba(0,234,255,0.1);
+            border: 1px solid rgba(0,234,255,0.25);
+            border-radius: 2rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            color: #00eaff;
+            font-weight: 700;
+        }
+
+        .stat-chip.warn {
+            background: rgba(255,159,67,0.12);
+            border-color: rgba(255,159,67,0.3);
+            color: #ff9f43;
+        }
+
+        .output-actions { display: flex; gap: 0.5rem; }
+
+        /* ── SQL OUTPUT: per-file blocks ── */
+        .sql-file-block { margin-bottom: 0.875rem; }
+
+        .sql-file-block:last-child { margin-bottom: 0; }
+
+        .sql-file-label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 0.3rem;
+        }
+
+        .sql-file-label span {
+            color: #00eaff;
+            font-size: 0.75rem;
+        }
+
+        .sql-output {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.6rem;
+            padding: 1rem 1.125rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.75;
+            color: #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+            max-height: 22rem;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,234,255,0.3) transparent;
+        }
+
+        .sql-output::-webkit-scrollbar { width: 5px; height: 5px; }
+        .sql-output::-webkit-scrollbar-thumb { background: rgba(0,234,255,0.3); border-radius: 5px; }
+
+        .sql-keyword { color: #00eaff; font-weight: bold; }
+        .sql-table   { color: #ffd32a; }
+        .sql-string  { color: #2ed573; }
+        .sql-number  { color: #ff9f43; }
+
+        .skipped-section { display: none; }
+        .skipped-section.show { display: block; }
+
+        .skipped-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+
+        .skip-chip {
+            background: rgba(255,71,87,0.1);
+            border: 1px solid rgba(255,71,87,0.25);
+            border-radius: 2rem;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.75rem;
+            color: #ff6b81;
+        }
+
+        .cs-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,234,255,0.15), transparent);
+            margin: 1.25rem 0;
+        }
+
+        .tool-badge {
+            background: linear-gradient(135deg, #00cfe8, #1dd1ff);
+            color: black;
+            font-size: 0.5rem;
+            font-weight: 800;
+            padding: 0.2rem 0.45rem;
+            border-radius: 0.3rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            vertical-align: middle;
+            margin-left: 0.4rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="right-section">
+
+            <!-- PAGE HEADING -->
+            <h3 style="margin-bottom: 0.3rem;">
+                <i class="fa-solid fa-database"></i>
+                CSV → SQL Converter
+                <span class="tool-badge">Tool</span>
+            </h3>
+            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 1.25rem;">
+                Konversi nilai export Moodle ke query SQL siap pakai
+            </p>
+
+            <!-- INPUT CARD -->
+            <div class="course-card" style="border: 1px solid rgba(0,234,255,0.15);">
+                <div class="card-title"><i class="fa-solid fa-sliders"></i> Konfigurasi</div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-id-badge"></i> Class ID</label>
+                    <input type="text" id="classId" placeholder="contoh: X-TKJ-1, XI-AK-2..." />
+                </div>
+
+                <div class="cs-divider"></div>
+
+                <div class="card-title" style="margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-file-csv"></i> Upload File CSV
+                </div>
+                <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-bottom:0.75rem;">
+                    Bisa upload banyak sekaligus. Tiap file isi nama kolom mapelnya masing-masing.
+                </p>
+
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="csvFile" accept=".csv" multiple />
+                    <div class="drop-zone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div class="drop-zone-text"><strong>Klik atau drag & drop</strong> satu atau banyak file CSV</div>
+                    <div class="drop-zone-hint">Format: export nilai dari Moodle (.csv)</div>
+                </div>
+
+                <!-- FILE LIST -->
+                <div class="file-list" id="fileList"></div>
+
+                <button class="btn-convert" onclick="convertCsv()">
+                    <i class="fa-solid fa-bolt"></i> Generate SQL
+                </button>
+            </div>
+
+            <!-- OUTPUT CARD -->
+            <div class="course-card output-section" id="outputSection" style="border: 1px solid rgba(0,234,255,0.15);">
+                <div class="output-header">
+                    <div class="card-title" style="margin-bottom:0;">
+                        <i class="fa-solid fa-code"></i> Output SQL
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        <span class="stat-chip" id="statRows">—</span>
+                        <span class="stat-chip" id="statFiles" style="background:rgba(46,213,115,0.1);border-color:rgba(46,213,115,0.25);color:#2ed573;">—</span>
+                        <span class="stat-chip warn" id="statSkipped" style="display:none;">—</span>
+                        <div class="output-actions">
+                            <button class="btn-tool" onclick="copySql()">
+                                <i class="fa-regular fa-copy"></i> Copy
+                            </button>
+                            <button class="btn-tool" onclick="downloadSql()">
+                                <i class="fa-solid fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="sql-output" id="sqlOutput"></div>
+            </div>
+
+            <!-- SKIPPED CARD -->
+            <div class="course-card skipped-section" id="skippedSection" style="border: 1px solid rgba(255,159,67,0.2);">
+                <div class="card-title" style="color: #ff9f43; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Siswa Dilewati
+                </div>
+                <p style="font-size: 0.8125rem; color: rgba(255,255,255,0.5); margin-bottom: 0.75rem;">
+                    Siswa berikut tidak diikutsertakan karena status <em>In progress</em> atau nilai tidak tersedia.
+                </p>
+                <div class="skipped-list" id="skippedList"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ── FILE STORE ────────────────────────────────────────────────
+        // Map: fileName -> { file: File, mapel: string }
+        let fileStore = new Map();
+
+        const csvFileInput = document.getElementById('csvFile');
+        const dropZone     = document.getElementById('dropZone');
+
+        csvFileInput.addEventListener('change', () => addFiles(csvFileInput.files));
+
+        dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            addFiles(e.dataTransfer.files);
+        });
+
+        function addFiles(fileList) {
+            for (const f of fileList) {
+                if (!f.name.endsWith('.csv')) continue;
+                if (!fileStore.has(f.name)) {
+                    fileStore.set(f.name, { file: f, mapel: '' });
+                }
+            }
+            renderFileList();
+        }
+
+        function removeFile(name) {
+            fileStore.delete(name);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const listEl = document.getElementById('fileList');
+            if (fileStore.size === 0) {
+                listEl.classList.remove('show');
+                listEl.innerHTML = '';
+                return;
+            }
+            listEl.classList.add('show');
+            listEl.innerHTML = [...fileStore.entries()].map(([name]) => `
+                <div class="file-row" id="row-${CSS.escape(name)}">
+                    <i class="fa-solid fa-file-csv file-row-icon"></i>
+                    <span class="file-row-name" title="${name}">${name}</span>
+                    <input
+                        type="text"
+                        placeholder="nama kolom mapel..."
+                        value="${fileStore.get(name).mapel}"
+                        oninput="fileStore.get('${name.replace(/'/g,"\\'")}').mapel = this.value.trim()"
+                    />
+                    <button class="file-row-remove" onclick="removeFile('${name.replace(/'/g,"\\'")}')">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // ── NAME NORMALIZATION ────────────────────────────────────────
+        const muhVariants = /^(muhammad|muhamad|moch|muh|mhd|mohamad|mohammad|m\.)$/i;
+
+        function normalizeName(firstName, lastName) {
+            const fn = firstName.trim();
+            const ln = lastName.trim();
+            if (muhVariants.test(fn)) return 'M. ' + ln.split(/\s+/)[0];
+            return fn;
+        }
+
+        // ── CSV PARSER ────────────────────────────────────────────────
+        function parseCsv(text) {
+            const lines = text.trim().split('\n');
+            const headers = parseCsvRow(lines[0]);
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = parseCsvRow(lines[i]);
+                if (cols.length < 4) continue;
+                const obj = {};
+                headers.forEach((h, idx) => {
+                    obj[h.trim().replace(/^\uFEFF/, '')] = (cols[idx] || '').trim();
+                });
+                rows.push(obj);
+            }
+            return rows;
+        }
+
+        function parseCsvRow(row) {
+            const result = [];
+            let cur = '', inQuote = false;
+            for (let i = 0; i < row.length; i++) {
+                const ch = row[i];
+                if (ch === '"') {
+                    if (inQuote && row[i+1] === '"') { cur += '"'; i++; }
+                    else inQuote = !inQuote;
+                } else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
+                else cur += ch;
+            }
+            result.push(cur);
+            return result;
+        }
+
+        // ── PROCESS ONE FILE ──────────────────────────────────────────
+        function processFile(text, namaMapel, classId) {
+            const rows = parseCsv(text);
+            const sqlLines = [], skipped = [];
+
+            // Deteksi kolom grade secara dinamis (Grade/100.00, Grade/10.00, dst)
+            const gradeKey = rows.length > 0
+                ? Object.keys(rows[0]).find(k => k.startsWith('Grade/'))
+                : null;
+            const gradeMax = gradeKey ? parseFloat(gradeKey.split('/')[1]) : 100;
+            const gradeMultiplier = gradeMax < 100 ? (100 / gradeMax) : 1;
+
+            for (const row of rows) {
+                const lastN  = row['Last name']  || '';
+                const firstN = row['First name'] || '';
+                const status = row['Status']     || '';
+                const grade  = gradeKey ? row[gradeKey] : null;
+
+                if (!firstN || !lastN) continue;
+                if (lastN.toLowerCase().includes('average')) continue;
+
+                if (status.toLowerCase() !== 'finished' || !grade || grade === '-') {
+                    skipped.push(firstN + ' ' + lastN);
+                    continue;
+                }
+
+                const displayName = normalizeName(firstN, lastN);
+                const nilai       = (parseFloat(grade) * gradeMultiplier).toFixed(2);
+                sqlLines.push(
+                    `UPDATE nilai_psts SET ${namaMapel} = ${nilai} WHERE nama_siswa = '${displayName}' AND class_id = '${classId}';`
+                );
+            }
+            return { sqlLines, skipped };
+        }
+
+        // ── SYNTAX HIGHLIGHT ──────────────────────────────────────────
+        function highlightSql(sql) {
+            return sql
+                .replace(/\b(UPDATE|SET|WHERE|AND)\b/g, '<span class="sql-keyword">$1</span>')
+                .replace(/\b(nilai_psts)\b/g,           '<span class="sql-table">$1</span>')
+                .replace(/'([^']*)'/g,                  '<span class="sql-string">\'$1\'</span>')
+                .replace(/= (\d+(\.\d+)?)/g,            '= <span class="sql-number">$1</span>');
+        }
+
+        // ── MAIN CONVERT ──────────────────────────────────────────────
+        let lastSqlRaw = '';
+
+        function convertCsv() {
+            const classId = document.getElementById('classId').value.trim();
+            if (!classId)          return notify('Isi Class ID dulu ya!', 'error');
+            if (fileStore.size === 0) return notify('Upload file CSV dulu!', 'error');
+
+            // Validasi semua file sudah ada nama mapelnya
+            for (const [name, data] of fileStore) {
+                if (!data.mapel) return notify(`Isi nama kolom mapel untuk: ${name}`, 'error');
+            }
+
+            const entries   = [...fileStore.entries()];
+            let   processed = 0;
+            const allBlocks = [];   // { namaMapel, fileName, sqlLines }
+            const allSkipped = [];  // { fileName, namaMapel, names[] }
+
+            for (const [name, data] of entries) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const { sqlLines, skipped } = processFile(e.target.result, data.mapel, classId);
+                    allBlocks.push({ namaMapel: data.mapel, fileName: name, sqlLines });
+                    if (skipped.length) allSkipped.push({ fileName: name, namaMapel: data.mapel, names: skipped });
+                    processed++;
+
+                    if (processed === entries.length) renderOutput(allBlocks, allSkipped, classId);
+                };
+                reader.readAsText(data.file);
+            }
+        }
+
+        function renderOutput(blocks, skipped, classId) {
+            // skipped is now array of { fileName, namaMapel, names[] }
+            const totalQueries = blocks.reduce((s, b) => s + b.sqlLines.length, 0);
+
+            // Build raw SQL (untuk copy/download): blok per file dipisah komentar
+            lastSqlRaw = blocks.map(b =>
+                `-- ${b.fileName} | ${b.namaMapel}\n` + b.sqlLines.join('\n')
+            ).join('\n\n');
+
+            // Build highlighted HTML
+            const htmlBlocks = blocks.map(b => `
+                <div class="sql-file-block">
+                    <div class="sql-file-label">
+                        <i class="fa-solid fa-file-csv"></i>
+                        ${b.fileName} &mdash; <span>${b.namaMapel}</span>
+                        &nbsp;·&nbsp; ${b.sqlLines.length} query
+                    </div>
+                    ${b.sqlLines.map(highlightSql).join('\n')}
+                </div>
+            `).join('<div style="height:0.75rem;border-top:1px solid rgba(255,255,255,0.06);margin:0.75rem 0;"></div>');
+
+            document.getElementById('sqlOutput').innerHTML = htmlBlocks;
+            document.getElementById('statRows').textContent  = totalQueries + ' query';
+            document.getElementById('statFiles').textContent = blocks.length + ' file';
+
+            const totalSkipped = skipped.reduce((s, g) => s + g.names.length, 0);
+
+            if (totalSkipped > 0) {
+                document.getElementById('statSkipped').textContent = totalSkipped + ' dilewati';
+                document.getElementById('statSkipped').style.display = '';
+                document.getElementById('skippedList').innerHTML = skipped.map(g => `
+                    <div style="margin-bottom:0.75rem;">
+                        <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ff9f43;margin-bottom:0.4rem;">
+                            <i class="fa-solid fa-file-csv" style="margin-right:4px;"></i>${g.fileName} &mdash; ${g.namaMapel}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+                            ${g.names.map(n => `<span class="skip-chip"><i class="fa-solid fa-xmark" style="font-size:.65rem;margin-right:3px;"></i>${n}</span>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('skippedSection').classList.add('show');
+            } else {
+                document.getElementById('statSkipped').style.display = 'none';
+                document.getElementById('skippedSection').classList.remove('show');
+            }
+
+            document.getElementById('outputSection').classList.add('show');
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            notify('SQL berhasil di-generate!', 'success');
+        }
+
+        // ── COPY & DOWNLOAD ───────────────────────────────────────────
+        function copySql() {
+            if (!lastSqlRaw) return;
+            navigator.clipboard.writeText(lastSqlRaw).then(() => notify('SQL berhasil di-copy!', 'success'));
+        }
+
+        function downloadSql() {
+            if (!lastSqlRaw) return;
+            const classId = document.getElementById('classId').value.trim() || 'kelas';
+            const blob = new Blob([lastSqlRaw], { type: 'text/plain' });
+            const a    = document.createElement('a');
+            a.href     = URL.createObjectURL(blob);
+            a.download = `sql_${classId}.sql`;
+            a.click();
+            notify('File .sql berhasil di-download!', 'success');
+        }
+
+        // ── NOTIFY ────────────────────────────────────────────────────
+        function notify(msg, type = 'success') {
+            if (typeof showPopup === 'function') {
+                showPopup(msg, type);
+            } else {
+                if (type === 'error') alert(msg);
+            }
+        }
+
+        // ── KEYBOARD SHORTCUT ─────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) convertCsv();
+        });
+    </script>
+
+</body>
+</html>

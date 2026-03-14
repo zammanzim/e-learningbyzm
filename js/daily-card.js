@@ -19,7 +19,7 @@ async function initDailyCard() {
 
     const user = _getDailyUser();
     if (!user || !user.class_id) return;
-    const CLASS_ID = user.class_id;
+    const CLASS_ID = getEffectiveClassId() || user.class_id;
 
     // --- 1. RENDER KERANGKA ---
     const cardId = 'dailyInfoCard';
@@ -313,7 +313,7 @@ async function updateTaskBadge(user) {
         const [{ count: total }, { count: done }] = await Promise.all([
             supabase.from('subject_announcements')
                 .select('*', { count: 'exact', head: true })
-                .eq('class_id', user.class_id)
+                .eq('class_id', getEffectiveClassId())
                 .neq('subject_id', 'announcements')
                 .neq('subject_id', 'akuhutajakus'),
             supabase.from('user_progress')
@@ -366,7 +366,7 @@ window.saveToDraft = function (day) {
 
     window.dailyDrafts[day] = {
         day_name: day,
-        class_id: user.class_id,
+        class_id: getEffectiveClassId(),
         uniform: cleanText(document.querySelector('[data-type="uniform"]')) || '-',
         activity: cleanText(document.querySelector('[data-type="activity"]')) || '-',
         notes: cleanText(document.querySelector('[data-type="notes"]')) || '-',
@@ -434,7 +434,7 @@ window.saveAllDrafts = async function () {
 
     const user = _getDailyUser();
     if (!user) return;
-    const CLASS_ID = user.class_id;
+    const CLASS_ID = getEffectiveClassId() || user.class_id;
 
     const newTitle = document.getElementById('lblHari').innerText.trim();
 

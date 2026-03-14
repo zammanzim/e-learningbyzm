@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const { data: schedules } = await supabase
                 .from('daily_schedules')
                 .select('day_name, lessons')
-                .eq('class_id', user.class_id)
+                .eq('class_id', getEffectiveClassId())
                 .in('day_name', PSTS_DAYS);
 
             kisiScheduleMap = {};

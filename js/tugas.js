@@ -45,7 +45,7 @@ async function initTugas() {
         const { data: sched } = await supabase
             .from('daily_schedules')
             .select('lessons')
-            .eq('class_id', user.class_id)
+            .eq('class_id', getEffectiveClassId())
             .eq('day_name', targetDayName)
             .single();
 
@@ -62,7 +62,7 @@ async function initTugas() {
         const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
             supabase.from('subject_announcements')
                 .select('*')
-                .eq('class_id', user.class_id)
+                .eq('class_id', getEffectiveClassId())
                 .neq('subject_id', 'announcements')
                 .neq('subject_id', 'kisi-kisi')
                 .neq('subject_id', 'akuhutajakus')

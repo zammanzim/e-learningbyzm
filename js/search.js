@@ -57,7 +57,7 @@ async function searchUser() {
         if (error) throw error;
 
         // --- LOGIKA SORTIR DINAMIS ---
-        const myClassId = user.class_id; // Gunakan ID kelas user login
+        const myClassId = getEffectiveClassId() || user.class_id; // Gunakan ID kelas user login
         
         data.sort((a, b) => {
             // 1. Cek apakah ini kelas yang sama dengan user login

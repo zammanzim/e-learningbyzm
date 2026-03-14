@@ -231,7 +231,7 @@ const SubjectApp = {
 
         try {
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
-            if (this.state.user && this.state.user.class_id) query = query.eq("class_id", this.state.user.class_id);
+            query = query.eq("class_id", getEffectiveClassId() || this.state.user.class_id);
 
             const cacheKey = `announcements_${this.state.subjectId}`;
             let data, error;
@@ -498,7 +498,7 @@ const SubjectApp = {
                 content: getContent(),
                 small: getVal("small"),
                 subject_id: this.state.subjectId,
-                class_id: this.state.user.class_id
+                class_id: getEffectiveClassId() || this.state.user.class_id
             };
         });
 
@@ -558,7 +558,7 @@ const SubjectApp = {
             id: card.dataset.id,            // Primary Key wajib ada
             display_order: index + 1,       // Urutan baru
             subject_id: this.state.subjectId, // Sertakan ini buat jaga-jaga RLS
-            class_id: this.state.user.class_id // Sertakan ini agar RLS mengizinkan akses
+            class_id: getEffectiveClassId() || this.state.user.class_id // Sertakan ini agar RLS mengizinkan akses
         }));
 
         if (updates.length === 0) return;
@@ -805,7 +805,7 @@ const SubjectApp = {
             if (data) urls.push(supabase.storage.from('subject-photos').getPublicUrl(name).data.publicUrl);
         }
         const { error } = await supabase.from('subject_announcements').insert({
-            subject_id: this.state.subjectId, class_id: this.state.user.class_id,
+            subject_id: this.state.subjectId, class_id: getEffectiveClassId() || this.state.user.class_id,
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,

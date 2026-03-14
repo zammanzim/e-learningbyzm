@@ -1,8 +1,3 @@
-/* === BASE FONT SIZE: 1rem = 16px === */
-html {
-    font-size: 16px;
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -37,14 +32,14 @@ body {
         linear-gradient(0deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
         linear-gradient(180deg, #006b83 0%, #005e73 35%, #028ea7 75%, #019196 100%);
     background-repeat: repeat, repeat, no-repeat;
-    background-size: 2.5rem 2.5rem, 2.5rem 2.5rem, cover;
+    background-size: 40px 40px, 40px 40px, cover;
     background-attachment: fixed;
 }
 
 header {
     background-color: transparent;
     color: #fff;
-    padding: 0.9375rem;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -57,12 +52,12 @@ header {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 20px;
 }
 
 .hamburger {
-    width: 1.875rem;
-    height: 1.375rem;
+    width: 30px;
+    height: 22px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -100,13 +95,13 @@ header {
 .visitor-trigger {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 16px;
     color: white;
-    padding: 0.3125rem 0.625rem;
-    border-radius: 0.3125rem;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 .visitor-trigger:hover {
@@ -116,10 +111,10 @@ header {
 .profile-box {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     cursor: pointer;
     font-weight: 600;
-    padding-right: 0.625rem;
+    padding-right: 10px;
     user-select: none;
 }
 
@@ -132,8 +127,8 @@ header {
 }
 
 .header-pp {
-    width: 2.125rem;
-    height: 2.125rem;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid white;
@@ -141,13 +136,13 @@ header {
 
 .profile-dropdown {
     position: absolute;
-    right: 0.9375rem;
-    top: 3.625rem;
+    right: 15px;
+    top: 58px;
     background: rgba(0, 0, 0, 0.55);
-    padding: 0.625rem 0;
-    border-radius: 0.625rem;
+    padding: 10px 0;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    width: 10.625rem;
+    width: 170px;
     display: block;
     opacity: 0;
     transform: translateY(-8px);
@@ -169,10 +164,10 @@ header {
 }
 
 .profile-dropdown li {
-    padding: 0.625rem 0.875rem;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 10px;
     cursor: pointer;
 }
 
@@ -183,12 +178,12 @@ header {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -17.5rem;
-    width: 17.5rem;
+    left: -280px;
+    width: 280px;
     height: 100vh;
     background: rgba(10, 15, 25, 0.6);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 5rem 0.9375rem 77vh 0.9375rem;
+    padding: 80px 15px 77vh 15px;
     transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     z-index: 2000;
     overflow-y: auto;
@@ -196,7 +191,7 @@ header {
 }
 
 .sidebar h3 {
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
 }
 
 .sidebar.open {
@@ -210,8 +205,8 @@ header {
 
 .sidebar li {
     position: relative;
-    margin-bottom: 0.5rem;
-    border-radius: 0.75rem;
+    margin-bottom: 8px;
+    border-radius: 12px;
     transition: all 0.3s ease;
     cursor: pointer;
     overflow: hidden;
@@ -221,20 +216,20 @@ header {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 0.875rem 0.9375rem;
+    padding: 14px 15px;
     color: #d3d3d3;
     text-decoration: none;
-    font-size: 0.9375rem;
+    font-size: 15px;
     font-weight: 500;
     transition: 0.3s;
     background: transparent;
 }
 
 .sidebar a i {
-    width: 1.875rem;
-    font-size: 1.125rem;
+    width: 30px;
+    font-size: 18px;
     text-align: center;
-    margin-right: 0.625rem;
+    margin-right: 10px;
     transition: 0.3s;
 }
 
@@ -244,7 +239,7 @@ header {
 
 .sidebar li:hover a {
     color: #fff;
-    padding-left: 1.25rem;
+    padding-left: 20px;
 }
 
 .sidebar li:hover i,
@@ -273,13 +268,13 @@ header {
 .sidebar-badge {
     position: absolute;
     top: 50%;
-    right: 0.9375rem;
+    right: 15px;
     transform: translateY(-50%);
-    font-size: 0.5625rem;
+    font-size: 9px;
     font-weight: 800;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0312rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
     z-index: 5;
     text-transform: uppercase;
 }
@@ -348,15 +343,15 @@ header {
 @media (min-width: 1024px) {
     .sidebar {
         left: 0;
-        width: 16.875rem;
+        width: 270px;
         background: transparent;
         backdrop-filter: none;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 5rem;
+        padding-top: 80px;
     }
 
     .main-content {
-        margin-left: 16.875rem;
+        margin-left: 270px;
     }
 
     .closebtn {
@@ -380,18 +375,18 @@ header {
 }
 
 .main-content {
-    padding: 1.25rem;
-    max-width: 56.25rem;
+    padding: 20px;
+    max-width: 900px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 3.75rem;
+    margin-top: 60px;
 }
 
 .course-card {
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    margin: 1.25rem 0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
     transition: all .3s ease;
     position: relative;
     /* TAMBAHKAN INI */
@@ -412,21 +407,21 @@ header {
 
 .course-card h3 {
     margin-top: 0;
-    margin-bottom: 0.3125rem;
+    margin-bottom: 5px;
     line-height: 1.2;
-    font-size: 1.5rem;
+    font-size: 24px;
 }
 
 .course-card h4 {
     margin-top: 0;
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
     font-weight: normal;
     color: #a2a0a0;
 }
 
 .course-card p {
     margin-top: 0;
-    margin-bottom: 0.9375rem;
+    margin-bottom: 15px;
 }
 
 .course-card small {
@@ -447,26 +442,26 @@ header {
 .card-photo-container {
     width: 100%;
     position: relative;
-    margin-bottom: 0.9375rem;
-    border-radius: 0.5rem;
+    margin-bottom: 15px;
+    border-radius: 8px;
     overflow: hidden;
 }
 
 .card-photo {
     width: 100%;
     height: auto;
-    max-height: 25rem;
+    max-height: 400px;
     object-fit: cover;
     display: block;
-    border-radius: 0.5rem;
+    border-radius: 8px;
 }
 
 .card-photo-placeholder {
     width: 100%;
-    padding: 2.5rem 1.25rem;
+    padding: 40px 20px;
     background: rgba(255, 255, 255, 0.1);
     border: 2px dashed rgba(255, 255, 255, 0.3);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -479,13 +474,13 @@ header {
 
 .delete-photo-btn {
     position: absolute;
-    top: 0.625rem;
-    right: 0.625rem;
+    top: 10px;
+    right: 10px;
     background: rgba(255, 0, 0, 0.8);
     color: white;
     border: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.3125rem;
+    padding: 8px 12px;
+    border-radius: 5px;
     cursor: pointer;
     z-index: 10;
 }
@@ -498,8 +493,8 @@ header {
     background: #2196F3;
     color: white;
     border: none;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.3125rem;
+    padding: 10px 20px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -512,22 +507,22 @@ header {
 }
 
 .delete-btn {
-    margin-top: 0.75rem;
-    padding: 0.5rem;
+    margin-top: 12px;
+    padding: 8px;
     background: #d9534f;
     border: none;
     color: white;
-    border-radius: 0.375rem;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .delete-btn i {
-    margin-right: 0.375rem;
+    margin-right: 6px;
 }
 
 i {
-    margin-right: 0.3125rem;
+    margin-right: 5px;
 }
 
 .visitor-overlay {
@@ -554,9 +549,9 @@ i {
 .visitor-popup {
     background-color: #0b1221;
     width: 90%;
-    max-width: 23.75rem;
-    border-radius: 1.25rem;
-    padding: 1.5625rem;
+    max-width: 380px;
+    border-radius: 20px;
+    padding: 25px;
     border: 1px solid #1e293b;
     text-align: center;
     color: white;
@@ -574,18 +569,18 @@ i {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5625rem;
+    margin-bottom: 25px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 0.9375rem;
+    padding-bottom: 15px;
 }
 
 .popup-header h3 {
     margin-bottom: 0;
-    font-size: 1.25rem;
+    font-size: 20px;
 }
 
 .close-popup {
-    font-size: 2rem;
+    font-size: 32px;
     color: #94a3b8;
     cursor: pointer;
     line-height: 20px;
@@ -599,15 +594,15 @@ i {
 
 .stats-grid {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5625rem;
+    gap: 12px;
+    margin-bottom: 25px;
 }
 
 .stat-card {
     background-color: #151e32;
     flex: 1;
-    padding: 0.9375rem 0.625rem;
-    border-radius: 0.75rem;
+    padding: 15px 10px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -615,14 +610,14 @@ i {
 }
 
 .stat-card h4 {
-    font-size: 0.75rem;
+    font-size: 12px;
     color: #cbd5e1;
-    margin-bottom: 0.3125rem;
+    margin-bottom: 5px;
     font-weight: normal;
 }
 
 .stat-card p {
-    font-size: 1.75rem;
+    font-size: 28px;
     font-weight: 900;
     color: white;
     margin: 0;
@@ -630,64 +625,64 @@ i {
 
 .list-section {
     text-align: left;
-    margin-bottom: 1.25rem;
+    margin-bottom: 20px;
 }
 
 .list-title {
-    font-size: 0.8125rem;
+    font-size: 13px;
     color: #cbd5e1;
-    margin-bottom: 0.625rem;
-    margin-left: 0.3125rem;
+    margin-bottom: 10px;
+    margin-left: 5px;
 }
 
 .visitor-list-container {
-    max-height: 13.75rem;
+    max-height: 220px;
     overflow-y: auto;
-    padding-right: 0.3125rem;
+    padding-right: 5px;
 }
 
 .visitor-list-container::-webkit-scrollbar {
-    width: 0.3125rem;
+    width: 5px;
 }
 
 .visitor-list-container::-webkit-scrollbar-thumb {
     background: #334155;
-    border-radius: 0.3125rem;
+    border-radius: 5px;
 }
 
 .visitor-item {
     background-color: #151e32;
-    margin-bottom: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    border-radius: 0.625rem;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
 }
 
 .visitor-pp {
-    width: 2.375rem;
-    height: 2.375rem;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     object-fit: cover;
-    margin-right: 0.75rem;
+    margin-right: 12px;
     border: 2px solid #334155;
 }
 
 .visitor-name {
     color: white;
     font-weight: 700;
-    font-size: 0.875rem;
-    margin-bottom: 0.125rem;
+    font-size: 14px;
+    margin-bottom: 2px;
 }
 
 .visited-at {
     display: block;
-    font-size: 0.6875rem;
+    font-size: 11px;
     color: #94a3b8;
 }
 
 .admin-actions {
-    margin-top: 0.9375rem;
+    margin-top: 15px;
     display: none;
 }
 
@@ -695,7 +690,7 @@ i {
     background: none;
     border: none;
     color: #ef4444;
-    font-size: 0.6875rem;
+    font-size: 11px;
     cursor: pointer;
     opacity: 0.6;
     transition: opacity 0.2s;
@@ -712,10 +707,10 @@ i {
         flex-direction: row;
         justify-content: center;
         align-items: flex-start;
-        gap: 1.875rem;
+        gap: 30px;
         max-width: 100%;
         text-align: left;
-        margin-left: 16.875rem;
+        margin-left: 270px;
         transition: margin-left 0.3s ease;
         overflow: visible;
     }
@@ -723,29 +718,29 @@ i {
     .left-section {
         flex: 1;
         position: sticky;
-        top: 5rem;
+        top: 80px;
         align-self: flex-start;
     }
 
     .right-section {
         flex: 1;
-        margin-top: 4.6875rem;
+        margin-top: 75px;
     }
 
     .sidebar {
-        left: -0.625rem;
+        left: -10px;
     }
 
     .sidebar.closed {
-        left: -16.875rem;
+        left: -270px;
     }
 
     .main-content.shifted {
-        margin-left: 1.25rem;
+        margin-left: 20px;
     }
 
     footer {
-        margin-top: 18.75rem;
+        margin-top: 300px;
     }
 
     .sidebar-overlay {
@@ -780,16 +775,16 @@ i {
 
 .glass-modal-box {
     width: 90%;
-    max-width: 31.25rem;
+    max-width: 500px;
     max-height: 90vh;
     background: rgba(30, 30, 30, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(0, 234, 255, 0.3);
-    border-radius: 1.5rem;
-    padding: 1.875rem;
+    border-radius: 24px;
+    padding: 30px;
     display: flex;
     flex-direction: column;
-    gap: 0.9375rem;
+    gap: 15px;
     color: white;
     transform: scale(1);
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -803,10 +798,10 @@ i {
     margin: 0;
     color: #fff;
     font-weight: 600;
-    font-size: 1.25rem;
+    font-size: 20px;
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .glass-modal-box h3 i {
@@ -817,8 +812,8 @@ i {
     width: 100%;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
-    padding: 0.875rem;
+    border-radius: 12px;
+    padding: 14px;
     color: white;
     outline: none;
     font-family: 'Poppins', sans-serif;
@@ -833,13 +828,13 @@ i {
 
 textarea.glass-input {
     resize: vertical;
-    min-height: 6.25rem;
+    min-height: 100px;
 }
 
 .drop-area {
     border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 1rem;
-    padding: 1.875rem 1.25rem;
+    border-radius: 16px;
+    padding: 30px 20px;
     text-align: center;
     cursor: pointer;
     transition: 0.3s;
@@ -854,13 +849,13 @@ textarea.glass-input {
 }
 
 .drop-icon {
-    font-size: 2rem;
+    font-size: 32px;
     color: #00eaff;
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
 }
 
 .drop-text {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: #aaa;
 }
 
@@ -871,14 +866,14 @@ textarea.glass-input {
 .preview-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.625rem;
-    margin-top: 0.625rem;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .preview-item {
-    width: 3.75rem;
-    height: 3.75rem;
-    border-radius: 0.5rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
     overflow: hidden;
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -904,7 +899,7 @@ textarea.glass-input {
     opacity: 0;
     cursor: pointer;
     transition: 0.2s;
-    font-size: 1.125rem;
+    font-size: 18px;
 }
 
 .preview-item:hover .preview-remove {
@@ -913,14 +908,14 @@ textarea.glass-input {
 
 .action-buttons {
     display: flex;
-    gap: 0.9375rem;
-    margin-top: 0.625rem;
+    gap: 15px;
+    margin-top: 10px;
 }
 
 .btn-glass-cancel {
     flex: 1;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
+    padding: 12px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: transparent;
     color: #ddd;
@@ -929,8 +924,8 @@ textarea.glass-input {
 
 .btn-glass-save {
     flex: 2;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
+    padding: 12px;
+    border-radius: 12px;
     border: none;
     background: #00eaff;
     color: #000;
@@ -963,8 +958,8 @@ li.nav-locked a::after {
     content: "\f023";
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
-    margin-left: 0.625rem;
-    font-size: 1rem;
+    margin-left: 10px;
+    font-size: 16px;
     opacity: 0.8;
     position: absolute;
     right: 20%;
@@ -972,11 +967,11 @@ li.nav-locked a::after {
 
 .photo-grid {
     display: grid;
-    gap: 0.125rem;
+    gap: 2px;
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 0.9375rem;
+    margin-bottom: 15px;
     background: #000;
 }
 
@@ -992,7 +987,7 @@ li.nav-locked a::after {
 }
 
 .grid-1 .photo-item {
-    height: 18.75rem;
+    height: 300px;
 }
 
 .grid-2 {
@@ -1000,12 +995,12 @@ li.nav-locked a::after {
 }
 
 .grid-2 .photo-item {
-    height: 15.625rem;
+    height: 250px;
 }
 
 .grid-3 {
     grid-template-columns: 1.5fr 1fr;
-    grid-template-rows: 7.8125rem 7.8125rem;
+    grid-template-rows: 125px 125px;
 }
 
 .grid-3 .photo-item:nth-child(1) {
@@ -1015,7 +1010,7 @@ li.nav-locked a::after {
 
 .grid-4 {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 9.375rem 9.375rem;
+    grid-template-rows: 150px 150px;
 }
 
 .lightbox {
@@ -1042,16 +1037,16 @@ li.nav-locked a::after {
 .lightbox img {
     max-width: 90%;
     max-height: 90vh;
-    border-radius: 0.5rem;
+    border-radius: 8px;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
 
 .lightbox-close {
     position: absolute;
-    top: 1.25rem;
-    right: 1.875rem;
+    top: 20px;
+    right: 30px;
     color: white;
-    font-size: 2.5rem;
+    font-size: 40px;
     cursor: pointer;
     z-index: 5001;
 }
@@ -1081,9 +1076,9 @@ li.nav-locked a::after {
 .glass-detail-box {
     width: 90%;
     height: 90%;
-    max-width: 68.75rem;
+    max-width: 1100px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1.25rem;
+    border-radius: 20px;
     display: flex;
     overflow: hidden;
     position: relative;
@@ -1092,9 +1087,9 @@ li.nav-locked a::after {
 
 .close-detail-btn {
     position: absolute;
-    top: 0.9375rem;
-    right: 1.25rem;
-    font-size: 2.5rem;
+    top: 15px;
+    right: 20px;
+    font-size: 40px;
     color: white;
     cursor: pointer;
     z-index: 20;
@@ -1119,7 +1114,7 @@ li.nav-locked a::after {
 
 /* 1. Global (Desktop & Mobile): Box jadi ramping & centered */
 .glass-detail-box.text-only-mode {
-    max-width: 37.5rem;
+    max-width: 600px;
     width: 90%;
     height: auto;
     max-height: 85vh;
@@ -1148,7 +1143,7 @@ li.nav-locked a::after {
         position: relative;
         background: rgba(30, 30, 30, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1.25rem;
+        border-radius: 20px;
         margin: auto;
         width: 85%;
     }
@@ -1164,7 +1159,7 @@ li.nav-locked a::after {
     }
 
     .glass-detail-box.text-only-mode .info-content-scroll {
-        padding: 1.5625rem;
+        padding: 25px;
     }
 
     /* === INI YANG PENTING === */
@@ -1175,10 +1170,10 @@ li.nav-locked a::after {
 
     /* Tombol close pindah ke dalam box biar rapi */
     .glass-detail-box.text-only-mode .close-detail-btn {
-        top: 0.625rem;
-        right: 0.9375rem;
+        top: 10px;
+        right: 15px;
         background: transparent;
-        font-size: 1.75rem;
+        font-size: 28px;
     }
 }
 
@@ -1194,7 +1189,7 @@ li.nav-locked a::after {
 .slider-wrapper img {
     max-width: 97%;
     max-height: 97%;
-    border-radius: 1rem;
+    border-radius: 16px;
 }
 
 .slider-nav-container {
@@ -1214,7 +1209,7 @@ li.nav-locked a::after {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     position: absolute;
-    font-size: 1.875rem;
+    font-size: 30px;
     color: #00eaff;
     animation: fa-spin 1s infinite linear;
     z-index: 5;
@@ -1234,9 +1229,9 @@ li.nav-locked a::after {
     position: absolute;
     top: auto;
     transform: none;
-    bottom: 0.9375rem;
-    width: 2.8125rem;
-    height: 2.8125rem;
+    bottom: 15px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -1245,7 +1240,7 @@ li.nav-locked a::after {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    font-size: 1.25rem;
+    font-size: 20px;
     cursor: pointer;
     pointer-events: all;
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1264,22 +1259,22 @@ li.nav-locked a::after {
 }
 
 .prev-btn {
-    left: 1.5625rem;
+    left: 25px;
 }
 
 .next-btn {
-    right: 1.5625rem;
+    right: 25px;
 }
 
 .photo-counter-tag {
     position: absolute;
-    top: 1.25rem;
-    left: 1.25rem;
-    padding: 0.3125rem 0.9375rem;
-    border-radius: 1.25rem;
-    font-size: 0.75rem;
+    top: 20px;
+    left: 20px;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
     color: white;
-    letter-spacing: 0.0625rem;
+    letter-spacing: 1px;
     background: #0056cc;
 }
 
@@ -1317,11 +1312,11 @@ li.nav-locked a::after {
 
     /* Text Style */
     color: white;
-    font-size: 2rem;
+    font-size: 32px;
     /* Ukuran gede kayak WA */
     font-weight: normal;
     /* WA biasanya ga bold banget */
-    letter-spacing: 0.0625rem;
+    letter-spacing: 1px;
     backdrop-filter: blur(2px);
     /* Efek kaca dikit */
 }
@@ -1331,11 +1326,11 @@ li.nav-locked a::after {
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
-    border-radius: 1.25rem;
+    border-radius: 20px;
 }
 
 .info-content-scroll {
-    padding: 2.5rem;
+    padding: 40px;
     height: 100%;
     overflow-y: auto;
     display: flex;
@@ -1343,20 +1338,20 @@ li.nav-locked a::after {
 }
 
 .info-content-scroll h2 {
-    font-size: 1.625rem;
-    margin-bottom: 0.3125rem;
+    font-size: 26px;
+    margin-bottom: 5px;
     color: #fff;
 }
 
 .info-content-scroll h4 {
-    font-size: 1rem;
+    font-size: 16px;
     color: #00eaff;
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
     font-weight: normal;
 }
 
 .detail-body-text {
-    font-size: 1rem;
+    font-size: 16px;
     line-height: 1.7;
     color: hsl(0, 0%, 95%);
     white-space: pre-wrap;
@@ -1364,40 +1359,40 @@ li.nav-locked a::after {
 }
 
 .detail-footer-text {
-    padding-top: 0.3125rem;
+    padding-top: 5px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     color: #888;
-    font-size: 0.8125rem;
-    margin-bottom: 0.625rem;
+    font-size: 13px;
+    margin-bottom: 10px;
 }
 
 .hide-desk {
     background: #00eaff;
     color: #000;
     font-weight: bold;
-    padding: 0.75rem 1.5625rem;
-    border-radius: 1.25rem;
+    padding: 12px 25px;
+    border-radius: 20px;
     cursor: pointer;
     box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
 }
 
 .mobile-toggle-btn {
     position: absolute;
-    bottom: 0.9375rem;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
     background: #000000ad;
     color: rgb(255, 255, 255);
     font-weight: bold;
-    padding: 0.75rem 1.5625rem;
-    border-radius: 1.875rem;
+    padding: 12px 25px;
+    border-radius: 30px;
     cursor: pointer;
     box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
     z-index: 30;
     display: none;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
+    gap: 8px;
+    font-size: 14px;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -1431,14 +1426,14 @@ li.nav-locked a::after {
         top: 0;
         left: 0;
         width: 100%;
-        padding: 1.25rem 4.375rem 1.25rem 1.5625rem;
+        padding: 20px 70px 20px 25px;
         z-index: 15;
         pointer-events: none;
     }
 
     .mobile-header-overlay h2 {
         margin: 0;
-        font-size: 1.375rem;
+        font-size: 22px;
         color: white;
         text-shadow: 0 0 10px #00eaff, 0 0 25px rgba(0, 234, 255, 0.6);
         font-weight: 700;
@@ -1446,8 +1441,8 @@ li.nav-locked a::after {
     }
 
     .mobile-header-overlay h4 {
-        margin: 0.3125rem 0 0 0;
-        font-size: 0.875rem;
+        margin: 5px 0 0 0;
+        font-size: 14px;
         color: #ccc;
         font-weight: 400;
     }
@@ -1477,7 +1472,7 @@ li.nav-locked a::after {
         background: rgba(20, 20, 20, 0.95);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        border-radius: 1.5rem 1.5rem 0 0;
+        border-radius: 24px 24px 0 0;
         z-index: 1000;
         display: flex;
         flex-direction: column;
@@ -1501,7 +1496,7 @@ li.nav-locked a::after {
     }
 
     .info-content-scroll {
-        padding: 1.5625rem;
+        padding: 25px;
     }
 
     .detail-info-section.hidden-mobile~.mobile-toggle-btn {
@@ -1521,23 +1516,23 @@ li.nav-locked a::after {
     .detail-info-section::before {
         content: '';
         position: absolute;
-        top: 0.625rem;
+        top: 10px;
         left: 50%;
         transform: translateX(-50%);
-        width: 2.5rem;
+        width: 40px;
         height: 4px;
         background: rgba(255, 255, 255, 0.3);
-        border-radius: 0.625rem;
+        border-radius: 10px;
     }
 
     .close-detail-btn {
-        top: 1.25rem;
-        right: 1.25rem;
+        top: 20px;
+        right: 20px;
         left: auto;
         z-index: 20;
         background: rgba(0, 0, 0, 0.5);
-        width: 2.5rem;
-        height: 2.5rem;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -1560,9 +1555,9 @@ li.nav-locked a::after {
 /* --- FITUR BOOKMARK FLOATING (UPDATED) --- */
 .bookmark-btn {
     position: absolute;
-    bottom: 0.9375rem;
+    bottom: 15px;
     /* Pindah ke bawah */
-    right: 0.9375rem;
+    right: 15px;
     /* Pindah ke kanan */
     top: auto;
     /* Reset top */
@@ -1572,11 +1567,11 @@ li.nav-locked a::after {
     /* Hapus background */
     border: none;
     box-shadow: none;
-    padding: 0.3125rem;
+    padding: 5px;
 
     /* Default: Abu-abu transparan */
     color: rgba(255, 255, 255, 0.3);
-    font-size: 1.25rem;
+    font-size: 20px;
     cursor: pointer;
     transition: transform 0.2s, color 0.2s;
 }
@@ -1659,10 +1654,10 @@ li.nav-locked a::after {
         0 20px 40px rgba(0, 0, 0, 0.6),
         0 0 30px rgba(0, 200, 255, 0.25);
 
-    border-radius: 1.125rem;
-    padding: 1.875rem;
+    border-radius: 18px;
+    padding: 30px;
     text-align: center;
-    max-width: 20rem;
+    max-width: 320px;
     width: 90%;
     transform: scale(0.8);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1684,8 +1679,8 @@ li.nav-locked a::after {
 }
 
 .uni-icon {
-    font-size: 3.125rem;
-    margin-bottom: 0.9375rem;
+    font-size: 50px;
+    margin-bottom: 15px;
 }
 
 .uni-icon.success {
@@ -1704,8 +1699,8 @@ li.nav-locked a::after {
 
 .uni-msg {
     color: white;
-    margin-bottom: 1.5625rem;
-    font-size: 1rem;
+    margin-bottom: 25px;
+    font-size: 16px;
     line-height: 1.5;
 }
 
@@ -1713,12 +1708,12 @@ li.nav-locked a::after {
     background: #00eaff;
     color: black;
     border: none;
-    padding: 0.625rem 1.875rem;
-    border-radius: 3.125rem;
+    padding: 10px 30px;
+    border-radius: 50px;
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s;
-    font-size: 0.875rem;
+    font-size: 14px;
     box-shadow: 0 0 15px rgba(0, 234, 255, 0.2);
 }
 
@@ -1729,23 +1724,23 @@ li.nav-locked a::after {
 
 .admin-fab-container {
     position: fixed;
-    bottom: 1.25rem;
-    right: 1.25rem;
+    bottom: 20px;
+    right: 20px;
     z-index: 2000;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    gap: 0.9375rem;
+    gap: 15px;
 }
 
 .fab-main {
-    width: 3.4375rem;
-    height: 3.4375rem;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
     border: none;
     color: white;
-    font-size: 1.875rem;
-    padding: 0.625rem;
+    font-size: 30px;
+    padding: 10px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1769,18 +1764,18 @@ li.nav-locked a::after {
 }
 
 .fab-add {
-    width: 3.125rem;
-    height: 3.125rem;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: #00eaff;
     border: none;
-    font-size: 1.375rem;
+    font-size: 22px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 234, 255, 0.3);
     opacity: 0;
     transform: translateY(40px) scale(0.5);
     position: absolute;
-    bottom: 0.625rem;
+    bottom: 10px;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 999;
 }
@@ -1832,9 +1827,9 @@ li.nav-locked a::after {
 /* Layout Tombol Ganda (Untuk Confirm) */
 .uni-actions {
     display: flex;
-    gap: 0.9375rem;
+    gap: 15px;
     justify-content: center;
-    margin-top: 1.5625rem;
+    margin-top: 25px;
     width: 100%;
 }
 
@@ -1843,8 +1838,8 @@ li.nav-locked a::after {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ddd;
-    padding: 0.625rem 1.5625rem;
-    border-radius: 3.125rem;
+    padding: 10px 25px;
+    border-radius: 50px;
     cursor: pointer;
     transition: 0.3s;
     flex: 1;
@@ -1861,8 +1856,8 @@ li.nav-locked a::after {
     /* Kuning */
     color: black;
     border: none;
-    padding: 0.625rem 1.5625rem;
-    border-radius: 3.125rem;
+    padding: 10px 25px;
+    border-radius: 50px;
     font-weight: 800;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
@@ -1879,15 +1874,15 @@ li.nav-locked a::after {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid #00bfff;
     color: #00bfff;
-    padding: 0.5rem 1rem;
-    border-radius: 1.25rem;
+    padding: 8px 16px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .task-btn:hover {
@@ -1909,7 +1904,7 @@ li.nav-locked a::after {
 
 /* Container Utama biar tengah di Desktop */
 .ig-container {
-    max-width: 58.4375rem;
+    max-width: 935px;
     /* Lebar standar IG Web */
     margin: 0 auto;
     padding: 0;
@@ -1923,8 +1918,8 @@ li.nav-locked a::after {
 .ig-header {
     display: flex;
     align-items: center;
-    padding: 1.25rem 1.25rem 0 1.25rem;
-    gap: 1.25rem;
+    padding: 20px 20px 0 20px;
+    gap: 20px;
 }
 
 /* Foto Profil */
@@ -1933,11 +1928,11 @@ li.nav-locked a::after {
 }
 
 .ig-pp-ring {
-    width: 5rem;
+    width: 80px;
     /* Ukuran Mobile */
-    height: 5rem;
+    height: 80px;
     border-radius: 50%;
-    padding: 0.125rem;
+    padding: 2px;
     /* Gradient Story IG */
     background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
 }
@@ -1961,26 +1956,26 @@ li.nav-locked a::after {
 
 .ig-stat-num {
     display: block;
-    font-size: 1.125rem;
+    font-size: 18px;
     font-weight: 700;
     color: #fff;
 }
 
 .ig-stat-label {
     display: block;
-    font-size: 0.8125rem;
+    font-size: 13px;
     color: #dbdbdb;
 }
 
 /* BIO Section */
 .ig-bio-section {
-    padding: 0 1.25rem 1.25rem 1.25rem;
-    font-size: 0.875rem;
+    padding: 0 20px 20px 20px;
+    font-size: 14px;
 }
 
 .ig-fullname {
     font-weight: 700;
-    margin-bottom: 0.125rem;
+    margin-bottom: 2px;
 }
 
 .ig-bio-text {
@@ -1997,8 +1992,8 @@ li.nav-locked a::after {
 /* TOMBOL EDIT PROFILE */
 .ig-actions {
     display: flex;
-    gap: 0.5rem;
-    padding: 0 1.25rem 0.9375rem 1.25rem;
+    gap: 8px;
+    padding: 0 20px 15px 20px;
 }
 
 .ig-btn {
@@ -2006,10 +2001,10 @@ li.nav-locked a::after {
     background: #363636;
     border: none;
     color: #fff;
-    padding: 0.4375rem 0;
-    border-radius: 0.5rem;
+    padding: 7px 0;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 14px;
     cursor: pointer;
 }
 
@@ -2021,16 +2016,16 @@ li.nav-locked a::after {
     background: #363636;
     border: none;
     color: #fff;
-    padding: 0 0.625rem;
-    border-radius: 0.5rem;
+    padding: 0 10px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
 /* HIGHLIGHTS */
 .ig-highlights {
     display: flex;
-    gap: 0.9375rem;
-    padding: 0 1.25rem 1.25rem 1.25rem;
+    gap: 15px;
+    padding: 0 20px 20px 20px;
     overflow-x: auto;
     scrollbar-width: none;
     /* Hide scrollbar Firefox */
@@ -2044,24 +2039,24 @@ li.nav-locked a::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3125rem;
-    min-width: 3.75rem;
+    gap: 5px;
+    min-width: 60px;
 }
 
 .ig-hl-ring {
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 1px solid #555;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 24px;
     background: #121212;
 }
 
 .ig-hl-item span {
-    font-size: 0.75rem;
+    font-size: 12px;
 }
 
 /* TABS (Grid Icon) */
@@ -2074,9 +2069,9 @@ li.nav-locked a::after {
 .ig-tab {
     flex: 1;
     text-align: center;
-    padding: 0.625rem 0;
+    padding: 10px 0;
     color: #8e8e8e;
-    font-size: 1.5rem;
+    font-size: 24px;
     cursor: pointer;
 }
 
@@ -2091,7 +2086,7 @@ li.nav-locked a::after {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     /* 3 Kolom */
-    gap: 0.125rem;
+    gap: 2px;
     /* Jarak tipis khas IG */
 }
 
@@ -2124,10 +2119,10 @@ li.nav-locked a::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.625rem;
+    padding: 10px;
     text-align: center;
     font-weight: 700;
-    font-size: 0.75rem;
+    font-size: 12px;
     color: #fff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -2135,52 +2130,52 @@ li.nav-locked a::after {
 /* --- Responsive Desktop Adjustments --- */
 @media (min-width: 768px) {
     .ig-header {
-        padding: 2.5rem 3.75rem;
-        gap: 5rem;
-        margin-bottom: 1.25rem;
+        padding: 40px 60px;
+        gap: 80px;
+        margin-bottom: 20px;
     }
 
     .ig-pp-ring {
-        width: 9.375rem;
-        height: 9.375rem;
+        width: 150px;
+        height: 150px;
     }
 
     .ig-stats-section {
         justify-content: flex-start;
-        gap: 2.5rem;
-        font-size: 1.125rem;
+        gap: 40px;
+        font-size: 18px;
     }
 
     .ig-stat-num {
-        font-size: 1.375rem;
+        font-size: 22px;
     }
 
     .ig-bio-section {
-        padding-left: 18.125rem;
+        padding-left: 290px;
         /* Geser bio ke kanan foto */
-        margin-top: -5rem;
+        margin-top: -80px;
         /* Naik ke sebelah foto */
     }
 
     .ig-actions {
-        padding-left: 18.125rem;
+        padding-left: 290px;
         justify-content: flex-start;
-        max-width: 37.5rem;
+        max-width: 600px;
     }
 
     .ig-btn {
         flex: unset;
-        width: 7.5rem;
+        width: 120px;
     }
 }
 
 /* --- DAILY CARD V10 (FINAL REQUEST) --- */
 .daily-card-final {
-    margin-top: 1.5625rem;
+    margin-top: 25px;
     background: rgba(15, 15, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    padding: 1.5625rem;
+    border-radius: 16px;
+    padding: 25px;
     position: relative;
     box-shadow: 0 10px 50px rgb(255, 130, 52);
     color: white;
@@ -2191,23 +2186,23 @@ li.nav-locked a::after {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1.5625rem;
+    margin-bottom: 25px;
 }
 
 .final-badge {
     background: #00eaff;
     color: black;
-    font-size: 0.625rem;
+    font-size: 10px;
     font-weight: 800;
-    padding: 0.25rem 0.625rem;
-    border-radius: 1.25rem;
+    padding: 4px 10px;
+    border-radius: 20px;
     text-transform: uppercase;
 }
 
 .final-day {
-    font-size: 2.375rem;
+    font-size: 38px;
     font-weight: 800;
-    margin: 0.3125rem 0 0 0;
+    margin: 5px 0 0 0;
     line-height: 1;
     color: white;
     text-transform: uppercase;
@@ -2215,16 +2210,16 @@ li.nav-locked a::after {
 
 .final-date {
     color: #b5b5b5;
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 500;
 }
 
 .task-shortcut-box {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 4.375rem;
-    height: 4.375rem;
-    border-radius: 0.75rem;
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2235,13 +2230,13 @@ li.nav-locked a::after {
 }
 
 .task-shortcut-box i {
-    font-size: 1.5rem;
-    margin-bottom: 0.3125rem;
+    font-size: 24px;
+    margin-bottom: 5px;
     color: #00eaff;
 }
 
 .task-shortcut-box span {
-    font-size: 0.625rem;
+    font-size: 10px;
     font-weight: 700;
     color: white;
 }
@@ -2261,12 +2256,12 @@ li.nav-locked a::after {
 .top-cards-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .info-card-dynamic {
-    padding: 0.9375rem;
-    border-radius: 1rem;
+    padding: 15px;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     transition: 0.3s;
@@ -2274,60 +2269,60 @@ li.nav-locked a::after {
 }
 
 .card-label {
-    font-size: 0.625rem;
+    font-size: 10px;
     text-transform: uppercase;
     font-weight: 700;
     display: block;
-    margin-bottom: 0.125rem;
+    margin-bottom: 2px;
 }
 
 .card-val {
-    font-size: 0.8125rem;
+    font-size: 13px;
     font-weight: 700;
     line-height: 1.2;
 }
 
 .card-val.small {
-    font-size: 0.6875rem;
+    font-size: 11px;
     font-weight: 500;
 }
 
 /* TIMELINE PELAJARAN */
 .final-section {
-    margin-top: 0.625rem;
+    margin-top: 10px;
 }
 
 .final-title {
-    font-size: 0.75rem;
+    font-size: 12px;
     color: #888;
     text-transform: uppercase;
-    margin-bottom: 0.9375rem;
+    margin-bottom: 15px;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .final-spacer {
-    height: 1.5625rem;
+    height: 25px;
 }
 
 /* Item Timeline - ANIMASI FIX */
 .tl-item-final {
     display: flex;
-    gap: 0.9375rem;
-    min-height: 2.5rem;
+    gap: 15px;
+    min-height: 40px;
     position: relative;
-    margin-left: 0.625rem;
+    margin-left: 10px;
     /* Opacity diatur animasi nanti */
 }
 
 .tl-time-final {
     font-family: monospace;
-    font-size: 0.875rem;
+    font-size: 14px;
     color: #00eaff;
     text-align: right;
-    padding-top: 0.375rem;
+    padding-top: 6px;
     flex-shrink: 0;
     text-align: left;
 }
@@ -2341,19 +2336,19 @@ li.nav-locked a::after {
 .tl-marker-final::after {
     content: '';
     position: absolute;
-    top: 0.375rem;
+    top: 6px;
     left: -4px;
-    width: 0.625rem;
-    height: 0.625rem;
+    width: 10px;
+    height: 10px;
     background: #111;
     border: 2px solid #00eaff;
     border-radius: 50%;
 }
 
 .tl-subject-final {
-    font-size: 1.0625rem;
+    font-size: 17px;
     color: #ddd;
-    padding-bottom: 1.25rem;
+    padding-bottom: 20px;
     font-weight: 500;
 }
 
@@ -2361,7 +2356,7 @@ li.nav-locked a::after {
 .picket-grid-big {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .picket-pill {
@@ -2371,10 +2366,10 @@ li.nav-locked a::after {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
-    padding: 0.75rem 0.625rem;
-    border-radius: 0.75rem;
+    padding: 12px 10px;
+    border-radius: 12px;
     text-align: center;
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
     transition: 0.2s;
 }
@@ -2388,10 +2383,10 @@ li.nav-locked a::after {
 
 .final-watermark {
     text-align: right;
-    margin-top: 1.875rem;
+    margin-top: 30px;
     opacity: 0.3;
-    font-size: 0.625rem;
-    letter-spacing: 0.125rem;
+    font-size: 10px;
+    letter-spacing: 2px;
 }
 
 /* --- ANIMATION ENGINE (SAFE & SMOOTH) --- */
@@ -2458,22 +2453,22 @@ li.nav-locked a::after {
     .info-card-dynamic {
         flex-direction: row;
         align-items: center;
-        gap: 0.9375rem;
+        gap: 15px;
         min-height: auto;
     }
 
     .card-icon {
         margin-bottom: 0;
-        font-size: 1.5rem;
+        font-size: 24px;
     }
 }
 
 /* --- FORM STYLING --- */
 .dc-label-input {
     display: block;
-    font-size: 0.75rem;
+    font-size: 12px;
     color: #aaa;
-    margin: 0.625rem 0 0.3125rem 0;
+    margin: 10px 0 5px 0;
 }
 
 /* --- TOGGLE SWITCH (ON/OFF) --- */
@@ -2482,17 +2477,17 @@ li.nav-locked a::after {
     justify-content: space-between;
     align-items: center;
     background: rgba(255, 255, 255, 0.05);
-    padding: 0.9375rem;
-    border-radius: 0.75rem;
-    margin-top: 1.25rem;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .switch {
     position: relative;
     display: inline-block;
-    width: 3.125rem;
-    height: 1.625rem;
+    width: 50px;
+    height: 26px;
 }
 
 .switch input {
@@ -2510,14 +2505,14 @@ li.nav-locked a::after {
     bottom: 0;
     background-color: #ccc;
     transition: .4s;
-    border-radius: 2.125rem;
+    border-radius: 34px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 1.125rem;
-    width: 1.125rem;
+    height: 18px;
+    width: 18px;
     left: 4px;
     bottom: 4px;
     background-color: white;
@@ -2542,23 +2537,23 @@ input:checked+.slider:before {
 /* FAB Container (Pojok Kanan Bawah) */
 .daily-fab-container {
     position: fixed;
-    bottom: 1.25rem;
-    right: 5.625rem;
+    bottom: 20px;
+    right: 90px;
     display: flex;
     flex-direction: column;
-    gap: 0.9375rem;
+    gap: 15px;
     z-index: 1;
 }
 
 /* Tombol Edit Bulat (Floating Action Button) */
 .fab-daily {
-    width: 3.4375rem;
-    height: 3.4375rem;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
     color: white;
-    font-size: 1.25rem;
+    font-size: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2591,9 +2586,9 @@ input:checked+.slider:before {
 .editable-active {
     border: 1px dashed rgba(255, 255, 255, 0.5);
     background: rgba(0, 0, 0, 0.2);
-    padding: 0.125rem 0.3125rem;
+    padding: 2px 5px;
     border-radius: 4px;
-    min-width: 1.25rem;
+    min-width: 20px;
     cursor: text;
     transition: 0.2s;
 }
@@ -2610,11 +2605,11 @@ input:checked+.slider:before {
     border: 1px dashed rgba(255, 255, 255, 0.3);
     color: #aaa;
     width: 100%;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    margin-top: 0.625rem;
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 10px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 12px;
     transition: 0.2s;
 }
 
@@ -2632,16 +2627,16 @@ input:checked+.slider:before {
     display: flex;
     /* Paksa muncul pas mode edit */
     position: absolute;
-    right: -0.5rem;
-    top: -0.5rem;
+    right: -8px;
+    top: -8px;
     background: #ff4757;
     color: white;
-    width: 1.375rem;
-    height: 1.375rem;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    font-size: 0.625rem;
+    font-size: 10px;
     cursor: pointer;
     z-index: 10;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -2659,7 +2654,7 @@ input:checked+.slider:before {
 .tl-time-final:empty,
 .tl-subject-final:empty,
 .picket-pill span:empty {
-    min-width: 3.125rem;
+    min-width: 50px;
     display: inline-block;
 }
 
@@ -2667,10 +2662,10 @@ input:checked+.slider:before {
 .config-panel {
     display: none;
     /* Default hidden */
-    margin-top: 1.25rem;
-    padding: 0.9375rem;
+    margin-top: 20px;
+    padding: 15px;
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.75rem;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -2704,9 +2699,9 @@ input:checked+.slider:before {
 /* Dashboard Styles */
 .dashboard-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 1.25rem;
-    padding: 1.875rem;
-    margin-bottom: 1.875rem;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
     color: white;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
 }
@@ -2716,19 +2711,19 @@ input:checked+.slider:before {
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
-    gap: 1.875rem;
+    gap: 30px;
 }
 
 .profile-left {
     display: flex;
-    gap: 1.5625rem;
+    gap: 25px;
     align-items: flex-start;
 }
 
 .profile-image-container {
     position: relative;
-    width: 7.5rem;
-    height: 7.5rem;
+    width: 120px;
+    height: 120px;
 }
 
 .profile-img-large {
@@ -2741,10 +2736,10 @@ input:checked+.slider:before {
 
 .online-status {
     position: absolute;
-    bottom: 0.625rem;
-    right: 0.625rem;
-    width: 1.25rem;
-    height: 1.25rem;
+    bottom: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
     background: #4cd964;
     border-radius: 50%;
     border: 3px solid #667eea;
@@ -2757,33 +2752,33 @@ input:checked+.slider:before {
 .profile-name {
     font-size: 2rem;
     font-weight: 700;
-    margin: 0 0 0.3125rem 0;
+    margin: 0 0 5px 0;
 }
 
 .profile-username {
     font-size: 1.1rem;
     opacity: 0.9;
-    margin: 0 0 0.9375rem 0;
+    margin: 0 0 15px 0;
 }
 
 .profile-bio {
     font-size: 1rem;
     opacity: 0.8;
     line-height: 1.5;
-    max-width: 31.25rem;
-    margin: 0 0 1.25rem 0;
+    max-width: 500px;
+    margin: 0 0 20px 0;
 }
 
 .profile-meta {
     display: flex;
-    gap: 1.25rem;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
 .meta-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     font-size: 0.95rem;
     opacity: 0.9;
 }
@@ -2791,18 +2786,18 @@ input:checked+.slider:before {
 .profile-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-    min-width: 18.75rem;
+    gap: 20px;
+    min-width: 300px;
 }
 
 .stat-card {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    border-radius: 0.9375rem;
-    padding: 1.25rem;
+    border-radius: 15px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 0.9375rem;
+    gap: 15px;
     transition: transform 0.3s ease, background 0.3s ease;
     cursor: pointer;
 }
@@ -2813,9 +2808,9 @@ input:checked+.slider:before {
 }
 
 .stat-icon {
-    width: 3.125rem;
-    height: 3.125rem;
-    border-radius: 0.75rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2853,16 +2848,16 @@ input:checked+.slider:before {
 .stat-label {
     font-size: 0.9rem;
     opacity: 0.9;
-    margin-top: 0.3125rem;
+    margin-top: 5px;
 }
 
 /* Tabs */
 .dashboard-tabs {
     background: white;
-    border-radius: 1.25rem;
+    border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-    margin-bottom: 1.875rem;
+    margin-bottom: 30px;
 }
 
 .tab-header {
@@ -2874,13 +2869,13 @@ input:checked+.slider:before {
 
 .tab-btn {
     flex: 1;
-    padding: 1.25rem;
+    padding: 20px;
     background: none;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.625rem;
+    gap: 10px;
     font-size: 1rem;
     font-weight: 600;
     color: #6c757d;
@@ -2913,14 +2908,14 @@ input:checked+.slider:before {
     background: #ff3b30;
     color: white;
     font-size: 0.8rem;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.625rem;
-    min-width: 1.5625rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 25px;
     text-align: center;
 }
 
 .tab-content {
-    padding: 1.875rem;
+    padding: 30px;
 }
 
 .tab-pane {
@@ -2944,21 +2939,21 @@ input:checked+.slider:before {
 
 .tab-subtitle {
     color: #6c757d;
-    margin-top: 0.3125rem;
+    margin-top: 5px;
 }
 
 /* Tasks & Bookmarks Containers */
 .tasks-container,
 .bookmarks-container {
-    margin-top: 1.25rem;
+    margin-top: 20px;
 }
 
 .task-item,
 .bookmark-item {
     background: #f8f9fa;
-    border-radius: 0.9375rem;
-    padding: 1.25rem;
-    margin-bottom: 0.9375rem;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
     border-left: 4px solid #007aff;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -2982,7 +2977,7 @@ input:checked+.slider:before {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
 }
 
 .task-title,
@@ -2995,52 +2990,52 @@ input:checked+.slider:before {
 .task-meta,
 .bookmark-meta {
     display: flex;
-    gap: 0.9375rem;
+    gap: 15px;
     font-size: 0.9rem;
     color: #6c757d;
-    margin-top: 0.3125rem;
+    margin-top: 5px;
 }
 
 .task-actions,
 .bookmark-actions {
     display: flex;
-    gap: 0.625rem;
-    margin-top: 0.9375rem;
+    gap: 10px;
+    margin-top: 15px;
 }
 
 .empty-state {
     text-align: center;
-    padding: 3.75rem 1.25rem;
+    padding: 60px 20px;
     color: #6c757d;
 }
 
 .empty-state i {
     font-size: 4rem;
     color: #dee2e6;
-    margin-bottom: 1.25rem;
+    margin-bottom: 20px;
 }
 
 .empty-state h3 {
     color: #495057;
-    margin: 0.625rem 0;
+    margin: 10px 0;
 }
 
 .empty-state p {
-    max-width: 25rem;
-    margin: 0 auto 1.25rem;
+    max-width: 400px;
+    margin: 0 auto 20px;
 }
 
 .btn-primary {
     background: #007aff;
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.625rem;
+    padding: 12px 24px;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     transition: background 0.3s ease;
 }
 
@@ -3051,32 +3046,32 @@ input:checked+.slider:before {
 /* Quick Access */
 .quick-access {
     background: white;
-    border-radius: 1.25rem;
-    padding: 1.875rem;
+    border-radius: 20px;
+    padding: 30px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
 }
 
 .quick-access h3 {
-    margin: 0 0 1.5625rem 0;
+    margin: 0 0 25px 0;
     color: #212529;
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .quick-access-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
 }
 
 .quick-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.5625rem 0.9375rem;
+    padding: 25px 15px;
     background: #f8f9fa;
-    border-radius: 0.9375rem;
+    border-radius: 15px;
     text-decoration: none;
     color: #495057;
     transition: all 0.3s ease;
@@ -3089,14 +3084,14 @@ input:checked+.slider:before {
 }
 
 .quick-icon {
-    width: 3.75rem;
-    height: 3.75rem;
-    border-radius: 0.9375rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    margin-bottom: 0.9375rem;
+    margin-bottom: 15px;
 }
 
 .quick-icon.subject {
@@ -3184,15 +3179,15 @@ input:checked+.slider:before {
 
 .task-badge {
     position: absolute;
-    top: -0.3125rem;
-    right: -0.3125rem;
+    top: -5px;
+    right: -5px;
     background: #ff4757;
     /* Merah */
     color: white;
-    font-size: 0.6875rem;
+    font-size: 11px;
     font-weight: 800;
-    width: 1.375rem;
-    height: 1.375rem;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: none;
     /* Sembunyi jika 0 */
@@ -3218,24 +3213,24 @@ input:checked+.slider:before {
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1.125rem;
+    border-radius: 18px;
     display: flex;
     position: relative;
-    padding: 0.375rem;
+    padding: 6px;
     width: 100%;
-    margin-bottom: 1.875rem;
+    margin-bottom: 30px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .filter-slider-bg {
     position: absolute;
-    top: 0.375rem;
-    left: 0.375rem;
-    width: calc(50% - 0.375rem);
-    height: calc(100% - 0.75rem);
+    top: 6px;
+    left: 6px;
+    width: calc(50% - 6px);
+    height: calc(100% - 12px);
     background: #00eaff;
     /* Neon Blue */
-    border-radius: 0.875rem;
+    border-radius: 14px;
     transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
     box-shadow: 0 0 25px rgba(0, 234, 255, 0.5);
     z-index: 1;
@@ -3250,18 +3245,18 @@ input:checked+.slider:before {
     background: none;
     border: none;
     color: rgba(255, 255, 255, 0.5);
-    padding: 0.9375rem 0;
+    padding: 15px 0;
     font-weight: 800;
-    font-size: 0.8125rem;
+    font-size: 13px;
     text-transform: uppercase;
-    letter-spacing: 0.0938rem;
+    letter-spacing: 1.5px;
     cursor: pointer;
     z-index: 2;
     transition: color 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .filter-btn-new.active {
@@ -3312,110 +3307,110 @@ input:checked+.slider:before {
 .task-red-deadline::after {
     content: "DEADLINE";
     position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
-    font-size: 0.5625rem;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
     font-weight: 900;
     color: #ffffff;
     background: rgb(255, 0, 0);
     border: 1px solid #ff4757;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 .task-yellow-pending::after {
     content: "TUGAS";
     position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
-    font-size: 0.5625rem;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
     font-weight: 900;
     color: #000000;
     background: rgb(255, 255, 0);
     border: 1px solid #f0ff47;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 .task-green-done::after {
     content: "SELESAI";
     position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
-    font-size: 0.5625rem;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
     font-weight: 900;
     color: #ffffff;
     background: rgb(0, 255, 0);
     border: 1px solid #00ff40;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 .tugasket1 {
     max-width: fit-content;
-    margin-top: 0.625rem;
-    margin-bottom: 0.3125rem;
-    font-size: 0.5625rem;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: 9px;
     font-weight: 900;
     color: #ffffff;
     background: rgb(255, 0, 0);
     border: 1px solid #ff4757;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 .tugasket2 {
     max-width: fit-content;
-    margin-top: 0.625rem;
-    margin-bottom: 0.3125rem;
-    top: 1.25rem;
-    right: 1.25rem;
-    font-size: 0.5625rem;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
     font-weight: 900;
     color: #000000;
     background: rgb(255, 255, 0);
     border: 1px solid #f0ff47;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 .tugasket3 {
     max-width: fit-content;
-    margin-top: 0.625rem;
-    margin-bottom: 0.3125rem;
-    top: 1.25rem;
-    right: 1.25rem;
-    font-size: 0.5625rem;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    top: 20px;
+    right: 20px;
+    font-size: 9px;
     font-weight: 900;
     color: #ffffff;
     background: rgb(0, 255, 0);
     border: 1px solid #00ff40;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    letter-spacing: 0.0625rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
     animation: pulseRed 2s infinite;
 }
 
 /* --- 4. MISC & ANIMATIONS --- */
 .empty-state {
     text-align: center;
-    padding: 6.25rem 1.25rem;
+    padding: 100px 20px;
     opacity: 0.4;
 }
 
 .empty-state i {
-    font-size: 4.375rem;
-    margin-bottom: 1.5625rem;
+    font-size: 70px;
+    margin-bottom: 25px;
     display: block;
     background: linear-gradient(to bottom, #fff, transparent);
     background-clip: text;
@@ -3490,10 +3485,10 @@ input:checked+.slider:before {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(0, 234, 255, 0.3);
     color: white;
-    padding: 0.3125rem 0.75rem;
-    border-radius: 0.375rem;
+    padding: 5px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 12px;
     transition: 0.2s;
 }
 
@@ -3505,18 +3500,18 @@ input:checked+.slider:before {
 /* Selector ini bakal nangkep format font baik di Modal maupun di Card */
 .editable font[size="5"],
 #addIsi font[size="5"] {
-    font-size: 1.5rem;
+    font-size: 24px;
     font-weight: bold;
 }
 
 .editable font[size="3"],
 #addIsi font[size="3"] {
-    font-size: 1.25rem;
+    font-size: 20px;
 }
 
 .editable font[size="2"],
 #addIsi font[size="2"] {
-    font-size: 1rem;
+    font-size: 16px;
 }
 
 /* Styling khusus div content di card */
@@ -3530,12 +3525,12 @@ input:checked+.slider:before {
 .class-divider {
     display: flex;
     align-items: center;
-    gap: 0.9375rem;
-    margin: 1.875rem 0 0.9375rem 0.3125rem;
+    gap: 15px;
+    margin: 30px 0 15px 5px;
     color: #00eaff;
-    font-size: 0.6875rem;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.125rem;
+    letter-spacing: 2px;
 }
 
 .class-divider::after {
@@ -3547,8 +3542,8 @@ input:checked+.slider:before {
 
 .class-divider span {
     background: rgba(0, 234, 255, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.375rem;
+    padding: 4px 12px;
+    border-radius: 6px;
     border: 1px solid rgba(0, 234, 255, 0.2);
 }
 
@@ -3565,7 +3560,7 @@ input:checked+.slider:before {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.625rem 0.9375rem;
+        padding: 10px 15px;
         background: rgba(255, 255, 255, 0.05);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -3575,20 +3570,20 @@ input:checked+.slider:before {
         background: rgba(255, 255, 255, 0.1);
         border: none;
         color: white;
-        width: 2.1875rem;
-        height: 2.1875rem;
+        width: 35px;
+        height: 35px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 16px;
     }
 
     .sheet-drag-indicator {
-        width: 2.5rem;
+        width: 40px;
         height: 4px;
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 0.625rem;
+        border-radius: 10px;
     }
 
     /* Optimasi Lag: Pake transform & durasi pas */
@@ -3633,18 +3628,18 @@ input:checked+.slider:before {
 .header-right-group {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 10px;
 }
 
 .card-edit-actions {
     display: flex;
-    gap: 0.3125rem;
+    gap: 5px;
 }
 
 .action-btn {
-    width: 3.75rem;
-    height: 3.75rem;
-    border-radius: 1rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
     border: 2px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.05);
     color: white;
@@ -3653,7 +3648,7 @@ input:checked+.slider:before {
     align-items: center;
     justify-content: center;
     transition: 0.2s;
-    font-size: 1.375rem;
+    font-size: 22px;
 }
 
 .action-btn.edit:hover {
@@ -3735,27 +3730,27 @@ input:checked+.slider:before {
             rgba(255, 255, 255, 0.1) 80px);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
-    border-radius: 0.5rem;
+    border-radius: 8px;
 }
 
 .sk-card {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1.25rem;
-    border-radius: 0.9375rem;
-    margin-bottom: 0.9375rem;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
 }
 
 .sk-title {
-    height: 1.375rem;
+    height: 22px;
     width: 60%;
-    margin-bottom: 0.9375rem;
+    margin-bottom: 15px;
 }
 
 .sk-text {
-    height: 0.875rem;
+    height: 14px;
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
 }
 
 .sk-text.short {
@@ -3763,16 +3758,16 @@ input:checked+.slider:before {
 }
 
 .sk-media {
-    height: 7.5rem;
+    height: 120px;
     width: 100%;
-    margin-bottom: 0.9375rem;
-    border-radius: 0.75rem;
+    margin-bottom: 15px;
+    border-radius: 12px;
 }
 
 .lkpd-table-task {
-    border-radius: 0.5rem;
+    border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 0.625rem;
+    margin-bottom: 10px;
 }
 
 .lkpd-table-task td[contenteditable="false"] {

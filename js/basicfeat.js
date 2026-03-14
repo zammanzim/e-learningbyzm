@@ -10,11 +10,100 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================
+// CLASS SWITCHER — Super Admin only
+// ==========================================
+function getEffectiveClassId() {
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) return null;
+        // Super admin bisa override class_id via sessionStorage
+        if (user.role === 'super_admin') {
+            const override = sessionStorage.getItem('class_override');
+            if (override) return override;
+        }
+        return String(user.class_id);
+    } catch (e) { return null; }
+}
+
+function getEffectiveClassName() {
+    try {
+        const override = sessionStorage.getItem('class_override_name');
+        if (override) return override;
+        const user = JSON.parse(localStorage.getItem("user"));
+        return user?.class_name || `Kelas ${user?.class_id}` || '';
+    } catch (e) { return ''; }
+}
+
+async function switchClass(classId, className) {
+    if (classId === getEffectiveClassId()) return;
+    sessionStorage.setItem('class_override', classId);
+    sessionStorage.setItem('class_override_name', className);
+    // Hapus cache sidebar biar langsung fetch ulang untuk kelas baru
+    const cacheKey = `sidebar_cache_${classId}`;
+    if (!localStorage.getItem(cacheKey)) {
+        localStorage.removeItem(`sidebar_cache_${getEffectiveClassId()}`);
+    }
+    // Reload halaman yang sekarang biar data ke-refresh sesuai kelas baru
+    window.location.reload();
+}
+
+function toggleClassSwitcher() {
+    const menu = document.getElementById('classSwitcher');
+    if (!menu) return;
+    const isOpen = menu.style.display === 'block';
+    menu.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        // Tutup kalau klik di luar
+        setTimeout(() => {
+            document.addEventListener('click', function handler(e) {
+                if (!document.getElementById('classSwitcherWrapper')?.contains(e.target)) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', handler);
+                }
+            });
+        }, 10);
+    }
+}
+
+async function renderClassSwitcher() {
+    const user = JSON.parse(localStorage.getItem("user") || 'null');
+    if (!user || user.role !== 'super_admin') return;
+
+    const switcher = document.getElementById('classSwitcher');
+    const wrapper = document.getElementById('classSwitcherWrapper');
+    const label = document.getElementById('classSwitcherLabel');
+    if (!switcher || !wrapper) return;
+
+    const { data: classes } = await supabase.from('classes').select('id, name').order('id');
+    if (!classes || classes.length === 0) return;
+
+    const current = getEffectiveClassId();
+    const currentClass = classes.find(c => String(c.id) === current);
+    if (label) label.innerText = currentClass?.name || `Kelas ${current}`;
+
+    switcher.innerHTML = classes.map(c => `
+        <div onclick="switchClass('${c.id}', '${c.name}')" style="
+            padding:10px 14px; font-size:13px; cursor:pointer;
+            color:${String(c.id) === current ? '#00eaff' : '#ddd'};
+            background:${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'};
+            display:flex; align-items:center; gap:8px;
+            transition:background 0.15s;
+        " onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+           onmouseout="this.style.background='${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'}'">
+            ${String(c.id) === current ? '<i class="fa-solid fa-check" style="font-size:10px; color:#00eaff;"></i>' : '<span style="width:12px;"></span>'}
+            ${c.name}
+        </div>`).join('');
+
+    wrapper.style.display = 'flex';
+}
+
+// ==========================================
 // 1. AUTO RUN SAAT HALAMAN DIMUAT
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     renderSidebar();
     syncHeaderProfile();
+    renderClassSwitcher();
 
     // [GLOBAL FIX] HAPUS GARIS MERAH (SPELLCHECK)
     document.body.setAttribute('spellcheck', 'false');
@@ -44,8 +133,10 @@ function syncHeaderProfile() {
     } catch (e) { console.error("Sync Profile Error:", e); }
 }
 // ==========================================
-// 3. UNIFIED SIDEBAR RENDERER (SWR + FIX ICON)
+// 3. UNIFIED SIDEBAR RENDERER (CACHE-FIRST + REALTIME)
 // ==========================================
+let _sidebarChannel = null;
+
 async function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
@@ -56,20 +147,27 @@ async function renderSidebar() {
     } catch (e) { return; }
     if (!user) return;
 
-    const CLASS_ID = String(user.class_id);
+    const CLASS_ID = getEffectiveClassId() || String(user.class_id);
     const CACHE_KEY = `sidebar_cache_${CLASS_ID}`;
+    const cachedRaw = localStorage.getItem(CACHE_KEY);
 
-    // 1. Ambil data dari Cache (Stale)
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
+    // 1. Cache ada → langsung render, tidak hit DB sama sekali
+    if (cachedRaw) {
         try {
-            processAndRenderSidebar(JSON.parse(cachedData), user);
+            processAndRenderSidebar(JSON.parse(cachedRaw), user);
         } catch (e) { console.error("Cache Parse Error"); }
+    } else {
+        // 2. Belum ada cache (pertama kali / cache dihapus) → fetch DB sekali
+        await fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY);
     }
 
-    // 2. Revalidate (Ambil data segar dari Supabase)
+    // 3. Setup realtime — hanya satu channel per sesi, tidak dibuat ulang tiap pindah halaman
+    setupSidebarRealtime(CLASS_ID, user, CACHE_KEY);
+}
+
+async function fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY) {
     try {
-        const { data: freshData, error } = await supabase
+        const { data, error } = await supabase
             .from('subjects_config')
             .select('*')
             .eq('class_id', CLASS_ID)
@@ -77,15 +175,38 @@ async function renderSidebar() {
 
         if (error) throw error;
 
-        // Bandingkan data. Jika beda / cache kosong, update & simpan
-        const freshDataString = JSON.stringify(freshData);
-        if (freshDataString !== cachedData) {
-            localStorage.setItem(CACHE_KEY, freshDataString);
-            processAndRenderSidebar(freshData, user);
-        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        processAndRenderSidebar(data, user);
     } catch (err) {
         console.error("Fetch Sidebar Error:", err);
     }
+}
+
+function setupSidebarRealtime(CLASS_ID, user, CACHE_KEY) {
+    // Kalau channel sudah jalan, skip — tidak perlu buat lagi
+    if (_sidebarChannel) return;
+
+    _sidebarChannel = supabase
+        .channel('sidebar_config_changes')
+        .on('postgres_changes', {
+            event: '*',         // INSERT, UPDATE, DELETE semua dipantau
+            schema: 'public',
+            table: 'subjects_config',
+            filter: `class_id=eq.${CLASS_ID}`
+        }, async () => {
+            // Admin ubah sesuatu → fetch ulang, update cache, re-render langsung
+            console.log('[Sidebar] Config berubah, memperbarui menu...');
+            await fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY);
+        })
+        .subscribe();
+
+    // Bersihkan saat user tutup/reload halaman
+    window.addEventListener('pagehide', () => {
+        if (_sidebarChannel) {
+            _sidebarChannel.unsubscribe();
+            _sidebarChannel = null;
+        }
+    }, { once: true });
 }
 
 function processAndRenderSidebar(allConfigs, user) {
@@ -179,11 +300,16 @@ function processAndRenderSidebar(allConfigs, user) {
 
     sidebar.innerHTML = htmlContent;
 
-    // Scroll otomatis ke menu yang aktif
-    const activeItem = sidebar.querySelector(".active");
-    if (activeItem) {
-        setTimeout(() => activeItem.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+    // Restore posisi scroll terakhir
+    const savedScroll = sessionStorage.getItem('sidebar_scroll');
+    if (savedScroll) {
+        sidebar.scrollTop = parseInt(savedScroll);
     }
+
+    // Simpan posisi scroll setiap kali user scroll sidebar
+    sidebar.addEventListener('scroll', () => {
+        sessionStorage.setItem('sidebar_scroll', sidebar.scrollTop);
+    }, { passive: true });
 }
 
 // ==========================================

@@ -19,6 +19,23 @@ const UIComponents = {
                     <span id="headerVisitorCount">0</span>
                 </div>
             </div>
+            <div id="classSwitcherWrapper" style="display:none; position:relative; margin-right:8px;">
+                <div id="classSwitcherTrigger" onclick="toggleClassSwitcher()" style="
+                    display:flex; align-items:center; gap:6px;
+                    background:rgba(0,234,255,0.08); border:1px solid rgba(0,234,255,0.25);
+                    border-radius:20px; padding:5px 12px; cursor:pointer;
+                    font-size:12px; color:#00eaff; transition:all 0.2s;
+                ">
+                    <i class="fa-solid fa-layer-group" style="font-size:11px;"></i>
+                    <span id="classSwitcherLabel">Kelas –</span>
+                    <i class="fa-solid fa-caret-down" style="font-size:10px;"></i>
+                </div>
+                <div id="classSwitcher" style="
+                    display:none; position:absolute; top:calc(100% + 8px); left:0;
+                    background:#111; border:1px solid rgba(0,234,255,0.2);
+                    border-radius:10px; min-width:140px; overflow:hidden; z-index:9999;
+                "></div>
+            </div>
             <div class="profile-box" id="profileTrigger">
                 <span id="headerName">Hai, ...</span>
                 <img id="headerPP" class="header-pp">
@@ -36,24 +53,11 @@ const UIComponents = {
         <div id="visitorOverlay" class="visitor-overlay">
             <div class="visitor-popup">
                 <div class="popup-header">
-                    <h3>Visitors</h3>
+                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:#00eaff;">0</span></h3>
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4><i class="fa-solid fa-eye"></i> Today Visitor</h4>
-                        <p id="popupToday">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4><i class="fa-solid fa-users"></i> Total Visitor</h4>
-                        <p id="popupTotal">0</p>
-                    </div>
-                </div>
-                <div class="list-section">
-                    <h4 class="list-title">List of accounts that visited today</h4>
-                    <div id="visitorList" class="visitor-list-container"></div>
-                </div>
-                <div class="admin-actions" style="margin-top: 20px;">
+                <div id="visitorList" class="visitor-list-container" style="text-align:left;"></div>
+                <div class="admin-actions" style="margin-top: 16px;">
                     <button id="resetVisitorBtn" class="btn-reset-text">
                         <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
                     </button>

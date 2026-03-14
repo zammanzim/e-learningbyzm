@@ -1,43 +1,70 @@
 let openTopicId = null;
+let forumChannel = null;        // Simpan referensi channel biar bisa di-unsubscribe
+const repliesCache = {};        // Cache balasan per topic { topicId: [data] }
+
 document.addEventListener('DOMContentLoaded', initForum);
 
 async function initForum() {
-    const user = getUser(); // Dari auth.js
+    const user = getUser();
     if (!user) { window.location.href = 'index'; return; }
 
     loadTopics();
+    setupRealtimeChannel(user);
+}
 
-    // Realtime update (opsional tapi keren)
-    supabase.channel('forum_realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'forum_topics' }, payload => {
+// ==========================================
+// REALTIME — dengan filter class_id & cleanup
+// ==========================================
+function setupRealtimeChannel(user) {
+    if (forumChannel) {
+        forumChannel.unsubscribe();
+        forumChannel = null;
+    }
+
+    forumChannel = supabase
+        .channel('forum_realtime')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'forum_topics',
+            filter: `class_id=eq.${getEffectiveClassId()}`
+        }, () => {
             loadTopics();
         })
         .subscribe();
 }
 
-// Tambahkan variabel state untuk melacak balasan yang terbuka
+// Tutup channel saat user tinggalkan halaman
+window.addEventListener('pagehide', () => {
+    if (forumChannel) {
+        forumChannel.unsubscribe();
+        forumChannel = null;
+    }
+});
 
+// ==========================================
+// LOAD TOPICS
+// ==========================================
 async function loadTopics() {
-    const user = getUser(); // Dari auth.js
+    const user = getUser();
     const container = document.getElementById('forumList');
 
     try {
         const { data, error } = await supabase
             .from('forum_topics')
             .select('*, users(nickname, avatar_url)')
-            .eq('class_id', user.class_id)
+            .eq('class_id', getEffectiveClassId())
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        container.innerHTML = data.length === 0 ?
-            `<p style="text-align:center; padding:40px; color:#aaa;">Belum ada diskusi.</p>` : "";
-
-        // File: js/forum.js
+        container.innerHTML = data.length === 0
+            ? '<p style="text-align:center; padding:40px; color:#aaa;">Belum ada diskusi.</p>'
+            : '';
 
         data.forEach(topic => {
             const card = document.createElement('div');
-            card.className = "course-card animate-slide-right";
+            card.className = 'course-card animate-slide-right';
             card.innerHTML = `
         <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
             <img src="${topic.users.avatar_url || 'icons/profpicture.png'}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #00eaff;">
@@ -70,11 +97,18 @@ async function loadTopics() {
     } catch (err) { console.error(err); }
 }
 
+// ==========================================
+// REPLIES — dengan cache sederhana
+// ==========================================
 async function toggleReplies(topicId) {
     const section = document.getElementById(`replySection-${topicId}`);
     if (section.style.display === 'none') {
         section.style.display = 'block';
-        loadReplies(topicId);
+        if (repliesCache[topicId]) {
+            renderReplies(topicId, repliesCache[topicId]);
+        } else {
+            loadReplies(topicId);
+        }
     } else {
         section.style.display = 'none';
     }
@@ -82,7 +116,7 @@ async function toggleReplies(topicId) {
 
 async function loadReplies(topicId) {
     const list = document.getElementById(`replyList-${topicId}`);
-    list.innerHTML = `<small style="color:#888;">Memuat balasan...</small>`;
+    list.innerHTML = '<small style="color:#888;">Memuat balasan...</small>';
 
     const { data, error } = await supabase
         .from('forum_replies')
@@ -92,10 +126,21 @@ async function loadReplies(topicId) {
 
     if (error) return;
 
-    list.innerHTML = data.length === 0 ? `<small style="color:#666;">Belum ada balasan.</small>` : "";
+    repliesCache[topicId] = data;
+    renderReplies(topicId, data);
+}
+
+function renderReplies(topicId, data) {
+    const list = document.getElementById(`replyList-${topicId}`);
+    if (!list) return;
+
+    list.innerHTML = data.length === 0
+        ? '<small style="color:#666;">Belum ada balasan.</small>'
+        : '';
+
     data.forEach(r => {
         const div = document.createElement('div');
-        div.style = "margin-bottom: 10px; font-size: 13px;";
+        div.style = 'margin-bottom: 10px; font-size: 13px;';
         div.innerHTML = `<b style="color: #00eaff;">${r.users.nickname}:</b> <span style="color: #ddd;">${r.content}</span>`;
         list.appendChild(div);
     });
@@ -114,36 +159,40 @@ async function sendReply(topicId) {
     });
 
     if (!error) {
-        input.value = "";
+        input.value = '';
+        delete repliesCache[topicId];
         loadReplies(topicId);
     }
 }
 
+// ==========================================
+// POST TOPIC BARU
+// ==========================================
 async function postNewTopic() {
     const user = getUser();
     const title = document.getElementById('topicTitle').value.trim();
     const content = document.getElementById('topicContent').value.trim();
 
     if (!title || !content) {
-        showPopup("Judul dan konten wajib diisi!", "error");
+        showPopup('Judul dan konten wajib diisi!', 'error');
         return;
     }
 
     try {
         const { error } = await supabase.from('forum_topics').insert({
             user_id: user.id,
-            class_id: user.class_id,
+            class_id: getEffectiveClassId(),
             title: title,
             content: content
         });
 
         if (error) throw error;
 
-        showPopup("Diskusi berhasil diposting!", "success");
-        document.getElementById('topicTitle').value = "";
-        document.getElementById('topicContent').value = "";
+        showPopup('Diskusi berhasil diposting!', 'success');
+        document.getElementById('topicTitle').value = '';
+        document.getElementById('topicContent').value = '';
         loadTopics();
     } catch (err) {
-        showPopup("Gagal posting: " + err.message, "error");
+        showPopup('Gagal posting: ' + err.message, 'error');
     }
 }

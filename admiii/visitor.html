@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js" defer></script>
+    <script src="../js/ui-components.js" defer></script>
+    <script src="../js/basicfeat.js" defer></script>
+    <script src="../js/visitor.js" defer></script>
+    <script src="../js/auth.js" defer></script>
+    <link rel="stylesheet" href="../css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .stat-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .stat-box.active-tab {
+            border-color: var(--tab-color, #00eaff);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+            line-height: 1;
+            margin-bottom: 5px;
+            color: var(--tab-color, #00eaff);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* tab colors */
+        .stat-box.t-online {
+            --tab-color: #2ecc71;
+        }
+
+        .stat-box.t-today {
+            --tab-color: #00eaff;
+        }
+
+        .stat-box.t-never {
+            --tab-color: #ff6b6b;
+        }
+
+        .visitor-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 11px 14px;
+            margin-bottom: 8px;
+            border-left: 3px solid rgba(255, 255, 255, 0.08);
+            transition: border-color 0.3s;
+        }
+
+        .visitor-row.is-online {
+            border-left-color: #2ecc71;
+        }
+
+        .visitor-row img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .vname {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .vmeta {
+            font-size: 11px;
+            color: #555;
+            margin-top: 2px;
+        }
+
+        .vmeta .page {
+            color: #00eaff;
+        }
+
+        .vtime {
+            font-size: 11px;
+            color: #555;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .online-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #2ecc71;
+            display: inline-block;
+            margin-right: 5px;
+            box-shadow: 0 0 5px #2ecc71;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #555;
+        }
+
+        .empty-state i {
+            font-size: 38px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .sk {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            animation: sk 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sk {
+
+            0%,
+            100% {
+                opacity: 0.3
+            }
+
+            50% {
+                opacity: 0.7
+            }
+        }
+
+        .sort-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .sort-row label {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .sort-row select {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <!-- LEFT -->
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-tower-broadcast"></i> Visitor Monitor</h1>
+                <p style="color:#aaa; font-size:13px;">Pantau aktivitas user di kelasmu.</p>
+            </div>
+
+            <!-- 3 Stat Boxes sebagai Tab -->
+            <div class="stat-grid">
+                <div class="stat-box t-online active-tab" id="tab-online" onclick="switchTab('online')">
+                    <span class="stat-num" id="statOnline">–</span>
+                    <span class="stat-label"><span class="online-dot"></span>Online</span>
+                </div>
+                <div class="stat-box t-today" id="tab-today" onclick="switchTab('today')">
+                    <span class="stat-num" id="statToday">–</span>
+                    <span class="stat-label">Hari Ini</span>
+                </div>
+                <div class="stat-box t-never" id="tab-never" onclick="switchTab('never')">
+                    <span class="stat-num" id="statNever">–</span>
+                    <span class="stat-label">Belum Pernah</span>
+                </div>
+            </div>
+
+            <!-- Sort -->
+            <div class="sort-row">
+                <label><i class="fa-solid fa-arrow-down-short-wide"></i> Urut</label>
+                <select id="sortSelect" class="glass-input" onchange="renderList()">
+                    <option value="time_desc">Terbaru</option>
+                    <option value="time_asc">Terlama</option>
+                    <option value="name_asc">Nama A–Z</option>
+                </select>
+            </div>
+
+            <p style="font-size:11px; color:#444; line-height:1.7; margin-top:8px;">
+                <i class="fa-solid fa-circle-info" style="color:#00eaff;"></i>
+                <b style="color:#2ecc71">Online</b> = koneksi WebSocket aktif, bukan polling.<br>
+                <i class="fa-solid fa-circle-info" style="color:#00eaff;"></i>
+                <b style="color:#00eaff">Hari ini</b> = pernah buka website hari ini.<br>
+                <i class="fa-solid fa-circle-info" style="color:#00eaff;"></i>
+                <b style="color:#ff6b6b">Belum pernah</b> = user terdaftar, belum pernah login.
+            </p>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-section">
+            <h3 id="listTitle" style="margin-bottom:4px;">
+                Online Sekarang
+                <span class="live-badge" id="liveBadge"><span class="online-dot"></span> LIVE</span>
+            </h3>
+            <p id="listSubtitle" style="font-size:12px; color:#555; margin-top:4px; margin-bottom:16px;">
+                Update otomatis, tidak perlu refresh.
+            </p>
+            <div id="visitorListContainer">
+                <div class="sk"></div>
+                <div class="sk"></div>
+                <div class="sk"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let _admin = null;
+        let _monitorChannel = null;
+        let _presenceUsers = {};   // { user_id: presenceData } — dari WS
+        let _todayUsers = [];      // dari DB
+        let _neverUsers = [];      // dari DB
+        let _currentTab = 'online';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            _admin = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
+            if (!_admin || (_admin.role !== 'class_admin' && _admin.role !== 'super_admin')) {
+                window.location.href = '../index'; return;
+            }
+
+            // Load data DB (today + never) secara paralel
+            await Promise.all([loadTodayAndNever(), subscribePresence()]);
+        });
+
+        // ==========================================
+        // PRESENCE — Online sekarang
+        // ==========================================
+        async function subscribePresence() {
+            _monitorChannel = supabase.channel(`presence_class_${_admin.class_id}`, {
+                config: { presence: { key: String(_admin.id) } }
+            });
+
+            _monitorChannel
+                .on('presence', { event: 'sync' }, () => {
+                    const state = _monitorChannel.presenceState();
+                    _presenceUsers = {};
+                    Object.entries(state).forEach(([, arr]) => {
+                        const p = arr[0];
+                        _presenceUsers[p.user_id] = p;
+                    });
+                    document.getElementById('statOnline').innerText = Object.keys(_presenceUsers).length;
+                    if (_currentTab === 'online') renderList();
+                })
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await _monitorChannel.track({
+                            user_id: _admin.id,
+                            nickname: _admin.nickname || _admin.short_name || 'Admin',
+                            avatar_url: _admin.avatar_url || null,
+                            page: document.title,
+                            joined_at: new Date().toISOString()
+                        });
+                    }
+                });
+
+            window.addEventListener('pagehide', () => {
+                _monitorChannel?.untrack();
+                _monitorChannel?.unsubscribe();
+            }, { once: true });
+        }
+
+        // ==========================================
+        // DB — Today + Never
+        // ==========================================
+        async function loadTodayAndNever() {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            const [visitorsRes, usersRes] = await Promise.all([
+                supabase
+                    .from('visitors')
+                    .select('user_id, visited_at, last_page, user:users(full_name, nickname, avatar_url)')
+                    .eq('class_id', _admin.class_id)
+                    .gte('visited_at', todayStart.toISOString())
+                    .order('visited_at', { ascending: false }),
+                supabase
+                    .from('users')
+                    .select('id, full_name, nickname, avatar_url')
+                    .eq('class_id', _admin.class_id)
+            ]);
+
+            _todayUsers = visitorsRes.data || [];
+            document.getElementById('statToday').innerText = _todayUsers.length;
+
+            // Never = user yang id-nya tidak ada di visitors sama sekali
+            const allUsers = usersRes.data || [];
+
+            // Cek siapa yang pernah masuk (bukan hanya hari ini — cek semua waktu)
+            const { data: everVisited } = await supabase
+                .from('visitors')
+                .select('user_id')
+                .eq('class_id', _admin.class_id);
+
+            const visitedIds = new Set((everVisited || []).map(v => String(v.user_id)));
+            _neverUsers = allUsers.filter(u => !visitedIds.has(String(u.id)));
+
+            document.getElementById('statNever').innerText = _neverUsers.length;
+        }
+
+        // ==========================================
+        // TABS
+        // ==========================================
+        function switchTab(tab) {
+            _currentTab = tab;
+
+            // Update active tab style
+            ['online', 'today', 'never'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('active-tab', t === tab);
+            });
+
+            // Update header
+            const titles = {
+                online: ['Online Sekarang', 'Update otomatis, tidak perlu refresh.', true],
+                today: ['Visitor Hari Ini', 'User yang sudah buka website hari ini.', false],
+                never: ['Belum Pernah Masuk', 'User terdaftar yang belum pernah login sama sekali.', false]
+            };
+            const [title, subtitle, showLive] = titles[tab];
+            document.getElementById('listTitle').innerHTML = title + (showLive
+                ? ' <span class="live-badge"><span class="online-dot"></span> LIVE</span>' : '');
+            document.getElementById('listSubtitle').innerText = subtitle;
+
+            // Sort options: belum pernah tidak ada waktu
+            document.getElementById('sortSelect').style.display = tab === 'never' ? 'none' : '';
+
+            renderList();
+        }
+
+        // ==========================================
+        // RENDER
+        // ==========================================
+        function renderList() {
+            const container = document.getElementById('visitorListContainer');
+            const sort = document.getElementById('sortSelect').value;
+
+            if (_currentTab === 'online') {
+                renderOnline(container, sort);
+            } else if (_currentTab === 'today') {
+                renderToday(container, sort);
+            } else {
+                renderNever(container);
+            }
+        }
+
+        function renderOnline(container, sort) {
+            const entries = Object.values(_presenceUsers);
+            if (entries.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-ghost"></i><p>Belum ada yang online.</p></div>`;
+                return;
+            }
+            entries.sort((a, b) => {
+                if (sort === 'time_asc') return new Date(a.joined_at) - new Date(b.joined_at);
+                if (sort === 'name_asc') return (a.nickname || '').localeCompare(b.nickname || '');
+                return new Date(b.joined_at) - new Date(a.joined_at);
+            });
+            const now = new Date();
+            container.innerHTML = '';
+            entries.forEach(v => {
+                const sinceMin = Math.floor((now - new Date(v.joined_at)) / 60000);
+                const sinceStr = sinceMin < 1 ? 'baru masuk' : sinceMin < 60 ? `${sinceMin} mnt` : `${Math.floor(sinceMin / 60)} jam`;
+                container.appendChild(makeRow({
+                    avatar: v.avatar_url,
+                    name: v.nickname,
+                    page: v.page,
+                    time: sinceStr,
+                    online: true
+                }));
+            });
+        }
+
+        function renderToday(container, sort) {
+            if (_todayUsers.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>Belum ada yang masuk hari ini.</p></div>`;
+                return;
+            }
+            const list = [..._todayUsers];
+            list.sort((a, b) => {
+                if (sort === 'time_asc') return new Date(a.visited_at) - new Date(b.visited_at);
+                if (sort === 'name_asc') {
+                    const na = a.user?.nickname || a.user?.full_name || '';
+                    const nb = b.user?.nickname || b.user?.full_name || '';
+                    return na.localeCompare(nb);
+                }
+                return new Date(b.visited_at) - new Date(a.visited_at);
+            });
+            container.innerHTML = '';
+            list.forEach(v => {
+                const u = v.user || {};
+                // Cek apakah user ini lagi online sekarang
+                const isOnline = !!_presenceUsers[v.user_id];
+                const visitedAt = new Date(v.visited_at);
+                const timeStr = visitedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                container.appendChild(makeRow({
+                    avatar: u.avatar_url,
+                    name: u.nickname || u.full_name || 'User',
+                    page: v.last_page,
+                    time: timeStr,
+                    online: isOnline
+                }));
+            });
+        }
+
+        function renderNever(container) {
+            if (_neverUsers.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-party-horn"></i><p>Semua user sudah pernah masuk!</p></div>`;
+                return;
+            }
+            const list = [..._neverUsers].sort((a, b) =>
+                (a.nickname || a.full_name || '').localeCompare(b.nickname || b.full_name || '')
+            );
+            container.innerHTML = '';
+            list.forEach(u => {
+                container.appendChild(makeRow({
+                    avatar: u.avatar_url,
+                    name: u.nickname || u.full_name || 'User',
+                    page: null,
+                    time: null,
+                    online: false,
+                    never: true
+                }));
+            });
+        }
+
+        function makeRow({ avatar, name, page, time, online, never }) {
+            const row = document.createElement('div');
+            row.className = `visitor-row${online ? ' is-online' : ''}`;
+            row.innerHTML = `
+                <img src="${avatar || '../icons/profpicture.png'}" onerror="this.src='../icons/profpicture.png'">
+                <div style="flex:1; min-width:0;">
+                    <div class="vname">
+                        ${online ? '<span class="online-dot"></span>' : ''}${name}
+                    </div>
+                    <div class="vmeta">
+                        ${never ? '<span style="color:#ff6b6b;">Belum pernah login</span>'
+                    : page ? `<span class="page">${page}</span>` : ''}
+                    </div>
+                </div>
+                ${time ? `<div class="vtime">${time}</div>` : ''}`;
+            return row;
+        }
+    </script>
+</body>
+
+</html>
