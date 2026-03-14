@@ -22,7 +22,7 @@ function getEffectiveClassId() {
             if (override) return override;
         }
         return String(user.class_id);
-    } catch (e) { return null; }
+    } catch(e) { return null; }
 }
 
 function getEffectiveClassName() {
@@ -31,7 +31,7 @@ function getEffectiveClassName() {
         if (override) return override;
         const user = JSON.parse(localStorage.getItem("user"));
         return user?.class_name || `Kelas ${user?.class_id}` || '';
-    } catch (e) { return ''; }
+    } catch(e) { return ''; }
 }
 
 async function switchClass(classId, className) {
@@ -151,21 +151,47 @@ async function renderSidebar() {
     const CACHE_KEY = `sidebar_cache_${CLASS_ID}`;
     const cachedRaw = localStorage.getItem(CACHE_KEY);
 
-    // 1. Cache ada → langsung render, tidak hit DB sama sekali
+    let cacheValid = false;
+
+    // 1. Coba render dari cache dulu
     if (cachedRaw) {
         try {
-            processAndRenderSidebar(JSON.parse(cachedRaw), user);
-        } catch (e) { console.error("Cache Parse Error"); }
-    } else {
-        // 2. Belum ada cache (pertama kali / cache dihapus) → fetch DB sekali
-        await fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY);
+            const cached = JSON.parse(cachedRaw);
+            // Cache dianggap valid kalau isinya array dan tidak kosong
+            if (Array.isArray(cached) && cached.length > 0) {
+                processAndRenderSidebar(cached, user);
+                cacheValid = true;
+            } else {
+                // Cache kosong/corrupt → hapus
+                localStorage.removeItem(CACHE_KEY);
+            }
+        } catch (e) {
+            // JSON corrupt → hapus
+            localStorage.removeItem(CACHE_KEY);
+        }
     }
 
-    // 3. Setup realtime — hanya satu channel per sesi, tidak dibuat ulang tiap pindah halaman
+    if (!cacheValid) {
+        // Tidak ada cache → tunggu fetch selesai (blocking)
+        await fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY);
+    } else {
+        // Ada cache → SELALU fetch background tiap page load
+        // Biar perubahan menu dari admin selalu ketangkap meski user lagi offline
+        fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY).catch(() => {});
+    }
+
+    // 3. Setup realtime
     setupSidebarRealtime(CLASS_ID, user, CACHE_KEY);
 }
 
-async function fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY) {
+async function fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY, retryCount = 0) {
+    // Tunggu supabase ready (race condition fix)
+    if (typeof supabase === 'undefined') {
+        if (retryCount >= 5) { console.error("Supabase tidak ready"); return; }
+        await new Promise(r => setTimeout(r, 300));
+        return fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY, retryCount + 1);
+    }
+
     try {
         const { data, error } = await supabase
             .from('subjects_config')
@@ -174,11 +200,27 @@ async function fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY) {
             .order('display_order', { ascending: true });
 
         if (error) throw error;
+        if (!data || data.length === 0) return; // Jangan overwrite cache dengan data kosong
 
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        processAndRenderSidebar(data, user);
+        // Bandingkan berdasarkan id + display_order, bukan raw string
+        // (JSON.stringify order bisa beda meski data sama)
+        const oldRaw = localStorage.getItem(CACHE_KEY);
+        const oldIds = oldRaw
+            ? JSON.parse(oldRaw).map(x => `${x.id}-${x.display_order}-${x.subject_name}-${x.badge}`).sort().join(',')
+            : '';
+        const newIds = data.map(x => `${x.id}-${x.display_order}-${x.subject_name}-${x.badge}`).sort().join(',');
+
+        if (newIds !== oldIds) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            processAndRenderSidebar(data, user);
+        }
     } catch (err) {
         console.error("Fetch Sidebar Error:", err);
+        // Retry sekali kalau gagal
+        if (retryCount === 0) {
+            await new Promise(r => setTimeout(r, 1000));
+            return fetchAndCacheSidebar(CLASS_ID, user, CACHE_KEY, 1);
+        }
     }
 }
 
