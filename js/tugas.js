@@ -143,8 +143,9 @@ function updateProgressUI() {
 function renderTasks(data) {
     const container = document.getElementById('taskList');
     if (!container) return;
-    container.innerHTML = "";
     const total = allTasks.length;
+
+    const fragment = document.createDocumentFragment();
 
     data.forEach((item) => {
         const isDone = doneIds.includes(String(item.id));
@@ -175,7 +176,7 @@ function renderTasks(data) {
                 const isLast = i === 3 && photos.length > 4;
                 return `
                     <div class="photo-item photo-wrapper">
-                        <img src="${url}">
+                        <img src="${url}" loading="lazy">
                         ${isLast ? `<div class="more-overlay">+${photos.length - 4}</div>` : ''}
                     </div>`;
             }).join('');
@@ -206,8 +207,10 @@ function renderTasks(data) {
         </button>
     </div>
 `;
-        container.appendChild(el);
+        fragment.appendChild(el);
     });
+
+    container.replaceChildren(fragment);
 }
 
 async function toggleStatus(e, id, btn) {

@@ -271,15 +271,25 @@ const SubjectApp = {
 
     renderAnnouncements() {
         const container = document.getElementById("announcements");
-        container.innerHTML = "<h3 style='margin-top: 30px;'>Materi & Pengumuman</h3>";
+
+        const header = document.createElement("h3");
+        header.style.marginTop = "30px";
+        header.textContent = "Materi & Pengumuman";
 
         if (this.state.announcements.length === 0) {
-            container.innerHTML += "<h3 style='color: #ff6200; padding:20px;'>Belum ada materi</h3>";
+            const empty = document.createElement("h3");
+            empty.style.cssText = "color: #ff6200; padding:20px;";
+            empty.textContent = "Belum ada materi";
+            container.replaceChildren(header, empty);
             return;
         }
+
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(header);
         this.state.announcements.forEach((item) => {
-            container.appendChild(this.createCardElement(item));
+            fragment.appendChild(this.createCardElement(item));
         });
+        container.replaceChildren(fragment);
     },
 
     createCardElement(data) {
@@ -314,11 +324,11 @@ const SubjectApp = {
 
         if (photos.length > 0) {
             let gridClass = `grid-${Math.min(photos.length, 4)}`;
-            let imgsHTML = photos.slice(0, 4).map(url => `<img src="${url}" class="photo-item">`).join('');
+            let imgsHTML = photos.slice(0, 4).map(url => `<img src="${url}" class="photo-item" loading="lazy">`).join('');
             if (photos.length > 4) {
                 gridClass = 'grid-4';
-                imgsHTML = photos.slice(0, 3).map(url => `<img src="${url}" class="photo-item">`).join('') +
-                    `<div class="photo-item photo-wrapper"><img src="${photos[3]}"><div class="more-overlay">+${photos.length - 4}</div></div>`;
+                imgsHTML = photos.slice(0, 3).map(url => `<img src="${url}" class="photo-item" loading="lazy">`).join('') +
+                    `<div class="photo-item photo-wrapper"><img src="${photos[3]}" loading="lazy"><div class="more-overlay">+${photos.length - 4}</div></div>`;
             }
             photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
             card.classList.add('clickable-card');
@@ -509,7 +519,16 @@ const SubjectApp = {
 
             if (error) throw error;
 
-            // 2. Berhasil! Balikin tombol ke icon edit
+            // 2. Update cache lokal biar urutan & konten gak balik pas reload
+            updates.forEach(u => {
+                const ann = this.state.announcements.find(a => String(a.id) === String(u.id));
+                if (ann) Object.assign(ann, u);
+            });
+            try {
+                localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
+            } catch (e) { /* ignore storage full */ }
+
+            // 3. Berhasil! Balikin tombol ke icon edit
             if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
@@ -550,42 +569,13 @@ const SubjectApp = {
         });
     },
 
-    async updateDisplayOrder() {
+    updateDisplayOrder() {
+        // Cukup sync urutan ke state lokal — DB diurus saveAllChanges() saat keluar edit mode
         const cards = document.querySelectorAll(".course-card");
-
-        // 1. Map data ke array of objects dengan kolom minimal tapi lengkap
-        const updates = Array.from(cards).map((card, index) => ({
-            id: card.dataset.id,            // Primary Key wajib ada
-            display_order: index + 1,       // Urutan baru
-            subject_id: this.state.subjectId, // Sertakan ini buat jaga-jaga RLS
-            class_id: getEffectiveClassId() || this.state.user.class_id // Sertakan ini agar RLS mengizinkan akses
-        }));
-
-        if (updates.length === 0) return;
-
-        try {
-            // 2. Kirim sekaligus (Bulk Upsert)
-            const { error } = await supabase
-                .from("subject_announcements")
-                .upsert(updates, {
-                    onConflict: 'id', // Kasih tau Supabase kalau ID sama, timpa aja (UPDATE)
-                    ignoreDuplicates: false
-                });
-
-            if (error) {
-                console.error("❌ Upsert Error:", error.message);
-                if (typeof showPopup === 'function') showPopup("Gagal simpan urutan: " + error.message, "error");
-                throw error;
-            }
-
-
-            // 3. Update cache lokal biar gak balik lagi urutannya pas reload
-            const cacheKey = `announcements_${this.state.subjectId}`;
-            localStorage.setItem(cacheKey, JSON.stringify(this.state.announcements));
-
-        } catch (err) {
-            console.error("Fatal Error saat reorder:", err);
-        }
+        Array.from(cards).forEach((card, index) => {
+            const ann = this.state.announcements.find(a => String(a.id) === String(card.dataset.id));
+            if (ann) ann.display_order = index + 1;
+        });
     },
 
     triggerPhotoUpload(card) {
@@ -798,12 +788,16 @@ const SubjectApp = {
     },
 
     async uploadAndSave(d) {
-        let urls = [];
-        for (let f of d.files) {
-            const name = `${this.state.subjectId}/new/${Date.now()}_${f.name.replace(/\s/g, '_')}`;
-            const { data } = await supabase.storage.from('subject-photos').upload(name, f);
-            if (data) urls.push(supabase.storage.from('subject-photos').getPublicUrl(name).data.publicUrl);
-        }
+        // Upload semua foto secara parallel (bukan satu-satu)
+        const urls = (await Promise.all(
+            d.files.map(async (f) => {
+                const name = `${this.state.subjectId}/new/${Date.now()}_${f.name.replace(/\s/g, '_')}`;
+                const { data } = await supabase.storage.from('subject-photos').upload(name, f);
+                if (!data) return null;
+                return supabase.storage.from('subject-photos').getPublicUrl(name).data.publicUrl;
+            })
+        )).filter(Boolean); // Buang yang null (gagal upload)
+
         const { error } = await supabase.from('subject_announcements').insert({
             subject_id: this.state.subjectId, class_id: getEffectiveClassId() || this.state.user.class_id,
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
