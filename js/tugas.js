@@ -232,8 +232,12 @@ async function toggleStatus(e, id, btn) {
             await supabase.from('user_progress').insert({ user_id: user.id, announcement_id: id });
             doneIds.push(id);
         }
+        // Invalidate cache badge biar daily-card ikut update
+        sessionStorage.removeItem(`task_badge_${user.id}`);
+        if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
+
         updateProgressUI();
-        applyCurrentFilter(); // Mencegah reset ke "Semua" saat toggle
+        applyCurrentFilter();
     } catch (err) {
         console.error(err);
         applyCurrentFilter();
@@ -276,3 +280,38 @@ function filterTasks(type, btn) {
 
     applyCurrentFilter();
 }
+
+// ── SHORTCUTS ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    // Ctrl+Enter → buka menu picker (kalau admin & form belum kebuka)
+    if (e.ctrlKey && e.key === 'Enter') {
+        const pickerOpen = !document.getElementById('tugasPickerOverlay')?.classList.contains('hidden');
+        const formOpen = !document.getElementById('tugasFormOverlay')?.classList.contains('hidden');
+        const fab = document.getElementById('tugasFabWrap');
+
+        if (!pickerOpen && !formOpen && fab && fab.style.display !== 'none') {
+            e.preventDefault();
+            if (typeof openTugasModal === 'function') openTugasModal();
+        }
+    }
+});
+
+// ── CLICK OUTSIDE TO CLOSE ────────────────────────────────────────
+document.addEventListener('click', e => {
+    // Picker overlay
+    const picker = document.getElementById('tugasPickerOverlay');
+    if (picker && !picker.classList.contains('hidden')) {
+        if (e.target === picker) {
+            picker.classList.add('hidden');
+        }
+    }
+
+    // Form overlay
+    const form = document.getElementById('tugasFormOverlay');
+    if (form && !form.classList.contains('hidden')) {
+        if (e.target === form) {
+            form.classList.add('hidden');
+            // Draft sengaja tidak dihapus
+        }
+    }
+});

@@ -102,6 +102,363 @@
     </div>
 
     <script src="js/tugas.js" defer></script>
+
+    <!-- ══ FAB TAMBAH TUGAS (admin only, inject via JS) ══ -->
+    <div id="tugasFabWrap" style="display:none;" class="admin-fab-container">
+        <button class="fab-main state-edit" id="tugasFabBtn" onclick="openTugasModal()">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- ══ OVERLAY STEP 1: PILIH MAPEL ══ -->
+    <div id="tugasPickerOverlay" class="modal-overlay hidden" style="z-index:3000;">
+        <div class="glass-modal-box" style="max-width:420px; width:90vw;">
+            <h3 style="margin-bottom:18px;"><i class="fa-solid fa-book-open"></i> Tugas untuk Mapel?</h3>
+            <div id="tugasMapelList"
+                style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;"></div>
+            <button onclick="closeTugasModal()"
+                style="margin-top:18px; width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#aaa; cursor:pointer; font-size:14px;">
+                Batal
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ OVERLAY STEP 2: FORM TUGAS ══ -->
+    <div id="tugasFormOverlay" class="modal-overlay hidden" style="z-index:3001;">
+        <div class="glass-modal-box" style="max-width:480px; width:92vw; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+                <button onclick="backToPicker()"
+                    style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#aaa; width:34px; height:34px; cursor:pointer; font-size:14px; flex-shrink:0;">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h3 style="margin:0; font-size:16px;"><i class="fa-solid fa-layer-group"></i> Tugas — <span
+                        id="tugasFormMapelName" style="color:#00eaff;"></span></h3>
+            </div>
+
+            <input type="text" id="tf_judul" class="glass-input" placeholder="Judul Tugas" spellcheck="false">
+            <input type="text" id="tf_subjudul" class="glass-input" placeholder="Sub-judul / Detail Singkat"
+                spellcheck="false">
+
+            <div class="editor-toolbar" style="display:flex; gap:10px; margin-bottom:8px;">
+                <button type="button" onclick="document.execCommand('fontSize',false,'5')"
+                    class="btn-tool">Besar</button>
+                <button type="button" onclick="document.execCommand('fontSize',false,'3')"
+                    class="btn-tool">Sedang</button>
+                <button type="button" onclick="document.execCommand('fontSize',false,'2')"
+                    class="btn-tool">Kecil</button>
+            </div>
+            <div id="tf_isi" contenteditable="true" class="glass-input" style="min-height:120px; overflow-y:auto;"
+                spellcheck="false"></div>
+            <input type="text" id="tf_small" class="glass-input" placeholder="Catatan kecil / tanggal deadline"
+                style="font-size:12px; opacity:0.8;">
+
+            <!-- Warna kartu -->
+            <div style="margin-top:14px;">
+                <label style="font-size:12px; color:#aaa; margin-bottom:8px; display:block;">Warna Kartu:</label>
+                <div id="tf_colors" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="color-opt active" data-color="default"
+                        style="width:22px;height:22px;border-radius:50%;border:2px solid white;cursor:pointer;background:rgba(0,0,0,0.3);">
+                    </div>
+                    <div class="color-opt" data-color="red"
+                        style="width:22px;height:22px;border-radius:50%;background:#ff4757;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="orange"
+                        style="width:22px;height:22px;border-radius:50%;background:#ff9f43;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="yellow"
+                        style="width:22px;height:22px;border-radius:50%;background:#ffd32a;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="green"
+                        style="width:22px;height:22px;border-radius:50%;background:#2ed573;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="blue"
+                        style="width:22px;height:22px;border-radius:50%;background:#00eaff;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="purple"
+                        style="width:22px;height:22px;border-radius:50%;background:#a55eea;cursor:pointer;"></div>
+                    <div class="color-opt" data-color="pink"
+                        style="width:22px;height:22px;border-radius:50%;background:#ff9ff3;cursor:pointer;"></div>
+                </div>
+            </div>
+
+            <!-- Upload foto -->
+            <div id="tf_dropZone" class="drop-area" style="margin-top:14px;">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <div class="drop-text"><b>Click to upload</b> or drag foto here</div>
+                <input type="file" id="tf_files" multiple accept="image/*" style="display:none;">
+            </div>
+            <div id="tf_preview" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"></div>
+
+            <button id="tf_btnSave" onclick="saveTugas()" class="btn-glass-save"
+                style="width:100%; margin-top:18px; padding:14px; font-size:15px; font-weight:700;">
+                <i class="fa-solid fa-paper-plane"></i> POSTING TUGAS
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ── STATE ──────────────────────────────────────────────────────
+        let _tugasSelectedSubject = null; // { id, name }
+        let _tugasSelectedColor = 'default';
+        let _tugasTempFiles = [];
+
+        const TUGAS_DRAFT_KEY = 'tugas_form_draft';
+
+        function _saveTugasDraft() {
+            try {
+                sessionStorage.setItem(TUGAS_DRAFT_KEY, JSON.stringify({
+                    subjectId: _tugasSelectedSubject?.id || null,
+                    subjectName: _tugasSelectedSubject?.name || null,
+                    judul: document.getElementById('tf_judul')?.value || '',
+                    tit: document.getElementById('tf_subjudul')?.value || '',
+                    con: document.getElementById('tf_isi')?.innerHTML || '',
+                    sml: document.getElementById('tf_small')?.value || '',
+                    color: _tugasSelectedColor
+                }));
+            } catch (e) { }
+        }
+
+        function _restoreTugasDraft() {
+            try {
+                const raw = sessionStorage.getItem(TUGAS_DRAFT_KEY);
+                if (!raw) return false;
+                const d = JSON.parse(raw);
+                if (!d.judul && !d.con) return false; // draft kosong, skip
+
+                if (d.subjectId && d.subjectName) {
+                    _tugasSelectedSubject = { id: d.subjectId, name: d.subjectName };
+                    document.getElementById('tugasFormMapelName').textContent = d.subjectName;
+                }
+                if (d.judul) document.getElementById('tf_judul').value = d.judul;
+                if (d.tit) document.getElementById('tf_subjudul').value = d.tit;
+                if (d.con) document.getElementById('tf_isi').innerHTML = d.con;
+                if (d.sml) document.getElementById('tf_small').value = d.sml;
+                if (d.color) {
+                    _tugasSelectedColor = d.color;
+                    document.querySelectorAll('#tf_colors .color-opt').forEach(dot => {
+                        dot.style.outline = dot.dataset.color === d.color ? '2px solid white' : '';
+                    });
+                }
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function _clearTugasDraft() {
+            try { sessionStorage.removeItem(TUGAS_DRAFT_KEY); } catch (e) { }
+        }
+
+        // ── INIT FAB (admin only) ──────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
+            if (!user) return;
+            if (user.role === 'class_admin' || user.role === 'super_admin') {
+                document.getElementById('tugasFabWrap').style.display = 'flex';
+            }
+
+            // Warna picker — simpan draft saat ganti warna
+            document.querySelectorAll('#tf_colors .color-opt').forEach(dot => {
+                dot.onclick = () => {
+                    document.querySelectorAll('#tf_colors .color-opt').forEach(d => d.style.outline = '');
+                    dot.style.outline = '2px solid white';
+                    _tugasSelectedColor = dot.dataset.color;
+                    _saveTugasDraft();
+                };
+            });
+
+            // Autosave saat ngetik
+            ['tf_judul', 'tf_subjudul', 'tf_isi', 'tf_small'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', () => _saveTugasDraft());
+            });
+
+            // Drop zone
+            const dz = document.getElementById('tf_dropZone');
+            const fi = document.getElementById('tf_files');
+            dz.onclick = () => fi.click();
+            fi.onchange = e => _handleTugasFiles(e.target.files);
+            dz.ondragover = e => { e.preventDefault(); dz.classList.add('dragover'); };
+            dz.ondragleave = () => dz.classList.remove('dragover');
+            dz.ondrop = e => { e.preventDefault(); dz.classList.remove('dragover'); _handleTugasFiles(e.dataTransfer.files); };
+
+            // Keyboard: Ctrl+Enter simpan
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && e.key === 'Enter' && !document.getElementById('tugasFormOverlay').classList.contains('hidden')) {
+                    e.preventDefault();
+                    saveTugas();
+                }
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('tugasFormOverlay').classList.contains('hidden')) closeTugasForm();
+                    else if (!document.getElementById('tugasPickerOverlay').classList.contains('hidden')) closeTugasModal();
+                }
+            });
+        });
+
+        // ── OPEN PICKER (step 1) ───────────────────────────────────────
+        async function openTugasModal() {
+            const overlay = document.getElementById('tugasPickerOverlay');
+            const list = document.getElementById('tugasMapelList');
+            overlay.classList.remove('hidden');
+            history.pushState({ type: 'overlay', target: 'tugasPicker' }, '');
+
+            list.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat...</p>';
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const classId = (typeof getEffectiveClassId === 'function') ? getEffectiveClassId() : String(user.class_id);
+
+                const { data, error } = await supabase
+                    .from('subjects_config')
+                    .select('subject_id, subject_name, icon')
+                    .eq('class_id', classId)
+                    .eq('menu_group', 'lessons')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                list.innerHTML = '';
+                (data || []).forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.style.cssText = 'width:100%; padding:14px 18px; background:rgba(255,255,255,0.04); border:1px solid rgba(0,234,255,0.15); border-radius:12px; color:#fff; text-align:left; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:12px; transition:all 0.2s;';
+                    btn.innerHTML = `<i class="${item.icon || 'fa-solid fa-book'}" style="color:#00eaff; width:18px;"></i> ${item.subject_name}`;
+                    btn.onmouseover = () => { btn.style.background = 'rgba(0,234,255,0.1)'; btn.style.borderColor = 'rgba(0,234,255,0.4)'; };
+                    btn.onmouseout = () => { btn.style.background = 'rgba(255,255,255,0.04)'; btn.style.borderColor = 'rgba(0,234,255,0.15)'; };
+                    btn.onclick = () => openTugasForm(item.subject_id, item.subject_name);
+                    list.appendChild(btn);
+                });
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;">Tidak ada mapel ditemukan.</p>';
+                }
+            } catch (err) {
+                list.innerHTML = `<p style="color:#ff4757; text-align:center; padding:20px;">${err.message}</p>`;
+            }
+        }
+
+        function closeTugasModal() {
+            document.getElementById('tugasPickerOverlay').classList.add('hidden');
+        }
+
+        // ── OPEN FORM (step 2) ─────────────────────────────────────────
+        function openTugasForm(subjectId, subjectName) {
+            _tugasSelectedSubject = { id: subjectId, name: subjectName };
+            closeTugasModal();
+
+            document.getElementById('tugasFormMapelName').textContent = subjectName;
+            document.getElementById('tugasFormOverlay').classList.remove('hidden');
+            history.pushState({ type: 'overlay', target: 'tugasForm' }, '');
+
+            // Coba restore draft dulu (subject harus sama)
+            const raw = (() => { try { return JSON.parse(sessionStorage.getItem(TUGAS_DRAFT_KEY)); } catch (e) { return null; } })();
+            const hasDraft = raw && raw.subjectId === subjectId && (raw.judul || raw.con);
+
+            if (hasDraft) {
+                _restoreTugasDraft();
+            } else {
+                // Tidak ada draft → tanggal hari ini
+                const el = document.getElementById('tf_small');
+                if (el && !el.value) el.value = (typeof getTodayIndo === 'function') ? getTodayIndo() : new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            setTimeout(() => document.getElementById('tf_judul')?.focus(), 150);
+        }
+
+        function backToPicker() {
+            // Tutup form tapi SIMPAN draft — user mungkin mau ganti mapel
+            document.getElementById('tugasFormOverlay').classList.add('hidden');
+            _saveTugasDraft(); // pastikan draft tersimpan sebelum balik
+            openTugasModal();
+        }
+
+        function closeTugasForm() {
+            document.getElementById('tugasFormOverlay').classList.add('hidden');
+            // Draft sengaja TIDAK dihapus — user bisa buka lagi
+        }
+
+        function _resetTugasForm() {
+            ['tf_judul', 'tf_small'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            const isi = document.getElementById('tf_isi'); if (isi) isi.innerHTML = '';
+            document.getElementById('tf_subjudul').value = '';
+            document.getElementById('tf_preview').innerHTML = '';
+            document.getElementById('tf_files').value = '';
+            _tugasTempFiles = [];
+            _tugasSelectedColor = 'default';
+            _tugasSelectedSubject = null;
+            document.querySelectorAll('#tf_colors .color-opt').forEach(d => d.style.outline = '');
+            document.querySelector('#tf_colors .color-opt[data-color="default"]').style.outline = '2px solid white';
+        }
+
+        // ── FILE HANDLING ──────────────────────────────────────────────
+        async function _handleTugasFiles(files) {
+            const pc = document.getElementById('tf_preview');
+            for (let file of Array.from(files)) {
+                if (!file.type.startsWith('image/')) continue;
+                if (typeof SubjectApp !== 'undefined') {
+                    try { file = await SubjectApp.compressImage(file); } catch (e) { }
+                }
+                _tugasTempFiles.push(file);
+                const div = document.createElement('div');
+                div.style.cssText = 'position:relative; width:70px; height:70px;';
+                div.innerHTML = `<img src="${URL.createObjectURL(file)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;">
+                <button onclick="this.parentElement.remove(); _tugasTempFiles.splice(${_tugasTempFiles.length - 1},1);" style="position:absolute;top:-6px;right:-6px;background:#ff4757;border:none;border-radius:50%;width:20px;height:20px;color:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+                pc.appendChild(div);
+            }
+        }
+
+        // ── SAVE ──────────────────────────────────────────────────────
+        async function saveTugas() {
+            const judul = document.getElementById('tf_judul').value.trim();
+            if (!judul) { showPopup('Judul wajib diisi!', 'error'); return; }
+            if (!_tugasSelectedSubject) { showPopup('Pilih mapel dulu!', 'error'); return; }
+
+            const btn = document.getElementById('tf_btnSave');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const classId = (typeof getEffectiveClassId === 'function') ? getEffectiveClassId() : String(user.class_id);
+
+                // Upload foto parallel
+                let urls = [];
+                if (_tugasTempFiles.length > 0) {
+                    urls = (await Promise.all(
+                        _tugasTempFiles.map(async f => {
+                            const name = `${_tugasSelectedSubject.id}/tugas/${Date.now()}_${f.name.replace(/\s/g, '_')}`;
+                            const { data } = await supabase.storage.from('subject-photos').upload(name, f);
+                            if (!data) return null;
+                            return supabase.storage.from('subject-photos').getPublicUrl(name).data.publicUrl;
+                        })
+                    )).filter(Boolean);
+                }
+
+                const { error } = await supabase.from('subject_announcements').insert({
+                    subject_id: _tugasSelectedSubject.id,
+                    class_id: classId,
+                    big_title: judul,
+                    title: document.getElementById('tf_subjudul').value.trim(),
+                    content: document.getElementById('tf_isi').innerHTML,
+                    small: document.getElementById('tf_small').value.trim(),
+                    photo_url: urls.length > 1 ? urls : (urls[0] || null),
+                    card_color: _tugasSelectedColor,
+                    display_order: 9999
+                });
+
+                if (error) throw error;
+
+                showPopup('Tugas berhasil diposting!', 'success');
+                _clearTugasDraft(); // Hapus draft HANYA setelah berhasil post
+                closeTugasForm();
+                _resetTugasForm();
+                // Reload daftar tugas
+                if (typeof initTugas === 'function') {
+                    allTasks = []; doneIds = [];
+                    initTugas();
+                } else {
+                    location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+                showPopup('Gagal posting: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> POSTING TUGAS';
+            }
+        }
+    </script>
 </body>
 
 </html>

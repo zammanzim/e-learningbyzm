@@ -681,6 +681,47 @@ const SubjectApp = {
         showPopup("Terhapus!", "success");
     },
 
+    // ── DRAFT KEY (unik per subject) ─────────────────────────────
+    _draftKey() {
+        return `add_draft_${this.state.subjectId}`;
+    },
+
+    _saveDraft() {
+        try {
+            sessionStorage.setItem(this._draftKey(), JSON.stringify({
+                big: document.getElementById('addJudul')?.value || '',
+                tit: document.getElementById('addSubjudul')?.value || '',
+                con: document.getElementById('addIsi')?.innerHTML || '',
+                sml: document.getElementById('addSmall')?.value || '',
+                color: this.state.selectedColor
+            }));
+        } catch (e) { }
+    },
+
+    _restoreDraft() {
+        try {
+            const raw = sessionStorage.getItem(this._draftKey());
+            if (!raw) return false;
+            const d = JSON.parse(raw);
+            if (!d.big && !d.tit && !d.con) return false;
+            if (d.big) document.getElementById('addJudul').value = d.big;
+            if (d.tit) document.getElementById('addSubjudul').value = d.tit;
+            if (d.con) document.getElementById('addIsi').innerHTML = d.con;
+            if (d.sml) document.getElementById('addSmall').value = d.sml;
+            if (d.color) {
+                this.state.selectedColor = d.color;
+                document.querySelectorAll('#addColors .color-opt').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.color === d.color);
+                });
+            }
+            return true;
+        } catch (e) { return false; }
+    },
+
+    _clearDraft() {
+        try { sessionStorage.removeItem(this._draftKey()); } catch (e) { }
+    },
+
     initAdd() {
         const modal = document.getElementById('addModal');
         const btnAdd = document.getElementById('addAnnouncementBtn');
@@ -696,7 +737,7 @@ const SubjectApp = {
 
         if (!btnAdd) return;
         btnAdd.onclick = (e) => { e.preventDefault(); modal.classList.remove('hidden'); this.tempFiles = []; document.getElementById('previewContainer').innerHTML = ''; };
-        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); this.clearForm(); };
+        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); /* Draft sengaja TIDAK dihapus */ };
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => this.handleNewFiles(e.target.files);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
@@ -712,7 +753,11 @@ const SubjectApp = {
             };
         });
 
-        // File: js/subject-manager.js
+
+        // ── Autosave draft saat user ngetik ──────────────────────
+        ['addJudul', 'addSubjudul', 'addIsi', 'addSmall'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => this._saveDraft());
+        });
 
         if (btnSave) {
             btnSave.onclick = async () => {
@@ -730,7 +775,9 @@ const SubjectApp = {
                 btnSave.innerHTML = 'Sending...'; btnSave.disabled = true;
                 await this.uploadAndSave(data);
                 btnSave.innerHTML = 'Posting'; btnSave.disabled = false;
-                modal.classList.add('hidden'); this.clearForm();
+                modal.classList.add('hidden');
+                this._clearDraft();
+                this.clearForm();
             };
         }
 
@@ -740,26 +787,23 @@ const SubjectApp = {
             this.tempFiles = [];
             document.getElementById('previewContainer').innerHTML = '';
 
-            // --- LOGIKA RANDOM COLOR ---
-            // Pilih warna acak dari list
-            const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-            this.state.selectedColor = randomColor;
+            // Coba restore draft dulu
+            const hasDraft = this._restoreDraft();
 
-            // Update UI Pilihan Warna di Modal agar sinkron
-            const colorOpts = document.querySelectorAll('#addColors .color-opt');
-            colorOpts.forEach(opt => {
-                opt.classList.remove('active');
-                if (opt.dataset.color === randomColor) {
-                    opt.classList.add('active');
-                }
-            });
+            if (!hasDraft) {
+                // Tidak ada draft → random warna + tanggal hari ini
+                const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                this.state.selectedColor = randomColor;
+                const colorOpts = document.querySelectorAll('#addColors .color-opt');
+                colorOpts.forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.color === randomColor);
+                });
+                const el = document.getElementById('addSmall');
+                if (el) el.value = getTodayIndo();
+            }
 
             // Catat history untuk tombol back mobile
             history.pushState({ type: 'overlay', target: 'addModal' }, '');
-
-            // Set otomatis tanggal hari ini di footer modal
-            const el = document.getElementById('addSmall');
-            if (el) el.value = getTodayIndo();
         };
     },
 

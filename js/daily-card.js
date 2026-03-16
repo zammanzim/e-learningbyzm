@@ -308,6 +308,7 @@ async function updateTaskBadge(user) {
                 .select('*', { count: 'exact', head: true })
                 .eq('class_id', getEffectiveClassId())
                 .neq('subject_id', 'announcements')
+                .neq('subject_id', 'kisi-kisi')
                 .neq('subject_id', 'akuhutajakus'),
             supabase.from('user_progress')
                 .select('*', { count: 'exact', head: true })
