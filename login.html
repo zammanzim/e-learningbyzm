@@ -8,16 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
     <style>
         /* --- RESET & GLOBAL --- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -39,100 +36,123 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #0a0a0a;
-            background-image:
-                radial-gradient(circle at 15% 20%, rgba(0, 200, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 85% 80%, rgba(255, 50, 150, 0.15) 0%, transparent 40%);
-            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
             position: relative;
         }
 
-        /* --- GLASS CARD --- */
+        /* --- MAIN CARD --- */
         .glass-card {
             width: 420px;
-            max-width: 90vw;
-            min-height: 620px;
-            max-height: 90vh;
-            background: rgba(10, 10, 12, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow:
-                0 25px 45px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 0 0 1px rgba(0, 234, 255, 0.05);
-            padding: 40px 35px;
+            max-width: 92vw;
+            max-height: 92vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            animation: fadeInUp 0.5s ease;
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(30px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
-        /* --- HEADER SECTION --- */
+        /* --- HEADER --- */
         .header {
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
+            color: white;
+            padding: 28px 30px 22px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 50%;
+        }
+
+        .header-icon {
+            font-size: 38px;
+            color: #ffd700;
+            margin-bottom: 8px;
             position: relative;
             z-index: 2;
         }
 
         .header h2 {
-            font-size: 32px;
+            font-size: 26px;
             font-weight: 700;
-            background: linear-gradient(90deg, #00eaff, #00b4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.5px;
+            color: white;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 4px;
+            background: none;
+            -webkit-text-fill-color: white;
         }
 
         .header p {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 400;
-            transition: color 0.3s ease;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            position: relative;
+            z-index: 2;
+            transition: none;
         }
 
         /* --- BACK BUTTON --- */
         .floating-back {
             position: absolute;
-            top: 30px;
-            left: 30px;
-            width: 40px;
-            height: 40px;
+            top: 18px;
+            left: 18px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: rgba(255, 255, 255, 0.5);
+            color: white;
             cursor: pointer;
             z-index: 100;
             opacity: 0;
             visibility: hidden;
             transform: translateX(-10px);
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .floating-back:hover {
-            background: rgba(0, 234, 255, 0.1);
-            color: #00eaff;
-            border-color: rgba(0, 234, 255, 0.3);
-            transform: translateX(-3px);
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
         }
 
         .floating-back.show {
@@ -143,12 +163,12 @@
 
         /* --- ERROR BOX --- */
         .error-box {
-            background: rgba(255, 71, 87, 0.1);
-            border: 1px solid rgba(255, 71, 87, 0.3);
-            border-radius: 14px;
-            padding: 18px;
-            margin-bottom: 20px;
-            color: #ff6b81;
+            background: #ffe5e7;
+            border: 1px solid #ffb3b8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 12px 20px 0;
+            color: #d63031;
             font-size: 13px;
             text-align: center;
             display: none;
@@ -159,164 +179,159 @@
 
             0%,
             100% {
-                transform: translateX(0);
+                transform: translateX(0)
             }
 
             25% {
-                transform: translateX(-5px);
+                transform: translateX(-5px)
             }
 
             75% {
-                transform: translateX(5px);
+                transform: translateX(5px)
             }
         }
 
-        /* --- SLIDER CONTAINER (UPDATED FOR 3 STEPS) --- */
+        /* --- SLIDER --- */
         .slider-window {
             flex: 1;
             overflow: hidden;
             position: relative;
-            margin: 10px 0;
+            margin: 0;
         }
 
         .slider-content {
             display: flex;
             width: 400%;
             height: 100%;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
         }
 
         .slide-step {
             width: 25%;
-            padding: 10px 5px;
+            padding: 20px 22px 8px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Logic posisi slider */
         .slider-content.step-1 {
-            transform: translateX(-25%);
+            transform: translateX(-25%)
         }
 
         .slider-content.step-2 {
-            transform: translateX(-50%);
+            transform: translateX(-50%)
         }
 
         .slider-content.step-3 {
-            transform: translateX(-75%);
+            transform: translateX(-75%)
         }
 
-        /* Style tambahan untuk Welcome Screen */
+        /* --- WELCOME SCREEN --- */
         .welcome-icon {
-            font-size: 60px;
-            background: linear-gradient(135deg, #00eaff, #00b4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 10px 0;
+            font-size: 54px;
+            color: #4a6ee0;
+            margin: 8px 0 12px;
             text-align: center;
+            -webkit-text-fill-color: #4a6ee0;
         }
 
         .welcome-text {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 22px;
         }
 
         .welcome-text h3 {
-            font-size: 22px;
-            margin-bottom: 10px;
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .welcome-text p {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
         }
 
         .maaftext {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         .maaftext p {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.6);
+            color: #bbb;
+            line-height: 1.5;
         }
 
-        /* --- SELECTION TRIGGERS --- */
+        /* --- DROPDOWN TRIGGERS --- */
         .dropdown-trigger {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 18px;
-            padding: 20px;
-            margin: 1px 0;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin: 3px 0;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .dropdown-trigger::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.1), transparent);
-            transition: left 0.6s;
-        }
-
-        .dropdown-trigger:hover::before {
-            left: 100%;
-        }
-
         .dropdown-trigger:hover {
-            border-color: rgba(0, 234, 255, 0.4);
-            background: rgba(0, 234, 255, 0.05);
+            border-color: #4a6ee0;
+            background: #eef1fd;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 234, 255, 0.08);
+            box-shadow: 0 8px 20px rgba(74, 110, 224, 0.12);
         }
 
         .dropdown-trigger.active {
-            border-color: #00eaff;
-            background: rgba(0, 234, 255, 0.08);
-            box-shadow: 0 0 25px rgba(0, 234, 255, 0.15);
+            border-color: #4a6ee0;
+            background: #eef1fd;
+            box-shadow: 0 4px 14px rgba(74, 110, 224, 0.15);
         }
 
         .trigger-label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 500;
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: block;
+            text-transform: uppercase;
         }
 
         .trigger-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: white;
+            color: #333;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .trigger-value i {
-            color: #00eaff;
+            color: #4a6ee0;
             font-size: 14px;
             transition: transform 0.3s;
         }
 
-        .dropdown-trigger:hover .trigger-value i {
+        .dropdown-trigger i.fa-chevron-right,
+        .dropdown-trigger i.fa-chevron-down {
+            color: #bbb;
+            font-size: 13px;
+        }
+
+        .dropdown-trigger:hover i.fa-chevron-right {
             transform: translateX(3px);
         }
 
         /* --- CLASS BADGE --- */
         .class-badge {
             text-align: center;
-            margin: 0 0 25px;
+            margin: 0 0 16px;
             display: none;
             animation: fadeIn 0.5s ease;
         }
@@ -324,37 +339,34 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-8px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
         .class-badge span {
-            background: rgba(0, 234, 255, 0.1);
-            border: 1.5px solid rgba(0, 234, 255, 0.4);
-            color: #00eaff;
-            padding: 10px 24px;
+            background: #eef1fd;
+            border: 1.5px solid #c5d0f5;
+            color: #4a6ee0;
+            padding: 7px 20px;
             border-radius: 50px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             display: inline-block;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 5px 15px rgba(0, 234, 255, 0.1);
         }
 
         /* --- AUTH CONTAINER --- */
         #authContainer {
             margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 25px;
+            border-top: 1px solid #eee;
+            padding-top: 16px;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform: translateY(15px);
+            transition: all 0.4s ease;
             pointer-events: none;
         }
 
@@ -370,112 +382,111 @@
         }
 
         .secure-title {
-            font-size: 14px;
-            color: #00eaff;
-            margin-bottom: 20px;
+            font-size: 13px;
+            color: #4a6ee0;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: 600;
         }
 
+        /* --- INPUTS --- */
         .input-wrapper {
             position: relative;
-            margin-bottom: 15px;
+            margin-bottom: 11px;
         }
 
         .input-box {
             width: 100%;
-            padding: 16px 20px 16px 50px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            color: white;
-            font-size: 15px;
+            padding: 12px 15px 12px 44px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 11px;
+            color: #333;
+            font-size: 14px;
             font-weight: 500;
             outline: none;
             transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .input-box:focus {
-            border-color: #00eaff;
-            background: rgba(0, 234, 255, 0.03);
-            box-shadow: 0 0 0 3px rgba(0, 234, 255, 0.1);
+            border-color: #4a6ee0;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.1);
         }
 
         .input-box.error {
-            border-color: #ff4757;
+            border-color: #ff3b30;
             animation: shake 0.4s ease;
-            background: rgba(255, 71, 87, 0.05);
+            background: #fff5f5;
+        }
+
+        .input-box::placeholder {
+            color: #bbb;
         }
 
         .input-wrapper i {
             position: absolute;
-            left: 20px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #00eaff;
-            font-size: 16px;
+            color: #4a6ee0;
+            font-size: 14px;
         }
 
         /* --- DIRECT MODE --- */
         .direct-entry {
             display: none;
             text-align: center;
-            animation: fadeIn 0.6s ease;
+            animation: fadeIn 0.5s ease;
         }
 
         .confirm-text {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 30px;
-            line-height: 1.5;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+
+        .confirm-text h3 {
+            font-size: 19px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 700;
         }
 
         .confirm-text b {
-            color: #00eaff;
+            color: #4a6ee0;
             font-weight: 700;
         }
 
         /* --- BUTTONS --- */
         .btn-neon {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(90deg, #00eaff, #0099ff);
+            padding: 14px;
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
             border: none;
-            border-radius: 16px;
-            color: #000;
+            border-radius: 11px;
+            color: white;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            margin-top: 10px;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-neon::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.6s;
-        }
-
-        .btn-neon:hover::before {
-            left: 100%;
-        }
-
         .btn-neon:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0, 234, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 110, 224, 0.3);
         }
 
         .btn-neon:active {
@@ -489,14 +500,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
             display: flex;
             flex-direction: column;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.35s ease;
         }
 
         .selection-modal.open {
@@ -505,19 +516,18 @@
         }
 
         .modal-content {
-            background: rgba(15, 15, 20, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            background: white;
+            border-radius: 20px;
             width: 100%;
             max-width: 400px;
-            max-height: 70vh;
+            max-height: 72vh;
             margin: auto;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
             transform: translateY(30px) scale(0.95);
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .selection-modal.open .modal-content {
@@ -525,134 +535,79 @@
         }
 
         .modal-header {
-            padding: 25px 25px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 22px 16px;
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .modal-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            color: #00eaff;
+            color: white;
         }
 
         .close-btn {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 22px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 18px;
             cursor: pointer;
-            transition: color 0.3s;
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+            transition: all 0.2s;
         }
 
         .close-btn:hover {
-            color: #ff4757;
-            background: rgba(255, 71, 87, 0.1);
+            color: white;
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .modal-list {
             flex: 1;
             overflow-y: auto;
-            padding: 15px 20px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 7px;
         }
 
         .list-item {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 14px;
+            padding: 13px 15px;
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 11px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 13px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
 
         .list-item:hover {
-            background: rgba(0, 234, 255, 0.1);
-            border-color: rgba(0, 234, 255, 0.3);
-            transform: translateX(5px);
+            background: #eef1fd;
+            border-color: #c5d0f5;
+            transform: translateX(4px);
         }
 
         .list-item .dot {
-            width: 10px;
-            height: 10px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
-            background: #00eaff;
-            box-shadow: 0 0 10px #00eaff;
+            background: #4a6ee0;
+            flex-shrink: 0;
+            box-shadow: none;
         }
 
-        .loader {
-            text-align: center;
-            padding: 40px;
-            color: rgba(255, 255, 255, 0.5);
+        .list-item span {
+            color: #333;
             font-size: 14px;
-        }
-
-        .fa-spin {
-            animation: fa-spin 1s infinite linear;
-        }
-
-        @keyframes fa-spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* --- FOOTER LINK --- */
-        .footer-link {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .footer-link a {
-            color: #00eaff;
             font-weight: 500;
-            transition: color 0.3s;
         }
 
-        .footer-link a:hover {
-            color: #00b4ff;
-        }
-
-        /* --- RESPONSIVE --- */
-        @media (max-width: 480px) {
-            .glass-card {
-                width: 90vw;
-                height: 90vh;
-                padding: 30px 25px;
-                border-radius: 24px;
-            }
-
-            .header h2 {
-                font-size: 28px;
-            }
-
-            .dropdown-trigger {
-                padding: 18px;
-            }
-
-            .btn-neon {
-                padding: 16px;
-            }
-        }
-
-        /* Style untuk item yang dikunci */
         .list-item.disabled {
             opacity: 0.3;
             cursor: not-allowed;
@@ -662,62 +617,73 @@
         }
 
         .list-item.disabled .dot {
-            background: #555;
-            box-shadow: none;
+            background: #bbb;
         }
 
-        /* Pembatas Tingkatan Kelas */
+        .loader {
+            text-align: center;
+            padding: 35px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* --- MODAL DIVIDER --- */
         .modal-divider {
-            padding: 0 10px;
-            font-size: 16px;
-            font-weight: 800;
-            color: #00eaff;
-            letter-spacing: 1.5px;
+            padding: 4px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #4a6ee0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .modal-divider::after {
             content: "";
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, rgba(0, 234, 255, 0.6), transparent);
+            background: linear-gradient(90deg, rgba(74, 110, 224, 0.4), transparent);
         }
 
-        /* --- SEARCH BAR DI MODAL --- */
+        /* --- SEARCH BAR --- */
         .search-wrapper {
-            padding: 10px 20px 15px;
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 14px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
         }
 
         .search-input {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: white;
-            font-size: 14px;
+            padding: 10px 13px;
+            background: white;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            color: #333;
+            font-size: 13px;
             outline: none;
             transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .search-input:focus {
-            border-color: #00eaff;
-            background: rgba(0, 234, 255, 0.05);
-            box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);
+            border-color: #4a6ee0;
+            box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #bbb;
         }
 
         /* --- GUEST BUTTON --- */
         .btn-guest {
             width: 100%;
-            padding: 15px;
-            background: rgba(167, 139, 250, 0.08);
-            border: 1.5px solid rgba(167, 139, 250, 0.3);
-            border-radius: 16px;
-            color: #a78bfa;
+            padding: 13px;
+            background: #f3f0ff;
+            border: 2px solid #d8b4fe;
+            border-radius: 11px;
+            color: #7c3aed;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
@@ -725,15 +691,66 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .btn-guest:hover {
-            background: rgba(167, 139, 250, 0.15);
-            border-color: rgba(167, 139, 250, 0.6);
+            background: #ede9fe;
+            border-color: #a855f7;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(167, 139, 250, 0.2);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        /* --- FOOTER --- */
+        .footer-link {
+            text-align: center;
+            padding: 13px 20px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            flex-shrink: 0;
+        }
+
+        .footer-link a {
+            color: #4a6ee0;
+            font-weight: 500;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media(max-width:480px) {
+            .glass-card {
+                max-width: 93vw;
+                max-height: 92vh;
+                border-radius: 16px;
+            }
+
+            .header {
+                padding: 22px 18px 18px;
+            }
+
+            .header h2 {
+                font-size: 22px;
+            }
+
+            .slide-step {
+                padding: 16px 16px 8px;
+            }
+        }
+
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1s infinite linear;
         }
     </style>
 </head>
@@ -741,13 +758,13 @@
 <body>
 
     <div class="glass-card">
-        <div id="globalBackBtn" class="floating-back" onclick="goBack()">
-            <i class="fa-solid fa-arrow-left"></i>
-        </div>
-
         <div class="header">
-            <h2>WELCOME!</h2>
-            <p id="headerSubtitle"></p>
+            <div id="globalBackBtn" class="floating-back" onclick="goBack()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <div class="header-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <h2 style="text-decoration: underline;">e-learniz.my.id</h2>
+            <p id="headerSubtitle">Platform pembelajaran by nza</p>
         </div>
 
         <div class="error-box" id="errorBox"></div>
@@ -760,11 +777,11 @@
                     </div>
                     <div class="welcome-text">
                         <h3>Selamat Datang!</h3>
-                        <p>Web e-learning sekolah (unofficial) yang berisi jadwal harian, pengumuman, tugas, dan
-                            lain-lainnya.</p>
+                        <p>Website e-learning ga resmi (unofficial) yang berisi jadwal harian, pengumuman, daftar tugas,
+                            dan lain lainnya.</p>
                     </div>
                     <button class="btn-neon" onclick="goToStep1()">
-                        <span>MULAI SEKARANG</span>
+                        <span>MASUK</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
                     <div class="maaftext">
@@ -787,10 +804,10 @@
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:10px; margin: 20px 0 5px;">
-                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
-                        <span style="font-size:11px; color:rgba(255,255,255,0.3); white-space:nowrap;">atau</span>
-                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+                    <div style="display:flex; align-items:center; gap:10px; margin:18px 0 8px;">
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                        <span style="font-size:11px; color:#bbb; white-space:nowrap;">atau</span>
+                        <div style="flex:1; height:1px; background:#eee;"></div>
                     </div>
 
                     <button class="btn-guest" onclick="goToGuestStep()">
@@ -826,12 +843,20 @@
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-user"></i>
                                 <input id="loginUsn" class="input-box" placeholder="Username" readonly
-                                    style="cursor: not-allowed; background: rgba(255,255,255,0.02);">
+                                    style="cursor:not-allowed; background:#f0f0f0; color:#999;">
                             </div>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-key"></i>
                                 <input id="loginPw" type="password" class="input-box" placeholder="Masukkan Password"
                                     oninput="this.classList.remove('error')">
+                            </div>
+                            <div style="text-align:right; margin: -4px 0 10px;">
+                                <a onclick="showLupaPopup()"
+                                    style="font-size:12px; color:#4a6ee0; cursor:pointer; text-decoration:none; font-weight:500; opacity:0.8; transition:opacity 0.2s;"
+                                    onmouseover="this.style.opacity='1'; this.style.textDecoration='underline'"
+                                    onmouseout="this.style.opacity='0.8'; this.style.textDecoration='none'">
+                                    Lupa kata sandi?
+                                </a>
                             </div>
                             <button class="btn-neon" onclick="loginSecure()">
                                 <i class="fa-solid fa-right-to-bracketj"></i>
@@ -859,22 +884,20 @@
                     <!-- State A: Returning guest (hidden by default, shown via JS) -->
                     <div id="guestReturning" style="display:none; text-align:center; animation: fadeIn 0.5s ease;">
                         <div style="font-size: 50px; margin: 10px 0 14px;">
-                            <i class="fa-solid fa-hand-wave"
-                                style="background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            <i class="fa-solid fa-hand-wave" style="color:#7c3aed;"></i>
                         </div>
-                        <h3 style="font-size: 22px; margin-bottom: 6px;">Haii, <b id="returningGuestName"
-                                style="color:#a78bfa;">Tamu</b>!</h3>
-                        <p
-                            style="font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 24px; line-height: 1.6;">
+                        <h3 style="font-size:22px; margin-bottom:6px; color:#333;">Haii, <b id="returningGuestName"
+                                style="color:#7c3aed;">Tamu</b>!</h3>
+                        <p style="font-size:13px; color:#888; margin-bottom:24px; line-height:1.6;">
                             Kamu udah pernah masuk sebagai tamu sebelumnya.
                         </p>
                         <button class="btn-neon" onclick="loginAsGuest(true)"
-                            style="background: linear-gradient(90deg, #a78bfa, #7c3aed); margin-bottom: 12px;">
+                            style="background:linear-gradient(135deg,#7c3aed,#6a11cb); margin-bottom:12px;">
                             <i class="fa-solid fa-door-open"></i>
                             <span>MASUK LAGI</span>
                         </button>
                         <button onclick="showNewGuestForm()"
-                            style="width:100%; padding:12px; background:transparent; border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; color:rgba(255,255,255,0.4); font-size:13px; cursor:pointer; font-family:'Poppins',sans-serif; transition: all 0.3s;">
+                            style="width:100%; padding:12px; background:#f8f9fa; border:2px solid #e0e0e0; border-radius:11px; color:#999; font-size:13px; cursor:pointer; font-family:'Segoe UI',sans-serif; transition:all 0.3s;">
                             Ganti nama / masuk baru
                         </button>
                     </div>
@@ -883,29 +906,28 @@
                     <div id="guestNew">
                         <div style="text-align:center; margin: 10px 0 25px;">
                             <div style="font-size: 50px; margin-bottom: 12px;">
-                                <i class="fa-solid fa-user-secret"
-                                    style="background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                                <i class="fa-solid fa-user-secret" style="color:#7c3aed;"></i>
                             </div>
-                            <h3 style="font-size: 20px; margin-bottom: 8px;">Masuk sebagai Tamu</h3>
-                            <p style="font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6;">
-                                Kamu akan masuk ke kelas <b style="color:#a78bfa;">X - RPL 2</b>.<br>
-                                Nama opsional, bisa dikosongkan.
+                            <h3 style="font-size:20px; margin-bottom:8px; color:#333; font-weight:700;">Masuk sebagai
+                                Tamu</h3>
+                            <p style="font-size: 13px; color: rgba(0, 0, 0, 0.5); line-height: 1.6;">
+                                Kamu akan masuk ke kelas <b style="color:#a78bfa;">X - RPL 2</b> sebagai tamu.
                             </p>
                         </div>
                         <div class="input-wrapper" style="margin-bottom: 8px;">
-                            <i class="fa-solid fa-signature" style="color: #a78bfa;"></i>
+                            <i class="fa-solid fa-signature" style="color:#7c3aed;"></i>
                             <input id="guestNameInput" class="input-box" placeholder="Nama kamu (opsional)"
-                                maxlength="30" style="border-color: rgba(167,139,250,0.3);"
-                                onfocus="this.style.borderColor='#a78bfa'; this.style.boxShadow='0 0 0 3px rgba(167,139,250,0.15)'"
-                                onblur="this.style.borderColor='rgba(167,139,250,0.3)'; this.style.boxShadow='none'"
+                                maxlength="30" style="border-color:rgba(167,139,250,0.5);"
+                                onfocus="this.style.borderColor='#7c3aed'; this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.12)'"
+                                onblur="this.style.borderColor='rgba(167,139,250,0.5)'; this.style.boxShadow='none'"
                                 onkeydown="if(event.key==='Enter') loginAsGuest()">
                         </div>
-                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-bottom: 20px; padding-left: 4px;">
+                        <p style="font-size:11px; color:#bbb; margin-bottom:18px; padding-left:4px;">
                             <i class="fa-solid fa-clock" style="margin-right:4px;"></i> Data tamu otomatis hilang
                             setelah 3 hari tidak aktif.
                         </p>
                         <button class="btn-neon" onclick="loginAsGuest()"
-                            style="background: linear-gradient(90deg, #a78bfa, #7c3aed);">
+                            style="background:linear-gradient(135deg,#7c3aed,#6a11cb);">
                             <i class="fa-solid fa-door-open"></i>
                             <span>MASUK SEKARANG</span>
                         </button>
@@ -917,6 +939,63 @@
         <div class="footer-link">
             Ada masalah? <a href="https://wa.me/6283851088843?text=min%20ada%20kendala%20login" target="_blank">Hubungi
                 Developer</a>
+        </div>
+
+        <!-- POPUP LUPA SANDI -->
+        <div id="lupaPopup" style="
+            display:none;
+            position:fixed; inset:0;
+            background:rgba(0,0,0,0.45);
+            backdrop-filter:blur(6px);
+            z-index:2000;
+            align-items:center;
+            justify-content:center;
+            animation: fadeIn 0.25s ease;
+        " onclick="if(event.target===this) hideLupaPopup()">
+            <div style="
+                background:white;
+                border-radius:18px;
+                width:320px;
+                max-width:88vw;
+                padding:28px 24px 22px;
+                box-shadow:0 25px 50px rgba(0,0,0,0.18);
+                text-align:center;
+                transform:translateY(0);
+                animation: fadeInUp 0.3s ease;
+            ">
+                <div style="font-size:40px; margin-bottom:12px;">
+                    <i class="fa-solid fa-lock-open" style="color:#4a6ee0;"></i>
+                </div>
+                <h3 style="font-size:17px; font-weight:700; color:#333; margin-bottom:8px;">Lupa Kata Sandi?</h3>
+                <p style="font-size:13px; color:#888; line-height:1.7; margin-bottom:20px;">
+                    anjeun nu ngatur password, anjeunna poho<br>
+                    Hubungi admin lewat WhatsApp untuk minta sandi.
+                </p>
+                <a href="https://wa.me/6283851088843?text=min%20lupa%20password%20nih%20bisa%20minta%20reset%3F"
+                    target="_blank" style="
+                    display:flex; align-items:center; justify-content:center; gap:10px;
+                    background:linear-gradient(135deg,#25d366,#128c7e);
+                    color:white; font-weight:700; font-size:14px;
+                    padding:13px 20px; border-radius:11px;
+                    text-decoration:none;
+                    transition:all 0.3s ease;
+                    margin-bottom:10px;
+                   "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(37,211,102,0.35)'"
+                    onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                    <i class="fa-brands fa-whatsapp" style="font-size:18px;"></i>
+                    <span>Chat Admin di WhatsApp</span>
+                </a>
+                <button onclick="hideLupaPopup()" style="
+                    width:100%; padding:11px;
+                    background:none; border:none;
+                    font-size:13px; color:#bbb;
+                    cursor:pointer; font-family:'Segoe UI',sans-serif;
+                    transition:color 0.2s;
+                " onmouseover="this.style.color='#999'" onmouseout="this.style.color='#bbb'">
+                    Tutup
+                </button>
+            </div>
         </div>
 
         <div class="selection-modal" id="modalOverlay">
@@ -937,25 +1016,43 @@
     </div>
 
     <script>
-        const DAFTAR_KELAS_ARRAY = [
-            { id: "6", nama: "X - AK" },
-            { id: "7", nama: "X - BR 1" },
-            { id: "8", nama: "X - BR 2" },
-            { id: "1", nama: "X - RPL 1" },
-            { id: "2", nama: "X - RPL 2" },
-            { id: "3", nama: "X - RPL 3" },
-            { id: "4", nama: "X - RPL 4" },
-            { id: "9", nama: "X - TSM 1" },
-            { id: "10", nama: "X - TSM 2" },
-            { id: "11", nama: "X - TKR" },
-            { id: "5", nama: "X - PER" },
-            { id: "12", nama: "XI - AK" },
-            { id: "13", nama: "XII - AK" },
+        function showLupaPopup() {
+            const popup = document.getElementById('lupaPopup');
+            popup.style.display = 'flex';
+        }
 
-        ];
+        function hideLupaPopup() {
+            const popup = document.getElementById('lupaPopup');
+            popup.style.display = 'none';
+        }
 
-        // Helper untuk tetap support pencarian ID lama
-        const DAFTAR_KELAS = Object.fromEntries(DAFTAR_KELAS_ARRAY.map(item => [item.id, item.nama]));
+        // Data kelas dimuat dinamis dari Supabase
+        let DAFTAR_KELAS_ARRAY = [];
+        let DAFTAR_KELAS = {};
+
+        async function loadDaftarKelas() {
+            try {
+                if (typeof supabase === 'undefined') throw new Error("Supabase belum siap.");
+
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('id, name')
+                    .order('name', { ascending: true });
+
+                if (error) throw error;
+
+                DAFTAR_KELAS_ARRAY = (data || []).map(item => ({
+                    id: String(item.id),
+                    nama: item.name
+                }));
+
+                // Rebuild lookup object
+                DAFTAR_KELAS = Object.fromEntries(DAFTAR_KELAS_ARRAY.map(item => [item.id, item.nama]));
+
+            } catch (err) {
+                console.error("Gagal memuat daftar kelas:", err);
+            }
+        }
 
         // AMBIL ID DARI URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -969,19 +1066,7 @@
         let selectedClassId = forcedClassId || null;
         let selectedUserObj = null;
 
-        // --- [TAMBAHAN: OTOMATIS PILIH JIKA ID TERDAFTAR] ---
-        document.addEventListener('DOMContentLoaded', () => {
-            if (forcedClassId && DAFTAR_KELAS[forcedClassId]) {
-                // Jika ada ID di URL, kita bisa langsung set namanya di trigger agar user tahu
-                const namaKelas = DAFTAR_KELAS[forcedClassId];
-                document.getElementById('dispClassSelected').innerHTML = `
-            <i class="fa-solid fa-graduation-cap"></i>
-            <span>${namaKelas}</span>
-        `;
-                // Opsional: Kamu bisa langsung panggil goNext() di sini jika ingin melewati klik kelas
-                // goNextStepWithId(forcedClassId); 
-            }
-        });
+
         let currentStep = 0; // Track step saat ini
 
         function goToStep1() {
@@ -1035,27 +1120,39 @@
             }
         }
 
-        // --- MODAL CLASS LOGIC ---
         function openClassModal() {
             document.getElementById('modalOverlay').classList.add('open');
             document.getElementById('modalTitle').innerText = "PILIH KELAS";
-
-            // SEMBUNYIKAN SEARCH BAR
             document.getElementById('searchWrapper').style.display = 'none';
 
             const list = document.getElementById('modalList');
-            list.innerHTML = '';
 
-            let lastGrade = ""; // Tracker buat cek perubahan tingkatan
+            // Jika data kelas belum dimuat, tampilkan loader dulu
+            if (DAFTAR_KELAS_ARRAY.length === 0) {
+                list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat daftar kelas...</div>';
+                loadDaftarKelas().then(() => {
+                    if (DAFTAR_KELAS_ARRAY.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:20px; color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i><br><b>Gagal Memuat Kelas!</b><br><small>Cek koneksi atau hubungi developer.</small></div>';
+                    } else {
+                        renderClassList(list);
+                    }
+                });
+                return;
+            }
+
+            renderClassList(list);
+        }
+
+        function renderClassList(list) {
+            list.innerHTML = '';
+            let lastGrade = "";
 
             DAFTAR_KELAS_ARRAY.forEach(itemObj => {
                 const id = itemObj.id;
                 const namaKelas = itemObj.nama;
 
-                // Ambil tingkatan (X, XI, atau XII) dari nama kelas
                 const currentGrade = namaKelas.split(' - ')[0];
 
-                // Kalau tingkatannya berubah, tambahin pembatas
                 if (currentGrade !== lastGrade) {
                     const divider = document.createElement('div');
                     divider.className = 'modal-divider';
@@ -1073,17 +1170,17 @@
                 item.className = isDisabled ? 'list-item disabled' : 'list-item';
 
                 item.innerHTML = `
-            <div class="dot" ${!isDisabled ? 'style="background:#00eaff; box-shadow:0 0 10px #00eaff;"' : ''}></div>
-            <span>${namaKelas} ${isDisabled ? '<i class="fa-solid fa-lock" style="font-size:10px; margin-left:5px; opacity:0.5;"></i>' : ''}</span>
-        `;
+                    <div class="dot"></div>
+                    <span>${namaKelas} ${isDisabled ? '<i class="fa-solid fa-lock" style="font-size:10px; margin-left:5px; opacity:0.5;"></i>' : ''}</span>
+                `;
 
                 if (!isDisabled) {
                     item.onclick = () => {
                         selectedClassId = id;
                         document.getElementById('dispClassSelected').innerHTML = `
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    <span>${namaKelas}</span>
-                `;
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <span>${namaKelas}</span>
+                        `;
                         closeModal();
                         setTimeout(() => goNext(), 300);
                     };
@@ -1405,9 +1502,19 @@
             } catch (e) { /* silent fail */ }
         }
 
-        // Jalankan cleanup saat halaman login dibuka
-        document.addEventListener('DOMContentLoaded', () => {
+        // Jalankan cleanup + load kelas saat halaman login dibuka
+        document.addEventListener('DOMContentLoaded', async () => {
             cleanupOldGuests();
+            await loadDaftarKelas();
+
+            // Setelah kelas berhasil dimuat, cek forcedClassId dari URL
+            if (forcedClassId && DAFTAR_KELAS[forcedClassId]) {
+                const namaKelas = DAFTAR_KELAS[forcedClassId];
+                document.getElementById('dispClassSelected').innerHTML = `
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>${namaKelas}</span>
+                `;
+            }
         });
     </script>
 </body>

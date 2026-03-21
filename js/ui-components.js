@@ -45,6 +45,7 @@ const UIComponents = {
                 <ul>
                     <li onclick="goDashboard()"><i class="fa-solid fa-table-columns"></i> Dashboard</li>
                     <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
+                    <li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'../':'')+'theme'"><i class="fa-solid fa-palette"></i> Personalisasi</li>
                     <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
                 </ul>
             </div>
