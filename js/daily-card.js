@@ -154,6 +154,9 @@ async function initDailyCard() {
 
         window.currentViewDay = displayDay;
 
+        // Set data-day buat warna per hari via CSS var
+        if (cardEl) cardEl.dataset.day = displayDay;
+
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;
         badgeEl.className = `final-badge ${displayDay === 'CUSTOM' ? 'bg-custom' : (labelWaktu === 'BESOK' ? 'bg-orange' : 'bg-cyan')}`;

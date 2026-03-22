@@ -590,8 +590,8 @@
                     <label>Icon <span style="opacity:0.4; font-size:10px; text-transform:none;">(klik kotak untuk
                             pilih)</span></label>
                     <div class="icon-form-wrap">
-                        <input type="text" id="mIcon" class="glass-input" placeholder="fa-book" readonly
-                            style="cursor:default;">
+                        <input type="text" id="mIcon" class="glass-input" placeholder="fa-book"
+                            oninput="previewIconInput(this.value)">
                         <div id="iconPreviewBox" onclick="openIconPicker()" title="Pilih ikon">
                             <i class="fa-solid fa-book"></i>
                         </div>
@@ -728,25 +728,25 @@
             { slug: 'nilai-psasi2526', label: 'Nilai PSASI 25/26', icon: 'fa-chart-bar', cat: 'Main' },
             { slug: 'nilai-psts2526', label: 'Nilai PSTS 25/26', icon: 'fa-chart-bar', cat: 'Main' },
             // Subject (lessons) — pakai subject?id=...
-            { slug: 'matematika', label: 'Matematika', icon: 'fa-calculator', cat: 'Lessons' },
-            { slug: 'bahasaindonesia', label: 'Bahasa Indonesia', icon: 'fa-language', cat: 'Lessons' },
+            { slug: 'bahasaindonesia', label: 'Bahasa Indonesia', icon: 'fa-book-open', cat: 'Lessons' },
             { slug: 'bahasainggris', label: 'Bahasa Inggris', icon: 'fa-language', cat: 'Lessons' },
+            { slug: 'bahasasunda', label: 'Bahasa Sunda', icon: 'fa-book', cat: 'Lessons' },
             { slug: 'bahasajepang', label: 'Bahasa Jepang', icon: 'fa-language', cat: 'Lessons' },
+            { slug: 'matematika', label: 'Matematika', icon: 'fa-calculator', cat: 'Lessons' },
+            { slug: 'proipas', label: 'Proipas', icon: 'fa-flask', cat: 'Lessons' },
+            { slug: 'pp', label: 'PP', icon: 'fa-book', cat: 'Lessons' },
             { slug: 'informatika', label: 'Informatika', icon: 'fa-laptop-code', cat: 'Lessons' },
-            { slug: 'proipas', label: 'Projek IPAS', icon: 'fa-flask', cat: 'Lessons' },
             { slug: 'pjok', label: 'PJOK', icon: 'fa-person-running', cat: 'Lessons' },
-            { slug: 'pabp', label: 'PABP', icon: 'fa-book-open', cat: 'Lessons' },
+            { slug: 'pabp', label: 'PABP', icon: 'fa-mosque', cat: 'Lessons' },
             { slug: 'senibudaya', label: 'Seni Budaya', icon: 'fa-palette', cat: 'Lessons' },
             { slug: 'sejarah', label: 'Sejarah', icon: 'fa-landmark', cat: 'Lessons' },
-            { slug: 'pp', label: 'PP', icon: 'fa-book', cat: 'Lessons' },
-            { slug: 'nilaipsasi', label: 'Nilai PSASI', icon: 'fa-chart-bar', cat: 'Lessons' },
             // Admin
-            { slug: 'admiii/control', label: 'User Control', icon: 'fa-users-gear', cat: 'Admin' },
-            { slug: 'admiii/visitor', label: 'Visitor Monitor', icon: 'fa-eye', cat: 'Admin' },
-            { slug: 'admiii/menu', label: 'Menu Manager', icon: 'fa-gears', cat: 'Admin' },
-            { slug: 'admiii/monitor_nilai', label: 'Monitor Nilai', icon: 'fa-chart-line', cat: 'Admin' },
-            { slug: 'admiii/csv-sql', label: 'CSV → SQL', icon: 'fa-database', cat: 'Admin' },
-            { slug: 'admiii/nilai-psts', label: 'Input Nilai PSTS', icon: 'fa-pen-to-square', cat: 'Admin' },
+            { slug: 'control', label: 'User Control', icon: 'fa-users-gear', cat: 'Admin' },
+            { slug: 'visitor', label: 'Visitor Monitor', icon: 'fa-eye', cat: 'Admin' },
+            { slug: 'menu', label: 'Menu Manager', icon: 'fa-gears', cat: 'Admin' },
+            { slug: 'monitor_nilai', label: 'Monitor Nilai', icon: 'fa-chart-line', cat: 'Admin' },
+            { slug: 'csv-sql', label: 'CSV → SQL', icon: 'fa-database', cat: 'Admin' },
+            { slug: 'nilai-psts', label: 'Input Nilai PSTS', icon: 'fa-pen-to-square', cat: 'Admin' },
         ];
 
         // Icon library lengkap per kategori
@@ -755,7 +755,7 @@
                 'fa-book', 'fa-book-open', 'fa-calculator', 'fa-language', 'fa-flask', 'fa-microscope',
                 'fa-dna', 'fa-atom', 'fa-brain', 'fa-earth-americas', 'fa-laptop-code', 'fa-code',
                 'fa-music', 'fa-palette', 'fa-pen-nib', 'fa-shapes', 'fa-ruler', 'fa-compass',
-                'fa-vial', 'fa-graduation-cap', 'fa-chalkboard', 'fa-chalkboard-user',
+                'fa-vial', 'fa-graduation-cap', 'fa-chalkboard', 'fa-chalkboard-user', 'fa-chip'
             ],
             'Navigasi': [
                 'fa-house', 'fa-bullhorn', 'fa-clipboard-list', 'fa-calendar-days', 'fa-magnifying-glass',
@@ -1175,20 +1175,44 @@
 
         async function saveMenu() {
             const id = document.getElementById('editId').value;
-            const payload = {
-                class_id: document.getElementById('mClassId').value,
-                subject_name: document.getElementById('mSubjectName').value.trim(),
-                subject_id: document.getElementById('mSubjectId').value.trim(),
-                icon: document.getElementById('mIcon').value.trim() || 'fa-book',
-                display_order: parseInt(document.getElementById('mOrder').value) || 1,
-                menu_group: document.getElementById('mGroup').value,
-                badge: document.getElementById('mBadge').value.trim(),
-                badge_type: document.getElementById('mBadgeType').value,
-            };
+            const classId = document.getElementById('mClassId').value;
+            const subjectName = document.getElementById('mSubjectName').value.trim();
+            const subjectId = document.getElementById('mSubjectId').value.trim();
+            const icon = document.getElementById('mIcon').value.trim() || 'fa-book';
+            const menuGroup = document.getElementById('mGroup').value;
+            const badge = document.getElementById('mBadge').value.trim();
+            const badgeType = document.getElementById('mBadgeType').value;
 
-            if (!payload.class_id || !payload.subject_name) {
+            if (!classId || !subjectName) {
                 showPopup && showPopup('Kelas dan nama menu wajib diisi!', 'error'); return;
             }
+
+            let displayOrder = parseInt(document.getElementById('mOrder').value) || 1;
+
+            // Kalau tambah baru, SELALU ambil urutan paling akhir dari DB biar ga duplikat
+            if (!id) {
+                const { data: orderData } = await supabase
+                    .from('subjects_config')
+                    .select('display_order')
+                    .eq('class_id', classId)
+                    .eq('menu_group', menuGroup)
+                    .order('display_order', { ascending: false })
+                    .limit(1);
+
+                displayOrder = (orderData && orderData.length > 0)
+                    ? orderData[0].display_order + 1 : 1;
+            }
+
+            const payload = {
+                class_id: classId,
+                subject_name: subjectName,
+                subject_id: subjectId,
+                icon,
+                display_order: displayOrder,
+                menu_group: menuGroup,
+                badge,
+                badge_type: badgeType,
+            };
 
             const { error } = id
                 ? await supabase.from('subjects_config').update(payload).eq('id', id)
@@ -1213,6 +1237,13 @@
             if (error) { showPopup && showPopup('Gagal hapus: ' + error.message, 'error'); return; }
             showPopup && showPopup('Menu dihapus!', 'success');
             loadClassMenus();
+        }
+
+        // ── PREVIEW ICON INPUT ─────────────────────────────────
+        function previewIconInput(val) {
+            const v = val.trim();
+            const box = document.getElementById('iconPreviewBox');
+            box.innerHTML = v ? `<i class="fa-solid ${v}"></i>` : `<i class="fa-solid fa-book"></i>`;
         }
 
         // ── TOAST ────────────────────────────────────────────────

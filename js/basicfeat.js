@@ -396,7 +396,7 @@ document.addEventListener("click", (e) => {
     }
 });
 
-function goDashboard() { window.location.href = "dashboard"; }
+function goAnnouncements() { window.location.href = "announcements"; }
 function goProfile() { window.location.href = "settingacc"; }
 
 // ==========================================

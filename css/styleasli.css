@@ -1644,14 +1644,15 @@ li.nav-locked a::after {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 10000;
-    /* Paling Depan */
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease, backdrop-filter 0.25s ease;
 }
 
 .uni-overlay.active {
@@ -1662,10 +1663,7 @@ li.nav-locked a::after {
 .uni-box {
     background: linear-gradient(135deg,
             rgba(0, 180, 220, 0.28),
-            /* kiri atas */
-            rgba(10, 20, 35, 0.85)
-            /* kanan bawah */
-        );
+            rgba(10, 20, 35, 0.85));
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -1680,8 +1678,11 @@ li.nav-locked a::after {
     text-align: center;
     max-width: 17rem;
     width: 90%;
-    transform: scale(0.8);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateY(24px) scale(0.94);
+    opacity: 0;
+    transition:
+        transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+        opacity 0.25s ease;
 }
 
 .uni-box::before {
@@ -1696,7 +1697,8 @@ li.nav-locked a::after {
 }
 
 .uni-overlay.active .uni-box {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
+    opacity: 1;
 }
 
 .uni-icon {
@@ -2191,230 +2193,400 @@ li.nav-locked a::after {
 }
 
 /* --- DAILY CARD V10 (FINAL REQUEST) --- */
+/* ═══════════════════════════════════════════════════════════
+   DAILY CARD — Redesign total
+   Aesthetic: Newspaper meets terminal — bold type, sharp lines
+   ═══════════════════════════════════════════════════════════ */
+
+/* Warna per hari — neon accent */
+:root {
+    --dc-senin: #ff4d6d;
+    --dc-selasa: #9b5de5;
+    --dc-rabu: #00f5d4;
+    --dc-kamis: #f4a261;
+    --dc-jumat: #f9c74f;
+    --dc-sabtu: #ff85a1;
+    --dc-minggu: #48cae4;
+    --dc-custom: #ffd700;
+    --dc-col: var(--accent, #00eaff);
+}
+
 .daily-card-final {
     margin-top: 1.3281rem;
-    background: rgba(15, 15, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.85rem;
-    padding: 1.3281rem;
     position: relative;
-    box-shadow: 0 10px 50px rgb(255, 130, 52);
+    border-radius: 0.85rem;
+    padding: 1.3rem;
+    background: rgba(15, 15, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 50px rgba(255, 130, 52, 0.15);
     color: white;
 }
 
-/* HEADER AREA */
+/* Warna aksen hari — set via JS di card */
+.daily-card-final[data-day="Senin"] {
+    --dc-col: var(--dc-senin);
+}
+
+.daily-card-final[data-day="Selasa"] {
+    --dc-col: var(--dc-selasa);
+}
+
+.daily-card-final[data-day="Rabu"] {
+    --dc-col: var(--dc-rabu);
+}
+
+.daily-card-final[data-day="Kamis"] {
+    --dc-col: var(--dc-kamis);
+}
+
+.daily-card-final[data-day="Jumat"] {
+    --dc-col: var(--dc-jumat);
+}
+
+.daily-card-final[data-day="Sabtu"] {
+    --dc-col: var(--dc-sabtu);
+}
+
+.daily-card-final[data-day="Minggu"] {
+    --dc-col: var(--dc-minggu);
+}
+
+.daily-card-final[data-day="CUSTOM"] {
+    --dc-col: var(--dc-custom);
+}
+
+/* ── HEADER AREA ── */
 .final-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.3281rem;
+    align-items: flex-end;
+    padding: 0 0 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 1.2rem;
+    position: relative;
+}
+
+.final-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 3rem;
+    height: 2px;
+    background: var(--dc-col);
+    transition: background 0.4s ease;
 }
 
 .final-badge {
-    background: #00eaff;
-    color: black;
-    font-size: 0.5312rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    color: var(--dc-col);
+    font-size: 0.55rem;
     font-weight: 800;
-    padding: 0.2125rem 0.5312rem;
-    border-radius: 1.0625rem;
+    padding: 3px 8px;
+    border-radius: 8px;
     text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 1px solid var(--dc-col);
+    margin-bottom: 0.4rem;
+    transition: all 0.4s ease;
+}
+
+.final-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--dc-col);
+    flex-shrink: 0;
 }
 
 .final-day {
-    font-size: 2.0187rem;
-    font-weight: 800;
-    margin: 0.2656rem 0 0 0;
-    line-height: 1;
+    font-size: 2.8rem;
+    font-weight: 900;
+    margin: 0;
+    line-height: 0.9;
     color: white;
     text-transform: uppercase;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 .final-date {
-    color: #b5b5b5;
-    font-size: 0.85rem;
-    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+    display: block;
+    margin-top: 0.3rem;
+    text-transform: uppercase;
 }
 
+/* ── TASK SHORTCUT ── */
 .task-shortcut-box {
-    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 3.7188rem;
-    height: 3.7188rem;
-    border-radius: 0.6375rem;
+    width: 3.8rem;
+    height: 3.8rem;
+    border-radius: 0.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0px 10px 50px #0056cc;
+    transition: all 0.25s ease;
+    gap: 3px;
 }
 
 .task-shortcut-box i {
-    font-size: 1.275rem;
-    margin-bottom: 0.2656rem;
-    color: #00eaff;
+    font-size: 1.1rem;
+    color: var(--dc-col);
+    transition: color 0.25s;
 }
 
 .task-shortcut-box span {
-    font-size: 0.5312rem;
-    font-weight: 700;
-    color: white;
+    font-size: 0.45rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 1);
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .task-shortcut-box:hover {
-    background: #00eaff;
-    border-color: #00eaff;
-    transform: translateY(-3px);
-    box-shadow: 0px 10px 50px #0056cc;
+    background: var(--dc-col);
+    border-color: var(--dc-col);
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--dc-col) 40%, transparent);
 }
 
 .task-shortcut-box:hover i,
 .task-shortcut-box:hover span {
-    color: black;
+    color: #000;
 }
 
+/* ── TOP INFO CARDS ── */
 .top-cards-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.5312rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    margin-bottom: 1.4rem;
 }
 
 .info-card-dynamic {
-    padding: 0.7969rem;
-    border-radius: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 1rem;
+    border-radius: 0 !important;
+    transition: filter 0.2s;
+    border: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.info-card-dynamic:last-child {
+    border-bottom: none !important;
+}
+
+.info-card-dynamic:hover {
+    filter: brightness(1.1);
+}
+
+.card-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.card-meta {
     display: flex;
     flex-direction: column;
-    transition: 0.3s;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
 }
 
 .card-label {
-    font-size: 0.5312rem;
+    font-size: 0.5rem !important;
     text-transform: uppercase;
     font-weight: 700;
+    letter-spacing: 1.2px;
+    opacity: 0.6;
     display: block;
-    margin-bottom: 0.1062rem;
 }
 
 .card-val {
-    font-size: 0.6906rem;
-    font-weight: 700;
-    line-height: 1.2;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card-val.small {
-    font-size: 0.5844rem;
-    font-weight: 500;
+    font-size: 0.72rem;
+    font-weight: 400;
+    opacity: 0.85;
+    white-space: normal;
 }
 
-/* TIMELINE PELAJARAN */
+/* ── SECTION HEADER ── */
 .final-section {
-    margin-top: 0.5312rem;
+    margin-top: 0;
 }
 
 .final-title {
-    font-size: 0.6375rem;
-    color: #888;
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.25);
     text-transform: uppercase;
-    margin-bottom: 0.7969rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.7rem;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 0.425rem;
+    gap: 0.5rem;
+}
+
+.final-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .final-spacer {
-    height: 1.3281rem;
+    height: 1.2rem;
 }
 
-/* Item Timeline - ANIMASI FIX */
-.tl-item-final {
+/* ── TIMELINE ── */
+.final-timeline {
     display: flex;
-    gap: 0.7969rem;
-    min-height: 2.125rem;
+    flex-direction: column;
+    gap: 0;
+}
+
+.tl-item-final {
+    display: grid;
+    grid-template-columns: 6.5rem 1px 1fr;
+    gap: 0 0.8rem;
+    min-height: 2.4rem;
     position: relative;
-    margin-left: 0.5312rem;
-    /* Opacity diatur animasi nanti */
+    align-items: start;
+    padding-bottom: 0.2rem;
 }
 
 .tl-time-final {
-    font-family: monospace;
-    font-size: 0.7438rem;
-    color: #00eaff;
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    color: var(--dc-col);
     text-align: right;
-    padding-top: 0.3187rem;
-    flex-shrink: 0;
-    text-align: left;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+    padding-top: 0.5rem;
+    transition: color 0.4s;
+    white-space: nowrap;
+    line-height: 1.4;
 }
 
 .tl-marker-final {
-    width: 2px;
-    background: rgba(255, 255, 255, 0.2);
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
     position: relative;
+    align-self: stretch;
+    flex-shrink: 0;
 }
 
 .tl-marker-final::after {
     content: '';
     position: absolute;
-    top: 0.3187rem;
-    left: -4px;
-    width: 0.5312rem;
-    height: 0.5312rem;
-    background: #111;
-    border: 2px solid #00eaff;
+    top: 0.55rem;
+    left: -3.5px;
+    width: 7px;
+    height: 7px;
+    background: #0a0a0f;
+    border: 1.5px solid var(--dc-col);
     border-radius: 50%;
+    transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.tl-item-final:hover .tl-marker-final::after {
+    box-shadow: 0 0 8px var(--dc-col);
 }
 
 .tl-subject-final {
-    font-size: 0.9031rem;
-    color: #ddd;
-    padding-bottom: 1.0625rem;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.45rem 0 0.7rem 0;
     font-weight: 500;
+    line-height: 1.5;
+    white-space: pre-line;
+    word-break: break-word;
 }
 
-/* PIKET NAMES (BIGGER) */
+/* ── PIKET PILLS ── */
 .picket-grid-big {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5312rem;
+    gap: 0.4rem;
 }
 
 .picket-pill {
     position: relative;
-    /* WAJIB TAMBAH INI */
-    flex: 1 1 30%;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 0.6375rem 0.5312rem;
-    border-radius: 0.6375rem;
-    text-align: center;
-    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 0.4rem 0.8rem;
+    border-radius: 2rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    flex: initial;
+}
+
+.picket-pill::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dc-col);
+    margin-right: 6px;
+    vertical-align: middle;
+    transition: background 0.4s;
 }
 
 .picket-pill:hover {
-    background: #00eaff;
-    color: black;
-    border-color: #00eaff;
-    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--dc-col);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
+/* ── WATERMARK ── */
 .final-watermark {
     text-align: right;
-    margin-top: 1.5938rem;
-    opacity: 0.3;
-    font-size: 0.5312rem;
-    letter-spacing: 0.1062rem;
+    margin-top: 1.2rem;
+    opacity: 0.15;
+    font-size: 0.45rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-/* --- ANIMATION ENGINE (SAFE & SMOOTH) --- */
+/* ── ANIMATIONS ── */
 @keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateX(-12px);
     }
 
     to {
@@ -2426,7 +2598,7 @@ li.nav-locked a::after {
 @keyframes popUp {
     from {
         opacity: 0;
-        transform: scale(0.8) translateY(10px);
+        transform: scale(0.85) translateY(8px);
     }
 
     to {
@@ -2447,61 +2619,51 @@ li.nav-locked a::after {
 
 .animate-slide-right {
     opacity: 0;
-    animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .animate-pop-up {
     opacity: 0;
-    animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: popUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .animate-fade-in {
     opacity: 0;
-    animation: fadeInSimple 0.6s ease forwards;
+    animation: fadeInSimple 0.5s ease forwards;
 }
 
 .animate-pop-in {
-    animation: popUp 0.6s ease forwards;
+    animation: popUp 0.5s ease forwards;
 }
 
-/* RESPONSIVE: DI HP JADI TUMPUK */
+/* ── RESPONSIVE ── */
 @media (max-width: 600px) {
+    .final-day {
+        font-size: 2.2rem;
+    }
+
     .top-cards-grid {
-        grid-template-columns: 1fr;
-        /* Tumpuk ke bawah */
-    }
-
-    .info-card-dynamic {
-        flex-direction: row;
-        align-items: center;
-        gap: 0.7969rem;
-        min-height: auto;
-    }
-
-    .card-icon {
-        margin-bottom: 0;
-        font-size: 1.275rem;
+        gap: 0;
     }
 }
 
-/* --- FORM STYLING --- */
+/* ── FORM / CONFIG ── */
 .dc-label-input {
     display: block;
-    font-size: 0.6375rem;
+    font-size: 0.6rem;
     color: #aaa;
-    margin: 0.5312rem 0 0.2656rem 0;
+    margin: 0.5rem 0 0.25rem;
 }
 
-/* --- TOGGLE SWITCH (ON/OFF) --- */
 .dc-toggle-area {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.7969rem;
-    border-radius: 0.6375rem;
-    margin-top: 1.0625rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.7rem;
+    border-radius: 0.5rem;
+    margin-top: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .switch {
@@ -2524,9 +2686,9 @@ li.nav-locked a::after {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 1.8062rem;
+    background-color: #333;
+    transition: .3s;
+    border-radius: 2rem;
 }
 
 .slider:before {
@@ -2537,54 +2699,50 @@ li.nav-locked a::after {
     left: 4px;
     bottom: 4px;
     background-color: white;
-    transition: .4s;
+    transition: .3s;
     border-radius: 50%;
 }
 
 input:checked+.slider {
-    background-color: #00eaff;
+    background-color: var(--accent, #00eaff);
 }
 
 input:focus+.slider {
-    box-shadow: 0 0 1px #00eaff;
+    box-shadow: 0 0 0 2px rgba(0, 234, 255, 0.25);
 }
 
 input:checked+.slider:before {
     transform: translateX(24px);
 }
 
-/* --- V12: INLINE EDIT & FAB --- */
-
-/* FAB Container (Pojok Kanan Bawah) */
+/* FAB */
 .daily-fab-container {
     position: fixed;
-    bottom: 1.0625rem;
-    right: 4.7812rem;
+    bottom: 1rem;
+    right: 4.8rem;
     display: flex;
     flex-direction: column;
-    gap: 0.7969rem;
+    gap: 0.7rem;
     z-index: 1;
 }
 
-/* Tombol Edit Bulat (Floating Action Button) */
 .fab-daily {
-    width: 2.9219rem;
-    height: 2.9219rem;
+    width: 2.8rem;
+    height: 2.8rem;
     border-radius: 50%;
     border: none;
     cursor: pointer;
     color: white;
-    font-size: 1.0625rem;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    transition: 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .fab-daily.btn-edit {
-    background: #ff9800;
+    background: #f4a261;
 }
 
 .fab-daily.btn-save {
@@ -2596,48 +2754,47 @@ input:checked+.slider:before {
 }
 
 .fab-daily:hover {
-    transform: scale(1.1);
+    transform: scale(1.12);
 }
 
 .fab-daily:active {
-    transform: scale(0.9);
+    transform: scale(0.92);
 }
 
-/* Mode Edit Aktif: Teks jadi ada kotaknya */
+/* EDIT MODE */
 .editable-active {
-    border: 1px dashed rgba(255, 255, 255, 0.5);
+    border: 1px dashed rgba(255, 255, 255, 0.35);
     background: rgba(0, 0, 0, 0.2);
-    padding: 0.1062rem 0.2656rem;
-    border-radius: 4px;
-    min-width: 1.0625rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    min-width: 1rem;
     cursor: text;
-    transition: 0.2s;
+    transition: 0.15s;
 }
 
 .editable-active:focus {
-    background: rgba(0, 234, 255, 0.1);
-    border-color: #00eaff;
+    background: rgba(0, 234, 255, 0.08);
+    border-color: var(--accent, #00eaff);
     outline: none;
 }
 
-/* Tombol Add (+) buat Timeline/Piket */
 .btn-add-inline {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px dashed rgba(255, 255, 255, 0.3);
-    color: #aaa;
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.3);
     width: 100%;
-    padding: 0.425rem;
-    border-radius: 0.425rem;
-    margin-top: 0.5312rem;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    margin-top: 0.4rem;
     cursor: pointer;
-    font-size: 0.6375rem;
+    font-size: 0.6rem;
     transition: 0.2s;
 }
 
 .btn-add-inline:hover {
-    background: rgba(0, 234, 255, 0.1);
-    color: #00eaff;
-    border-color: #00eaff;
+    background: rgba(0, 234, 255, 0.07);
+    color: var(--accent, #00eaff);
+    border-color: var(--accent, #00eaff);
 }
 
 .btn-del-inline {
@@ -2646,48 +2803,43 @@ input:checked+.slider:before {
 
 .edit-mode-on .btn-del-inline {
     display: flex;
-    /* Paksa muncul pas mode edit */
     position: absolute;
-    right: -0.425rem;
-    top: -0.425rem;
+    right: -0.3rem;
+    top: 0.3rem;
     background: #ff4757;
     color: white;
-    width: 1.1687rem;
-    height: 1.1687rem;
+    width: 1.1rem;
+    height: 1.1rem;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    font-size: 0.5312rem;
+    font-size: 0.5rem;
     cursor: pointer;
     z-index: 10;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-/* Placeholder untuk contenteditable */
 .editable-text:empty:before {
     content: attr(data-placeholder);
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.2);
     pointer-events: none;
     display: block;
 }
 
-/* Pastikan kolom tetep punya lebar minimal biar bisa diklik pas kosong */
 .tl-time-final:empty,
 .tl-subject-final:empty,
 .picket-pill span:empty {
-    min-width: 2.6562rem;
+    min-width: 2.5rem;
     display: inline-block;
 }
 
-/* Area Toggle Config (Muncul pas edit doang) */
 .config-panel {
     display: none;
-    /* Default hidden */
-    margin-top: 1.0625rem;
-    padding: 0.7969rem;
+    margin-top: 1rem;
+    padding: 0.8rem;
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.6375rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .edit-mode-on .config-panel {
@@ -2695,29 +2847,86 @@ input:checked+.slider:before {
     animation: popUp 0.3s forwards;
 }
 
-/* Badge Custom Mode */
 .bg-custom {
-    background: #FFD700;
-    color: #000;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: #000 !important;
+    border-color: #ffd700 !important;
     animation: pulseBadge 2s infinite;
 }
 
+.bg-orange {
+    color: #f4a261 !important;
+    border-color: #f4a261 !important;
+}
+
 @keyframes pulseBadge {
-    0% {
-        transform: scale(1);
+
+    0%,
+    100% {
+        opacity: 1;
     }
 
     50% {
-        transform: scale(1.05);
-    }
-
-    100% {
-        transform: scale(1);
+        opacity: 0.7;
     }
 }
 
-/* Dashboard Styles */
+.dc-empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.75rem;
+}
+
+/* Header action buttons */
+.header-right-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.card-edit-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.action-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn.edit:hover {
+    background: rgba(244, 162, 97, 0.2);
+    color: #f4a261;
+    border-color: #f4a261;
+}
+
+.action-btn.save:hover {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+    border-color: #2ed573;
+}
+
+.action-btn.cancel:hover {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+    border-color: #ff4757;
+}
+
+.glass-card-effect {
+    /* Kosong — class masih dipake JS tapi styling dari .daily-card-final */
+}
+
 .dashboard-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 1.0625rem;
