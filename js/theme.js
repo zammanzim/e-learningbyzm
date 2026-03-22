@@ -42,7 +42,7 @@
 .sidebar li:hover i, .sidebar li:hover b,
 .sidebar li.active a, .sidebar li.active i,
 .glass-modal-box h3 i, .drop-icon,
-.info-content-scroll h4, .uni-btn,
+.info-content-scroll h4,
 .final-badge, .color-blue,
 .hide-desk { color: ${a} !important; }
 
@@ -84,7 +84,7 @@ input:focus + .slider { background: ${a} !important; }
 .glass-input:focus {
     box-shadow: 0 0 0 3px ${rgba('0.15')} !important;
 }
-.btn-glass-save {
+.btn-glass-save, btn-save {
     background: ${a} !important;
     box-shadow: 0 0 20px ${rgba('0.3')} !important;
 }
@@ -92,7 +92,7 @@ input:focus + .slider { background: ${a} !important; }
     background: ${a} !important;
     box-shadow: 0 0 25px ${rgba('0.5')} !important;
 }
-.btn-glass-save:hover {
+.btn-glass-save:hover, btn-save:hover {
     box-shadow: 0 0 30px ${rgba('0.5')} !important;
 }
 .current-pp {

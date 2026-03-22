@@ -354,7 +354,39 @@
             display: flex;
         }
 
-        /* ── POPUP MODAL (shared) ── */
+        /* ── TOAST SHORTCUT ── */
+        .shortcut-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 99999;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shortcut-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .shortcut-toast i {
+            color: var(--accent, #00eaff);
+            font-size: 11px;
+        }
+
         .mm-modal-overlay {
             position: fixed;
             inset: 0;
@@ -516,6 +548,7 @@
                     </span>
                 </div>
                 <input type="hidden" id="editId">
+                <input type="hidden" id="mOrder" value="1">
 
                 <div class="form-row">
                     <div class="form-group" style="margin:0;">
@@ -666,6 +699,12 @@
         <i class="fa-solid fa-circle-notch fa-spin"></i> Menyimpan urutan...
     </div>
 
+    <!-- ── SHORTCUT TOAST ── -->
+    <div class="shortcut-toast" id="shortcutToast">
+        <i class="fa-solid fa-keyboard"></i>
+        <span id="shortcutToastMsg"></span>
+    </div>
+
     <script>
         // ══════════════════════════════════════════════════
         // DATA
@@ -673,6 +712,7 @@
         let allMenuData = [];
         let activeGroup = 'all';
         let dragSrcItem = null;
+        let classNameMap = {}; // id → nama kelas
         let dragSrcId = null;
 
         // File yang diketahui ada di project — dikategorikan
@@ -748,6 +788,51 @@
                     if (e.target === this) closeModal(id);
                 });
             });
+
+            // ── KEYBOARD SHORTCUTS ───────────────────────────────
+            document.addEventListener('keydown', (e) => {
+                const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+                const isModalOpen = document.querySelector('.mm-modal-overlay.open');
+
+                // Tutup modal pakai ESC
+                if (e.key === 'Escape') {
+                    if (isModalOpen) {
+                        document.querySelectorAll('.mm-modal-overlay.open').forEach(m => m.classList.remove('open'));
+                        return;
+                    }
+                    // Edit mode → batal
+                    if (document.getElementById('editId').value) {
+                        resetForm();
+                        showToast('Edit dibatalkan');
+                        return;
+                    }
+                }
+
+                // Ctrl+Enter → simpan
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    saveMenu();
+                    return;
+                }
+
+                // Angka 1–9 → switch kelas (hanya kalau ga lagi ngetik & ga ada modal)
+                if (!isTyping && !isModalOpen && /^[1-9]$/.test(e.key)) {
+                    const classOpts = [...document.getElementById('targetClassId').options];
+                    const idx = parseInt(e.key); // 1 = option index 1 (skip "Semua Kelas")
+                    if (classOpts[idx]) {
+                        document.getElementById('targetClassId').value = classOpts[idx].value;
+                        onFilterChange();
+                        showToast(`Kelas: ${classOpts[idx].textContent}`);
+                    }
+                }
+
+                // 0 → semua kelas
+                if (!isTyping && !isModalOpen && e.key === '0') {
+                    document.getElementById('targetClassId').value = 'all';
+                    onFilterChange();
+                    showToast('Semua Kelas');
+                }
+            });
         });
 
         async function setupClassDropdown() {
@@ -764,6 +849,7 @@
                     opt.textContent = cls.name;
                     sel.appendChild(opt);
                 });
+                classNameMap[String(cls.id)] = cls.name;
             });
         }
 
@@ -810,15 +896,31 @@
             const shouldGroup = (classId === 'all' && activeGroup === 'all');
 
             if (shouldGroup) {
-                // Group by class
+                // Group by class dulu
                 const byClass = {};
                 data.forEach(item => {
-                    if (!byClass[item.class_id]) byClass[item.class_id] = [];
-                    byClass[item.class_id].push(item);
+                    const cid = String(item.class_id);
+                    if (!byClass[cid]) byClass[cid] = [];
+                    byClass[cid].push(item);
                 });
-                for (const [id, items] of Object.entries(byClass)) {
-                    appendGroupHeader(container, '#ffd700', `<i class="fa-solid fa-users"></i> Kelas ID: ${id}`);
-                    items.forEach(item => container.appendChild(createItemEl(item)));
+
+                for (const [cid, items] of Object.entries(byClass)) {
+                    // Header kelas
+                    const className = classNameMap[cid] || `Kelas ID: ${cid}`;
+                    appendGroupHeader(container, '#ffd700', `<i class="fa-solid fa-users"></i> ${className}`);
+
+                    // Group by menu_group dalam kelas ini
+                    const byGroup = {};
+                    items.forEach(item => {
+                        if (!byGroup[item.menu_group]) byGroup[item.menu_group] = [];
+                        byGroup[item.menu_group].push(item);
+                    });
+
+                    ORDER.forEach(group => {
+                        if (!byGroup[group]) return;
+                        appendGroupHeader(container, COLOR[group] || '#aaa', `<i class="fa-solid fa-layer-group"></i> ${LABEL[group] || group}`, true);
+                        byGroup[group].forEach(item => container.appendChild(createItemEl(item)));
+                    });
                 }
             } else {
                 // Group by menu group
@@ -835,10 +937,16 @@
             }
         }
 
-        function appendGroupHeader(container, color, html) {
+        function appendGroupHeader(container, color, html, isSubGroup = false) {
             const h = document.createElement('div');
             h.className = 'group-header';
             h.style.color = color;
+            if (isSubGroup) {
+                h.style.paddingLeft = '12px';
+                h.style.fontSize = '9px';
+                h.style.opacity = '0.5';
+                h.style.paddingTop = '8px';
+            }
             h.innerHTML = html;
             container.appendChild(h);
         }
@@ -1105,6 +1213,16 @@
             if (error) { showPopup && showPopup('Gagal hapus: ' + error.message, 'error'); return; }
             showPopup && showPopup('Menu dihapus!', 'success');
             loadClassMenus();
+        }
+
+        // ── TOAST ────────────────────────────────────────────────
+        let _toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('shortcutToast');
+            document.getElementById('shortcutToastMsg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
         }
 
         function filterGroup(el) {
