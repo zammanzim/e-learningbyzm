@@ -108,14 +108,14 @@ async function searchUser() {
             
             card.innerHTML = `
                 <img src="${u.avatar_url || 'images/default-avatar.png'}" 
-                     style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
+                     style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--accent, #00eaff); object-fit: cover;">
                 <div style="flex: 1;">
                     <h3 style="margin: 0; font-size: 16px; color: #fff;">
                         ${u.full_name} ${String(u.id) === String(user.id) ? '(Anda)' : ''}
                     </h3>
-                    <p style="margin: 2px 0; font-size: 12px; color: #00eaff;">@${u.username || u.short_name}</p>
+                    <p style="margin: 2px 0; font-size: 12px; color: var(--accent, #00eaff);">@${u.username || u.short_name}</p>
                 </div>
-                <button class="btn-tool" onclick="viewPublicProfile('${u.id}')" style="border-radius: 50%; width: 40px; height: 40px; border: 1px solid rgba(0,234,255,0.3);">
+                <button class="btn-tool" onclick="viewPublicProfile('${u.id}')" style="border-radius: 50%; width: 40px; height: 40px; border: 1px solid rgba(0, 234, 255, 0.3);">
                     <i class="fa-solid fa-chevron-right" style="margin:0;"></i>
                 </button>
             `;

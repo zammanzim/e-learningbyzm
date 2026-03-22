@@ -100,7 +100,7 @@ function updateProgressUI() {
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
     let grad = '', themeColor = '';
-    if (percent === 100) { grad = 'linear-gradient(90deg, #00eaff, #007bff)'; themeColor = '#00eaff'; }
+    if (percent === 100) { grad = 'linear-gradient(90deg, var(--accent, #00eaff), #007bff)'; themeColor = 'var(--accent, #00eaff)'; }
     else if (percent >= 70) { grad = 'linear-gradient(90deg, #0be881, #05c46b)'; themeColor = '#0be881'; }
     else if (percent >= 30) { grad = 'linear-gradient(90deg, #ff8c00, #ffd700)'; themeColor = '#ff8c00'; }
     else { grad = 'linear-gradient(90deg, #ff4757, #ff6b81)'; themeColor = '#ff4757'; }

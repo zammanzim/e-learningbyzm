@@ -138,7 +138,7 @@ async function renderVisitorStats() {
                 <div style="flex:1; margin-left:10px;">
                     <div style="font-size:13px; font-weight:bold;">${nickname}</div>
                     <div style="font-size:11px; color:#aaa;">
-                        <span style="color:#00eaff">${v.last_page || 'Muter-muter'}</span>
+                        <span style="color:var(--accent, #00eaff)">${v.last_page || 'Muter-muter'}</span>
                         • ${new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                 </div>`;

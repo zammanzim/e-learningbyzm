@@ -8,8 +8,8 @@
 
     const DEFAULT_BG = `linear-gradient(90deg,rgba(255,255,255,0.15)1px,transparent 1px),linear-gradient(0deg,rgba(255,255,255,0.15)1px,transparent 1px),linear-gradient(180deg,#353a50 0%,#505a6a 40%,#404560 70%,#2a2a45 100%)`;
 
-    const bg = theme.bg || DEFAULT_BG;
-    const accent = theme.accent || '#00eaff';
+    const bg       = theme.bg       || DEFAULT_BG;
+    const accent   = theme.accent   || '#00eaff';
     const fontSize = theme.fontSize || 'sedang';
 
     const style = document.createElement('style');
@@ -30,17 +30,19 @@
 
     // --- 3. ACCENT COLOR ---
     const a = accent;
-    const ar = parseInt(a.slice(1, 3), 16);
-    const ag = parseInt(a.slice(3, 5), 16);
-    const ab = parseInt(a.slice(5, 7), 16);
-    const rgba = (op) => `rgba(${ar},${ag},${ab},${op})`;
+    // Set CSS variable supaya semua halaman bisa pakai var(--accent)
+    document.documentElement.style.setProperty('--accent', a);
+        const ar = parseInt(a.slice(1, 3), 16);
+        const ag = parseInt(a.slice(3, 5), 16);
+        const ab = parseInt(a.slice(5, 7), 16);
+        const rgba = (op) => `rgba(${ar},${ag},${ab},${op})`;
 
-    css += `
+        css += `
 /* === ACCENT COLOR OVERRIDE === */
 .sidebar li:hover i, .sidebar li:hover b,
 .sidebar li.active a, .sidebar li.active i,
 .glass-modal-box h3 i, .drop-icon,
-.info-content-scroll h4,
+.info-content-scroll h4, .uni-btn,
 .final-badge, .color-blue,
 .hide-desk { color: ${a} !important; }
 
@@ -74,6 +76,35 @@ input:focus + .slider { background: ${a} !important; }
 .glow {
     text-shadow: 0 0 5px ${a}, 0 0 10px ${a}, 0 0 20px ${rgba('0.8')}, 0 0 40px ${rgba('0.5')} !important;
 }
+
+/* rgba overrides (background, shadow, border dengan opacity) */
+.sidebar li.active {
+    background: linear-gradient(90deg, ${rgba('0.15')} 10%, ${rgba('0')} 100%) !important;
+}
+.glass-input:focus {
+    box-shadow: 0 0 0 3px ${rgba('0.15')} !important;
+}
+.btn-glass-save {
+    background: ${a} !important;
+    box-shadow: 0 0 20px ${rgba('0.3')} !important;
+}
+.filter-slider-bg {
+    background: ${a} !important;
+    box-shadow: 0 0 25px ${rgba('0.5')} !important;
+}
+.btn-glass-save:hover {
+    box-shadow: 0 0 30px ${rgba('0.5')} !important;
+}
+.current-pp {
+    border-color: ${a} !important;
+    box-shadow: 0 0 15px ${rgba('0.3')} !important;
+}
+.editable-active:focus { background: ${rgba('0.1')} !important; }
+.btn-add-inline:hover  { background: ${rgba('0.1')} !important; }
+.drop-area:hover, .drop-area.dragover { border-color: ${a} !important; }
+.task-shortcut-box:hover { border-color: ${a} !important; }
+.uni-btn { box-shadow: 0 4px 15px ${rgba('0.3')} !important; }
+.final-badge { text-shadow: 0 0 10px ${rgba('0.8')}, 0 0 25px ${rgba('0.6')} !important; }
 
 /* scrollbar */
 ::-webkit-scrollbar-thumb { background: ${a} !important; }

@@ -659,14 +659,79 @@
         if (user.short_name && document.getElementById('headerName'))
             document.getElementById('headerName').textContent = `Hai, ${user.short_name}`;
 
+        // Mapping hex accent → nama warna
+        const ACCENT_NAMES = {
+            '#00eaff': 'Cyan',
+            '#4a9eff': 'Biru Muda',
+            '#a78bfa': 'Lavender',
+            '#f472b6': 'Pink',
+            '#34d399': 'Hijau Mint',
+            '#fb923c': 'Oranye',
+            '#fbbf24': 'Kuning',
+            '#f87171': 'Merah Muda',
+            '#e879f9': 'Ungu Neon',
+            '#38bdf8': 'Biru Langit',
+            '#86efac': 'Hijau Pastel',
+            '#ffffff': 'Putih',
+        };
+
+        function getBgLabel() {
+            const match = BG_PRESETS.find(p => p.grad === state.bg);
+            return match ? match.label : 'Custom';
+        }
+
+        function getAccentLabel() {
+            return ACCENT_NAMES[state.accent] || 'Custom (' + state.accent + ')';
+        }
+
         // Save / Reset
-        function saveTheme() {
+        async function saveTheme() {
+            // 1. Simpan ke localStorage dulu (tetap utama)
             localStorage.setItem('user_theme', JSON.stringify(state));
+
+            // 2. Log ke Supabase
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.id && typeof supabase !== 'undefined') {
+                    await supabase.from('theme_logs').upsert({
+                        user_id: user.id,
+                        nickname: user.nickname || user.short_name || 'Unknown',
+                        class_id: String(user.class_id || ''),
+                        bg: getBgLabel(),
+                        accent: getAccentLabel(),
+                        font_size: state.fontSize,
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) {
+                console.warn('[Theme] Gagal sync ke Supabase:', e);
+            }
+
             if (typeof showPopup === 'function') showPopup('Tema berhasil disimpan!', 'success');
             setTimeout(() => window.location.reload(), 900);
         }
-        function resetTheme() {
+
+        async function resetTheme() {
             localStorage.removeItem('user_theme');
+
+            // Log reset ke Supabase
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.id && typeof supabase !== 'undefined') {
+                    await supabase.from('theme_logs').upsert({
+                        user_id: user.id,
+                        nickname: user.nickname || user.short_name || 'Unknown',
+                        class_id: String(user.class_id || ''),
+                        bg: 'Default',
+                        accent: 'Default',
+                        font_size: 'sedang',
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) {
+                console.warn('[Theme] Gagal sync reset ke Supabase:', e);
+            }
+
             if (typeof showPopup === 'function') showPopup('Tema direset ke default.', 'success');
             setTimeout(() => window.location.reload(), 900);
         }

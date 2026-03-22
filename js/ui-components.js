@@ -22,9 +22,9 @@ const UIComponents = {
             <div id="classSwitcherWrapper" style="display:none; position:relative; margin-right:8px;">
                 <div id="classSwitcherTrigger" onclick="toggleClassSwitcher()" style="
                     display:flex; align-items:center; gap:6px;
-                    background:rgba(0,234,255,0.08); border:1px solid rgba(0,234,255,0.25);
+                    background:rgba(0, 234, 255, 0.08); border:1px solid rgba(0, 234, 255, 0.25);
                     border-radius:20px; padding:5px 12px; cursor:pointer;
-                    font-size:12px; color:#00eaff; transition:all 0.2s;
+                    font-size:12px; color:var(--accent, #00eaff); transition:all 0.2s;
                 ">
                     <i class="fa-solid fa-layer-group" style="font-size:11px;"></i>
                     <span id="classSwitcherLabel">Kelas –</span>
@@ -32,7 +32,7 @@ const UIComponents = {
                 </div>
                 <div id="classSwitcher" style="
                     display:none; position:absolute; top:calc(100% + 8px); left:0;
-                    background:#111; border:1px solid rgba(0,234,255,0.2);
+                    background:#111; border:1px solid rgba(0, 234, 255, 0.2);
                     border-radius:10px; min-width:140px; overflow:hidden; z-index:9999;
                 "></div>
             </div>
@@ -54,7 +54,7 @@ const UIComponents = {
         <div id="visitorOverlay" class="visitor-overlay">
             <div class="visitor-popup">
                 <div class="popup-header">
-                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:#00eaff;">0</span></h3>
+                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">0</span></h3>
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
                 <div id="visitorList" class="visitor-list-container" style="text-align:left;"></div>
@@ -88,7 +88,7 @@ const UIComponents = {
     <div class="color-opt" data-color="orange" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9f43; cursor: pointer;"></div>
     <div class="color-opt" data-color="yellow" style="width: 22px; height: 22px; border-radius: 50%; background: #ffd32a; cursor: pointer;"></div>
     <div class="color-opt" data-color="green" style="width: 22px; height: 22px; border-radius: 50%; background: #2ed573; cursor: pointer;"></div>
-    <div class="color-opt" data-color="blue" style="width: 22px; height: 22px; border-radius: 50%; background: #00eaff; cursor: pointer;"></div>
+    <div class="color-opt" data-color="blue" style="width: 22px; height: 22px; border-radius: 50%; background: var(--accent, #00eaff); cursor: pointer;"></div>
     <div class="color-opt" data-color="purple" style="width: 22px; height: 22px; border-radius: 50%; background: #a55eea; cursor: pointer;"></div>
     <div class="color-opt" data-color="pink" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9ff3; cursor: pointer;"></div>
     <div class="color-opt" data-color="brown" style="width: 22px; height: 22px; border-radius: 50%; background: #8b4513; cursor: pointer;"></div>

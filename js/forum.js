@@ -67,17 +67,17 @@ async function loadTopics() {
             card.className = 'course-card animate-slide-right';
             card.innerHTML = `
         <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
-            <img src="${topic.users.avatar_url || 'icons/profpicture.png'}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #00eaff;">
+            <img src="${topic.users.avatar_url || 'icons/profpicture.png'}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--accent, #00eaff);">
             <div>
                 <strong style="display: block; font-size: 14px;">${topic.users.nickname}</strong>
                 <small style="color: #888; font-size: 11px;">${new Date(topic.created_at).toLocaleString('id-ID')}</small>
             </div>
         </div>
-        <h3 style="font-size: 18px; margin-bottom: 8px; color: #00eaff;">${topic.title}</h3>
+        <h3 style="font-size: 18px; margin-bottom: 8px; color: var(--accent, #00eaff);">${topic.title}</h3>
         <p style="font-size: 14px; color: #ddd; line-height: 1.5;">${topic.content}</p>
         
         <div id="replySection-${topic.id}" style="margin-top: 15px; display: none;">
-            <div id="replyList-${topic.id}" style="margin-bottom: 10px; padding-left: 20px; border-left: 2px solid rgba(0,234,255,0.2);"></div>
+            <div id="replyList-${topic.id}" style="margin-bottom: 10px; padding-left: 20px; border-left: 2px solid rgba(0, 234, 255, 0.2);"></div>
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="inputReply-${topic.id}" class="glass-input" placeholder="Tulis balasan..." style="font-size: 13px; padding: 8px;">
                 <button onclick="sendReply('${topic.id}')" class="btn-glass-save" style="flex: 0; padding: 0 15px;">
@@ -141,7 +141,7 @@ function renderReplies(topicId, data) {
     data.forEach(r => {
         const div = document.createElement('div');
         div.style = 'margin-bottom: 10px; font-size: 13px;';
-        div.innerHTML = `<b style="color: #00eaff;">${r.users.nickname}:</b> <span style="color: #ddd;">${r.content}</span>`;
+        div.innerHTML = `<b style="color: var(--accent, #00eaff);">${r.users.nickname}:</b> <span style="color: #ddd;">${r.content}</span>`;
         list.appendChild(div);
     });
 }

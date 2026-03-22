@@ -355,7 +355,7 @@ const SubjectApp = {
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'orange')" style="width:14px; height:14px; border-radius:50%; background:#ff9f43; cursor:pointer;" title="Jingga"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'yellow')" style="width:14px; height:14px; border-radius:50%; background:#ffd32a; cursor:pointer;" title="Kuning"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'green')" style="width:14px; height:14px; border-radius:50%; background:#2ed573; cursor:pointer;" title="Hijau"></div>
-    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'blue')" style="width:14px; height:14px; border-radius:50%; background:#00eaff; cursor:pointer;" title="Biru"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'blue')" style="width:14px; height:14px; border-radius:50%; background:var(--accent, #00eaff); cursor:pointer;" title="Biru"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'purple')" style="width:14px; height:14px; border-radius:50%; background:#a55eea; cursor:pointer;" title="Ungu"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'pink')" style="width:14px; height:14px; border-radius:50%; background:#ff9ff3; cursor:pointer;" title="Pink"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'brown')" style="width:14px; height:14px; border-radius:50%; background:#8b4513; cursor:pointer;" title="Coklat"></div>
@@ -364,10 +364,10 @@ const SubjectApp = {
         card.innerHTML = `
         <input type="file" class="photo-input" accept="image/*" style="display:none;">
         <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; display:none; flex-direction:column; gap:4px;">
-            <button class="move-up-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'up')" style="background:rgba(0,234,255,0.15); border:1px solid rgba(0,234,255,0.3); color:#00eaff; width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <button class="move-up-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'up')" style="background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.3); color:var(--accent, #00eaff); width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
                 <i class="fa-solid fa-chevron-up" style="pointer-events:none;"></i>
             </button>
-            <button class="move-down-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'down')" style="background:rgba(0,234,255,0.15); border:1px solid rgba(0,234,255,0.3); color:#00eaff; width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <button class="move-down-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'down')" style="background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.3); color:var(--accent, #00eaff); width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
                 <i class="fa-solid fa-chevron-down" style="pointer-events:none;"></i>
             </button>
         </div>

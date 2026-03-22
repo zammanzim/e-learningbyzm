@@ -123,7 +123,7 @@ async function logout() {
             // Jika kuota habis (hanya user biasa)
             const batas = `Kamu udah gabisa logout lagi hari ini.
                 <br><br>
-                <a href="https://wa.me/6283851088843" target="_blank" style="color: #00eaff; text-decoration: none; font-size: 12px;">
+                <a href="https://wa.me/6283851088843" target="_blank" style="color: var(--accent, #00eaff); text-decoration: none; font-size: 12px;">
                     <i class="fa-solid fa-circle-question"></i> Butuh bantuan?
                 </a>`;
             setTimeout(() => {

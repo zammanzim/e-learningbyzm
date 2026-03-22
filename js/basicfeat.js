@@ -84,13 +84,13 @@ async function renderClassSwitcher() {
     switcher.innerHTML = classes.map(c => `
         <div onclick="switchClass('${c.id}', '${c.name}')" style="
             padding:10px 14px; font-size:13px; cursor:pointer;
-            color:${String(c.id) === current ? '#00eaff' : '#ddd'};
-            background:${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'};
+            color:${String(c.id) === current ? 'var(--accent, #00eaff)' : '#ddd'};
+            background:${String(c.id) === current ? 'rgba(0, 234, 255, 0.08)' : 'transparent'};
             display:flex; align-items:center; gap:8px;
             transition:background 0.15s;
         " onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-           onmouseout="this.style.background='${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'}'">
-            ${String(c.id) === current ? '<i class="fa-solid fa-check" style="font-size:10px; color:#00eaff;"></i>' : '<span style="width:12px;"></span>'}
+           onmouseout="this.style.background='${String(c.id) === current ? 'rgba(0, 234, 255, 0.08)' : 'transparent'}'">
+            ${String(c.id) === current ? '<i class="fa-solid fa-check" style="font-size:10px; color:var(--accent, #00eaff);"></i>' : '<span style="width:12px;"></span>'}
             ${c.name}
         </div>`).join('');
 
@@ -272,7 +272,7 @@ function processAndRenderSidebar(allConfigs, user) {
     if (role === 'super_admin' && systemItems.length > 0) {
         menuGroups.push({
             header: "System Menu",
-            color: "#00eaff", // Warna khusus biru neon
+            color: "var(--accent, #00eaff)", // Warna khusus biru neon
             items: systemItems.map(m => ({ ...m, url: adminPrefix + m.subject_id }))
         });
     }

@@ -111,11 +111,11 @@ window.renderKisiList = function () {
     const filterBar = document.createElement('div');
     filterBar.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:22px;';
     filterBar.innerHTML = `
-        <i class="fa-solid fa-filter" style="color:#00eaff; font-size:14px;"></i> Pilih Pelajaran
+        <i class="fa-solid fa-filter" style="color:var(--accent, #00eaff); font-size:14px;"></i> Pilih Pelajaran
         <select id="kisiSubjectFilter"
             onchange="kisiFilter = this.value; renderKisiList();"
             style="flex:1; background:rgba(255,255,255,0.08); color:white;
-                   border:1px solid rgba(0,234,255,0.3); padding:9px 15px;
+                   border:1px solid rgba(0, 234, 255, 0.3); padding:9px 15px;
                    border-radius:20px; font-size:13px; outline:none; cursor:pointer;
                    appearance:none; -webkit-appearance:none;">
             <option value="all">Semua Pelajaran</option>
@@ -160,15 +160,15 @@ window.renderKisiList = function () {
         divEl.style.cssText = 'margin:' + (isFirst ? '4px' : '36px') + ' 0 16px;';
 
         const todayBadge = isToday
-            ? '<span style="font-size:11px; background:rgba(0,234,255,0.15); border:1px solid rgba(0,234,255,0.5); border-radius:12px; padding:2px 10px; margin-left:10px; vertical-align:middle; font-weight:700; letter-spacing:1px;">HARI INI</span>'
+            ? '<span style="font-size:11px; background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.5); border-radius:12px; padding:2px 10px; margin-left:10px; vertical-align:middle; font-weight:700; letter-spacing:1px;">HARI INI</span>'
             : '';
 
         const lineColor = isToday
-            ? 'linear-gradient(to right, rgba(0,234,255,0.6), transparent)'
+            ? 'linear-gradient(to right, rgba(0, 234, 255, 0.6), transparent)'
             : 'linear-gradient(to right, rgba(255,255,255,0.2), transparent)';
 
-        const textColor = isToday ? '#00eaff' : 'rgba(255,255,255,0.7)';
-        const textShadow = isToday ? 'text-shadow: 0 0 16px rgba(0,234,255,0.6);' : '';
+        const textColor = isToday ? 'var(--accent, #00eaff)' : 'rgba(255,255,255,0.7)';
+        const textShadow = isToday ? 'text-shadow: 0 0 16px rgba(0, 234, 255, 0.6);' : '';
         const fontSize = isToday ? '22px' : '18px';
 
         divEl.innerHTML =
@@ -251,9 +251,9 @@ function _renderKisiInfoList(items) {
                 const normSubject = entry.norm;
                 html += '<div onclick="kisiFilter=\'' + normSubject + '\'; renderKisiList(); document.querySelector(\'.right-section\').scrollIntoView({behavior:\'smooth\'});"'
                     + ' style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.06); border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.08);"'
-                    + ' onmouseover="this.style.background=\'rgba(0,234,255,0.1)\'; this.style.borderColor=\'rgba(0,234,255,0.3)\'"'
+                    + ' onmouseover="this.style.background=\'rgba(0, 234, 255, 0.1)\'; this.style.borderColor=\'rgba(0, 234, 255, 0.3)\'"'
                     + ' onmouseout="this.style.background=\'rgba(255,255,255,0.06)\'; this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
-                    + '<i class="fa-solid fa-file-lines" style="color:#00eaff; font-size:11px; flex-shrink:0;"></i>'
+                    + '<i class="fa-solid fa-file-lines" style="color:var(--accent, #00eaff); font-size:11px; flex-shrink:0;"></i>'
                     + '<span style="font-size:12px; color:#e0e0e0; font-weight:500;">' + displayName + '</span>'
                     + '</div>';
             } else {
