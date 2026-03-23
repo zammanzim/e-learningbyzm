@@ -54,11 +54,11 @@ async function initTugas() {
                 .map(item => {
                     const parts = item.split('-');
                     const name = parts.length > 1 ? parts[1] : parts[0];
-                    return normalize(name.trim()); // Simpan dalam bentuk bersih
+                    return normalize(name.trim());
                 });
         }
 
-        // 3. Ambil Tugas: Urutkan Terbaru di Atas (created_at DESC)
+        // 3. Ambil Tugas + Progress user secara paralel
         const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
             supabase.from('subject_announcements')
                 .select('*')
@@ -77,14 +77,24 @@ async function initTugas() {
 
         allTasks = tasks || [];
 
-        // Di tugas.js, ubah bagian sinkronisasi progress:
         const validTaskIds = allTasks.map(t => String(t.id));
         doneIds = (progress || [])
-            .map(p => String(p.announcement_id)) // Paksa jadi String
+            .map(p => String(p.announcement_id))
             .filter(id => validTaskIds.includes(id));
 
+        // 4. Ranking via RPC (1 query ringan, logika jalan di Postgres)
+        if (validTaskIds.length > 0) {
+            const { data: rankData } = await supabase.rpc('get_task_rank', {
+                p_user_id: String(user.id),
+                p_task_ids: validTaskIds
+            });
+            window._taskRankPercent = rankData ?? 0;
+        } else {
+            window._taskRankPercent = 0;
+        }
+
         updateProgressUI();
-        applyCurrentFilter(); // Render pertama kali sesuai filter
+        applyCurrentFilter();
     } catch (e) {
         console.error("Load tugas gagal:", e);
     }
@@ -119,24 +129,51 @@ function updateProgressUI() {
         centerEl.innerText = `kamu sudah ngejain ${done} dari ${total} tugas`;
     }
 
-    // 2. Logika Motivasi (URUTAN DIPERBAIKI)
+    // 2. Logika Motivasi
     if (motivEl) {
         let msg = "";
-
-        // Cek dari yang paling tinggi dulu
         if (percent === 100) {
             msg = "dak rajin";
-        }
-        else if (percent > 50) {
+        } else if (percent > 50) {
             msg = "kejaken kabeh kagok";
-        }
-        else {
-            // FIX: Munculkan pesan untuk yang di bawah 50%
+        } else {
             msg = "kejaken tugas na, mun ngarasa entos pencet selesai";
         }
-
         motivEl.innerText = msg;
         motivEl.style.color = themeColor;
+    }
+
+    // 3. Player rank box
+    const rankTextEl = document.getElementById('playerRankText');
+    const rankEmojiEl = document.getElementById('playerRankEmoji');
+    if (rankTextEl) {
+        const rankPct = (typeof window._taskRankPercent !== 'undefined') ? window._taskRankPercent : null;
+        let emoji = '', rankMsg = '';
+
+        if (total === 0) {
+            emoji = '📭';
+            rankMsg = 'belum ada tugas nih';
+        } else if (rankPct === null) {
+            emoji = '⏳';
+            rankMsg = 'menghitung ranking...';
+        } else if (rankPct === 100 || percent === 100) {
+            emoji = '🏆';
+            rankMsg = 'tugas kamu selesai <span style="color:#00eaff; font-size:16px;">99%</span> lebih tinggi daripada orang lain';
+        } else if (rankPct >= 70) {
+            emoji = '🔥';
+            rankMsg = `tugas kamu selesai <span style="color:#0be881; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
+        } else if (rankPct >= 30) {
+            emoji = '⚡';
+            rankMsg = `tugas kamu selesai <span style="color:#ff8c00; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
+        } else if (rankPct > 0) {
+            emoji = '😴';
+            rankMsg = `tugas kamu selesai <span style="color:#ff4757; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
+        } else {
+            emoji = '💀';
+            rankMsg = 'tugas kamu selesai <span style="color:#ff4757; font-size:16px;">0%</span> lebih tinggi daripada orang lain';
+        }
+        if (rankEmojiEl) rankEmojiEl.innerText = emoji;
+        rankTextEl.innerHTML = rankMsg;
     }
 }
 
@@ -232,9 +269,20 @@ async function toggleStatus(e, id, btn) {
             await supabase.from('user_progress').insert({ user_id: user.id, announcement_id: id });
             doneIds.push(id);
         }
+
         // Invalidate cache badge biar daily-card ikut update
         sessionStorage.removeItem(`task_badge_${user.id}`);
         if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
+
+        // Update ranking via RPC
+        const validTaskIds = allTasks.map(t => String(t.id));
+        if (validTaskIds.length > 0) {
+            const { data: rankData } = await supabase.rpc('get_task_rank', {
+                p_user_id: String(user.id),
+                p_task_ids: validTaskIds
+            });
+            window._taskRankPercent = rankData ?? 0;
+        }
 
         updateProgressUI();
         applyCurrentFilter();
@@ -257,9 +305,9 @@ function applyCurrentFilter() {
                 normalize(b.subject_id).includes(s) || normalize(b.big_title).includes(s)
             );
 
-            if (aIsDeadline && !bIsDeadline) return -1; // a naik
-            if (!aIsDeadline && bIsDeadline) return 1;  // b naik
-            return 0; // Tetap urut terbaru (created_at DESC)
+            if (aIsDeadline && !bIsDeadline) return -1;
+            if (!aIsDeadline && bIsDeadline) return 1;
+            return 0;
         });
 
         renderTasks(filtered);
@@ -283,7 +331,6 @@ function filterTasks(type, btn) {
 
 // ── SHORTCUTS ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    // Ctrl+Enter → buka menu picker (kalau admin & form belum kebuka)
     if (e.ctrlKey && e.key === 'Enter') {
         const pickerOpen = !document.getElementById('tugasPickerOverlay')?.classList.contains('hidden');
         const formOpen = !document.getElementById('tugasFormOverlay')?.classList.contains('hidden');
@@ -298,20 +345,13 @@ document.addEventListener('keydown', e => {
 
 // ── CLICK OUTSIDE TO CLOSE ────────────────────────────────────────
 document.addEventListener('click', e => {
-    // Picker overlay
     const picker = document.getElementById('tugasPickerOverlay');
     if (picker && !picker.classList.contains('hidden')) {
-        if (e.target === picker) {
-            picker.classList.add('hidden');
-        }
+        if (e.target === picker) picker.classList.add('hidden');
     }
 
-    // Form overlay
     const form = document.getElementById('tugasFormOverlay');
     if (form && !form.classList.contains('hidden')) {
-        if (e.target === form) {
-            form.classList.add('hidden');
-            // Draft sengaja tidak dihapus
-        }
+        if (e.target === form) form.classList.add('hidden');
     }
 });

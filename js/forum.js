@@ -1,53 +1,68 @@
-let openTopicId = null;
-let forumChannel = null;        // Simpan referensi channel biar bisa di-unsubscribe
-const repliesCache = {};        // Cache balasan per topic { topicId: [data] }
+// js/forum.js — IG/TikTok comment style
+let forumChannel = null;
+let activeTopicId = null;
+let activeTopicReplyCount = 0;
 
-document.addEventListener('DOMContentLoaded', initForum);
-
-async function initForum() {
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
     const user = getUser();
     if (!user) { window.location.href = 'index'; return; }
 
-    loadTopics();
-    setupRealtimeChannel(user);
-}
+    // Set avatar di comment input bar
+    const avatarEl = document.getElementById('commentUserAvatar');
+    if (avatarEl) avatarEl.src = user.avatar_url || 'icons/profpicture.png';
 
-// ==========================================
-// REALTIME — dengan filter class_id & cleanup
-// ==========================================
-function setupRealtimeChannel(user) {
-    if (forumChannel) {
-        forumChannel.unsubscribe();
-        forumChannel = null;
-    }
+    // Enter kirim komentar
+    document.getElementById('commentInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); }
+    });
 
-    forumChannel = supabase
-        .channel('forum_realtime')
+    // Swipe down drawer untuk tutup
+    setupDrawerSwipe();
+
+    loadFeed();
+    setupRealtime();
+});
+
+// ─────────────────────────────────────────
+// REALTIME
+// ─────────────────────────────────────────
+function setupRealtime() {
+    if (forumChannel) { forumChannel.unsubscribe(); forumChannel = null; }
+
+    forumChannel = supabase.channel('forum_realtime')
         .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'forum_topics',
+            event: 'INSERT', schema: 'public', table: 'forum_topics',
             filter: `class_id=eq.${getEffectiveClassId()}`
-        }, () => {
-            loadTopics();
+        }, () => loadFeed())
+        .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'forum_replies'
+        }, payload => {
+            // Update comment count badge di post card
+            const tid = String(payload.new.topic_id);
+            const badge = document.getElementById(`comment-count-${tid}`);
+            if (badge) badge.innerText = parseInt(badge.innerText || '0') + 1;
+
+            // Kalau drawer lagi buka untuk topic ini, append komentar baru langsung
+            if (activeTopicId === tid) {
+                appendCommentRealtime(payload.new);
+            }
         })
         .subscribe();
 }
 
-// Tutup channel saat user tinggalkan halaman
 window.addEventListener('pagehide', () => {
-    if (forumChannel) {
-        forumChannel.unsubscribe();
-        forumChannel = null;
-    }
+    if (forumChannel) { forumChannel.unsubscribe(); forumChannel = null; }
 });
 
-// ==========================================
-// LOAD TOPICS
-// ==========================================
-async function loadTopics() {
+// ─────────────────────────────────────────
+// LOAD FEED
+// ─────────────────────────────────────────
+async function loadFeed() {
     const user = getUser();
-    const container = document.getElementById('forumList');
+    const feed = document.getElementById('forumFeed');
 
     try {
         const { data, error } = await supabase
@@ -58,141 +73,306 @@ async function loadTopics() {
 
         if (error) throw error;
 
-        container.innerHTML = data.length === 0
-            ? '<p style="text-align:center; padding:40px; color:#aaa;">Belum ada diskusi.</p>'
-            : '';
-
-        data.forEach(topic => {
-            const card = document.createElement('div');
-            card.className = 'course-card animate-slide-right';
-            card.innerHTML = `
-        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
-            <img src="${topic.users.avatar_url || 'icons/profpicture.png'}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--accent, #00eaff);">
-            <div>
-                <strong style="display: block; font-size: 14px;">${topic.users.nickname}</strong>
-                <small style="color: #888; font-size: 11px;">${new Date(topic.created_at).toLocaleString('id-ID')}</small>
-            </div>
-        </div>
-        <h3 style="font-size: 18px; margin-bottom: 8px; color: var(--accent, #00eaff);">${topic.title}</h3>
-        <p style="font-size: 14px; color: #ddd; line-height: 1.5;">${topic.content}</p>
-        
-        <div id="replySection-${topic.id}" style="margin-top: 15px; display: none;">
-            <div id="replyList-${topic.id}" style="margin-bottom: 10px; padding-left: 20px; border-left: 2px solid rgba(0, 234, 255, 0.2);"></div>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="inputReply-${topic.id}" class="glass-input" placeholder="Tulis balasan..." style="font-size: 13px; padding: 8px;">
-                <button onclick="sendReply('${topic.id}')" class="btn-glass-save" style="flex: 0; padding: 0 15px;">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-
-        <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-            <button class="btn-tool" onclick="toggleReplies('${topic.id}')">
-                <i class="fa-solid fa-comments"></i> Balasan
-            </button>
-        </div>
-    `;
-            container.appendChild(card);
-        });
-    } catch (err) { console.error(err); }
-}
-
-// ==========================================
-// REPLIES — dengan cache sederhana
-// ==========================================
-async function toggleReplies(topicId) {
-    const section = document.getElementById(`replySection-${topicId}`);
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        if (repliesCache[topicId]) {
-            renderReplies(topicId, repliesCache[topicId]);
-        } else {
-            loadReplies(topicId);
+        if (!data || data.length === 0) {
+            feed.innerHTML = `
+                <div class="forum-empty">
+                    <i class="fa-regular fa-comments"></i>
+                    <p>Belum ada diskusi.<br>Jadi yang pertama posting!</p>
+                </div>`;
+            return;
         }
-    } else {
-        section.style.display = 'none';
+
+        // Ambil reply count semua topic sekaligus
+        const topicIds = data.map(t => t.id);
+        const { data: replyCounts } = await supabase
+            .from('forum_replies')
+            .select('topic_id')
+            .in('topic_id', topicIds);
+
+        const countMap = {};
+        (replyCounts || []).forEach(r => {
+            countMap[r.topic_id] = (countMap[r.topic_id] || 0) + 1;
+        });
+
+        feed.innerHTML = '';
+        data.forEach(topic => renderPost(topic, user, countMap[topic.id] || 0));
+
+    } catch (err) {
+        console.error('loadFeed error:', err);
     }
 }
 
-async function loadReplies(topicId) {
-    const list = document.getElementById(`replyList-${topicId}`);
-    list.innerHTML = '<small style="color:#888;">Memuat balasan...</small>';
+function renderPost(topic, user, commentCount) {
+    const feed = document.getElementById('forumFeed');
+    const isOwner = String(topic.user_id) === String(user.id) || user.role === 'super_admin' || user.role === 'class_admin';
+    const timeStr = timeAgo(topic.created_at);
+    const avatar = topic.users?.avatar_url || 'icons/profpicture.png';
+    const name = topic.users?.nickname || 'Anonim';
+
+    const card = document.createElement('div');
+    card.className = 'forum-post animate-pop-in';
+    card.id = `post-${topic.id}`;
+    card.innerHTML = `
+        <div class="post-header">
+            <img class="post-avatar" src="${avatar}" onerror="this.src='icons/profpicture.png'">
+            <div class="post-meta">
+                <div class="post-username">${name}</div>
+                <div class="post-time">${timeStr}</div>
+            </div>
+            ${isOwner ? `<button class="post-delete-btn" onclick="deleteTopic('${topic.id}')" title="Hapus">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>` : ''}
+        </div>
+        <div class="post-title">${escHtml(topic.title)}</div>
+        <div class="post-body">${escHtml(topic.content)}</div>
+        <div class="post-actions">
+            <button class="action-btn" onclick="openCommentDrawer('${topic.id}', '${escAttr(topic.title)}')">
+                <i class="fa-regular fa-comment"></i>
+                <span id="comment-count-${topic.id}">${commentCount}</span> komentar
+            </button>
+        </div>
+    `;
+    feed.appendChild(card);
+}
+
+// ─────────────────────────────────────────
+// COMMENT DRAWER
+// ─────────────────────────────────────────
+async function openCommentDrawer(topicId, topicTitle) {
+    activeTopicId = String(topicId);
+
+    document.getElementById('drawerTitle').innerText = `Komentar`;
+    document.getElementById('commentList').innerHTML = `<div class="comment-loading"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
+    document.getElementById('commentInput').value = '';
+
+    document.getElementById('commentBackdrop').classList.add('show');
+    document.getElementById('commentDrawer').classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    await loadComments(topicId);
+    setTimeout(() => document.getElementById('commentInput')?.focus(), 350);
+}
+
+function closeCommentDrawer() {
+    activeTopicId = null;
+    document.getElementById('commentBackdrop').classList.remove('show');
+    document.getElementById('commentDrawer').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+async function loadComments(topicId) {
+    const user = getUser();
+    const list = document.getElementById('commentList');
 
     const { data, error } = await supabase
         .from('forum_replies')
-        .select('*, users(nickname)')
+        .select('*, users(nickname, avatar_url)')
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
 
-    if (error) return;
+    if (error) { list.innerHTML = '<div class="comment-loading">Gagal memuat.</div>'; return; }
 
-    repliesCache[topicId] = data;
-    renderReplies(topicId, data);
+    if (!data || data.length === 0) {
+        list.innerHTML = `<div class="forum-empty" style="padding:40px 0;">
+            <i class="fa-regular fa-comment" style="font-size:28px;"></i>
+            <p>Belum ada komentar.<br>Mulai dulu!</p>
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = '';
+    data.forEach(reply => list.appendChild(buildCommentEl(reply, user)));
+    list.scrollTop = list.scrollHeight;
 }
 
-function renderReplies(topicId, data) {
-    const list = document.getElementById(`replyList-${topicId}`);
-    if (!list) return;
+function buildCommentEl(reply, user) {
+    const isOwner = user && (String(reply.user_id) === String(user.id) || user.role === 'super_admin' || user.role === 'class_admin');
+    const avatar = reply.users?.avatar_url || 'icons/profpicture.png';
+    const name = reply.users?.nickname || 'Anonim';
 
-    list.innerHTML = data.length === 0
-        ? '<small style="color:#666;">Belum ada balasan.</small>'
-        : '';
-
-    data.forEach(r => {
-        const div = document.createElement('div');
-        div.style = 'margin-bottom: 10px; font-size: 13px;';
-        div.innerHTML = `<b style="color: var(--accent, #00eaff);">${r.users.nickname}:</b> <span style="color: #ddd;">${r.content}</span>`;
-        list.appendChild(div);
-    });
+    const div = document.createElement('div');
+    div.className = 'comment-item';
+    div.id = `reply-${reply.id}`;
+    div.innerHTML = `
+        <img class="comment-avatar" src="${avatar}" onerror="this.src='icons/profpicture.png'">
+        <div class="comment-body">
+            <div class="comment-name">${name}</div>
+            <div class="comment-text">${escHtml(reply.content)}</div>
+            <div class="comment-time">${timeAgo(reply.created_at)}</div>
+        </div>
+        ${isOwner ? `<button class="comment-delete" onclick="deleteComment('${reply.id}')" title="Hapus">
+            <i class="fa-solid fa-trash-can"></i>
+        </button>` : ''}
+    `;
+    return div;
 }
 
-async function sendReply(topicId) {
-    const input = document.getElementById(`inputReply-${topicId}`);
+async function appendCommentRealtime(newReply) {
+    // Fetch user detail untuk reply baru
+    const { data: replyWithUser } = await supabase
+        .from('forum_replies')
+        .select('*, users(nickname, avatar_url)')
+        .eq('id', newReply.id)
+        .single();
+
+    if (!replyWithUser) return;
+
+    const user = getUser();
+    const list = document.getElementById('commentList');
+    const emptyEl = list.querySelector('.forum-empty');
+    if (emptyEl) emptyEl.remove();
+
+    list.appendChild(buildCommentEl(replyWithUser, user));
+    list.scrollTop = list.scrollHeight;
+}
+
+// ─────────────────────────────────────────
+// SEND COMMENT
+// ─────────────────────────────────────────
+async function sendComment() {
+    if (!activeTopicId) return;
+    const input = document.getElementById('commentInput');
+    const btn = document.getElementById('commentSendBtn');
     const content = input.value.trim();
     if (!content) return;
 
     const user = getUser();
+    btn.disabled = true;
+    input.disabled = true;
+
     const { error } = await supabase.from('forum_replies').insert({
-        topic_id: topicId,
+        topic_id: activeTopicId,
         user_id: user.id,
         content: content
     });
 
     if (!error) {
         input.value = '';
-        delete repliesCache[topicId];
-        loadReplies(topicId);
+        // Update count badge
+        const badge = document.getElementById(`comment-count-${activeTopicId}`);
+        if (badge) badge.innerText = parseInt(badge.innerText || '0') + 1;
+    } else {
+        showPopup('Gagal kirim komentar', 'error');
+    }
+
+    btn.disabled = false;
+    input.disabled = false;
+    input.focus();
+}
+
+// ─────────────────────────────────────────
+// DELETE
+// ─────────────────────────────────────────
+async function deleteTopic(topicId) {
+    if (!confirm('Hapus diskusi ini?')) return;
+    const { error } = await supabase.from('forum_topics').delete().eq('id', topicId);
+    if (!error) {
+        document.getElementById(`post-${topicId}`)?.remove();
+        showPopup('Diskusi dihapus', 'success');
+    } else {
+        showPopup('Gagal hapus', 'error');
     }
 }
 
-// ==========================================
-// POST TOPIC BARU
-// ==========================================
+async function deleteComment(replyId) {
+    if (!confirm('Hapus komentar ini?')) return;
+    const { error } = await supabase.from('forum_replies').delete().eq('id', replyId);
+    if (!error) {
+        const el = document.getElementById(`reply-${replyId}`);
+        el?.remove();
+        // Update count badge
+        if (activeTopicId) {
+            const badge = document.getElementById(`comment-count-${activeTopicId}`);
+            if (badge) badge.innerText = Math.max(0, parseInt(badge.innerText || '0') - 1);
+        }
+    } else {
+        showPopup('Gagal hapus komentar', 'error');
+    }
+}
+
+// ─────────────────────────────────────────
+// POST NEW TOPIC
+// ─────────────────────────────────────────
 async function postNewTopic() {
     const user = getUser();
     const title = document.getElementById('topicTitle').value.trim();
     const content = document.getElementById('topicContent').value.trim();
 
-    if (!title || !content) {
-        showPopup('Judul dan konten wajib diisi!', 'error');
-        return;
-    }
+    if (!title || !content) { showPopup('Judul dan isi wajib diisi!', 'error'); return; }
 
-    try {
-        const { error } = await supabase.from('forum_topics').insert({
-            user_id: user.id,
-            class_id: getEffectiveClassId(),
-            title: title,
-            content: content
-        });
+    const btn = document.querySelector('.compose-box .btn-glass-save');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
 
-        if (error) throw error;
+    const { error } = await supabase.from('forum_topics').insert({
+        user_id: user.id,
+        class_id: getEffectiveClassId(),
+        title: title,
+        content: content
+    });
 
-        showPopup('Diskusi berhasil diposting!', 'success');
+    if (!error) {
+        showPopup('Diskusi diposting!', 'success');
         document.getElementById('topicTitle').value = '';
         document.getElementById('topicContent').value = '';
-        loadTopics();
-    } catch (err) {
-        showPopup('Gagal posting: ' + err.message, 'error');
+        loadFeed();
+    } else {
+        showPopup('Gagal posting: ' + error.message, 'error');
     }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Posting';
+}
+
+// ─────────────────────────────────────────
+// SWIPE DOWN TO CLOSE DRAWER
+// ─────────────────────────────────────────
+function setupDrawerSwipe() {
+    const drawer = document.getElementById('commentDrawer');
+    let startY = 0, isDragging = false;
+
+    drawer.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+    }, { passive: true });
+
+    drawer.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0) drawer.style.transform = `translateY(${dy}px)`;
+    }, { passive: true });
+
+    drawer.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const dy = e.changedTouches[0].clientY - startY;
+        drawer.style.transform = '';
+        if (dy > 100) closeCommentDrawer();
+    });
+}
+
+// ─────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────
+function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return 'baru saja';
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} menit lalu`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} jam lalu`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d} hari lalu`;
+    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'");
 }

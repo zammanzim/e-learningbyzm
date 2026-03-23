@@ -260,7 +260,7 @@
         // -- UI --
         function updateProfileUI(user) {
             if (document.getElementById('name')) document.getElementById('name').innerText = user.full_name || user.nickname;
-            if (document.getElementById('uname')) document.getElementById('uname').innerText = `@${user.username}`;
+            if (document.getElementById('uname')) document.getElementById('uname').innerText = `@${user.username || user.short_name}`;
             if (document.getElementById('pp')) document.getElementById('pp').src = user.avatar_url || '../icons/profpicture.png';
         }
 
@@ -358,7 +358,7 @@
             else ucapanEl.innerText = "gapapa dibawah 50, yang penting jujur.";
 
             document.getElementById('peringkat').innerHTML =
-                `Peringkat di kelas sendiri: <span style="color:${color}; font-size:1.3em; font-weight:bold;">#${myIndex + 1}</span>`;
+                `Peringkat: <span style="color:${color}; font-size:1.3em; font-weight:bold;">#${myIndex + 1}</span>`;
 
             // Tabel per-mapel
             const tbody = document.getElementById('personalTableBody');

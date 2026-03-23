@@ -13,7 +13,7 @@
     <script src="js/visitor.js" defer></script>
     <script src="js/subject-manager.js" defer></script>
     <script src="js/theme.js"></script>
-<link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/checklist.png" type="image/png">
 </head>
@@ -59,16 +59,11 @@
                 <small style="font-size: 10px;">*Pencet tombol "Selesai?" biar tugas yang sudah dan belum tersortir
                     rapi, dan untuk menghargai dev.</small>
 
-                <h3 style="margin: 10px 0;">Keterangan</h3>
-                <div class="tugasket1">DEADLINE</div>
-                <p>Besok / Sekarang Dikumpulkan</p>
-                <div class="tugasket2">TUGAS</div>
-                <p>Masih Beberapa Hari Lagi Dikumpulkannya</p>
-                <div class="tugasket3">SELESAI</div>
-                <p>Sudah Selesai</p>
-
-                <p style="margin-top: 15px; font-size: 12px">Note: Tugas yang deadline bakal di prioritaskan atau ada
-                    diatas di tab "YANG BELUM SELESAI", jadi kalo tugas nya udah pencet tandai selesai.</p>
+                <div id="playerRankBox"
+                    style="margin-top: 10px; text-align: center; padding: 14px 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                    <div id="playerRankEmoji" style="font-size: 28px; margin-bottom: 6px;"></div>
+                    <p id="playerRankText" style="margin: 0; font-size: 13px; font-weight: 700; line-height: 1.5;"></p>
+                </div>
             </div>
         </div>
 
