@@ -99,6 +99,19 @@ async function renderVisitorStats() {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
 
+    // Tampilkan skeleton dulu saat popup dibuka
+    const listEl = document.getElementById("visitorList");
+    if (listEl) {
+        listEl.innerHTML = Array.from({ length: 5 }, () => `
+            <div class="visitor-item">
+                <div class="dc-skel" style="width:30px; height:30px; border-radius:50%; flex-shrink:0;"></div>
+                <div style="flex:1; margin-left:10px;">
+                    <div class="dc-skel" style="height:12px; width:${60 + Math.floor(Math.random() * 60)}px; margin-bottom:6px; border-radius:6px;"></div>
+                    <div class="dc-skel" style="height:10px; width:${80 + Math.floor(Math.random() * 50)}px; border-radius:6px;"></div>
+                </div>
+            </div>`).join('');
+    }
+
     try {
         const { data, error } = await supabase
             .from('visitors')
@@ -119,10 +132,10 @@ async function renderVisitorStats() {
         const popupCount = document.getElementById("popupVisitorCount");
         if (popupCount) popupCount.innerText = uniqueMap.size;
 
-        const listEl = document.getElementById("visitorList");
-        if (!listEl) return;
+        const listEl2 = document.getElementById("visitorList");
+        if (!listEl2) return;
 
-        listEl.innerHTML = uniqueMap.size === 0
+        listEl2.innerHTML = uniqueMap.size === 0
             ? '<p style="color:#aaa; font-size:12px;">Belum ada yang mampir.</p>'
             : '';
 
@@ -142,7 +155,7 @@ async function renderVisitorStats() {
                         • ${new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                 </div>`;
-            listEl.appendChild(item);
+            listEl2.appendChild(item);
         });
 
         const adminActions = document.querySelector(".admin-actions");

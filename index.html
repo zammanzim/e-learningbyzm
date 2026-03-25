@@ -13,7 +13,7 @@
     <script src="js/visitor.js" defer></script>
     <script src="js/subject-manager.js" defer></script>
     <script src="js/theme.js"></script>
-<link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/announcements.png" type="image/png">
     <style>
@@ -71,20 +71,21 @@
 
     <script>
         window.onload = async () => {
-            // Kasih waktu 1 detik biar spinner-nya sempet muter
+            // Selalu tampilkan spinner 1 detik dulu baru redirect
             setTimeout(async () => {
                 try {
-                    // Ambil sesi lewat client yang sudah di-import di atas
+                    const localUser = localStorage.getItem("user");
+                    if (localUser && JSON.parse(localUser)) {
+                        window.location.href = 'announcements';
+                        return;
+                    }
                     const { data: { session } } = await supabase.auth.getSession();
-
-                    // Redirect sesuai kondisi login
                     if (session) {
                         window.location.href = 'announcements';
                     } else {
                         window.location.href = 'login';
                     }
                 } catch (e) {
-                    // Kalau error/jaringan bapuk, lempar ke login aja
                     window.location.href = 'login';
                 }
             }, 1000);

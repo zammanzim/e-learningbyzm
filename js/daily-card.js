@@ -4,6 +4,114 @@ window.isDailyEditing = false;
 window.editingDay = null;
 window.currentViewDay = null;
 
+// ==========================================
+// SKELETON LOADER
+// ==========================================
+(function injectSkeletonStyles() {
+    if (document.getElementById('dc-skeleton-style')) return;
+    const style = document.createElement('style');
+    style.id = 'dc-skeleton-style';
+    style.textContent = `
+        .dc-skel {
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0.05) 25%,
+                rgba(255,255,255,0.12) 50%,
+                rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: dc-shimmer 1.4s infinite;
+            border-radius: 8px;
+        }
+        @keyframes dc-shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .dc-skel-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-radius: 0.6rem;
+            overflow: hidden;
+            margin-bottom: 1.4rem;
+        }
+        .dc-skel-card {
+            height: 54px;
+            border-radius: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .dc-skel-card:last-child {
+            border-bottom: none;
+        }
+        .dc-skel-section-title {
+            height: 14px;
+            width: 140px;
+            margin-bottom: 12px;
+        }
+        .dc-skel-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .dc-skel-time  { height: 12px; width: 52px; flex-shrink: 0; }
+        .dc-skel-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .dc-skel-subj  { height: 12px; flex: 1; }
+        .dc-skel-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .dc-skel-pill  { height: 30px; width: 80px; border-radius: 20px; }
+        .dc-skel-header-badge { height: 18px; width: 70px; border-radius: 6px; margin-bottom: 8px; }
+        .dc-skel-header-day   { height: 26px; width: 120px; border-radius: 8px; margin-bottom: 6px; }
+        .dc-skel-header-date  { height: 13px; width: 160px; border-radius: 6px; }
+    `;
+    document.head.appendChild(style);
+})();
+
+function _buildDailyCardSkeleton() {
+    const rows = [1, 2, 3, 4, 5].map(() => `
+        <div class="dc-skel-row">
+            <div class="dc-skel dc-skel-time"></div>
+            <div class="dc-skel dc-skel-dot"></div>
+            <div class="dc-skel dc-skel-subj" style="width:${50 + Math.floor(Math.random() * 35)}%"></div>
+        </div>`).join('');
+
+    return `
+        <div class="dc-skel-cards">
+            <div class="dc-skel dc-skel-card"></div>
+            <div class="dc-skel dc-skel-card"></div>
+            <div class="dc-skel dc-skel-card"></div>
+        </div>
+        <div class="final-spacer"></div>
+        <div class="final-section">
+            <div class="dc-skel dc-skel-section-title"></div>
+            ${rows}
+        </div>
+        <div class="final-spacer"></div>
+        <div class="final-section">
+            <div class="dc-skel dc-skel-section-title" style="width:110px; margin-bottom:12px;"></div>
+            <div class="dc-skel-pills">
+                <div class="dc-skel dc-skel-pill"></div>
+                <div class="dc-skel dc-skel-pill" style="width:65px;"></div>
+                <div class="dc-skel dc-skel-pill" style="width:90px;"></div>
+            </div>
+        </div>
+    `;
+}
+
+function _buildHeaderSkeleton() {
+    return `
+        <div>
+            <div class="dc-skel dc-skel-header-badge"></div>
+            <div class="dc-skel dc-skel-header-day"></div>
+            <div class="dc-skel dc-skel-header-date"></div>
+        </div>
+        <div class="header-right-group">
+            <div class="task-shortcut-box" style="opacity:0.4; pointer-events:none;">
+                <div class="task-badge" style="display:none;">0</div>
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>TUGAS</span>
+            </div>
+        </div>`;
+}
+
+
 // Helper aman baca user dari localStorage
 function _getDailyUser() {
     try {
@@ -11,6 +119,35 @@ function _getDailyUser() {
     } catch (e) {
         return null;
     }
+}
+
+// ==========================================
+// CACHE HELPERS
+// ==========================================
+const DAILY_CACHE_TTL = 30 * 60 * 1000; // 30 menit
+
+function _dcCacheGet(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > DAILY_CACHE_TTL) return null; // expired
+        return data;
+    } catch (e) { return null; }
+}
+
+function _dcCacheSet(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
+    } catch (e) { /* storage penuh, skip */ }
+}
+
+function _dcCacheInvalidate(classId) {
+    try {
+        const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu', 'CUSTOM'];
+        days.forEach(d => localStorage.removeItem(`dc_sched_${classId}_${d}`));
+        localStorage.removeItem(`dc_config_${classId}`);
+    } catch (e) { }
 }
 
 async function initDailyCard() {
@@ -48,7 +185,7 @@ async function initDailyCard() {
                 <div class="final-header animate-pop-in" id="dcHeader"></div>
 
                 <div id="dcContentFinal" class="final-content">
-                    <p style="text-align:center; padding:20px;">Mengambil Data...</p>
+                    ${_buildDailyCardSkeleton()}
                 </div>
 
                 <div id="dailyConfigPanel" class="config-panel">
@@ -95,31 +232,39 @@ async function initDailyCard() {
     }
 
     const headerEl = document.getElementById('dcHeader');
-    headerEl.innerHTML = `
-    <div>
-        <span class="final-badge" id="lblBadge">LOADING</span>
-        <h2 class="final-day editable-text" id="lblHari" oninput="autoSaveDraft()">...</h2>
-        <small class="final-date" id="lblTanggal">...</small>
-    </div>
+    headerEl.innerHTML = _buildHeaderSkeleton();
 
-    <div class="header-right-group">
-        ${editActionHTML}
-        <div class="task-shortcut-box" onclick="window.location.href='tugas'">
-            <div id="taskBadge" class="task-badge">0</div>
-            <i class="fa-solid fa-clipboard-list"></i>
-            <span>TUGAS</span>
-        </div>
-    </div>`;
+    // Kalau card sudah ada (re-render), tampilkan skeleton sementara data diambil
+    const contentEl2 = document.getElementById('dcContentFinal');
+    if (contentEl2 && !window.isDailyEditing) {
+        contentEl2.innerHTML = _buildDailyCardSkeleton();
+    }
 
     // --- 2. LOGIC DATA ---
     try {
         if (!window.currentConfig) {
-            let { data: config } = await supabase.from('daily_config').select('*').eq('class_id', CLASS_ID).single();
-            if (!config) {
-                config = { class_id: CLASS_ID, is_auto: true, is_custom: false, forced_day: 'Senin' };
-                await supabase.from('daily_config').insert(config);
+            const configCacheKey = `dc_config_${CLASS_ID}`;
+            const cachedConfig = _dcCacheGet(configCacheKey);
+
+            if (cachedConfig) {
+                // Pakai cache dulu, fetch di background buat update
+                window.currentConfig = cachedConfig;
+                supabase.from('daily_config').select('*').eq('class_id', CLASS_ID).single()
+                    .then(({ data }) => {
+                        if (data) {
+                            _dcCacheSet(configCacheKey, data);
+                            window.currentConfig = data;
+                        }
+                    }).catch(() => { });
+            } else {
+                let { data: config } = await supabase.from('daily_config').select('*').eq('class_id', CLASS_ID).single();
+                if (!config) {
+                    config = { class_id: CLASS_ID, is_auto: true, is_custom: false, forced_day: 'Senin' };
+                    await supabase.from('daily_config').insert(config);
+                }
+                _dcCacheSet(configCacheKey, config);
+                window.currentConfig = config;
             }
-            window.currentConfig = config;
         }
 
         const config = window.currentConfig;
@@ -157,6 +302,22 @@ async function initDailyCard() {
         // Set data-day buat warna per hari via CSS var
         if (cardEl) cardEl.dataset.day = displayDay;
 
+        // Render header real (ganti skeleton)
+        headerEl.innerHTML = `
+        <div>
+            <span class="final-badge" id="lblBadge">LOADING</span>
+            <h2 class="final-day editable-text" id="lblHari" oninput="autoSaveDraft()">...</h2>
+            <small class="final-date" id="lblTanggal">...</small>
+        </div>
+        <div class="header-right-group">
+            ${editActionHTML}
+            <div class="task-shortcut-box" onclick="window.location.href='tugas'">
+                <div id="taskBadge" class="task-badge">0</div>
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>TUGAS</span>
+            </div>
+        </div>`;
+
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;
         badgeEl.className = `final-badge ${displayDay === 'CUSTOM' ? 'bg-custom' : (labelWaktu === 'BESOK' ? 'bg-orange' : 'bg-cyan')}`;
@@ -193,8 +354,29 @@ async function initDailyCard() {
         if (window.dailyDrafts[displayDay]) {
             scheduleData = window.dailyDrafts[displayDay];
         } else {
-            const { data } = await supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).single();
-            scheduleData = data;
+            const schedCacheKey = `dc_sched_${CLASS_ID}_${displayDay}`;
+            const cachedSched = _dcCacheGet(schedCacheKey);
+
+            if (cachedSched) {
+                // Tampilkan cache langsung, fetch fresh di background
+                scheduleData = cachedSched;
+                supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).single()
+                    .then(({ data }) => {
+                        if (data) _dcCacheSet(schedCacheKey, data);
+                    }).catch(() => { });
+            } else {
+                try {
+                    const { data } = await supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).single();
+                    scheduleData = data;
+                    if (data) _dcCacheSet(schedCacheKey, data);
+                } catch (err) {
+                    // Fallback ke cache expired kalau network error
+                    try {
+                        const raw = localStorage.getItem(`dc_sched_${CLASS_ID}_${displayDay}`);
+                        if (raw) scheduleData = JSON.parse(raw).data;
+                    } catch (e) { }
+                }
+            }
         }
 
         const contentEl = document.getElementById('dcContentFinal');
@@ -466,6 +648,10 @@ window.saveAllDrafts = async function () {
         window.dailyDrafts = {};
         window.isDailyEditing = false;
         window.editingDay = null;
+
+        // Invalidate cache biar data baru langsung ke-fetch pas reload
+        _dcCacheInvalidate(CLASS_ID);
+        window.currentConfig = null; // force re-fetch config juga
 
         if (typeof showPopup === 'function') showPopup('Data Tersimpan!', 'success');
         initDailyCard();
