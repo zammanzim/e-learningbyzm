@@ -102,7 +102,7 @@ async function renderVisitorStats() {
     // Tampilkan skeleton dulu saat popup dibuka
     const listEl = document.getElementById("visitorList");
     if (listEl) {
-        listEl.innerHTML = Array.from({ length: 5 }, () => `
+        listEl.innerHTML = Array.from({ length: 3 }, () => `
             <div class="visitor-item">
                 <div class="dc-skel" style="width:30px; height:30px; border-radius:50%; flex-shrink:0;"></div>
                 <div style="flex:1; margin-left:10px;">

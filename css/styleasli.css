@@ -2923,10 +2923,6 @@ input:checked+.slider:before {
     border-color: #ff4757;
 }
 
-.glass-card-effect {
-    /* Kosong — class masih dipake JS tapi styling dari .daily-card-final */
-}
-
 .dashboard-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 1.0625rem;
