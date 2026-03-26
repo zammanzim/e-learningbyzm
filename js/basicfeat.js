@@ -125,7 +125,7 @@ function syncHeaderProfile() {
         const headerPP = document.getElementById("headerPP");
 
         if (headerName) {
-            headerName.innerText = `Hai, ${user.short_name || user.nickname || 'User'}`;
+            headerName.innerText = `Haii, ${user.short_name || user.nickname || 'User'}`;
         }
         if (headerPP) {
             headerPP.src = user.avatar_url || "../icons/profpicture.png";

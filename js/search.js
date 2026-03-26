@@ -9,7 +9,7 @@ async function initSearchPage() {
     // Sync Header Profil
     const headerName = document.getElementById('headerName');
     const headerPP = document.getElementById('headerPP');
-    if (headerName) headerName.innerText = `Hai, ${user.full_name.split(' ')[0]}`;
+    if (headerName) headerName.innerText = `Haii, ${user.full_name.split(' ')[0]}`;
     if (headerPP) headerPP.src = user.avatar_url || 'images/default-avatar.png';
 
     // Munculkan semua akun pas pertama buka

@@ -37,7 +37,7 @@ const UIComponents = {
                 "></div>
             </div>
             <div class="profile-box" id="profileTrigger">
-                <span id="headerName">Hai, ...</span>
+                <span id="headerName">Haii, ...</span>
                 <img id="headerPP" class="header-pp">
                 <i class="fa-solid fa-caret-down"></i>
             </div>

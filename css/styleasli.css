@@ -147,7 +147,7 @@ header {
     padding: 0.5312rem 0;
     border-radius: 0.5312rem;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    width: 9.0312rem;
+    width: 12.0312rem;
     display: block;
     opacity: 0;
     transform: translateY(-8px);
@@ -823,7 +823,7 @@ i {
 
 .glass-input {
     width: 100%;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.6375rem;
     padding: 0.7438rem;

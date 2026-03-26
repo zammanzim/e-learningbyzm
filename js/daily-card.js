@@ -202,7 +202,7 @@ async function initDailyCard() {
                     <div id="normalConfigArea">
                         <div style="margin-bottom:15px;">
                             <label style="font-size:12px; display:block; margin-bottom:5px;">Edit Hari Apa?</label>
-                            <select id="editDaySelector" class="glass-input" style="width:100%; padding:8px; border-radius:8px; background:rgba(255,255,255,0.1); color:white; border:none;">
+                            <select id="editDaySelector" class="glass-input">
                                 <option value="Senin">Senin</option>
                                 <option value="Selasa">Selasa</option>
                                 <option value="Rabu">Rabu</option>

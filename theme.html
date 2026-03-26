@@ -12,7 +12,6 @@
     <script src="js/auth.js"></script>
     <script src="js/visitor.js"></script>
     <script src="js/theme.js"></script>
-    <script src="js/i18n.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/accountsetting.png" type="image/png">
@@ -414,24 +413,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="course-card">
-                <h2 class="section-title"><i class="fa-solid fa-language"></i> Bahasa / Language</h2>
-                <div class="font-row" id="langRow">
-                    <div class="font-opt lang-opt" data-lang="id" onclick="pickLang(this)">
-                        <span class="size-label" style="font-size:1.4rem;">🇮🇩</span>
-                        <span class="size-desc">Indonesia</span>
-                    </div>
-                    <div class="font-opt lang-opt" data-lang="en" onclick="pickLang(this)">
-                        <span class="size-label" style="font-size:1.4rem;">🇬🇧</span>
-                        <span class="size-desc">English</span>
-                    </div>
-                    <div class="font-opt lang-opt" data-lang="ja" onclick="pickLang(this)">
-                        <span class="size-label" style="font-size:1.4rem;">🇯🇵</span>
-                        <span class="size-desc">日本語</span>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- KANAN -->
@@ -506,7 +487,6 @@
             bg: saved.bg || BG_PRESETS[0].grad,
             accent: saved.accent || '#00eaff',
             fontSize: saved.fontSize || 'sedang',
-            lang: saved.lang || 'id',
         };
 
         // Build BG Grid
@@ -590,15 +570,6 @@
             el.classList.toggle('selected', el.dataset.size === state.fontSize);
         });
 
-        function pickLang(el) {
-            document.querySelectorAll('.lang-opt').forEach(x => x.classList.remove('selected'));
-            el.classList.add('selected');
-            state.lang = el.dataset.lang;
-        }
-        document.querySelectorAll('.lang-opt').forEach(el => {
-            el.classList.toggle('selected', el.dataset.lang === state.lang);
-        });
-
         // Preview
         function applyPreview() {
             const a = state.accent;
@@ -649,7 +620,7 @@
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.nickname) document.getElementById('pvName').textContent = `Haii, ${user.nickname}!`;
         if (user.short_name && document.getElementById('headerName'))
-            document.getElementById('headerName').textContent = `Hai, ${user.short_name}`;
+            document.getElementById('headerName').textContent = `Haii, ${user.short_name}`;
 
         // Mapping hex accent → nama warna
         const ACCENT_NAMES = {
