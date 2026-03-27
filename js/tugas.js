@@ -6,6 +6,38 @@ let doneIds = [];
 let deadlineSubjects = [];
 let currentFilter = 'all';
 
+// ==========================================
+// CACHE HELPERS
+// ==========================================
+const TUGAS_CACHE_TTL_TASKS    = 5  * 60 * 1000; // 5 menit — list tugas
+const TUGAS_CACHE_TTL_DONE     = 2  * 60 * 1000; // 2 menit — progress user
+const TUGAS_CACHE_TTL_SCHED    = 30 * 60 * 1000; // 30 menit — jadwal deadline
+const TUGAS_CACHE_TTL_RANK     = 2  * 60 * 1000; // 2 menit — rank
+
+function _tugasCacheGet(key, ttl) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > ttl) return null; // expired
+        return data;
+    } catch (e) { return null; }
+}
+
+function _tugasCacheSet(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
+    } catch (e) { /* storage penuh, skip */ }
+}
+
+function _tugasCacheInvalidate(userId, classId) {
+    try {
+        if (userId)  localStorage.removeItem(`tugas_done_${userId}`);
+        if (userId)  localStorage.removeItem(`tugas_rank_${userId}`);
+        if (classId) localStorage.removeItem(`tugas_tasks_${classId}`);
+    } catch (e) { }
+}
+
 // Fungsi Normalisasi: Hapus spasi & tanda baca (biar "B. Inggris" == "binggris")
 function normalize(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
@@ -41,33 +73,85 @@ async function initTugas() {
             targetDayName = days[tomorrow.getDay()];
         }
 
-        // 2. Ambil Jadwal dari Daily Card untuk filter Deadline
-        const { data: sched } = await supabase
-            .from('daily_schedules')
-            .select('lessons')
-            .eq('class_id', getEffectiveClassId())
-            .eq('day_name', targetDayName)
-            .single();
+        const classId = getEffectiveClassId();
+        const schedCacheKey  = `tugas_sched_${classId}_${targetDayName}`;
+        const tasksCacheKey  = `tugas_tasks_${classId}`;
+        const doneCacheKey   = `tugas_done_${user.id}`;
+        const rankCacheKey   = `tugas_rank_${user.id}`;
 
-        if (sched && sched.lessons) {
-            deadlineSubjects = sched.lessons.split(',')
-                .map(item => {
-                    const parts = item.split('-');
-                    const name = parts.length > 1 ? parts[1] : parts[0];
-                    return normalize(name.trim());
-                });
+        // ── 2. JADWAL DEADLINE (cache 30 menit) ──────────────────────
+        const cachedSched = _tugasCacheGet(schedCacheKey, TUGAS_CACHE_TTL_SCHED);
+        if (cachedSched !== null) {
+            deadlineSubjects = cachedSched;
+            // Refresh di background
+            supabase.from('daily_schedules').select('lessons')
+                .eq('class_id', classId).eq('day_name', targetDayName).single()
+                .then(({ data }) => {
+                    if (data?.lessons) {
+                        const fresh = _parseDeadlineSubjects(data.lessons);
+                        _tugasCacheSet(schedCacheKey, fresh);
+                    }
+                }).catch(() => {});
+        } else {
+            const { data: sched } = await supabase
+                .from('daily_schedules').select('lessons')
+                .eq('class_id', classId).eq('day_name', targetDayName).single();
+            if (sched?.lessons) {
+                deadlineSubjects = _parseDeadlineSubjects(sched.lessons);
+                _tugasCacheSet(schedCacheKey, deadlineSubjects);
+            }
         }
 
-        // 3. Ambil Tugas + Progress user secara paralel
+        // ── 3. TASKS + DONE — coba dari cache dulu, render langsung ──
+        const cachedTasks = _tugasCacheGet(tasksCacheKey, TUGAS_CACHE_TTL_TASKS);
+        const cachedDone  = _tugasCacheGet(doneCacheKey,  TUGAS_CACHE_TTL_DONE);
+
+        if (cachedTasks !== null && cachedDone !== null) {
+            // Tampilkan cache LANGSUNG biar kelihatan cepat
+            allTasks = cachedTasks;
+            const validIds = allTasks.map(t => String(t.id));
+            doneIds  = cachedDone.filter(id => validIds.includes(id));
+
+            // Coba pakai rank dari cache juga
+            const cachedRank = _tugasCacheGet(rankCacheKey, TUGAS_CACHE_TTL_RANK);
+            window._taskRankPercent = cachedRank ?? 0;
+
+            updateProgressUI();
+            applyCurrentFilter();
+
+            // Fetch fresh di background (stale-while-revalidate)
+            _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey });
+        } else {
+            // Tidak ada cache — fetch langsung (first load / expired)
+            await _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey, render: true });
+        }
+    } catch (e) {
+        console.error("Load tugas gagal:", e);
+    }
+}
+
+// ── Helper: parse lessons string → deadlineSubjects array ────────
+function _parseDeadlineSubjects(lessons) {
+    return lessons.split(',')
+        .map(item => {
+            const trimmed = item.trim();
+            const name = trimmed.replace(/^\d+[-_]\s*/, '');
+            return normalize(name.trim());
+        })
+        .filter(s => s.length > 0);
+}
+
+// ── Helper: fetch fresh dari DB, update cache & UI ───────────────
+async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey, render = false }) {
+    try {
         const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
             supabase.from('subject_announcements')
                 .select('*')
-                .eq('class_id', getEffectiveClassId())
+                .eq('class_id', classId)
                 .neq('subject_id', 'announcements')
                 .neq('subject_id', 'kisi-kisi')
                 .neq('subject_id', 'akuhutajakus')
                 .order('created_at', { ascending: false }),
-
             supabase.from('user_progress')
                 .select('announcement_id')
                 .eq('user_id', user.id)
@@ -75,28 +159,40 @@ async function initTugas() {
 
         if (err1 || err2) throw (err1 || err2);
 
-        allTasks = tasks || [];
-
-        const validTaskIds = allTasks.map(t => String(t.id));
-        doneIds = (progress || [])
+        const freshTasks = tasks || [];
+        const validIds   = freshTasks.map(t => String(t.id));
+        const freshDone  = (progress || [])
             .map(p => String(p.announcement_id))
-            .filter(id => validTaskIds.includes(id));
+            .filter(id => validIds.includes(id));
 
-        // 4. Ranking via RPC (1 query ringan, logika jalan di Postgres)
-        if (validTaskIds.length > 0) {
+        // Simpan ke cache
+        _tugasCacheSet(tasksCacheKey, freshTasks);
+        _tugasCacheSet(doneCacheKey,  freshDone);
+
+        // Update global state
+        allTasks = freshTasks;
+        doneIds  = freshDone;
+
+        // Rank
+        if (validIds.length > 0) {
             const { data: rankData } = await supabase.rpc('get_task_rank', {
                 p_user_id: String(user.id),
-                p_task_ids: validTaskIds
+                p_task_ids: validIds
             });
-            window._taskRankPercent = rankData ?? 0;
+            const rank = rankData ?? 0;
+            window._taskRankPercent = rank;
+            _tugasCacheSet(rankCacheKey, rank);
         } else {
             window._taskRankPercent = 0;
+            _tugasCacheSet(rankCacheKey, 0);
         }
 
+        // Kalau render = false (background refresh), cukup update UI kalau ada perubahan
         updateProgressUI();
         applyCurrentFilter();
     } catch (e) {
-        console.error("Load tugas gagal:", e);
+        if (render) console.error("Fetch tugas gagal:", e);
+        // Kalau background fetch gagal, diam saja (sudah ada cache di layar)
     }
 }
 
@@ -186,10 +282,13 @@ function renderTasks(data) {
 
     data.forEach((item) => {
         const isDone = doneIds.includes(String(item.id));
-        const isDeadline = !isDone && deadlineSubjects.some(s =>
-            normalize(item.subject_id).includes(s) ||
-            normalize(item.big_title).includes(s)
-        );
+        const isDeadline = !isDone && deadlineSubjects.some(s => {
+            const normSubject = normalize(item.subject_id);
+            const normTitle = normalize(item.big_title);
+            // Cek dua arah: subject mengandung jadwal ATAU jadwal mengandung subject
+            return normSubject.includes(s) || s.includes(normSubject) ||
+                   normTitle.includes(s) || s.includes(normTitle);
+        });
 
         const autoNumber = total - allTasks.indexOf(item);
         let statusClass = isDone ? 'task-green-done' : (isDeadline ? 'task-red-deadline' : 'task-yellow-pending');
@@ -270,7 +369,9 @@ async function toggleStatus(e, id, btn) {
             doneIds.push(id);
         }
 
-        // Invalidate cache badge biar daily-card ikut update
+        // Invalidate cache done & rank biar next load fresh
+        const classId = getEffectiveClassId();
+        _tugasCacheInvalidate(user.id, null); // tasks cache tetap valid, cukup done+rank
         sessionStorage.removeItem(`task_badge_${user.id}`);
         if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
 
@@ -298,12 +399,18 @@ function applyCurrentFilter() {
 
         // Urutkan: Deadline (merah) dulu, baru Pending (kuning)
         filtered.sort((a, b) => {
-            const aIsDeadline = deadlineSubjects.some(s =>
-                normalize(a.subject_id).includes(s) || normalize(a.big_title).includes(s)
-            );
-            const bIsDeadline = deadlineSubjects.some(s =>
-                normalize(b.subject_id).includes(s) || normalize(b.big_title).includes(s)
-            );
+            const aIsDeadline = deadlineSubjects.some(s => {
+                const normSubject = normalize(a.subject_id);
+                const normTitle = normalize(a.big_title);
+                return normSubject.includes(s) || s.includes(normSubject) ||
+                       normTitle.includes(s) || s.includes(normTitle);
+            });
+            const bIsDeadline = deadlineSubjects.some(s => {
+                const normSubject = normalize(b.subject_id);
+                const normTitle = normalize(b.big_title);
+                return normSubject.includes(s) || s.includes(normSubject) ||
+                       normTitle.includes(s) || s.includes(normTitle);
+            });
 
             if (aIsDeadline && !bIsDeadline) return -1;
             if (!aIsDeadline && bIsDeadline) return 1;

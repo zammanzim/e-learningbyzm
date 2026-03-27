@@ -572,21 +572,35 @@ window.toggleDailyEditMode = function () {
 };
 
 function applyEditMode(isActive) {
+    // Cek apakah sekarang sedang melihat mode CUSTOM
+    const isCustomMode = (window.currentViewDay === 'CUSTOM');
+
     document.querySelectorAll('.editable-text').forEach(el => {
-        el.contentEditable = isActive;
-        el.classList.toggle('editable-active', isActive);
-        // FIX BUG ENTER: Blokir Enter supaya tidak bikin baris baru di contenteditable
-        if (isActive) {
+        let canEditElement = isActive;
+
+        // Logika tambahan: Jika elemen adalah ID lblHari, 
+        // dia cuma boleh edit kalau isActive DAN sedang mode CUSTOM
+        if (el.id === 'lblHari' && !isCustomMode) {
+            canEditElement = false;
+        }
+
+        el.contentEditable = canEditElement;
+        el.classList.toggle('editable-active', canEditElement);
+
+        // Pasang listener Enter hanya jika elemen memang boleh di-edit
+        if (canEditElement) {
             el.addEventListener('keydown', _blockEnterKey);
         } else {
             el.removeEventListener('keydown', _blockEnterKey);
         }
     });
 
-    // Null-safe: elemen ini hanya ada setelah scheduleData ter-render
+    // Elemen kontrol lainnya (tombol tambah baris & config panel) 
+    // tetap muncul selama mode edit aktif
     const btnLesson = document.getElementById('btnAddLesson');
     const btnPicket = document.getElementById('btnAddPicket');
     const configPanel = document.getElementById('dailyConfigPanel');
+
     if (btnLesson) btnLesson.style.display = isActive ? 'block' : 'none';
     if (btnPicket) btnPicket.style.display = isActive ? 'block' : 'none';
     if (configPanel) configPanel.style.display = isActive ? 'block' : 'none';

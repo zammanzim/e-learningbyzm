@@ -363,13 +363,20 @@ const SubjectApp = {
 
         card.innerHTML = `
         <input type="file" class="photo-input" accept="image/*" style="display:none;">
-        <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50; display:none; flex-direction:column; gap:4px;">
-            <button class="move-up-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'up')" style="background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.3); color:var(--accent, #00eaff); width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-chevron-up" style="pointer-events:none;"></i>
-            </button>
-            <button class="move-down-btn" onclick="SubjectApp.moveCard(this.closest('.course-card'), 'down')" style="background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.3); color:var(--accent, #00eaff); width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-chevron-down" style="pointer-events:none;"></i>
-            </button>
+        <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50;">
+            <div class="drag-grip" title="Tahan & geser untuk pindah urutan" style="
+                background:rgba(0,234,255,0.15);
+                border:1px solid rgba(0,234,255,0.3);
+                color:var(--accent,#00eaff);
+                width:32px; height:32px;
+                border-radius:8px;
+                cursor:grab;
+                display:flex; align-items:center; justify-content:center;
+                user-select:none; -webkit-user-select:none;
+                touch-action:none;
+            ">
+                <i class="fa-solid fa-grip-vertical" style="pointer-events:none; font-size:14px;"></i>
+            </div>
         </div>
         <button class="${btnClass}"><i class="${iconClass}"></i></button>
         ${photoHTML}
@@ -454,6 +461,7 @@ const SubjectApp = {
 
             if (this.state.editMode) {
                 card.classList.add("editable-mode");
+                card.draggable = true;
                 fields.forEach(f => {
                     f.contentEditable = "true";
                     f.style.pointerEvents = "auto";
@@ -479,7 +487,7 @@ const SubjectApp = {
         if (!this.state.editMode) {
             await this.saveAllChanges();
         } else {
-            this.updateArrowButtons();
+            this._initDragDrop();
         }
 
         this.state.isToggling = false;
@@ -538,6 +546,240 @@ const SubjectApp = {
             toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
             toggleBtn.disabled = false;
         }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // DRAG & DROP — Desktop (HTML5) + Mobile (Touch)
+    // ═══════════════════════════════════════════════════════════════
+
+    _initDragDrop() {
+        const container = document.getElementById('announcements');
+        if (!container || container._dragInitialized) return;
+        container._dragInitialized = true;
+
+        // ── AUTO-SCROLL shared state ─────────────────────────────────
+        // Scroll otomatis saat drag/touch dekat tepi viewport
+        const SCROLL_ZONE  = 80;  // px dari tepi mulai scroll
+        const SCROLL_SPEED = 12;  // px per frame
+        let   scrollRafId  = null;
+        let   cursorY      = 0;   // diupdate oleh dragover / touchmove
+
+        const startAutoScroll = () => {
+            if (scrollRafId) return;
+            const loop = () => {
+                const vh = window.innerHeight;
+                if (cursorY < SCROLL_ZONE) {
+                    // Dekat atas — scroll ke atas
+                    const speed = SCROLL_SPEED * (1 - cursorY / SCROLL_ZONE);
+                    window.scrollBy(0, -speed);
+                } else if (cursorY > vh - SCROLL_ZONE) {
+                    // Dekat bawah — scroll ke bawah
+                    const speed = SCROLL_SPEED * (1 - (vh - cursorY) / SCROLL_ZONE);
+                    window.scrollBy(0, speed);
+                }
+                scrollRafId = requestAnimationFrame(loop);
+            };
+            scrollRafId = requestAnimationFrame(loop);
+        };
+
+        const stopAutoScroll = () => {
+            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
+        };
+
+        // ── DESKTOP: HTML5 Drag & Drop ──────────────────────────────
+        let dragSrcCard = null;
+        let gripClicked = false;
+
+        container.addEventListener('mousedown', (e) => {
+            gripClicked = !!e.target.closest('.drag-grip');
+        });
+
+        container.addEventListener('dragstart', (e) => {
+            if (!gripClicked) { e.preventDefault(); return; }
+            const card = e.target.closest('.course-card');
+            if (!card) return;
+            dragSrcCard = card;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', card.dataset.id);
+            requestAnimationFrame(() => {
+                card.style.opacity = '0.35';
+                card.style.outline = '2px dashed rgba(0,234,255,0.4)';
+            });
+            startAutoScroll();
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!dragSrcCard) return;
+            e.dataTransfer.dropEffect = 'move';
+            cursorY = e.clientY; // update posisi cursor buat auto-scroll
+            const target = e.target.closest('.course-card');
+            if (target && target !== dragSrcCard) {
+                this._showDropIndicator(container, target, e.clientY);
+            }
+        });
+
+        container.addEventListener('dragleave', (e) => {
+            if (!container.contains(e.relatedTarget)) this._removeDropIndicator();
+        });
+
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            stopAutoScroll();
+            if (!dragSrcCard) return;
+            const indicator = document.getElementById('_dnd_indicator');
+            if (indicator) container.insertBefore(dragSrcCard, indicator);
+            this._cleanupDrag(dragSrcCard);
+            dragSrcCard = null;
+            gripClicked = false;
+        });
+
+        container.addEventListener('dragend', () => {
+            stopAutoScroll();
+            if (dragSrcCard) this._cleanupDrag(dragSrcCard);
+            dragSrcCard = null;
+            gripClicked = false;
+        });
+
+        // ── MOBILE: Touch Drag ──────────────────────────────────────
+        // Pakai transform (GPU) bukan left/top, posisi di-update lewat rAF
+        // supaya smooth tanpa jank
+        let touchCard     = null;
+        let touchClone    = null;
+        let touchOffX     = 0, touchOffY = 0;
+        let cloneInitLeft = 0, cloneInitTop = 0;
+        let latestTouchX  = 0, latestTouchY = 0;
+        let moveRafId     = null;
+        let lastTarget    = null; // throttle indicator DOM mutation
+
+        const updateClonePos = () => {
+            if (!touchClone) return;
+            const dx = latestTouchX - touchOffX - cloneInitLeft;
+            const dy = latestTouchY - touchOffY - cloneInitTop;
+            touchClone.style.transform = `translate(${dx}px, ${dy}px) scale(1.03) rotate(1.2deg)`;
+            moveRafId = null;
+        };
+
+        container.addEventListener('touchstart', (e) => {
+            const grip = e.target.closest('.drag-grip');
+            if (!grip) return;
+            const card = grip.closest('.course-card');
+            if (!card) return;
+
+            touchCard = card;
+            lastTarget = null;
+            const touch = e.touches[0];
+            const rect  = card.getBoundingClientRect();
+
+            // Offset jari relatif ke sudut kiri-atas card
+            touchOffX    = touch.clientX - rect.left;
+            touchOffY    = touch.clientY - rect.top;
+            cloneInitLeft = rect.left;
+            cloneInitTop  = rect.top;
+            latestTouchX  = touch.clientX;
+            latestTouchY  = touch.clientY;
+
+            // Clone — posisi awal pakai left/top sekali, lalu gerak via transform
+            touchClone = card.cloneNode(true);
+            touchClone.id = '_dnd_clone';
+            touchClone.style.cssText = `
+                position: fixed;
+                width: ${rect.width}px;
+                left: ${rect.left}px;
+                top: ${rect.top}px;
+                margin: 0;
+                opacity: 0.9;
+                pointer-events: none;
+                z-index: 9999;
+                will-change: transform;
+                box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 2px rgba(0,234,255,0.6);
+                border-radius: 14px;
+                transform: scale(1.03) rotate(1.2deg);
+            `;
+            document.body.appendChild(touchClone);
+            card.style.opacity   = '0.25';
+            card.style.outline   = '2px dashed rgba(0,234,255,0.35)';
+            e.preventDefault();
+            startAutoScroll();
+        }, { passive: false });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!touchCard || !touchClone) return;
+            const touch = e.touches[0];
+            latestTouchX = touch.clientX;
+            latestTouchY = touch.clientY;
+            cursorY      = touch.clientY; // untuk auto-scroll
+
+            // Update posisi clone via rAF (1x per frame, tanpa blocking)
+            if (!moveRafId) moveRafId = requestAnimationFrame(updateClonePos);
+
+            // Cari target card — throttle: hanya kalau jari bergerak >4px
+            touchClone.style.visibility = 'hidden';
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            touchClone.style.visibility = '';
+            const target = el?.closest('.course-card');
+            if (target && target !== touchCard && target !== lastTarget) {
+                lastTarget = target;
+                this._showDropIndicator(container, target, touch.clientY);
+            }
+            e.preventDefault();
+        }, { passive: false });
+
+        const onTouchEnd = () => {
+            stopAutoScroll();
+            if (moveRafId) { cancelAnimationFrame(moveRafId); moveRafId = null; }
+            if (!touchCard) return;
+            const indicator = document.getElementById('_dnd_indicator');
+            if (indicator) container.insertBefore(touchCard, indicator);
+            if (touchClone) { touchClone.remove(); touchClone = null; }
+            this._cleanupDrag(touchCard);
+            touchCard  = null;
+            lastTarget = null;
+        };
+
+        container.addEventListener('touchend',    onTouchEnd);
+        container.addEventListener('touchcancel', onTouchEnd);
+    },
+
+    _showDropIndicator(container, target, clientY) {
+        this._removeDropIndicator();
+        const line = document.createElement('div');
+        line.id = '_dnd_indicator';
+        line.style.cssText = `
+            height: 3px;
+            background: var(--accent, #00eaff);
+            border-radius: 3px;
+            margin: 2px 0;
+            box-shadow: 0 0 10px var(--accent, #00eaff), 0 0 20px rgba(0,234,255,0.4);
+            pointer-events: none;
+            animation: dndPulse 0.8s ease-in-out infinite alternate;
+        `;
+        // Inject keyframe sekali
+        if (!document.getElementById('_dnd_style')) {
+            const s = document.createElement('style');
+            s.id = '_dnd_style';
+            s.textContent = `@keyframes dndPulse { from { opacity:0.6; } to { opacity:1; } }`;
+            document.head.appendChild(s);
+        }
+        const rect = target.getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) {
+            container.insertBefore(line, target);
+        } else {
+            target.after(line);
+        }
+    },
+
+    _removeDropIndicator() {
+        document.getElementById('_dnd_indicator')?.remove();
+    },
+
+    _cleanupDrag(card) {
+        if (card) {
+            card.style.opacity = '';
+            card.style.outline = '';
+        }
+        this._removeDropIndicator();
+        this.updateDisplayOrder();
     },
 
     moveCard(card, direction) {
