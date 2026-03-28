@@ -310,13 +310,22 @@ async function initDailyCard() {
             <small class="final-date" id="lblTanggal">...</small>
         </div>
         <div class="header-right-group">
-            ${editActionHTML}
             <div class="task-shortcut-box" onclick="window.location.href='tugas'">
                 <div id="taskBadge" class="task-badge">0</div>
                 <i class="fa-solid fa-clipboard-list"></i>
                 <span>TUGAS</span>
             </div>
         </div>`;
+
+        // Inject tombol edit di pojok kanan bawah card (bukan di header)
+        let editBtnEl = document.getElementById('dcEditBtn');
+        if (!editBtnEl) {
+            editBtnEl = document.createElement('div');
+            editBtnEl.id = 'dcEditBtn';
+            editBtnEl.className = 'dc-edit-btn-wrap';
+            cardEl.appendChild(editBtnEl);
+        }
+        editBtnEl.innerHTML = editActionHTML;
 
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;

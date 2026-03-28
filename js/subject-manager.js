@@ -68,11 +68,12 @@ const SubjectApp = {
         if (isAdmin && editControls) {
             editControls.innerHTML = `
                 <div id="adminFabContainer" class="admin-fab-container">
-                    <button id="toggleEditMode" class="fab-main state-edit">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
                     <button id="addAnnouncementBtn" class="fab-add">
                         <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button id="toggleEditMode" class="fab-main state-edit">
+                        <i class="fa-solid fa-pen-to-square fab-icon"></i>
+                        <span class="fab-label">Edit</span>
                     </button>
                 </div>
             `;
@@ -159,8 +160,8 @@ const SubjectApp = {
             // Handle Card Actions
             if (e.target.closest(".delete-btn")) { e.preventDefault(); self.deleteAnnouncement(e.target.closest(".course-card")); }
             if (e.target.closest(".bookmark-btn")) { e.preventDefault(); self.toggleBookmark(e.target.closest(".course-card")); }
-            if (e.target.closest(".card-photo-placeholder")) { e.preventDefault(); self.triggerPhotoUpload(e.target.closest(".course-card")); }
-            if (e.target.closest(".delete-photo-btn")) { e.preventDefault(); self.deletePhoto(e.target.closest(".course-card")); }
+            if (e.target.closest(".camera-btn")) { e.preventDefault(); self.triggerPhotoUpload(e.target.closest(".course-card")); }
+            if (e.target.closest(".delete-photo-btn")) { e.preventDefault(); self.deletePhoto(e.target.closest(".course-card"), e.target.closest(".delete-photo-btn").dataset.url); }
 
             // Handle Task Checklist
             const taskBtn = e.target.closest(".task-btn");
@@ -310,32 +311,15 @@ const SubjectApp = {
         // DEFINISI isAdmin BIAR GAK ERROR "NOT DEFINED"
         const isAdmin = this.state.user && (this.state.user.role === 'class_admin' || this.state.user.role === 'super_admin');
 
-        let photoHTML = "";
-        let photos = [];
-        if (data.photo_url) {
-            if (Array.isArray(data.photo_url)) photos = data.photo_url;
-            else if (typeof data.photo_url === 'string') {
-                try {
-                    if (data.photo_url.startsWith('[')) photos = JSON.parse(data.photo_url);
-                    else photos = [data.photo_url];
-                } catch (e) { photos = [data.photo_url]; }
-            }
-        }
+        const photos = this._parsePhotoUrls(data.photo_url);
 
+        let photoHTML = '';
         if (photos.length > 0) {
-            let gridClass = `grid-${Math.min(photos.length, 4)}`;
-            let imgsHTML = photos.slice(0, 4).map(url => `<img src="${url}" class="photo-item" loading="lazy">`).join('');
-            if (photos.length > 4) {
-                gridClass = 'grid-4';
-                imgsHTML = photos.slice(0, 3).map(url => `<img src="${url}" class="photo-item" loading="lazy">`).join('') +
-                    `<div class="photo-item photo-wrapper"><img src="${photos[3]}" loading="lazy"><div class="more-overlay">+${photos.length - 4}</div></div>`;
-            }
-            photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
+            photoHTML = this._buildPhotoGridHTML(photos);
             card.classList.add('clickable-card');
         } else {
             card.classList.remove('clickable-card');
-            card.style.cursor = "default";
-            photoHTML = `<div class="card-photo-placeholder" style="display:none;"><i class="fa-solid fa-image"></i><p>Klik Upload Foto</p></div>`;
+            card.style.cursor = 'default';
         }
 
         const isSaved = this.state.bookmarks.includes(String(data.id));
@@ -362,7 +346,7 @@ const SubjectApp = {
 </div>`;
 
         card.innerHTML = `
-        <input type="file" class="photo-input" accept="image/*" style="display:none;">
+        <input type="file" class="photo-input" accept="image/*" multiple style="display:none;">
         <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50;">
             <div class="drag-grip" title="Tahan & geser untuk pindah urutan" style="
                 background:rgba(0,234,255,0.15);
@@ -380,14 +364,19 @@ const SubjectApp = {
         </div>
         <button class="${btnClass}"><i class="${iconClass}"></i></button>
         ${photoHTML}
+        <div class="pending-photo-preview" style="display:none; margin-bottom:12px;"></div>
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
         <h4 contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</h4>
         <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${content}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
         
         <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
-            <div style="flex-shrink: 0;">
-                ${taskBtnHTML} 
+            <div style="flex-shrink: 0; display:flex; gap:8px; align-items:center;">
+                ${taskBtnHTML}
+                ${isAdmin ? `
+                <button class="camera-btn" style="display:none; background:rgba(0,234,255,0.12); border:1px solid rgba(0,234,255,0.3); color:var(--accent,#00eaff); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-camera" style="pointer-events:none;"></i>
+                </button>` : ''}
             </div>
             
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1;">
@@ -442,43 +431,44 @@ const SubjectApp = {
             if (this.state.editMode) {
                 container.classList.add("active");
                 toggleBtn.className = "fab-main state-done";
-                toggleBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-check fab-icon"></i><span class="fab-label">Simpan</span>';
             } else {
                 container.classList.remove("active");
                 toggleBtn.className = "fab-main state-edit";
-                toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">Edit</span>';
             }
         }
 
         // 2. UPDATE SEMUA KARTU (UI Mode)
         cards.forEach(card => {
-            const fields = card.querySelectorAll(".editable");
-            const deleteBtn = card.querySelector(".delete-btn");
-            const colorTools = card.querySelector(".card-color-tools");
+            const fields       = card.querySelectorAll(".editable");
+            const deleteBtn    = card.querySelector(".delete-btn");
+            const colorTools   = card.querySelector(".card-color-tools");
             const reorderHandle = card.querySelector(".reorder-handle");
-            const placeholder = card.querySelector(".card-photo-placeholder");
-            const deletePhotoBtn = card.querySelector(".delete-photo-btn");
+            const cameraBtn    = card.querySelector(".camera-btn");
+            const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
 
             if (this.state.editMode) {
                 card.classList.add("editable-mode");
-                card.draggable = true;
+                // draggable diatur dinamis oleh grip mousedown/touchstart — jangan set true di sini
                 fields.forEach(f => {
                     f.contentEditable = "true";
                     f.style.pointerEvents = "auto";
+                    f.style.cursor = "text";
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
                 if (reorderHandle) reorderHandle.style.display = "flex";
-                if (placeholder) placeholder.style.display = "block";
-                if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
+                if (cameraBtn) cameraBtn.style.display = "flex";
+                deletePhotoBtns.forEach(b => b.style.display = "flex");
             } else {
                 card.classList.remove("editable-mode");
-                fields.forEach(f => f.contentEditable = "false");
+                fields.forEach(f => { f.contentEditable = "false"; f.style.cursor = ""; });
                 if (deleteBtn) deleteBtn.style.display = "none";
                 if (colorTools) colorTools.style.display = "none";
                 if (reorderHandle) reorderHandle.style.display = "none";
-                if (placeholder) placeholder.style.display = "none";
-                if (deletePhotoBtn) deletePhotoBtn.style.display = "none";
+                if (cameraBtn) cameraBtn.style.display = "none";
+                deletePhotoBtns.forEach(b => b.style.display = "none");
                 card.draggable = false;
             }
         });
@@ -495,55 +485,100 @@ const SubjectApp = {
 
     async saveAllChanges() {
         const toggleBtn = document.getElementById("toggleEditMode");
-        const originalHTML = toggleBtn.innerHTML; // Simpan icon centang
-
-        // 1. Kasih animasi loading pas proses simpan
-        toggleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        toggleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin fab-icon"></i><span class="fab-label">Menyimpan...</span>';
         toggleBtn.disabled = true;
 
-        // ... (logic ambil data updates kamu tetap sama) ...
         const cards = document.querySelectorAll(".course-card");
-        const updates = Array.from(cards).map((card, index) => {
-            const id = card.dataset.id;
-            const getVal = (f) => card.querySelector(`[data-field="${f}"]`)?.innerText.trim() || "";
-            const getContent = () => card.querySelector(`[data-field="content"]`)?.innerHTML || "";
-
-            return {
-                id: id,
-                display_order: index + 1,
-                big_title: getVal("big_title"),
-                title: getVal("title"),
-                content: getContent(),
-                small: getVal("small"),
-                subject_id: this.state.subjectId,
-                class_id: getEffectiveClassId() || this.state.user.class_id
-            };
-        });
 
         try {
+            // 1. Upload semua foto pending per card sebelum upsert
+            for (const card of cards) {
+                const pending = card._pendingFiles;
+                if (!pending || pending.length === 0) continue;
+
+                const id = card.dataset.id;
+                const ann = this.state.announcements.find(a => String(a.id) === String(id));
+
+                // Existing URLs — parse dulu biar selalu array bersih
+                const existingUrls = this._parsePhotoUrls(ann?.photo_url);
+
+                const newUrls = [];
+                for (const { file, objUrl } of pending) {
+                    try {
+                        const fileName = `${this.state.subjectId}/${id}/${Date.now()}_${file.name}`;
+                        const { error: uploadErr } = await supabase.storage.from('subject-photos').upload(fileName, file);
+                        if (uploadErr) throw uploadErr;
+                        const { data: urlData } = supabase.storage.from('subject-photos').getPublicUrl(fileName);
+                        newUrls.push(urlData.publicUrl);
+                    } catch (err) {
+                        console.error('Upload gagal untuk satu foto:', err);
+                    }
+                    URL.revokeObjectURL(objUrl);
+                }
+
+                // Merge dan simpan ke state
+                const mergedUrls = [...existingUrls, ...newUrls];
+                if (ann) ann.photo_url = mergedUrls;
+
+                // Bersihkan pending
+                card._pendingFiles = [];
+                const preview = card.querySelector('.pending-photo-preview');
+                if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+
+                // Re-render grid langsung di DOM tanpa refresh
+                const oldGrid = card.querySelector('.photo-grid');
+                if (oldGrid) oldGrid.remove();
+                if (mergedUrls.length > 0) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = this._buildPhotoGridHTML(mergedUrls, this.state.editMode);
+                    const newGrid = tempDiv.firstElementChild;
+                    const anchor = card.querySelector('.pending-photo-preview') || card.querySelector('h3');
+                    card.insertBefore(newGrid, anchor);
+                    card.classList.add('clickable-card');
+                    card.style.cursor = '';
+                }
+            }
+
+            // 2. Bangun array updates (sekarang photo_url sudah up-to-date di state)
+            const updates = Array.from(cards).map((card, index) => {
+                const id = card.dataset.id;
+                const ann = this.state.announcements.find(a => String(a.id) === String(id));
+                const getVal = (f) => card.querySelector(`[data-field="${f}"]`)?.innerText.trim() || "";
+                const getContent = () => card.querySelector(`[data-field="content"]`)?.innerHTML || "";
+
+                return {
+                    id,
+                    display_order: index + 1,
+                    big_title: getVal("big_title"),
+                    title: getVal("title"),
+                    content: getContent(),
+                    small: getVal("small"),
+                    photo_url: this._serializePhotoUrls(this._parsePhotoUrls(ann?.photo_url)),
+                    subject_id: this.state.subjectId,
+                    class_id: getEffectiveClassId() || this.state.user.class_id
+                };
+            });
+
             const { error } = await supabase
                 .from("subject_announcements")
                 .upsert(updates, { onConflict: 'id' });
-
             if (error) throw error;
 
-            // 2. Update cache lokal biar urutan & konten gak balik pas reload
+            // 3. Sync state lokal
             updates.forEach(u => {
                 const ann = this.state.announcements.find(a => String(a.id) === String(u.id));
                 if (ann) Object.assign(ann, u);
             });
             try {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
-            } catch (e) { /* ignore storage full */ }
+            } catch (e) {}
 
-            // 3. Berhasil! Balikin tombol ke icon edit
             if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
             showPopup("Gagal simpan data!", "error");
         } finally {
-            // Balikin tombol ke keadaan normal
-            toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+            toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">Edit</span>';
             toggleBtn.disabled = false;
         }
     },
@@ -557,31 +592,30 @@ const SubjectApp = {
         if (!container || container._dragInitialized) return;
         container._dragInitialized = true;
 
-        // ── AUTO-SCROLL shared state ─────────────────────────────────
-        // Scroll otomatis saat drag/touch dekat tepi viewport
-        const SCROLL_ZONE  = 80;  // px dari tepi mulai scroll
-        const SCROLL_SPEED = 12;  // px per frame
-        let   scrollRafId  = null;
-        let   cursorY      = 0;   // diupdate oleh dragover / touchmove
+        // ── AUTO-SCROLL (shared desktop + mobile) ────────────────────
+        const SCROLL_ZONE  = 100;
+        const SCROLL_MAX   = 20;
+        let scrollRafId    = null;
+        let cursorY        = 0;
 
         const startAutoScroll = () => {
             if (scrollRafId) return;
             const loop = () => {
                 const vh = window.innerHeight;
+                let speed = 0;
                 if (cursorY < SCROLL_ZONE) {
-                    // Dekat atas — scroll ke atas
-                    const speed = SCROLL_SPEED * (1 - cursorY / SCROLL_ZONE);
-                    window.scrollBy(0, -speed);
+                    // Quadratic: makin deket ujung makin kenceng
+                    const t = 1 - cursorY / SCROLL_ZONE;
+                    speed = -(SCROLL_MAX * t * t);
                 } else if (cursorY > vh - SCROLL_ZONE) {
-                    // Dekat bawah — scroll ke bawah
-                    const speed = SCROLL_SPEED * (1 - (vh - cursorY) / SCROLL_ZONE);
-                    window.scrollBy(0, speed);
+                    const t = 1 - (vh - cursorY) / SCROLL_ZONE;
+                    speed = SCROLL_MAX * t * t;
                 }
+                if (speed !== 0) window.scrollBy(0, speed);
                 scrollRafId = requestAnimationFrame(loop);
             };
             scrollRafId = requestAnimationFrame(loop);
         };
-
         const stopAutoScroll = () => {
             if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
         };
@@ -592,6 +626,9 @@ const SubjectApp = {
 
         container.addEventListener('mousedown', (e) => {
             gripClicked = !!e.target.closest('.drag-grip');
+            // Set draggable hanya pada card yang grip-nya diklik
+            const card = e.target.closest('.course-card');
+            if (card) card.draggable = gripClicked;
         });
 
         container.addEventListener('dragstart', (e) => {
@@ -612,7 +649,7 @@ const SubjectApp = {
             e.preventDefault();
             if (!dragSrcCard) return;
             e.dataTransfer.dropEffect = 'move';
-            cursorY = e.clientY; // update posisi cursor buat auto-scroll
+            cursorY = e.clientY;
             const target = e.target.closest('.course-card');
             if (target && target !== dragSrcCard) {
                 this._showDropIndicator(container, target, e.clientY);
@@ -629,36 +666,25 @@ const SubjectApp = {
             if (!dragSrcCard) return;
             const indicator = document.getElementById('_dnd_indicator');
             if (indicator) container.insertBefore(dragSrcCard, indicator);
+            dragSrcCard.draggable = false;
             this._cleanupDrag(dragSrcCard);
-            dragSrcCard = null;
-            gripClicked = false;
+            dragSrcCard = null; gripClicked = false;
         });
 
         container.addEventListener('dragend', () => {
             stopAutoScroll();
-            if (dragSrcCard) this._cleanupDrag(dragSrcCard);
-            dragSrcCard = null;
-            gripClicked = false;
+            if (dragSrcCard) {
+                this._cleanupDrag(dragSrcCard);
+                dragSrcCard.draggable = false;
+            }
+            dragSrcCard = null; gripClicked = false;
         });
 
-        // ── MOBILE: Touch Drag ──────────────────────────────────────
-        // Pakai transform (GPU) bukan left/top, posisi di-update lewat rAF
-        // supaya smooth tanpa jank
-        let touchCard     = null;
-        let touchClone    = null;
-        let touchOffX     = 0, touchOffY = 0;
-        let cloneInitLeft = 0, cloneInitTop = 0;
-        let latestTouchX  = 0, latestTouchY = 0;
-        let moveRafId     = null;
-        let lastTarget    = null; // throttle indicator DOM mutation
-
-        const updateClonePos = () => {
-            if (!touchClone) return;
-            const dx = latestTouchX - touchOffX - cloneInitLeft;
-            const dy = latestTouchY - touchOffY - cloneInitTop;
-            touchClone.style.transform = `translate(${dx}px, ${dy}px) scale(1.03) rotate(1.2deg)`;
-            moveRafId = null;
-        };
+        // ── MOBILE: Touch Drag — lightweight ghost ──────────────────
+        let touchCard  = null;
+        let ghost      = null;
+        let lastTarget = null;
+        let ghostInitX = 0, ghostInitY = 0;
 
         container.addEventListener('touchstart', (e) => {
             const grip = e.target.closest('.drag-grip');
@@ -666,57 +692,63 @@ const SubjectApp = {
             const card = grip.closest('.course-card');
             if (!card) return;
 
-            touchCard = card;
+            touchCard  = card;
             lastTarget = null;
             const touch = e.touches[0];
             const rect  = card.getBoundingClientRect();
 
-            // Offset jari relatif ke sudut kiri-atas card
-            touchOffX    = touch.clientX - rect.left;
-            touchOffY    = touch.clientY - rect.top;
-            cloneInitLeft = rect.left;
-            cloneInitTop  = rect.top;
-            latestTouchX  = touch.clientX;
-            latestTouchY  = touch.clientY;
-
-            // Clone — posisi awal pakai left/top sekali, lalu gerak via transform
-            touchClone = card.cloneNode(true);
-            touchClone.id = '_dnd_clone';
-            touchClone.style.cssText = `
+            // Ghost ringan: hanya ukuran + judul, bukan clone full DOM
+            const title = card.querySelector('[data-field="big_title"]')?.innerText || '';
+            ghost = document.createElement('div');
+            ghost.style.cssText = `
                 position: fixed;
-                width: ${rect.width}px;
                 left: ${rect.left}px;
                 top: ${rect.top}px;
-                margin: 0;
-                opacity: 0.9;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                background: rgba(0,20,30,0.85);
+                border: 2px solid rgba(0,234,255,0.7);
+                border-radius: 14px;
+                box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,234,255,0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 pointer-events: none;
                 z-index: 9999;
                 will-change: transform;
-                box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 2px rgba(0,234,255,0.6);
-                border-radius: 14px;
-                transform: scale(1.03) rotate(1.2deg);
+                color: rgba(255,255,255,0.85);
+                font-size: 15px;
+                font-weight: 600;
+                padding: 0 20px;
+                text-align: center;
+                overflow: hidden;
             `;
-            document.body.appendChild(touchClone);
-            card.style.opacity   = '0.25';
-            card.style.outline   = '2px dashed rgba(0,234,255,0.35)';
+            ghost.innerHTML = `<i class="fa-solid fa-grip-vertical" style="margin-right:10px; color:rgba(0,234,255,0.8);"></i>${title}`;
+            document.body.appendChild(ghost);
+
+            ghostInitX = rect.left - (touch.clientX - rect.left);
+            ghostInitY = rect.top  - (touch.clientY - rect.top);
+
+            card.style.opacity    = '0.3';
+            card.style.transition = 'opacity 0.15s';
             e.preventDefault();
             startAutoScroll();
         }, { passive: false });
 
         container.addEventListener('touchmove', (e) => {
-            if (!touchCard || !touchClone) return;
+            if (!touchCard || !ghost) return;
             const touch = e.touches[0];
-            latestTouchX = touch.clientX;
-            latestTouchY = touch.clientY;
-            cursorY      = touch.clientY; // untuk auto-scroll
+            cursorY = touch.clientY;
 
-            // Update posisi clone via rAF (1x per frame, tanpa blocking)
-            if (!moveRafId) moveRafId = requestAnimationFrame(updateClonePos);
+            // Gerak ghost via transform — zero reflow
+            const dx = touch.clientX + ghostInitX;
+            const dy = touch.clientY + ghostInitY;
+            ghost.style.transform = `translate(${dx}px, ${dy}px)`;
 
-            // Cari target card — throttle: hanya kalau jari bergerak >4px
-            touchClone.style.visibility = 'hidden';
+            // Drop indicator — throttle via lastTarget
+            ghost.style.visibility = 'hidden';
             const el = document.elementFromPoint(touch.clientX, touch.clientY);
-            touchClone.style.visibility = '';
+            ghost.style.visibility = '';
             const target = el?.closest('.course-card');
             if (target && target !== touchCard && target !== lastTarget) {
                 lastTarget = target;
@@ -727,14 +759,14 @@ const SubjectApp = {
 
         const onTouchEnd = () => {
             stopAutoScroll();
-            if (moveRafId) { cancelAnimationFrame(moveRafId); moveRafId = null; }
             if (!touchCard) return;
             const indicator = document.getElementById('_dnd_indicator');
             if (indicator) container.insertBefore(touchCard, indicator);
-            if (touchClone) { touchClone.remove(); touchClone = null; }
+            if (ghost) { ghost.remove(); ghost = null; }
+            touchCard.style.opacity    = '';
+            touchCard.style.transition = '';
             this._cleanupDrag(touchCard);
-            touchCard  = null;
-            lastTarget = null;
+            touchCard = null; lastTarget = null;
         };
 
         container.addEventListener('touchend',    onTouchEnd);
@@ -820,80 +852,169 @@ const SubjectApp = {
         });
     },
 
+    // Bangun innerHTML photo-grid dari array URL — dipakai di createCardElement & re-render setelah delete
+    _buildPhotoGridHTML(photos, editMode = false) {
+        if (!photos || photos.length === 0) return '';
+        const deleteBtnStyle = editMode
+            ? 'display:flex; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;'
+            : 'display:none; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;';
+
+        const makeSlot = (url) => `
+            <div class="photo-item photo-wrapper" style="position:relative;">
+                <img src="${url}" loading="lazy">
+                <button class="delete-photo-btn" data-url="${url}" style="${deleteBtnStyle}">
+                    <i class="fa-solid fa-trash" style="pointer-events:none;"></i>
+                </button>
+            </div>`;
+
+        let gridClass, imgsHTML;
+
+        if (photos.length <= 4) {
+            // Semua foto tampil penuh, semua bisa dihapus
+            gridClass = `grid-${photos.length}`;
+            imgsHTML  = photos.map(makeSlot).join('');
+        } else {
+            // Slot 1-3: foto biasa + tombol hapus
+            // Slot 4: foto ke-4 tampil, sisanya jadi overlay "+N"
+            gridClass = 'grid-4';
+            imgsHTML  = photos.slice(0, 3).map(makeSlot).join('');
+            // Slot 4 tetap bisa dihapus, overlay cuma teks
+            imgsHTML += `
+            <div class="photo-item photo-wrapper" style="position:relative;">
+                <img src="${photos[3]}" loading="lazy">
+                <div class="more-overlay" style="pointer-events:none;">+${photos.length - 4}</div>
+                <button class="delete-photo-btn" data-url="${photos[3]}" style="${deleteBtnStyle}">
+                    <i class="fa-solid fa-trash" style="pointer-events:none;"></i>
+                </button>
+            </div>`;
+        }
+
+        return `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
+    },
+
+
+    // apapun formatnya (string JSON, plain string, array, null)
+    _parsePhotoUrls(val) {
+        if (!val) return [];
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+            const trimmed = val.trim();
+            if (trimmed.startsWith('[')) {
+                try { return JSON.parse(trimmed); } catch (e) {}
+            }
+            return [trimmed];
+        }
+        return [];
+    },
+
+    // Supabase menyimpan photo_url sebagai teks JSON — selalu kirim sebagai string
+    _serializePhotoUrls(arr) {
+        if (!arr || arr.length === 0) return null;
+        return JSON.stringify(arr);
+    },
+
     triggerPhotoUpload(card) {
         const fileInput = card.querySelector(".photo-input");
+        if (!fileInput) return;
+        fileInput.value = ''; // reset biar bisa pilih file yang sama
         fileInput.click();
         fileInput.onchange = async (e) => {
-            let file = e.target.files[0];
-            if (!file || !file.type.startsWith('image/')) return;
-            try { file = await this.compressImage(file); } catch (err) { }
-            if (file.size > 5 * 1024 * 1024) { showPopup("Max 5MB", "error"); return; }
-            await this.uploadPhoto(card, file);
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+
+            if (!card._pendingFiles) card._pendingFiles = [];
+
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) continue;
+                try { file = await this.compressImage(file); } catch (err) {}
+                if (file.size > 5 * 1024 * 1024) { showPopup("Max 5MB per foto", "error"); continue; }
+                const objUrl = URL.createObjectURL(file);
+                card._pendingFiles.push({ file, objUrl });
+            }
+
+            this._renderPendingPreviews(card);
         };
     },
 
-    async uploadPhoto(card, file) {
+    _renderPendingPreviews(card) {
+        const container = card.querySelector('.pending-photo-preview');
+        if (!container) return;
+        const pending = card._pendingFiles || [];
+        if (pending.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
+
+        container.style.display = 'flex';
+        container.style.cssText += 'flex-wrap:wrap; gap:6px; margin-bottom:12px;';
+        container.innerHTML = pending.map((p, i) => `
+            <div style="position:relative; width:72px; height:72px; border-radius:8px; overflow:hidden; border:2px solid rgba(0,234,255,0.5);">
+                <img src="${p.objUrl}" style="width:100%; height:100%; object-fit:cover;">
+                <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;">
+                    <i class="fa-solid fa-clock" style="color:#00eaff; font-size:10px;"></i>
+                    <span style="font-size:8px; color:#00eaff; font-weight:700;">PENDING</span>
+                </div>
+                <button data-pending-index="${i}" style="position:absolute; top:2px; right:2px; background:rgba(200,0,0,0.85); border:none; color:white; width:18px; height:18px; border-radius:4px; cursor:pointer; font-size:9px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa-solid fa-xmark" style="pointer-events:none;"></i>
+                </button>
+            </div>
+        `).join('');
+
+        // Handle hapus pending per item
+        container.querySelectorAll('button[data-pending-index]').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.pendingIndex);
+                const removed = card._pendingFiles.splice(idx, 1)[0];
+                if (removed?.objUrl) URL.revokeObjectURL(removed.objUrl);
+                this._renderPendingPreviews(card);
+            };
+        });
+    },
+
+    async deletePhoto(card, urlToDelete) {
+        if (!await showPopup("Hapus foto ini?", "confirm")) return;
         const id = card.dataset.id;
+        const ann = this.state.announcements.find(a => a.id == id);
+
         try {
-            const fileName = `${this.state.subjectId}/${id}/${Date.now()}_${file.name}`;
-            const { error: uploadError } = await supabase.storage.from('subject-photos').upload(fileName, file);
-            if (uploadError) throw uploadError;
+            // Hapus dari storage
+            if (urlToDelete?.includes('/subject-photos/')) {
+                const path = decodeURIComponent(urlToDelete.split('/subject-photos/')[1]);
+                await supabase.storage.from('subject-photos').remove([path]);
+            }
 
-            const { data: urlData } = supabase.storage.from('subject-photos').getPublicUrl(fileName);
-            const { error: updateError } = await supabase.from("subject_announcements").update({ photo_url: urlData.publicUrl }).eq("id", id);
-            if (updateError) throw updateError;
+            // Parse dulu, filter, lalu serialize kembali ke string
+            const currentUrls = this._parsePhotoUrls(ann?.photo_url);
+            const newUrls     = currentUrls.filter(u => u !== urlToDelete);
+            const newVal      = this._serializePhotoUrls(newUrls);
 
-            this.updateCardPhoto(card, urlData.publicUrl);
-        } catch (err) { console.error(err); showPopup("Gagal upload", "error"); }
-    },
+            await supabase.from("subject_announcements").update({ photo_url: newVal }).eq("id", id);
 
-    updateCardPhoto(card, photoUrl) {
-        let photoContainer = card.querySelector(".card-photo-container");
-        const placeholder = card.querySelector(".card-photo-placeholder");
-        if (placeholder) {
-            placeholder.remove();
-            photoContainer = document.createElement("div");
-            photoContainer.className = "card-photo-container";
-            photoContainer.style.position = "relative";
-            photoContainer.style.marginBottom = "15px";
-            photoContainer.innerHTML = `
-                <img src="${photoUrl}" class="card-photo">
-                <button class="delete-photo-btn" style="${this.state.editMode ? 'display:block;' : 'display:none;'} position:absolute; top:5px; right:5px; background:rgba(255,0,0,0.8); color:white; border:none; padding:5px; border-radius:5px;"><i class="fa-solid fa-trash"></i></button>
-            `;
-            card.insertBefore(photoContainer, card.querySelector("h3"));
-        } else if (photoContainer) {
-            photoContainer.querySelector(".card-photo").src = photoUrl;
+            // Update state
+            if (ann) ann.photo_url = newUrls.length === 0 ? null : newUrls;
+
+            // Re-render grid dari awal biar urutan & overlay selalu bener
+            const oldGrid = card.querySelector('.photo-grid');
+            if (oldGrid) oldGrid.remove();
+
+            if (newUrls.length > 0) {
+                const newGridHTML = this._buildPhotoGridHTML(newUrls, this.state.editMode);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newGridHTML;
+                const newGrid = tempDiv.firstElementChild;
+                // Sisipkan sebelum pending-photo-preview atau h3
+                const anchor = card.querySelector('.pending-photo-preview') || card.querySelector('h3');
+                card.insertBefore(newGrid, anchor);
+                card.classList.add('clickable-card');
+                card.style.cursor = '';
+            } else {
+                card.classList.remove('clickable-card');
+                card.style.cursor = 'default';
+            }
+
+            showPopup("Foto dihapus", "success");
+        } catch (err) {
+            console.error(err);
+            showPopup("Gagal hapus foto", "error");
         }
-        const ann = this.state.announcements.find(a => a.id == card.dataset.id);
-        if (ann) ann.photo_url = photoUrl;
-    },
-
-    async deletePhoto(card) {
-        if (!await showPopup("Hapus foto?", "confirm")) return;
-        const id = card.dataset.id;
-        const data = this.state.announcements.find(a => a.id == id);
-
-        if (data && data.photo_url) {
-            let urls = Array.isArray(data.photo_url) ? data.photo_url : [data.photo_url];
-            const paths = urls.map(u => u.includes('/subject-photos/') ? decodeURIComponent(u.split('/subject-photos/')[1]) : null).filter(p => p);
-            if (paths.length > 0) await supabase.storage.from('subject-photos').remove(paths);
-        }
-
-        await supabase.from("subject_announcements").update({ photo_url: null }).eq("id", id);
-        this.removeCardPhoto(card);
-        showPopup("Foto dihapus", "success");
-    },
-
-    removeCardPhoto(card) {
-        const pc = card.querySelector(".card-photo-container");
-        if (pc) pc.remove();
-        const ph = document.createElement("div");
-        ph.className = "card-photo-placeholder";
-        ph.style.display = this.state.editMode ? "block" : "none";
-        ph.innerHTML = `<i class="fa-solid fa-image"></i><p>Klik Upload Foto</p>`;
-        card.insertBefore(ph, card.querySelector("h3"));
-        const ann = this.state.announcements.find(a => a.id == card.dataset.id);
-        if (ann) ann.photo_url = null;
     },
 
     async saveAnnouncement(card) {
