@@ -1036,15 +1036,15 @@
 
                 const { data, error } = await supabase
                     .from('classes')
-                    .select('id, name')
-                    .eq('is_active', true) // 🔥 INI KUNCINYA
+                    .select('id, name, is_active')
                     .order('name', { ascending: true });
 
                 if (error) throw error;
 
                 DAFTAR_KELAS_ARRAY = (data || []).map(item => ({
                     id: String(item.id),
-                    nama: item.name
+                    nama: item.name,
+                    is_active: item.is_active
                 }));
 
                 // Rebuild lookup object
@@ -1162,11 +1162,11 @@
                     lastGrade = currentGrade;
                 }
 
-                let isDisabled = false;
+                let isDisabled = !itemObj.is_active;
+
                 if (forcedClassId) {
                     isDisabled = (id !== forcedClassId);
                 }
-
                 const item = document.createElement('div');
                 item.className = isDisabled ? 'list-item disabled' : 'list-item';
 
