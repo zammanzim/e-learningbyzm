@@ -1222,7 +1222,7 @@
             if (error) {
                 showPopup && showPopup('Gagal: ' + error.message, 'error');
             } else {
-                showPopup && showPopup(id ? 'Berhasil diupdate!' : 'Menu ditambahkan!', 'success');
+                showToast && showToast(id ? 'Berhasil diupdate!' : 'Menu ditambahkan!', 'success');
                 resetForm();
                 loadClassMenus();
             }
@@ -1231,12 +1231,12 @@
         async function deleteMenu(id) {
             const item = allMenuData.find(m => m.id === id);
             const name = item ? item.subject_name : 'item ini';
-            const ok = await showPopup(`Hapus <b>${name}</b>?<br><small>Data hilang permanen.</small>`, 'confirm');
+            const ok = await showPopup(`Hapus <b>${name}</b>?<br>`, 'confirm');
             if (!ok) return;
 
             const { error } = await supabase.from('subjects_config').delete().eq('id', id);
             if (error) { showPopup && showPopup('Gagal hapus: ' + error.message, 'error'); return; }
-            showPopup && showPopup('Menu dihapus!', 'success');
+            showToast && showToast('Menu dihapus!', 'success');
             loadClassMenus();
         }
 

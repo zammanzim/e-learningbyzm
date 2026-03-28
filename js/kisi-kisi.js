@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         await supabase.from("subject_announcements").delete().eq("id", id);
         // Fix: paksa string comparison biar item beneran ke-filter dari state
         SubjectApp.state.announcements = SubjectApp.state.announcements.filter(a => String(a.id) !== String(id));
-        showPopup("Terhapus!", "success");
+        showToast("Terhapus!", "success");
         window.renderKisiList();
         // Re-apply edit mode ke card-card baru kalau masih dalam mode edit
         if (SubjectApp.state.editMode) _reapplyEditMode();

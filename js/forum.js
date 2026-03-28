@@ -312,7 +312,7 @@ async function postNewTopic() {
     });
 
     if (!error) {
-        showPopup('Diskusi diposting!', 'success');
+        showToast('Diskusi diposting!', 'success');
         document.getElementById('topicTitle').value = '';
         document.getElementById('topicContent').value = '';
         loadFeed();

@@ -676,7 +676,7 @@ window.saveAllDrafts = async function () {
         _dcCacheInvalidate(CLASS_ID);
         window.currentConfig = null; // force re-fetch config juga
 
-        if (typeof showPopup === 'function') showPopup('Data Tersimpan!', 'success');
+        if (typeof showToast === 'function') showToast('Data Tersimpan!', 'success');
         initDailyCard();
     } catch (err) {
         console.error('Save error:', err);

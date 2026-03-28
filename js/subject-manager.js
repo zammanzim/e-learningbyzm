@@ -375,7 +375,7 @@ const SubjectApp = {
                 ${taskBtnHTML}
                 ${isAdmin ? `
                 <button class="camera-btn" style="display:none; background:rgba(0,234,255,0.12); border:1px solid rgba(0,234,255,0.3); color:var(--accent,#00eaff); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-camera" style="pointer-events:none;"></i>
+                    <i class="fa-solid fa-camera" style="pointer-events:none;"></i> Upload Foto
                 </button>` : ''}
             </div>
             
@@ -573,7 +573,7 @@ const SubjectApp = {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
             } catch (e) {}
 
-            if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
+            if (typeof showToast === 'function') showToast("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
             showPopup("Gagal simpan data!", "error");
@@ -1010,7 +1010,7 @@ const SubjectApp = {
                 card.style.cursor = 'default';
             }
 
-            showPopup("Foto dihapus", "success");
+            showToast("Foto dihapus", "success");
         } catch (err) {
             console.error(err);
             showPopup("Gagal hapus foto", "error");
@@ -1041,7 +1041,7 @@ const SubjectApp = {
         await supabase.from("subject_announcements").delete().eq("id", id);
         card.remove();
         this.state.announcements = this.state.announcements.filter(a => a.id !== id);
-        showPopup("Terhapus!", "success");
+        showToast("Terhapus!", "success");
     },
 
     // ── DRAFT KEY (unik per subject) ─────────────────────────────

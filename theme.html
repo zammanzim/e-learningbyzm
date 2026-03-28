@@ -671,7 +671,7 @@
                 console.warn('[Theme] Gagal sync ke Supabase:', e);
             }
 
-            if (typeof showPopup === 'function') showPopup('Tema berhasil disimpan!', 'success');
+            if (typeof showToast === 'function') showToast('Tema berhasil disimpan!', 'success');
             setTimeout(() => window.location.reload(), 900);
         }
 
@@ -696,7 +696,7 @@
                 console.warn('[Theme] Gagal sync reset ke Supabase:', e);
             }
 
-            if (typeof showPopup === 'function') showPopup('Tema direset ke default.', 'success');
+            if (typeof showToast === 'function') showToast('Tema direset ke default.', 'success');
             setTimeout(() => window.location.reload(), 900);
         }
     </script>

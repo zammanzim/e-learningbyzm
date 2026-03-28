@@ -4088,7 +4088,7 @@ input:checked+.slider:before {
     align-items: center;
     gap: 0.6rem;
     padding: 0.65rem 1.1rem;
-    border-radius: 12px;
+    border-radius: 20px;
     font-size: 0.875rem;
     font-weight: 600;
     color: #fff;

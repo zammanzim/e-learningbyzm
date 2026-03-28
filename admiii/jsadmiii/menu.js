@@ -198,7 +198,7 @@ async function saveMenu() {
     if (error) {
         if (window.showPopup) showPopup("Gagal: " + error.message, "error");
     } else {
-        if (window.showPopup) showPopup(id ? "Berhasil diupdate!" : "Berhasil ditambah!", "success");
+        if (window.showToast) showToast(id ? "Berhasil diupdate!" : "Berhasil ditambah!", "success");
 
         // RESET FORM TANPA RESET FILTER
         resetForm();
@@ -233,7 +233,7 @@ async function deleteMenu(id) {
     const itemName = item ? item.subject_name : "materi ini";
 
     // 2. Panggil popup universal dengan mode 'confirm'
-    const yakin = await showPopup(`Yakin mau hapus <b>${itemName}</b>?<br>Data ini bakal ilang permanen dari database!`, "confirm");
+    const yakin = await showPopup(`Yakin mau hapus <b>${itemName}</b>?<br>`, "confirm");
 
     // 3. Jika user klik 'Ya' (yakin === true)
     if (yakin) {
@@ -245,7 +245,7 @@ async function deleteMenu(id) {
         if (error) {
             if (window.showPopup) showPopup("Gagal hapus: " + error.message, "error");
         } else {
-            if (window.showPopup) showPopup("Materi berhasil dihapus!", "success");
+            if (window.showToast) showToast("Materi berhasil dihapus!", "success");
 
             // 4. Refresh daftar menu setelah berhasil hapus
             loadClassMenus();

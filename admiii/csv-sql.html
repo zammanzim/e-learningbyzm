@@ -636,8 +636,8 @@
 
         // ── NOTIFY ────────────────────────────────────────────────────
         function notify(msg, type = 'success') {
-            if (typeof showPopup === 'function') {
-                showPopup(msg, type);
+            if (typeof showToast === 'function') {
+                showToast(msg, type);
             } else {
                 if (type === 'error') alert(msg);
             }

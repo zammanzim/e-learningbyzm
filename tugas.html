@@ -436,7 +436,7 @@
 
                 if (error) throw error;
 
-                showPopup('Tugas berhasil diposting!', 'success');
+                showToast('Tugas berhasil diposting!', 'success');
                 _clearTugasDraft(); // Hapus draft HANYA setelah berhasil post
                 closeTugasForm();
                 _resetTugasForm();

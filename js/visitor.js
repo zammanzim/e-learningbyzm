@@ -232,8 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .eq('class_id', getEffectiveClassId() || user.class_id);
 
                 if (error) throw error;
-                showPopup("List pengunjung telah di-reset!", "success");
-                renderVisitorStats();
+                showToast("List pengunjung telah di-reset!", "success");
             } catch (err) {
                 console.error("Reset Error:", err);
                 showPopup("Gagal reset data", "error");
