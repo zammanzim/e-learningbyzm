@@ -103,21 +103,20 @@ async function searchUser() {
 
             const card = document.createElement('div');
             card.className = "course-card animate-pop-in";
-            card.style.display = "flex"; card.style.alignItems = "center";
-            card.style.gap = "15px"; card.style.marginBottom = "12px"; card.style.padding = "15px";
-            
+            card.style.cssText = "display:flex;align-items:center;gap:15px;margin-bottom:12px;padding:15px;cursor:pointer;";
+            card.onclick = () => viewPublicProfile(u.id);
+            const isSelf = String(u.id) === String(user.id);
             card.innerHTML = `
-                <img src="${u.avatar_url || 'images/default-avatar.png'}" 
-                     style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--accent, #00eaff); object-fit: cover;">
-                <div style="flex: 1;">
-                    <h3 style="margin: 0; font-size: 16px; color: #fff;">
-                        ${u.full_name} ${String(u.id) === String(user.id) ? '(Anda)' : ''}
+                <img src="${u.avatar_url || 'icons/profpicture.png'}" 
+                     style="width:55px;height:55px;border-radius:50%;border:2px solid var(--accent,#00eaff);object-fit:cover;flex-shrink:0;"
+                     onerror="this.src='icons/profpicture.png'">
+                <div style="flex:1;min-width:0;">
+                    <h3 style="margin:0;font-size:15px;color:#fff;">
+                        ${u.full_name}${isSelf ? ' <span style="font-size:11px;color:var(--accent,#00eaff);font-weight:400;">(Anda)</span>' : ''}
                     </h3>
-                    <p style="margin: 2px 0; font-size: 12px; color: var(--accent, #00eaff);">@${u.username || u.short_name}</p>
+                    <p style="margin:2px 0;font-size:12px;color:var(--accent,#00eaff);">@${u.username || u.short_name || '-'}</p>
                 </div>
-                <button class="btn-tool" onclick="viewPublicProfile('${u.id}')" style="border-radius: 50%; width: 40px; height: 40px; border: 1px solid rgba(0, 234, 255, 0.3);">
-                    <i class="fa-solid fa-chevron-right" style="margin:0;"></i>
-                </button>
+                <i class="fa-solid fa-chevron-right" style="margin:0;color:rgba(255,255,255,0.25);font-size:13px;flex-shrink:0;"></i>
             `;
             container.appendChild(card);
         });
@@ -127,5 +126,11 @@ async function searchUser() {
 }
 
 function viewPublicProfile(id) {
-    showPopup("Profil teman segera hadir!", "info");
+    const me = JSON.parse(localStorage.getItem('user'));
+    // Kalau klik profil sendiri, langsung ke halaman user tanpa id
+    if (me && String(me.id) === String(id)) {
+        window.location.href = 'user';
+    } else {
+        window.location.href = `user?id=${id}`;
+    }
 }

@@ -454,11 +454,17 @@ document.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
     const picker = document.getElementById('tugasPickerOverlay');
     if (picker && !picker.classList.contains('hidden')) {
-        if (e.target === picker) picker.classList.add('hidden');
+        if (e.target === picker) {
+            picker.classList.add('hidden');
+            if (typeof unlockScroll === 'function') unlockScroll();
+        }
     }
 
     const form = document.getElementById('tugasFormOverlay');
     if (form && !form.classList.contains('hidden')) {
-        if (e.target === form) form.classList.add('hidden');
+        if (e.target === form) {
+            form.classList.add('hidden');
+            if (typeof unlockScroll === 'function') unlockScroll();
+        }
     }
 });

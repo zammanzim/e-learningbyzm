@@ -13,7 +13,6 @@
     <script src="js/visitor.js" defer></script>
     <script src="js/subject-manager.js" defer></script>
     <script src="js/theme.js"></script>
-<script src="js/toast.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/checklist.png" type="image/png">
@@ -289,6 +288,7 @@
             const overlay = document.getElementById('tugasPickerOverlay');
             const list = document.getElementById('tugasMapelList');
             overlay.classList.remove('hidden');
+            if (typeof lockScroll === 'function') lockScroll();
             history.pushState({ type: 'overlay', target: 'tugasPicker' }, '');
 
             list.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat...</p>';
@@ -327,6 +327,7 @@
 
         function closeTugasModal() {
             document.getElementById('tugasPickerOverlay').classList.add('hidden');
+            if (typeof unlockScroll === 'function') unlockScroll();
         }
 
         // ── OPEN FORM (step 2) ─────────────────────────────────────────
@@ -336,6 +337,7 @@
 
             document.getElementById('tugasFormMapelName').textContent = subjectName;
             document.getElementById('tugasFormOverlay').classList.remove('hidden');
+            if (typeof lockScroll === 'function') lockScroll();
             history.pushState({ type: 'overlay', target: 'tugasForm' }, '');
 
             // Coba restore draft dulu (subject harus sama)
@@ -354,14 +356,15 @@
         }
 
         function backToPicker() {
-            // Tutup form tapi SIMPAN draft — user mungkin mau ganti mapel
             document.getElementById('tugasFormOverlay').classList.add('hidden');
-            _saveTugasDraft(); // pastikan draft tersimpan sebelum balik
+            if (typeof unlockScroll === 'function') unlockScroll();
+            _saveTugasDraft();
             openTugasModal();
         }
 
         function closeTugasForm() {
             document.getElementById('tugasFormOverlay').classList.add('hidden');
+            if (typeof unlockScroll === 'function') unlockScroll();
             // Draft sengaja TIDAK dihapus — user bisa buka lagi
         }
 
@@ -436,7 +439,7 @@
 
                 if (error) throw error;
 
-                showToast('Tugas berhasil diposting!', 'success');
+                showPopup('Tugas berhasil diposting!', 'success');
                 _clearTugasDraft(); // Hapus draft HANYA setelah berhasil post
                 closeTugasForm();
                 _resetTugasForm();

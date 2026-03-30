@@ -10,8 +10,31 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================
-// CLASS SWITCHER — Super Admin only
+// SCROLL LOCK — global, scroll position safe
 // ==========================================
+let _scrollLockCount = 0;
+let _scrollLockY = 0;
+
+window.lockScroll = function () {
+    _scrollLockCount++;
+    if (_scrollLockCount > 1) return;
+    _scrollLockY = window.scrollY;
+    // Kompensasi scrollbar biar konten tidak melebar
+    const sbWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (sbWidth > 0) document.body.style.paddingRight = sbWidth + 'px';
+    document.body.style.overflow = 'hidden';
+};
+
+window.unlockScroll = function () {
+    if (_scrollLockCount <= 0) return;
+    _scrollLockCount = Math.max(0, _scrollLockCount - 1);
+    if (_scrollLockCount > 0) return;
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    window.scrollTo({ top: _scrollLockY, behavior: 'instant' });
+};
+
+
 function getEffectiveClassId() {
     try {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -372,13 +395,14 @@ function toggleMenu() {
             hamburger.classList.add("active");
             overlay.classList.add("show");
             overlay.onclick = toggleMenu;
-            document.body.style.overflow = "hidden";
+            lockScroll();
             history.pushState({ type: 'overlay', target: 'sidebar' }, ''); // Catat di history
         } else {
             sidebar.classList.remove("open");
             hamburger.classList.remove("active");
             overlay.classList.remove("show");
             document.body.style.overflow = "";
+            unlockScroll();
             // Jangan pushState di sini, popstate yang akan menangani jika user mencet back
         }
     }
@@ -456,6 +480,7 @@ window.showPopup = function (msg, type = 'info') {
             </div>`;
 
         document.body.appendChild(overlay);
+        lockScroll();
 
         // Animasi Masuk
         setTimeout(() => overlay.classList.add('active'), 10);
@@ -463,7 +488,7 @@ window.showPopup = function (msg, type = 'info') {
         // --- LOGIC PENUTUPAN ---
         const close = (result) => {
             overlay.classList.remove('active');
-            // Hapus listener keyboard biar gak numpuk
+            unlockScroll();
             document.removeEventListener('keydown', handleKey);
 
             setTimeout(() => {
@@ -537,6 +562,7 @@ function closeActiveOverlays(shouldGoBack = true) {
     const addModal = document.getElementById('addModal');
     if (addModal && !addModal.classList.contains('hidden')) {
         addModal.classList.add('hidden');
+        unlockScroll();
         if (typeof SubjectApp !== 'undefined') SubjectApp.clearForm();
         return;
     }
@@ -550,6 +576,7 @@ function closeActiveOverlays(shouldGoBack = true) {
     const visitor = document.getElementById('visitorOverlay');
     if (visitor?.classList.contains('active')) {
         visitor.classList.remove('active');
+        unlockScroll();
         return;
     }
     // 5. Sidebar (Mobile)
@@ -564,10 +591,16 @@ function closeActiveOverlays(shouldGoBack = true) {
 document.getElementById('visitorTrigger')?.addEventListener('click', () => {
     const v = document.getElementById('visitorOverlay');
     v.classList.add('active');
+    lockScroll();
     history.pushState({ type: 'overlay', target: 'visitor' }, '');
 });
 document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
-    if (document.getElementById('visitorOverlay').classList.contains('active')) history.back();
+    const v = document.getElementById('visitorOverlay');
+    if (v?.classList.contains('active')) {
+        v.classList.remove('active');
+        unlockScroll();
+        history.back();
+    }
 });
 
-// ===== PWA INSTALL — dihandle langsung di announcements.html =====
+// ===== PWA INSTALL — dihandle langsung di announcements.html ===== 

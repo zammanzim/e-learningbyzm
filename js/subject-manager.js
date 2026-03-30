@@ -117,6 +117,7 @@ const SubjectApp = {
             addModal.onclick = (e) => {
                 if (e.target === addModal) {
                     addModal.classList.add('hidden');
+                    unlockScroll();
                     self.clearForm();
                 }
             };
@@ -375,7 +376,7 @@ const SubjectApp = {
                 ${taskBtnHTML}
                 ${isAdmin ? `
                 <button class="camera-btn" style="display:none; background:rgba(0,234,255,0.12); border:1px solid rgba(0,234,255,0.3); color:var(--accent,#00eaff); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-camera" style="pointer-events:none;"></i> Upload Foto
+                    <i class="fa-solid fa-camera" style="pointer-events:none;"></i>
                 </button>` : ''}
             </div>
             
@@ -573,7 +574,7 @@ const SubjectApp = {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
             } catch (e) {}
 
-            if (typeof showToast === 'function') showToast("Semua perubahan tersimpan!", "success");
+            if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
             showPopup("Gagal simpan data!", "error");
@@ -1010,7 +1011,7 @@ const SubjectApp = {
                 card.style.cursor = 'default';
             }
 
-            showToast("Foto dihapus", "success");
+            showPopup("Foto dihapus", "success");
         } catch (err) {
             console.error(err);
             showPopup("Gagal hapus foto", "error");
@@ -1041,7 +1042,7 @@ const SubjectApp = {
         await supabase.from("subject_announcements").delete().eq("id", id);
         card.remove();
         this.state.announcements = this.state.announcements.filter(a => a.id !== id);
-        showToast("Terhapus!", "success");
+        showPopup("Terhapus!", "success");
     },
 
     // ── DRAFT KEY (unik per subject) ─────────────────────────────
@@ -1099,8 +1100,8 @@ const SubjectApp = {
         const availableColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'];
 
         if (!btnAdd) return;
-        btnAdd.onclick = (e) => { e.preventDefault(); modal.classList.remove('hidden'); this.tempFiles = []; document.getElementById('previewContainer').innerHTML = ''; };
-        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); /* Draft sengaja TIDAK dihapus */ };
+        btnAdd.onclick = (e) => { e.preventDefault(); modal.classList.remove('hidden'); lockScroll(); this.tempFiles = []; document.getElementById('previewContainer').innerHTML = ''; };
+        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); unlockScroll(); /* Draft sengaja TIDAK dihapus */ };
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => this.handleNewFiles(e.target.files);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
@@ -1139,6 +1140,7 @@ const SubjectApp = {
                 await this.uploadAndSave(data);
                 btnSave.innerHTML = 'Posting'; btnSave.disabled = false;
                 modal.classList.add('hidden');
+                unlockScroll();
                 this._clearDraft();
                 this.clearForm();
             };
@@ -1147,6 +1149,7 @@ const SubjectApp = {
         btnAdd.onclick = (e) => {
             e.preventDefault();
             modal.classList.remove('hidden');
+            lockScroll();
             this.tempFiles = [];
             document.getElementById('previewContainer').innerHTML = '';
 
@@ -1344,11 +1347,13 @@ function openDetail(data) {
     currentViewerIndex = 0;
     updateSliderUI();
     overlay.classList.add('active');
+    lockScroll();
     history.pushState({ type: 'overlay', target: 'detail' }, '');
 }
 
 function closeDetail() {
     document.getElementById('detailOverlay').classList.remove('active');
+    unlockScroll();
 }
 
 function updateSliderUI() {

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/basicfeat.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/theme.js"></script>
+    <script src="js/toast.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/accountsetting.png" type="image/png">
+
+    <style>
+        .profile-page-wrap {
+            max-width: 47.8125rem;
+            margin: 0 auto;
+            padding: 0 1rem 6rem;
+        }
+
+        /* ── Header card ── */
+        .profile-header-card {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.2rem;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+
+        .profile-cover {
+            height: 90px;
+            background: linear-gradient(135deg,
+                    rgba(0, 234, 255, 0.18) 0%,
+                    rgba(0, 100, 130, 0.25) 50%,
+                    rgba(0, 0, 0, 0.4) 100%);
+            position: relative;
+        }
+
+        /* ── Avatar row — avatar + tombol + sejajar ── */
+        .profile-avatar-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            padding: 0 1.25rem;
+            margin-top: -42px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent, #00eaff);
+            box-shadow: 0 0 18px rgba(0, 234, 255, 0.22);
+            display: block;
+        }
+
+        /* Edit foto kecil di pojok avatar */
+        .avatar-edit-btn {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent, #00eaff);
+            color: #000;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* ── Tombol + Upload — sejajar kanan foto ── */
+        .btn-add-post {
+            margin-bottom: 6px;
+            /* sejajar dgn bawah avatar */
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            background: var(--accent, #00eaff);
+            color: #000;
+            border: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-add-post:hover {
+            opacity: 0.85;
+        }
+
+        .btn-add-post:active {
+            transform: scale(0.95);
+        }
+
+        .btn-add-post i {
+            margin: 0;
+            font-size: 0.78rem;
+        }
+
+        /* ── Info teks ── */
+        .profile-info {
+            padding: 0.7rem 1.25rem 1.25rem;
+        }
+
+        .profile-fullname {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 0.1rem;
+            color: #fff;
+        }
+
+        .profile-username {
+            font-size: 0.82rem;
+            color: var(--accent, #00eaff);
+            margin: 0 0 0.45rem;
+        }
+
+        .profile-bio {
+            font-size: 0.84rem;
+            color: #c0c0c0;
+            margin: 0 0 0.65rem;
+            line-height: 1.5;
+        }
+
+        .profile-class-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.22);
+            font-size: 0.73rem;
+            color: var(--accent, #00eaff);
+            margin-bottom: 0.85rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            padding-top: 0.7rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .stat-item {
+            text-align: left;
+        }
+
+        .stat-num {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Grid ── */
+        .posts-section-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.65rem;
+            padding: 0 2px;
+        }
+
+        .posts-section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .post-thumb {
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .post-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.25s ease;
+        }
+
+        .post-thumb:hover img {
+            transform: scale(1.05);
+        }
+
+        .post-thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+        }
+
+        .post-thumb:hover .post-thumb-overlay {
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 1;
+        }
+
+        .post-thumb-overlay i {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .posts-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #555;
+        }
+
+        .posts-empty i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+            color: rgba(0, 234, 255, 0.18);
+        }
+
+        .posts-skeleton {
+            aspect-ratio: 1 / 1;
+            background: rgba(255, 255, 255, 0.05);
+            animation: shimmer 1.2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ── Post detail modal ── */
+        .post-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .post-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .post-modal-box {
+            width: 92%;
+            max-width: 28rem;
+            max-height: 90vh;
+            background: rgba(18, 18, 22, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.2rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.93);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .post-modal-overlay.show .post-modal-box {
+            transform: scale(1);
+        }
+
+        .post-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .post-modal-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .post-modal-user img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--accent, #00eaff);
+        }
+
+        .post-modal-username {
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .post-modal-time {
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+        .post-modal-close {
+            background: none;
+            border: none;
+            color: #777;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .post-modal-img {
+            width: 100%;
+            max-height: 55vh;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .post-modal-caption {
+            padding: 0.85rem 1rem;
+            font-size: 0.87rem;
+            color: #ccc;
+            line-height: 1.5;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .post-modal-caption .cap-name {
+            font-weight: 700;
+            color: #fff;
+            margin-right: 6px;
+        }
+
+        .post-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 1rem 0.85rem;
+        }
+
+        /* utility — pastiin .hidden beneran nyembunyiin elemen */
+        #detailActionsWrap.hidden {
+            display: none !important;
+        }
+
+        .btn-delete-post {
+            background: rgba(220, 50, 50, 0.1);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.22);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.77rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-delete-post:hover {
+            background: rgba(220, 50, 50, 0.22);
+        }
+
+        .btn-delete-post i {
+            margin: 0;
+        }
+
+        /* ── Upload modal extras ── */
+        .upload-preview-wrap {
+            position: relative;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .upload-preview-img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .upload-remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.65);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .upload-remove-btn i {
+            margin: 0;
+        }
+
+        .char-counter {
+            font-size: 0.72rem;
+            color: #555;
+            text-align: right;
+            margin-top: -4px;
+        }
+
+        /* ── Skeleton ── */
+        .profile-sk-cover {
+            height: 90px;
+            background: rgba(255, 255, 255, 0.06);
+            animation: shimmer 1.2s infinite;
+        }
+
+        .profile-sk-avatar {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            animation: shimmer 1.2s infinite;
+        }
+
+        .profile-sk-line {
+            height: 13px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 11px 0;
+            animation: shimmer 1.2s infinite;
+        }
+
+        /* ── Konfirmasi hapus inline ── */
+        .delete-confirm-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem 0.85rem;
+            gap: 8px;
+            border-top: 1px solid rgba(255, 71, 87, 0.15);
+            background: rgba(255, 71, 87, 0.05);
+        }
+
+        .delete-confirm-bar span {
+            font-size: 0.8rem;
+            color: #ff7f7f;
+        }
+
+        .delete-confirm-bar button {
+            padding: 5px 14px;
+            border-radius: 8px;
+            font-size: 0.77rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-confirm-yes {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-confirm-no {
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content" style="padding-top: 4rem;">
+        <div class="profile-page-wrap" id="profilePageWrap">
+            <!-- Skeleton -->
+            <div class="profile-header-card" id="profileSkeleton">
+                <div class="profile-sk-cover"></div>
+                <div style="padding: 0 1.25rem;">
+                    <div class="profile-sk-avatar" style="margin-top:-42px;"></div>
+                    <div class="profile-sk-line" style="width:38%;"></div>
+                    <div class="profile-sk-line" style="width:22%;"></div>
+                    <div class="profile-sk-line" style="width:55%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== UPLOAD MODAL ===== -->
+    <div class="modal-overlay hidden" id="uploadModal">
+        <div class="glass-modal-box">
+            <h3><i class="fa-solid fa-image"></i> Posting Foto</h3>
+
+            <div id="uploadDropZone" class="drop-area" onclick="document.getElementById('uploadFileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <div class="drop-text"><b>Pilih foto</b> atau drag ke sini</div>
+                <input type="file" id="uploadFileInput" accept="image/*" style="display:none;">
+            </div>
+
+            <div id="uploadPreviewWrap" class="upload-preview-wrap hidden">
+                <img id="uploadPreviewImg" class="upload-preview-img" alt="">
+                <button class="upload-remove-btn" onclick="removeUploadPreview()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <textarea id="uploadCaption" class="glass-input" placeholder="Tulis caption..." maxlength="500" rows="3"
+                oninput="document.getElementById('captionCounter').textContent=this.value.length+'/500'"></textarea>
+            <div class="char-counter" id="captionCounter">0/500</div>
+
+            <div class="action-buttons">
+                <button class="btn-glass-cancel" onclick="closeUploadModal()">Batal</button>
+                <button class="btn-glass-save" id="btnPostSave" onclick="submitPost()">
+                    <i class="fa-solid fa-paper-plane"></i> Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== POST DETAIL MODAL ===== -->
+    <div class="post-modal-overlay" id="postDetailOverlay" onclick="handleDetailOverlayClick(event)">
+        <div class="post-modal-box">
+            <div class="post-modal-header">
+                <div class="post-modal-user">
+                    <img id="detailUserAvatar" src="" alt="">
+                    <div>
+                        <div class="post-modal-username" id="detailUserName"></div>
+                        <div class="post-modal-time" id="detailPostTime"></div>
+                    </div>
+                </div>
+                <button class="post-modal-close" onclick="closePostDetail()">
+                    <i class="fa-solid fa-xmark" style="margin:0"></i>
+                </button>
+            </div>
+
+            <img class="post-modal-img" id="detailPostImg" src="" alt="">
+
+            <div class="post-modal-caption">
+                <span id="detailCapText"></span>
+            </div>
+
+            <!-- Tombol hapus — hanya own profile, dikontrol JS -->
+            <div class="post-modal-actions hidden" id="detailActionsWrap">
+                <button class="btn-delete-post" id="btnDeletePost" onclick="deleteCurrentPost()">
+                    <i class="fa-solid fa-trash"></i> Hapus Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/user.js" defer></script>
+</body>
+
+</html>
