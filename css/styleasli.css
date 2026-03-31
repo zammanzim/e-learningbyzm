@@ -1978,6 +1978,29 @@ li.nav-locked a::after {
     background: #009624;
 }
 
+.task-btn-delete {
+    background: rgba(255, 71, 87, 0.08);
+    border: 1px solid rgba(255, 71, 87, 0.35);
+    color: rgba(255, 71, 87, 0.7);
+    padding: 0.425rem 0.75rem;
+    border-radius: 1.0625rem;
+    cursor: pointer;
+    font-size: 0.7438rem;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.task-btn-delete:hover {
+    background: rgba(255, 71, 87, 0.2);
+    border-color: #ff4757;
+    color: #ff4757;
+    transform: translateY(-1px);
+}
+
+
+
 /* Container Utama biar tengah di Desktop */
 .ig-container {
     max-width: 49.6719rem;
@@ -3525,7 +3548,7 @@ input:checked+.slider:before {
     z-index: 1;
 }
 
-.filter-group-wrapper.pending-active .filter-slider-bg {
+.filter-group-wrapper.all-active .filter-slider-bg {
     transform: translateX(100%);
 }
 

@@ -4,15 +4,16 @@ document.addEventListener('DOMContentLoaded', initTugas);
 let allTasks = [];
 let doneIds = [];
 let deadlineSubjects = [];
-let currentFilter = 'all';
+let currentFilter = 'pending';
+let _isAdminUser = false;
 
 // ==========================================
 // CACHE HELPERS
 // ==========================================
-const TUGAS_CACHE_TTL_TASKS    = 5  * 60 * 1000; // 5 menit — list tugas
-const TUGAS_CACHE_TTL_DONE     = 2  * 60 * 1000; // 2 menit — progress user
-const TUGAS_CACHE_TTL_SCHED    = 30 * 60 * 1000; // 30 menit — jadwal deadline
-const TUGAS_CACHE_TTL_RANK     = 2  * 60 * 1000; // 2 menit — rank
+const TUGAS_CACHE_TTL_TASKS = 5 * 60 * 1000; // 5 menit — list tugas
+const TUGAS_CACHE_TTL_DONE = 2 * 60 * 1000; // 2 menit — progress user
+const TUGAS_CACHE_TTL_SCHED = 30 * 60 * 1000; // 30 menit — jadwal deadline
+const TUGAS_CACHE_TTL_RANK = 2 * 60 * 1000; // 2 menit — rank
 
 function _tugasCacheGet(key, ttl) {
     try {
@@ -32,8 +33,8 @@ function _tugasCacheSet(key, data) {
 
 function _tugasCacheInvalidate(userId, classId) {
     try {
-        if (userId)  localStorage.removeItem(`tugas_done_${userId}`);
-        if (userId)  localStorage.removeItem(`tugas_rank_${userId}`);
+        if (userId) localStorage.removeItem(`tugas_done_${userId}`);
+        if (userId) localStorage.removeItem(`tugas_rank_${userId}`);
         if (classId) localStorage.removeItem(`tugas_tasks_${classId}`);
     } catch (e) { }
 }
@@ -57,6 +58,9 @@ async function initTugas() {
     } catch (e) { user = null; }
     if (!user) { window.location.href = 'index'; return; }
 
+    // Set flag admin untuk renderTasks
+    _isAdminUser = (user.role === 'class_admin' || user.role === 'super_admin');
+
     // Set Profil di Card
     document.getElementById('userTaskName').innerText = user.nickname;
     document.getElementById('userTaskPP').src = user.avatar_url || '../icons/profpicture.png';
@@ -74,10 +78,10 @@ async function initTugas() {
         }
 
         const classId = getEffectiveClassId();
-        const schedCacheKey  = `tugas_sched_${classId}_${targetDayName}`;
-        const tasksCacheKey  = `tugas_tasks_${classId}`;
-        const doneCacheKey   = `tugas_done_${user.id}`;
-        const rankCacheKey   = `tugas_rank_${user.id}`;
+        const schedCacheKey = `tugas_sched_${classId}_${targetDayName}`;
+        const tasksCacheKey = `tugas_tasks_${classId}`;
+        const doneCacheKey = `tugas_done_${user.id}`;
+        const rankCacheKey = `tugas_rank_${user.id}`;
 
         // ── 2. JADWAL DEADLINE (cache 30 menit) ──────────────────────
         const cachedSched = _tugasCacheGet(schedCacheKey, TUGAS_CACHE_TTL_SCHED);
@@ -91,7 +95,7 @@ async function initTugas() {
                         const fresh = _parseDeadlineSubjects(data.lessons);
                         _tugasCacheSet(schedCacheKey, fresh);
                     }
-                }).catch(() => {});
+                }).catch(() => { });
         } else {
             const { data: sched } = await supabase
                 .from('daily_schedules').select('lessons')
@@ -104,13 +108,13 @@ async function initTugas() {
 
         // ── 3. TASKS + DONE — coba dari cache dulu, render langsung ──
         const cachedTasks = _tugasCacheGet(tasksCacheKey, TUGAS_CACHE_TTL_TASKS);
-        const cachedDone  = _tugasCacheGet(doneCacheKey,  TUGAS_CACHE_TTL_DONE);
+        const cachedDone = _tugasCacheGet(doneCacheKey, TUGAS_CACHE_TTL_DONE);
 
         if (cachedTasks !== null && cachedDone !== null) {
             // Tampilkan cache LANGSUNG biar kelihatan cepat
             allTasks = cachedTasks;
             const validIds = allTasks.map(t => String(t.id));
-            doneIds  = cachedDone.filter(id => validIds.includes(id));
+            doneIds = cachedDone.filter(id => validIds.includes(id));
 
             // Coba pakai rank dari cache juga
             const cachedRank = _tugasCacheGet(rankCacheKey, TUGAS_CACHE_TTL_RANK);
@@ -160,18 +164,18 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
         if (err1 || err2) throw (err1 || err2);
 
         const freshTasks = tasks || [];
-        const validIds   = freshTasks.map(t => String(t.id));
-        const freshDone  = (progress || [])
+        const validIds = freshTasks.map(t => String(t.id));
+        const freshDone = (progress || [])
             .map(p => String(p.announcement_id))
             .filter(id => validIds.includes(id));
 
         // Simpan ke cache
         _tugasCacheSet(tasksCacheKey, freshTasks);
-        _tugasCacheSet(doneCacheKey,  freshDone);
+        _tugasCacheSet(doneCacheKey, freshDone);
 
         // Update global state
         allTasks = freshTasks;
-        doneIds  = freshDone;
+        doneIds = freshDone;
 
         // Rank
         if (validIds.length > 0) {
@@ -287,7 +291,7 @@ function renderTasks(data) {
             const normTitle = normalize(item.big_title);
             // Cek dua arah: subject mengandung jadwal ATAU jadwal mengandung subject
             return normSubject.includes(s) || s.includes(normSubject) ||
-                   normTitle.includes(s) || s.includes(normTitle);
+                normTitle.includes(s) || s.includes(normTitle);
         });
 
         const autoNumber = total - allTasks.indexOf(item);
@@ -337,7 +341,11 @@ function renderTasks(data) {
     <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
     <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5; white-space: pre-wrap;">${item.content}</p>
     ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
-    <div style="display:flex; justify-content:flex-end;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        ${_isAdminUser ? `
+        <button class="task-btn-delete" onclick="deleteTugas(event, '${item.id}')" title="Hapus tugas ini">
+            <i class="fa-solid fa-trash"></i>
+        </button>` : '<span></span>'}
         <button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
             ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
         </button>
@@ -393,6 +401,39 @@ async function toggleStatus(e, id, btn) {
     }
 }
 
+async function deleteTugas(e, id) {
+    e.stopPropagation();
+
+    const yakin = await showPopup('Yakin mau hapus tugas ini? <br><small style="opacity:0.6">Data akan terhapus permanen.</small>', 'confirm');
+    if (!yakin) return;
+
+    try {
+        // Hapus progress user yang terkait dulu
+        await supabase.from('user_progress').delete().eq('announcement_id', id);
+
+        // Hapus tugas dari subject_announcements
+        const { error } = await supabase.from('subject_announcements').delete().eq('id', id);
+        if (error) throw error;
+
+        // Update state lokal langsung (tanpa reload)
+        allTasks = allTasks.filter(t => String(t.id) !== String(id));
+        doneIds = doneIds.filter(d => d !== String(id));
+
+        // Invalidate cache
+        const classId = getEffectiveClassId();
+        const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
+        _tugasCacheInvalidate(user?.id, classId);
+
+        updateProgressUI();
+        applyCurrentFilter();
+
+        if (typeof showToast === 'function') showToast('Tugas berhasil dihapus', 'success');
+    } catch (err) {
+        console.error('Hapus tugas gagal:', err);
+        showPopup('Gagal menghapus: ' + err.message, 'error');
+    }
+}
+
 function applyCurrentFilter() {
     if (currentFilter === 'pending') {
         const filtered = allTasks.filter(t => !doneIds.includes(String(t.id)));
@@ -403,13 +444,13 @@ function applyCurrentFilter() {
                 const normSubject = normalize(a.subject_id);
                 const normTitle = normalize(a.big_title);
                 return normSubject.includes(s) || s.includes(normSubject) ||
-                       normTitle.includes(s) || s.includes(normTitle);
+                    normTitle.includes(s) || s.includes(normTitle);
             });
             const bIsDeadline = deadlineSubjects.some(s => {
                 const normSubject = normalize(b.subject_id);
                 const normTitle = normalize(b.big_title);
                 return normSubject.includes(s) || s.includes(normSubject) ||
-                       normTitle.includes(s) || s.includes(normTitle);
+                    normTitle.includes(s) || s.includes(normTitle);
             });
 
             if (aIsDeadline && !bIsDeadline) return -1;
@@ -430,8 +471,8 @@ function filterTasks(type, btn) {
     buttons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    if (type === 'pending') wrapper.classList.add('pending-active');
-    else wrapper.classList.remove('pending-active');
+    if (type === 'all') wrapper.classList.add('all-active');
+    else wrapper.classList.remove('all-active');
 
     applyCurrentFilter();
 }

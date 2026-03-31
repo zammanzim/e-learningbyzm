@@ -90,9 +90,9 @@ const UserProfile = {
         const t = this.state.target;
         if (!t) return;
 
-        const username  = t.username || t.short_name || t.full_name?.split(' ')[0];
-        const avatar    = t.avatar_url || 'icons/profpicture.png';
-        const bio       = t.bio || '';
+        const username = t.username || t.short_name || t.full_name?.split(' ')[0];
+        const avatar = t.avatar_url || 'icons/profpicture.png';
+        const bio = t.bio || '';
         const className = t.classes?.name || (t.class_id ? `Kelas ${t.class_id}` : '');
 
         document.title = `@${username}`;
@@ -140,7 +140,7 @@ const UserProfile = {
             <div class="profile-info">
                 <div class="profile-fullname">${t.full_name || username}</div>
                 <div class="profile-username">@${username}</div>
-                ${bio       ? this.buildBioHTML(bio) : ''}
+                ${bio ? this.buildBioHTML(bio) : ''}
                 ${className ? `<div class="profile-class-badge"><i class="fa-solid fa-school" style="margin:0;font-size:10px;"></i> ${className}</div>` : ''}
                 <div class="profile-stats">
                     <div class="stat-item">
@@ -157,7 +157,7 @@ const UserProfile = {
         </div>
 
         <div class="posts-grid" id="postsGrid">
-            ${[1,2,3,4,5,6].map(() => `<div class="posts-skeleton"></div>`).join('')}
+            ${[1, 2, 3, 4, 5, 6].map(() => `<div class="posts-skeleton"></div>`).join('')}
         </div>`;
 
         document.getElementById('profileSkeleton')?.remove();
@@ -229,9 +229,9 @@ const UserProfile = {
         const username = t.username || t.short_name || t.full_name?.split(' ')[0];
 
         document.getElementById('detailUserAvatar').src = t.avatar_url || 'icons/profpicture.png';
-        document.getElementById('detailUserName').textContent  = `@${username}`;
-        document.getElementById('detailPostTime').textContent  = this.formatDate(post.created_at);
-        document.getElementById('detailCapText').textContent   = post.caption || '';
+        document.getElementById('detailUserName').textContent = `@${username}`;
+        document.getElementById('detailPostTime').textContent = this.formatDate(post.created_at);
+        document.getElementById('detailCapText').textContent = post.caption || '';
 
         // Gambar — sembunyikan kalau text-only
         const imgEl = document.getElementById('detailPostImg');
@@ -246,10 +246,19 @@ const UserProfile = {
         // Tombol hapus — HANYA own profile
         const actionsWrap = document.getElementById('detailActionsWrap');
         if (actionsWrap) {
-            actionsWrap.style.display = this.state.isOwnProfile ? 'flex' : 'none';
+            if (this.state.isOwnProfile) {
+                actionsWrap.classList.remove('hidden');
+            } else {
+                actionsWrap.classList.add('hidden');
+            }
         }
 
         document.getElementById('postDetailOverlay').classList.add('show');
+
+        // Reset tombol hapus ke state normal (jaga-jaga dari delete sebelumnya)
+        const btn = document.getElementById('btnDeletePost');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post'; }
+
         lockScroll();
     },
 
@@ -289,7 +298,7 @@ const UserProfile = {
     // ── Upload ──────────────────────────────────────
     setupUploadListeners() {
         const fileInput = document.getElementById('uploadFileInput');
-        const dropZone  = document.getElementById('uploadDropZone');
+        const dropZone = document.getElementById('uploadDropZone');
         if (!fileInput) return;
 
         fileInput.addEventListener('change', (e) => {
@@ -335,10 +344,10 @@ const UserProfile = {
 
             // Upload foto kalau ada
             if (this.state.selectedFile) {
-                const file       = this.state.selectedFile;
+                const file = this.state.selectedFile;
                 const compressed = await this.compressImage(file, 1080, 0.82);
-                const ext        = file.name.split('.').pop() || 'jpg';
-                const fileName   = `${this.state.me.id}/${Date.now()}.${ext}`;
+                const ext = file.name.split('.').pop() || 'jpg';
+                const fileName = `${this.state.me.id}/${Date.now()}.${ext}`;
 
                 const { error: uploadErr } = await supabase.storage
                     .from('post-photos')
@@ -351,9 +360,9 @@ const UserProfile = {
             }
 
             const { error: dbErr } = await supabase.from('user_posts').insert({
-                user_id:   this.state.me.id,
+                user_id: this.state.me.id,
                 image_url: imageUrl,
-                caption:   caption || null,
+                caption: caption || null,
             });
 
             if (dbErr) throw dbErr;
@@ -388,7 +397,7 @@ const UserProfile = {
                     height = Math.round(height * r);
                 }
                 const canvas = document.createElement('canvas');
-                canvas.width  = width;
+                canvas.width = width;
                 canvas.height = height;
                 canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 canvas.toBlob(resolve, 'image/jpeg', quality);
@@ -399,11 +408,11 @@ const UserProfile = {
 
     formatDate(iso) {
         if (!iso) return '';
-        const d    = new Date(iso);
+        const d = new Date(iso);
         const diff = (Date.now() - d) / 1000;
-        if (diff < 60)     return 'Baru saja';
-        if (diff < 3600)   return `${Math.floor(diff / 60)} menit lalu`;
-        if (diff < 86400)  return `${Math.floor(diff / 3600)} jam lalu`;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
         if (diff < 604800) return `${Math.floor(diff / 86400)} hari lalu`;
         return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     },
@@ -420,7 +429,7 @@ const UserProfile = {
         let cutAt = MAX;
         while (cutAt > 0 && bio[cutAt] !== ' ' && bio[cutAt] !== '\n') cutAt--;
         const short = toHTML(bio.slice(0, cutAt || MAX));
-        const full  = toHTML(bio);
+        const full = toHTML(bio);
         // Semua inline — tidak ada whitespace aneh dari template literal
         return '<div class="profile-bio" id="profileBio">'
             + '<span id="bioShort">' + short + '…</span>'
@@ -430,7 +439,7 @@ const UserProfile = {
     },
 
     escapeHtml(s) {
-        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     },
 };
 
@@ -440,6 +449,14 @@ function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     modal.classList.remove('hidden');
     lockScroll();
+
+    // Reset form tiap kali buka — biar draft lama gak keliatan
+    document.getElementById('uploadCaption').value = '';
+    document.getElementById('captionCounter').textContent = '0/500';
+    document.getElementById('uploadFileInput').value = '';
+    document.getElementById('uploadPreviewWrap').classList.add('hidden');
+    document.getElementById('uploadDropZone').classList.remove('hidden');
+    UserProfile.state.selectedFile = null;
 
     // Klik area gelap = tutup
     modal.onclick = (e) => { if (e.target === modal) closeUploadModal(); };
@@ -496,13 +513,13 @@ function submitPost() {
 }
 
 function toggleBio() {
-    const short  = document.getElementById('bioShort');
-    const full   = document.getElementById('bioFull');
-    const btn    = document.getElementById('bioToggleBtn');
+    const short = document.getElementById('bioShort');
+    const full = document.getElementById('bioFull');
+    const btn = document.getElementById('bioToggleBtn');
     const isOpen = full.style.display !== 'none';
     short.style.display = isOpen ? 'inline' : 'none';
-    full.style.display  = isOpen ? 'none'   : 'inline';
-    btn.textContent     = isOpen ? 'selengkapnya' : 'sembunyikan';
+    full.style.display = isOpen ? 'none' : 'inline';
+    btn.textContent = isOpen ? 'selengkapnya' : 'sembunyikan';
 }
 
 // ── Boot ─────────────────────────────────────────────

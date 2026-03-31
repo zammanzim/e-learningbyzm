@@ -1,119 +1,198 @@
 document.addEventListener('DOMContentLoaded', initSearchPage);
 
-let searchTimer; // Untuk handle jeda (debounce)
+let searchTimer;
+let _allClasses = [];       // cache daftar kelas
+let _activeClassId = null;  // kelas yang lagi dibuka
 
+// ── INIT ─────────────────────────────────────────────────────────
 async function initSearchPage() {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) { window.location.href = 'index'; return; }
 
-    // Sync Header Profil
     const headerName = document.getElementById('headerName');
-    const headerPP = document.getElementById('headerPP');
+    const headerPP   = document.getElementById('headerPP');
     if (headerName) headerName.innerText = `Haii, ${user.full_name.split(' ')[0]}`;
-    if (headerPP) headerPP.src = user.avatar_url || 'images/default-avatar.png';
+    if (headerPP)   headerPP.src = user.avatar_url || 'icons/profpicture.png';
 
-    // Munculkan semua akun pas pertama buka
-    searchUser();
+    await loadClasses();
+    showClassList();
 
-    // LIVE SEARCH DENGAN JEDA 1.5 DETIK
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimer); // Hapus timer sebelumnya tiap kali jari masih ngetik
-
-            // Set timer baru: nunggu 1500ms (1.5 detik) diem baru eksekusi cari
-            searchTimer = setTimeout(() => {
-                searchUser();
-            }, 200);
+            clearTimeout(searchTimer);
+            const q = searchInput.value.trim();
+            if (q === '') {
+                if (_activeClassId) showStudents(_activeClassId);
+                else showClassList();
+                return;
+            }
+            searchTimer = setTimeout(() => searchUser(q), 200);
         });
 
-        // Kalau pencet Enter, langsung cari tanpa nunggu jeda
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 clearTimeout(searchTimer);
-                searchUser();
+                const q = searchInput.value.trim();
+                if (q) searchUser(q);
             }
         });
     }
 }
 
-async function searchUser() {
-    // Ambil data user login dari localStorage
-    const user = JSON.parse(localStorage.getItem("user")); 
-    const query = document.getElementById('searchInput').value.trim();
-    const container = document.getElementById('userResultList');
-    
+// ── LOAD KELAS ───────────────────────────────────────────────────
+async function loadClasses() {
     try {
-        // [UPDATE SELECT]: Join ke tabel 'classes' untuk ambil kolom 'name'
-        // Format 'classes(name)' artinya ambil kolom 'name' dari tabel 'classes'
-        let q = supabase.from('users')
-            .select('id, full_name, short_name, username, avatar_url, class_id, classes(name)');
+        const { data, error } = await supabase
+            .from('classes')
+            .select('id, name')
+            .order('name', { ascending: true });
+        if (error) throw error;
+        _allClasses = data || [];
+    } catch (err) {
+        console.error('Load classes gagal:', err);
+    }
+}
 
-        if (query !== "") {
-            q = q.or(`full_name.ilike.%${query}%,username.ilike.%${query}%`);
-        }
+// ── RENDER DAFTAR KELAS ──────────────────────────────────────────
+function getClassLevel(name) {
+    // Deteksi angka di depan: "10", "11", "12" atau Roman: "X", "XI", "XII"
+    const s = name.trim().toUpperCase();
+    if (/^XII/.test(s) || /^12/.test(s)) return '12';
+    if (/^XI/.test(s)  || /^11/.test(s)) return '11';
+    if (/^X/.test(s)   || /^10/.test(s)) return '10';
+    return 'lainnya';
+}
 
-        const { data, error } = await q.limit(100); 
+async function showClassList() {
+    _activeClassId = null;
+    setBackBtn(false);
+
+    const container = document.getElementById('userResultList');
+    container.innerHTML = '';
+
+    if (_allClasses.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa;">Tidak ada kelas ditemukan.</p>';
+        return;
+    }
+
+    // Fetch jumlah siswa per kelas
+    let countMap = {};
+    try {
+        const { data } = await supabase.from('users').select('class_id');
+        (data || []).forEach(u => {
+            countMap[u.class_id] = (countMap[u.class_id] || 0) + 1;
+        });
+    } catch (_) {}
+
+    const myClassId = String(getEffectiveClassId());
+    const sorted = [..._allClasses].sort((a, b) => a.name.localeCompare(b.name));
+
+    const label = document.createElement('div');
+    label.className = 'class-divider animate-fade-in';
+    label.innerHTML = '<span>SEMUA KELAS</span>';
+    container.appendChild(label);
+
+    // Group kelas per tingkat, kelas sendiri tetap di atas sendiri
+    const myClass   = sorted.find(c => String(c.id) === myClassId);
+    const others    = sorted.filter(c => String(c.id) !== myClassId);
+
+    // Render kelas sendiri dulu (kalau ada)
+    if (myClass) {
+        renderClassCard(container, myClass, true, countMap[myClass.id] || 0);
+    }
+
+    // Group sisa kelas per tingkat
+    const groups = {};
+    others.forEach(cls => {
+        const lvl = getClassLevel(cls.name);
+        if (!groups[lvl]) groups[lvl] = [];
+        groups[lvl].push(cls);
+    });
+
+    const levelOrder = ['10', '11', '12', 'lainnya'];
+    levelOrder.forEach(lvl => {
+        if (!groups[lvl] || groups[lvl].length === 0) return;
+        const lvlLabel = lvl === 'lainnya' ? 'LAINNYA' : `KELAS ${lvl}`;
+        const divider = document.createElement('div');
+        divider.className = 'class-divider animate-fade-in';
+        divider.innerHTML = `<span>${lvlLabel}</span>`;
+        container.appendChild(divider);
+
+        groups[lvl].forEach(cls => {
+            renderClassCard(container, cls, false, countMap[cls.id] || 0);
+        });
+    });
+}
+
+function renderClassCard(container, cls, isMine, count) {
+    const card = document.createElement('div');
+    card.className = 'course-card animate-pop-in';
+    card.style.cssText = 'display:flex;align-items:center;gap:15px;margin-bottom:12px;padding:15px;cursor:pointer;';
+    card.onclick = () => showStudents(cls.id, cls.name);
+    card.innerHTML = `
+        <div style="width:48px;height:48px;border-radius:12px;flex-shrink:0;background:rgba(0,234,255,0.08);border:1px solid rgba(0,234,255,${isMine ? '0.5' : '0.15'});display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-users" style="margin:0;font-size:18px;color:${isMine ? 'var(--accent,#00eaff)' : 'rgba(255,255,255,0.3)'};"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <h3 style="margin:0;font-size:15px;color:#fff;">
+                ${cls.name}${isMine ? ' <span style="font-size:10px;color:var(--accent,#00eaff);font-weight:400;margin-left:6px;">(Kelas Kamu)</span>' : ''}
+            </h3>
+            <p style="margin:3px 0 0;font-size:12px;color:rgba(255,255,255,0.35);">${count} siswa</p>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="margin:0;color:rgba(255,255,255,0.2);font-size:13px;flex-shrink:0;"></i>
+    `;
+    container.appendChild(card);
+}
+
+// ── RENDER SISWA SATU KELAS ───────────────────────────────────────
+async function showStudents(classId, className) {
+    _activeClassId = classId;
+
+    const cls  = _allClasses.find(c => String(c.id) === String(classId));
+    const name = className || cls?.name || 'Kelas ' + classId;
+
+    setBackBtn(true);
+
+    const container = document.getElementById('userResultList');
+    container.innerHTML = `
+        <div class="sk-card"><div class="skeleton sk-title"></div><div class="skeleton sk-text"></div></div>
+        <div class="sk-card"><div class="skeleton sk-title"></div><div class="skeleton sk-text"></div></div>
+        <div class="sk-card"><div class="skeleton sk-title"></div><div class="skeleton sk-text"></div></div>
+    `;
+
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, full_name, short_name, username, avatar_url, class_id')
+            .eq('class_id', classId)
+            .order('full_name', { ascending: true });
+
         if (error) throw error;
 
-        // --- LOGIKA SORTIR DINAMIS ---
-        const myClassId = getEffectiveClassId() || user.class_id; // Gunakan ID kelas user login
-        
-        data.sort((a, b) => {
-            // 1. Cek apakah ini kelas yang sama dengan user login
-            const aIsMine = a.class_id === myClassId;
-            const bIsMine = b.class_id === myClassId;
+        container.innerHTML = '';
 
-            if (aIsMine && !bIsMine) return -1; // Kelas lu naik ke paling atas
-            if (!aIsMine && bIsMine) return 1;
+        const divider = document.createElement('div');
+        divider.className = 'class-divider animate-fade-in';
+        divider.innerHTML = '<span>' + name.toUpperCase() + '</span>';
+        container.appendChild(divider);
 
-            // 2. Jika bukan kelas lu, urutkan berdasarkan Nama Kelas (X-RPL 1, dll)
-            // Hasil join classes(name) biasanya berupa object: { name: "X-RPL 1" }
-            const aClassName = a.classes?.name || 'Umum';
-            const bClassName = b.classes?.name || 'Umum';
-
-            if (aClassName !== bClassName) {
-                return aClassName.localeCompare(bClassName);
-            }
-
-            // 3. Terakhir urutkan berdasarkan Nama Siswa A-Z
-            return a.full_name.localeCompare(b.full_name);
-        });
-
-        // --- RENDER DENGAN PEMBATAS ---
-        container.innerHTML = "";
-        if (data.length === 0) {
-            container.innerHTML = `<p style="text-align: center; padding: 20px; color: #aaa;">Akun tidak ditemukan.</p>`;
+        if (!data || data.length === 0) {
+            container.innerHTML += '<p style="text-align:center;padding:30px;color:#aaa;">Belum ada siswa di kelas ini.</p>';
             return;
         }
 
-        let lastClass = null;
         data.forEach(u => {
-            // Ambil nama kelas dari hasil join
-            const currentClassName = String(u.classes?.name || 'UMUM');
-
-            // Tambah Pembatas jika ganti kelas
-            if (currentClassName !== lastClass) {
-                const divider = document.createElement('div');
-                divider.className = "class-divider animate-fade-in";
-                divider.innerHTML = `<span>${currentClassName.toUpperCase()}</span>`;
-                container.appendChild(divider);
-                lastClass = currentClassName;
-            }
-
-            const card = document.createElement('div');
-            card.className = "course-card animate-pop-in";
-            card.style.cssText = "display:flex;align-items:center;gap:15px;margin-bottom:12px;padding:15px;cursor:pointer;";
-            card.onclick = () => viewPublicProfile(u.id);
             const isSelf = String(u.id) === String(user.id);
+            const card = document.createElement('div');
+            card.className = 'course-card animate-pop-in';
+            card.style.cssText = 'display:flex;align-items:center;gap:15px;margin-bottom:12px;padding:15px;cursor:pointer;';
+            card.onclick = () => viewPublicProfile(u.id);
             card.innerHTML = `
-                <img src="${u.avatar_url || 'icons/profpicture.png'}" 
-                     style="width:55px;height:55px;border-radius:50%;border:2px solid var(--accent,#00eaff);object-fit:cover;flex-shrink:0;"
-                     onerror="this.src='icons/profpicture.png'">
+                <img src="${u.avatar_url || 'icons/profpicture.png'}" style="width:55px;height:55px;border-radius:50%;border:2px solid var(--accent,#00eaff);object-fit:cover;flex-shrink:0;" onerror="this.src='icons/profpicture.png'">
                 <div style="flex:1;min-width:0;">
-                    <h3 style="margin:0;font-size:15px;color:#fff;">
-                        ${u.full_name}${isSelf ? ' <span style="font-size:11px;color:var(--accent,#00eaff);font-weight:400;">(Anda)</span>' : ''}
-                    </h3>
+                    <h3 style="margin:0;font-size:15px;color:#fff;">${u.full_name}${isSelf ? ' <span style="font-size:11px;color:var(--accent,#00eaff);font-weight:400;">(Anda)</span>' : ''}</h3>
                     <p style="margin:2px 0;font-size:12px;color:var(--accent,#00eaff);">@${u.username || u.short_name || '-'}</p>
                 </div>
                 <i class="fa-solid fa-chevron-right" style="margin:0;color:rgba(255,255,255,0.25);font-size:13px;flex-shrink:0;"></i>
@@ -121,16 +200,109 @@ async function searchUser() {
             container.appendChild(card);
         });
     } catch (err) {
-        console.error("Gagal cari akun:", err);
+        console.error('Load siswa gagal:', err);
+        container.innerHTML = '<p style="color:#ff4757;text-align:center;padding:20px;">Gagal memuat data.</p>';
     }
+}
+
+// ── SEARCH QUERY ─────────────────────────────────────────────────
+async function searchUser(query) {
+    setBackBtn(false);
+
+    const container = document.getElementById('userResultList');
+    container.innerHTML = `
+        <div class="sk-card"><div class="skeleton sk-title"></div><div class="skeleton sk-text"></div></div>
+        <div class="sk-card"><div class="skeleton sk-title"></div><div class="skeleton sk-text"></div></div>
+    `;
+
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, full_name, short_name, username, avatar_url, class_id, classes(name)')
+            .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
+            .limit(50);
+
+        if (error) throw error;
+
+        const myClassId = String(getEffectiveClassId() || user.class_id);
+        data.sort((a, b) => {
+            const aIsMine = String(a.class_id) === myClassId;
+            const bIsMine = String(b.class_id) === myClassId;
+            if (aIsMine && !bIsMine) return -1;
+            if (!aIsMine && bIsMine) return 1;
+            const aClass = a.classes?.name || '';
+            const bClass = b.classes?.name || '';
+            if (aClass !== bClass) return aClass.localeCompare(bClass);
+            return a.full_name.localeCompare(b.full_name);
+        });
+
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa;">Akun tidak ditemukan.</p>';
+            return;
+        }
+
+        let lastClass = null;
+        data.forEach(u => {
+            const currentClass = u.classes?.name || 'UMUM';
+            if (currentClass !== lastClass) {
+                const divider = document.createElement('div');
+                divider.className = 'class-divider animate-fade-in';
+                divider.innerHTML = '<span>' + currentClass.toUpperCase() + '</span>';
+                container.appendChild(divider);
+                lastClass = currentClass;
+            }
+            const isSelf = String(u.id) === String(user.id);
+            const card = document.createElement('div');
+            card.className = 'course-card animate-pop-in';
+            card.style.cssText = 'display:flex;align-items:center;gap:15px;margin-bottom:12px;padding:15px;cursor:pointer;';
+            card.onclick = () => viewPublicProfile(u.id);
+            card.innerHTML = `
+                <img src="${u.avatar_url || 'icons/profpicture.png'}" style="width:55px;height:55px;border-radius:50%;border:2px solid var(--accent,#00eaff);object-fit:cover;flex-shrink:0;" onerror="this.src='icons/profpicture.png'">
+                <div style="flex:1;min-width:0;">
+                    <h3 style="margin:0;font-size:15px;color:#fff;">${u.full_name}${isSelf ? ' <span style="font-size:11px;color:var(--accent,#00eaff);font-weight:400;">(Anda)</span>' : ''}</h3>
+                    <p style="margin:2px 0;font-size:12px;color:var(--accent,#00eaff);">@${u.username || u.short_name || '-'}</p>
+                    <p style="margin:1px 0 0;font-size:11px;color:rgba(255,255,255,0.3);">${currentClass}</p>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="margin:0;color:rgba(255,255,255,0.25);font-size:13px;flex-shrink:0;"></i>
+            `;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error('Search gagal:', err);
+    }
+}
+
+// ── TOMBOL BACK ──────────────────────────────────────────────────
+function setBackBtn(show) {
+    let wrap = document.getElementById('searchBackWrap');
+    if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.id = 'searchBackWrap';
+        wrap.style.cssText = 'display:none;margin-bottom:14px;';
+        wrap.innerHTML = `
+            <button onclick="backToClasses()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">
+                <i class="fa-solid fa-arrow-left" style="margin:0;font-size:12px;"></i> Semua Kelas
+            </button>
+        `;
+        const list = document.getElementById('userResultList');
+        if (list) list.before(wrap);
+    }
+    wrap.style.display = show ? 'block' : 'none';
+}
+
+function backToClasses() {
+    document.getElementById('searchInput').value = '';
+    showClassList();
 }
 
 function viewPublicProfile(id) {
     const me = JSON.parse(localStorage.getItem('user'));
-    // Kalau klik profil sendiri, langsung ke halaman user tanpa id
     if (me && String(me.id) === String(id)) {
         window.location.href = 'user';
     } else {
-        window.location.href = `user?id=${id}`;
+        window.location.href = 'user?id=' + id;
     }
 }
