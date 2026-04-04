@@ -4,8 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Akses</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <title>E-Learniz - Platform Pembelajaran by zam</title>
+
+    <meta name="description"
+        content="platform pembelajaran yang isinya jadwal harian, pengumuman, tugas, nilai, dan lain lain. e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
+
+    <meta name="keywords" content="e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
+
+    <meta property="og:title" content="e-learniz by zam">
+    <meta property="og:description" content="Platform pembelajaran yang berisi jadwal harian, pengumuman, daftar tugas, nilai, dan lain lainnya">
+    <meta property="og:url" content="https://e-learniz.my.id">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
     <script src="js/supabase-clients.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -39,6 +50,19 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             position: relative;
+        }
+
+        /* Update dari h2 ke h1 agar tetap estetik tapi SEO friendly */
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 4px;
+            background: none;
+            -webkit-text-fill-color: white;
+            text-decoration: underline;
         }
 
         /* --- MAIN CARD --- */
@@ -763,7 +787,7 @@
                 <i class="fa-solid fa-arrow-left"></i>
             </div>
             <div class="header-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-            <h2 style="text-decoration: underline;">e-learniz.my.id</h2>
+            <h1>e-learniz.my.id</h1>
             <p id="headerSubtitle">Platform pembelajaran by nza</p>
         </div>
 
@@ -937,6 +961,10 @@
         </div>
 
         <div class="footer-link">
+            <p style="margin-bottom: 8px; font-size: 10px; color: #ccc; line-height: 1.4;">
+                E-Learniz (atau biasa disebut elearniz/ilerniz) dikembangkan untuk mendukung kegiatan belajar mengajar
+                secara efisien.
+            </p>
             Ada masalah? <a href="https://wa.me/6283851088843?text=min%20ada%20kendala%20login" target="_blank">Hubungi
                 Developer</a>
         </div>

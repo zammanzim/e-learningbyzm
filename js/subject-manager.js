@@ -646,14 +646,17 @@ const SubjectApp = {
             startAutoScroll();
         });
 
+        let prevDragY = 0;
         container.addEventListener('dragover', (e) => {
             e.preventDefault();
             if (!dragSrcCard) return;
             e.dataTransfer.dropEffect = 'move';
+            const dragDir = e.clientY < prevDragY ? 'up' : 'down';
+            prevDragY = e.clientY;
             cursorY = e.clientY;
             const target = e.target.closest('.course-card');
             if (target && target !== dragSrcCard) {
-                this._showDropIndicator(container, target, e.clientY);
+                this._showDropIndicator(container, target, e.clientY, dragDir);
             }
         });
 
@@ -774,7 +777,7 @@ const SubjectApp = {
         container.addEventListener('touchcancel', onTouchEnd);
     },
 
-    _showDropIndicator(container, target, clientY) {
+    _showDropIndicator(container, target, clientY, dragDir = 'down') {
         this._removeDropIndicator();
         const line = document.createElement('div');
         line.id = '_dnd_indicator';
@@ -795,7 +798,12 @@ const SubjectApp = {
             document.head.appendChild(s);
         }
         const rect = target.getBoundingClientRect();
-        if (clientY < rect.top + rect.height / 2) {
+        // Drag ke atas: cursor masuk dari bawah, langsung trigger di 90% height
+        // Drag ke bawah: cursor masuk dari atas, threshold normal 50%
+        const threshold = dragDir === 'up'
+            ? rect.top + rect.height * 0.9
+            : rect.top + rect.height * 0.5;
+        if (clientY < threshold) {
             container.insertBefore(line, target);
         } else {
             target.after(line);
@@ -1213,7 +1221,7 @@ const SubjectApp = {
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,
-            display_order: this.state.announcements.length + 1
+            display_order: 0
         });
         if (!error) location.reload();
     },
