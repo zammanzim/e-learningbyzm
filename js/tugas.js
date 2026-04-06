@@ -44,6 +44,13 @@ function normalize(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
+// ===== PWA SW REGISTER =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { });
+    });
+}
+
 async function initTugas() {
     let user;
     try {
@@ -470,8 +477,29 @@ function filterTasks(type, btn) {
     applyCurrentFilter();
 }
 
+// ── DETAIL OVERLAY: klik area kosong → tutup ─────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const detailOverlay = document.getElementById('detailOverlay');
+    if (detailOverlay) {
+        detailOverlay.onclick = (e) => {
+            if (e.target === detailOverlay) {
+                if (typeof closeDetail === 'function') closeDetail();
+            }
+        };
+    }
+});
+
 // ── SHORTCUTS ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
+    const detailOverlay = document.getElementById('detailOverlay');
+    const isDetailActive = detailOverlay && detailOverlay.classList.contains('active');
+
+    if (isDetailActive) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); if (typeof nextSlide === 'function') nextSlide(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); if (typeof prevSlide === 'function') prevSlide(); }
+        if (e.key === 'Escape') { if (typeof closeDetail === 'function') closeDetail(); return; }
+    }
+
     if (e.ctrlKey && e.key === 'Enter') {
         const pickerOpen = !document.getElementById('tugasPickerOverlay')?.classList.contains('hidden');
         const formOpen = !document.getElementById('tugasFormOverlay')?.classList.contains('hidden');

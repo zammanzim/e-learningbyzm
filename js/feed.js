@@ -57,21 +57,26 @@ const FeedApp = {
             if (error) throw error;
             if (!data || data.length < this.state.pageSize) this.state.hasMore = false;
 
-            // Batch fetch likes
+            // Batch fetch likes + comment counts
             const postIds = (data || []).map(p => p.id);
-            let likeMap = {};
+            let likeMap = {}, commentMap = {};
             if (postIds.length > 0) {
-                const { data: likes } = await supabase
-                    .from('post_likes').select('post_id, user_id').in('post_id', postIds);
+                const [{ data: likes }, { data: comments }] = await Promise.all([
+                    supabase.from('post_likes').select('post_id, user_id').in('post_id', postIds),
+                    supabase.from('post_comments').select('post_id').in('post_id', postIds),
+                ]);
                 (likes || []).forEach(l => {
                     likeMap[l.post_id] = (likeMap[l.post_id] || 0) + 1;
                     if (l.user_id === this.state.user.id) this.state.likedPosts.add(l.post_id);
+                });
+                (comments || []).forEach(c => {
+                    commentMap[c.post_id] = (commentMap[c.post_id] || 0) + 1;
                 });
             }
 
             (data || []).forEach(post => {
                 this.state.posts.push(post);
-                this.renderPost(post, likeMap[post.id] || 0);
+                this.renderPost(post, likeMap[post.id] || 0, commentMap[post.id] || 0);
             });
 
             this.state.page++;
@@ -85,7 +90,7 @@ const FeedApp = {
         this.state.loading = false;
     },
 
-    renderPost(post, likeCount = 0, prepend = false) {
+    renderPost(post, likeCount = 0, commentCount = 0, prepend = false) {
         const u        = post.users || {};
         const avatar   = u.avatar_url || 'icons/profpicture.png';
         const username = u.username || u.short_name || u.full_name?.split(' ')[0] || 'User';
@@ -128,6 +133,7 @@ const FeedApp = {
                 </button>
                 <button class="fc-comment-btn" aria-label="komentar">
                     <i class="fa-regular fa-comment"></i>
+                    ${commentCount > 0 ? `<span class="fc-comment-badge">${commentCount}</span>` : ''}
                 </button>
             </div>
 
@@ -277,6 +283,19 @@ const FeedApp = {
             list.querySelector('.fc-no-comments')?.remove();
             list.insertAdjacentHTML('beforeend', this._commentHTML(data));
         }
+
+        // Increment badge
+        const btn   = card.querySelector('.fc-comment-btn');
+        let badge   = btn.querySelector('.fc-comment-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'fc-comment-badge';
+            badge.textContent = '0';
+            btn.appendChild(badge);
+        }
+        badge.textContent = parseInt(badge.textContent || '0') + 1;
+        badge.classList.add('badge-bump');
+        setTimeout(() => badge.classList.remove('badge-bump'), 350);
     },
 
     async deletePost(postId, card) {
@@ -336,7 +355,7 @@ const FeedApp = {
                     .from('user_posts')
                     .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url)')
                     .eq('id', payload.new.id).single();
-                if (data) { this.state.posts.unshift(data); this.renderPost(data, 0, true); this.checkEmpty(); }
+                if (data) { this.state.posts.unshift(data); this.renderPost(data, 0, 0, true); this.checkEmpty(); }
             })
             .subscribe();
     },
