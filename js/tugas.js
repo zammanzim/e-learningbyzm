@@ -44,13 +44,6 @@ function normalize(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
-// ===== PWA SW REGISTER =====
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => { });
-    });
-}
-
 async function initTugas() {
     let user;
     try {

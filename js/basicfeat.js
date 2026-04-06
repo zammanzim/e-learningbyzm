@@ -1,15 +1,4 @@
 // ==========================================
-// PWA — SERVICE WORKER REGISTER (GLOBAL)
-// ==========================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('[PWA] SW terdaftar:', reg.scope))
-            .catch(err => console.warn('[PWA] SW gagal:', err));
-    });
-}
-
-// ==========================================
 // SCROLL LOCK — global, scroll position safe
 // ==========================================
 let _scrollLockCount = 0;
@@ -602,5 +591,3 @@ document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
         history.back();
     }
 });
-
-// ===== PWA INSTALL — dihandle langsung di announcements.html ===== 
