@@ -442,11 +442,11 @@ const SubjectApp = {
 
         // 2. UPDATE SEMUA KARTU (UI Mode)
         cards.forEach(card => {
-            const fields       = card.querySelectorAll(".editable");
-            const deleteBtn    = card.querySelector(".delete-btn");
-            const colorTools   = card.querySelector(".card-color-tools");
+            const fields = card.querySelectorAll(".editable");
+            const deleteBtn = card.querySelector(".delete-btn");
+            const colorTools = card.querySelector(".card-color-tools");
             const reorderHandle = card.querySelector(".reorder-handle");
-            const cameraBtn    = card.querySelector(".camera-btn");
+            const cameraBtn = card.querySelector(".camera-btn");
             const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
 
             if (this.state.editMode) {
@@ -572,7 +572,7 @@ const SubjectApp = {
             });
             try {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
-            } catch (e) {}
+            } catch (e) { }
 
             if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
         } catch (err) {
@@ -594,10 +594,10 @@ const SubjectApp = {
         container._dragInitialized = true;
 
         // ── AUTO-SCROLL (shared desktop + mobile) ────────────────────
-        const SCROLL_ZONE  = 100;
-        const SCROLL_MAX   = 20;
-        let scrollRafId    = null;
-        let cursorY        = 0;
+        const SCROLL_ZONE = 100;
+        const SCROLL_MAX = 20;
+        let scrollRafId = null;
+        let cursorY = 0;
 
         const startAutoScroll = () => {
             if (scrollRafId) return;
@@ -685,8 +685,8 @@ const SubjectApp = {
         });
 
         // ── MOBILE: Touch Drag — lightweight ghost ──────────────────
-        let touchCard  = null;
-        let ghost      = null;
+        let touchCard = null;
+        let ghost = null;
         let lastTarget = null;
         let ghostInitX = 0, ghostInitY = 0;
 
@@ -696,10 +696,10 @@ const SubjectApp = {
             const card = grip.closest('.course-card');
             if (!card) return;
 
-            touchCard  = card;
+            touchCard = card;
             lastTarget = null;
             const touch = e.touches[0];
-            const rect  = card.getBoundingClientRect();
+            const rect = card.getBoundingClientRect();
 
             // Ghost ringan: hanya ukuran + judul, bukan clone full DOM
             const title = card.querySelector('[data-field="big_title"]')?.innerText || '';
@@ -731,9 +731,9 @@ const SubjectApp = {
             document.body.appendChild(ghost);
 
             ghostInitX = rect.left - (touch.clientX - rect.left);
-            ghostInitY = rect.top  - (touch.clientY - rect.top);
+            ghostInitY = rect.top - (touch.clientY - rect.top);
 
-            card.style.opacity    = '0.3';
+            card.style.opacity = '0.3';
             card.style.transition = 'opacity 0.15s';
             e.preventDefault();
             startAutoScroll();
@@ -767,13 +767,13 @@ const SubjectApp = {
             const indicator = document.getElementById('_dnd_indicator');
             if (indicator) container.insertBefore(touchCard, indicator);
             if (ghost) { ghost.remove(); ghost = null; }
-            touchCard.style.opacity    = '';
+            touchCard.style.opacity = '';
             touchCard.style.transition = '';
             this._cleanupDrag(touchCard);
             touchCard = null; lastTarget = null;
         };
 
-        container.addEventListener('touchend',    onTouchEnd);
+        container.addEventListener('touchend', onTouchEnd);
         container.addEventListener('touchcancel', onTouchEnd);
     },
 
@@ -881,12 +881,12 @@ const SubjectApp = {
         if (photos.length <= 4) {
             // Semua foto tampil penuh, semua bisa dihapus
             gridClass = `grid-${photos.length}`;
-            imgsHTML  = photos.map(makeSlot).join('');
+            imgsHTML = photos.map(makeSlot).join('');
         } else {
             // Slot 1-3: foto biasa + tombol hapus
             // Slot 4: foto ke-4 tampil, sisanya jadi overlay "+N"
             gridClass = 'grid-4';
-            imgsHTML  = photos.slice(0, 3).map(makeSlot).join('');
+            imgsHTML = photos.slice(0, 3).map(makeSlot).join('');
             // Slot 4 tetap bisa dihapus, overlay cuma teks
             imgsHTML += `
             <div class="photo-item photo-wrapper" style="position:relative;">
@@ -909,7 +909,7 @@ const SubjectApp = {
         if (typeof val === 'string') {
             const trimmed = val.trim();
             if (trimmed.startsWith('[')) {
-                try { return JSON.parse(trimmed); } catch (e) {}
+                try { return JSON.parse(trimmed); } catch (e) { }
             }
             return [trimmed];
         }
@@ -935,7 +935,7 @@ const SubjectApp = {
 
             for (let file of files) {
                 if (!file.type.startsWith('image/')) continue;
-                try { file = await this.compressImage(file); } catch (err) {}
+                try { file = await this.compressImage(file); } catch (err) { }
                 if (file.size > 5 * 1024 * 1024) { showPopup("Max 5MB per foto", "error"); continue; }
                 const objUrl = URL.createObjectURL(file);
                 card._pendingFiles.push({ file, objUrl });
@@ -992,8 +992,8 @@ const SubjectApp = {
 
             // Parse dulu, filter, lalu serialize kembali ke string
             const currentUrls = this._parsePhotoUrls(ann?.photo_url);
-            const newUrls     = currentUrls.filter(u => u !== urlToDelete);
-            const newVal      = this._serializePhotoUrls(newUrls);
+            const newUrls = currentUrls.filter(u => u !== urlToDelete);
+            const newVal = this._serializePhotoUrls(newUrls);
 
             await supabase.from("subject_announcements").update({ photo_url: newVal }).eq("id", id);
 
@@ -1165,7 +1165,7 @@ const SubjectApp = {
             const hasDraft = this._restoreDraft();
 
             if (!hasDraft) {
-                // Tidak ada draft → random warna + tanggal hari ini
+                // Tidak ada draft → random warna + tanggal+jam hari ini + judul otomatis
                 const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
                 this.state.selectedColor = randomColor;
                 const colorOpts = document.querySelectorAll('#addColors .color-opt');
@@ -1174,6 +1174,15 @@ const SubjectApp = {
                 });
                 const el = document.getElementById('addSmall');
                 if (el) el.value = getTodayIndo();
+
+                // Auto-isi big title dengan nama pelajaran (hanya di halaman lesson)
+                const judulEl = document.getElementById('addJudul');
+                if (judulEl && !judulEl.value && this.state.isLessonMode) {
+                    const nama = this.state.subjectName
+                        ? this.state.subjectName.replace(/<[^>]*>/g, '').trim()
+                        : '';
+                    if (nama) judulEl.value = `Tugas ${nama}`;
+                }
             }
 
             // Catat history untuk tombol back mobile
@@ -1315,12 +1324,15 @@ const SubjectApp = {
 
 function getTodayIndo() {
     const d = new Date();
-    return d.toLocaleDateString('id-ID', {
+    const tanggal = d.toLocaleDateString('id-ID', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
+    const jam = String(d.getHours()).padStart(2, '0');
+    const menit = String(d.getMinutes()).padStart(2, '0');
+    return `${tanggal}, ${jam}.${menit}`;
 }
 
 let currentViewerPhotos = [], currentViewerIndex = 0;

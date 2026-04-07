@@ -348,9 +348,21 @@
             if (hasDraft) {
                 _restoreTugasDraft();
             } else {
-                // Tidak ada draft → tanggal hari ini
+                // Tidak ada draft → tanggal+jam hari ini + judul otomatis
                 const el = document.getElementById('tf_small');
-                if (el && !el.value) el.value = (typeof getTodayIndo === 'function') ? getTodayIndo() : new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                if (el && !el.value) el.value = (typeof getTodayIndo === 'function')
+                    ? getTodayIndo()
+                    : (() => {
+                        const d = new Date();
+                        const tgl = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                        const jam = String(d.getHours()).padStart(2, '0');
+                        const menit = String(d.getMinutes()).padStart(2, '0');
+                        return `${tgl}, ${jam}.${menit}`;
+                    })();
+
+                // Auto-isi judul dengan nama mapel
+                const judulEl = document.getElementById('tf_judul');
+                if (judulEl && !judulEl.value) judulEl.value = `Tugas ${subjectName}`;
             }
 
             setTimeout(() => document.getElementById('tf_judul')?.focus(), 150);
