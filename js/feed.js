@@ -50,15 +50,20 @@ const FeedApp = {
         try {
             const { data, error } = await supabase
                 .from('user_posts')
-                .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url, class_id)')
+                .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url, class_id, is_private)')
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
             if (error) throw error;
             if (!data || data.length < this.state.pageSize) this.state.hasMore = false;
 
+            // Filter postingan dari akun privat (kecuali punya sendiri)
+            const filtered = (data || []).filter(post =>
+                post.user_id === this.state.user.id || !post.users?.is_private
+            );
+
             // Batch fetch likes + comment counts
-            const postIds = (data || []).map(p => p.id);
+            const postIds = filtered.map(p => p.id);
             let likeMap = {}, commentMap = {};
             if (postIds.length > 0) {
                 const [{ data: likes }, { data: comments }] = await Promise.all([
@@ -74,7 +79,7 @@ const FeedApp = {
                 });
             }
 
-            (data || []).forEach(post => {
+            filtered.forEach(post => {
                 this.state.posts.push(post);
                 this.renderPost(post, likeMap[post.id] || 0, commentMap[post.id] || 0);
             });
@@ -353,9 +358,13 @@ const FeedApp = {
                 if (payload.new.user_id === this.state.user.id) return;
                 const { data } = await supabase
                     .from('user_posts')
-                    .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url)')
+                    .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url, is_private)')
                     .eq('id', payload.new.id).single();
-                if (data) { this.state.posts.unshift(data); this.renderPost(data, 0, 0, true); this.checkEmpty(); }
+                if (data && !data.users?.is_private) {
+                    this.state.posts.unshift(data);
+                    this.renderPost(data, 0, 0, true);
+                    this.checkEmpty();
+                }
             })
             .subscribe();
     },

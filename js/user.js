@@ -54,7 +54,7 @@ const UserProfile = {
         try {
             const { data } = await supabase
                 .from('users')
-                .select('id, full_name, short_name, username, avatar_url, bio, class_id, classes(name)')
+                .select('id, full_name, short_name, username, avatar_url, bio, class_id, is_private, classes(name)')
                 .eq('id', userId).single();
             if (data) this.state.target = data;
         } catch { /* pakai data lokal */ }
@@ -64,7 +64,7 @@ const UserProfile = {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('id, full_name, short_name, username, avatar_url, bio, class_id, classes(name)')
+                .select('id, full_name, short_name, username, avatar_url, bio, class_id, is_private, classes(name)')
                 .eq('id', userId).single();
             if (error || !data) {
                 document.getElementById('profilePageWrap').innerHTML =
@@ -148,6 +148,23 @@ const UserProfile = {
                         <span class="stat-label">Postingan</span>
                     </div>
                 </div>
+
+                ${this.state.isOwnProfile ? `
+                <div class="privacy-toggle-row" style="margin-top:1rem;" onclick="event.stopPropagation()">
+                    <div class="privacy-toggle-info">
+                        <span class="privacy-toggle-label">
+                            <i class="fa-solid fa-lock"></i> Akun Privat
+                        </span>
+                        <span class="privacy-toggle-desc">Postinganmu tidak muncul di Feed orang lain</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="profileTogglePrivate" ${t.is_private ? 'checked' : ''} onchange="UserProfile.savePrivacy(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>` : (t.is_private ? `
+                <div style="margin-top:.75rem;display:inline-flex;align-items:center;gap:6px;font-size:0.73rem;color:#888;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);padding:4px 10px;border-radius:20px;">
+                    <i class="fa-solid fa-lock" style="font-size:10px;margin:0;"></i> Akun Privat
+                </div>` : '')}
             </div>
         </div>
 
@@ -415,6 +432,26 @@ const UserProfile = {
         if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
         if (diff < 604800) return `${Math.floor(diff / 86400)} hari lalu`;
         return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    async savePrivacy(isPrivate) {
+        const me = this.state.me;
+        if (!me) return;
+        try {
+            const { error } = await supabase.from('users').update({ is_private: isPrivate }).eq('id', me.id);
+            if (error) throw error;
+            // Update localStorage
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            stored.is_private = isPrivate;
+            localStorage.setItem('user', JSON.stringify(stored));
+            this.state.target.is_private = isPrivate;
+            showToast(isPrivate ? '🔒 Akun kamu sekarang privat' : '🌐 Akun kamu sekarang publik');
+        } catch (err) {
+            showToast('Gagal menyimpan pengaturan privasi', 'error');
+            // Revert toggle
+            const toggle = document.getElementById('profileTogglePrivate');
+            if (toggle) toggle.checked = !isPrivate;
+        }
     },
 
     buildBioHTML(bio) {
