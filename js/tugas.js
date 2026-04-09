@@ -136,11 +136,15 @@ async function initTugas() {
 
 // ── Helper: parse lessons string → deadlineSubjects array ────────
 function _parseDeadlineSubjects(lessons) {
-    return lessons.split(',')
+    // Format DB: "07.00-08.00 - PPK; 08.00-09.00 - PP" → split pakai ";"
+    // Sama kayak daily-card.js: lastIndexOf("-") untuk ambil nama subject-nya
+    return lessons.split(';')
         .map(item => {
             const trimmed = item.trim();
-            const name = trimmed.replace(/^\d+[-_]\s*/, '');
-            return normalize(name.trim());
+            if (!trimmed) return '';
+            const dashIdx = trimmed.lastIndexOf('-');
+            const subject = dashIdx !== -1 ? trimmed.substring(dashIdx + 1).trim() : trimmed;
+            return normalize(subject);
         })
         .filter(s => s.length > 0);
 }
@@ -289,9 +293,14 @@ function renderTasks(data) {
         const isDeadline = !isDone && deadlineSubjects.some(s => {
             const normSubject = normalize(item.subject_id);
             const normTitle = normalize(item.big_title);
-            // Cek dua arah: subject mengandung jadwal ATAU jadwal mengandung subject
-            return normSubject.includes(s) || s.includes(normSubject) ||
-                normTitle.includes(s) || s.includes(normTitle);
+            // Exact match selalu aman. Includes boleh tapi KEDUANYA harus >= 3 huruf
+            // biar "pp" (2 huruf) ga nyangkut ke "ppk" (atau sebaliknya)
+            const subOk = normSubject === s ||
+                (normSubject.length >= 3 && s.includes(normSubject)) ||
+                (s.length >= 3 && normSubject.includes(s));
+            const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
+                (normTitle.length >= 3 && s.includes(normTitle));
+            return subOk || titleOk;
         });
 
         const autoNumber = total - allTasks.indexOf(item);
@@ -443,14 +452,22 @@ function applyCurrentFilter() {
             const aIsDeadline = deadlineSubjects.some(s => {
                 const normSubject = normalize(a.subject_id);
                 const normTitle = normalize(a.big_title);
-                return normSubject.includes(s) || s.includes(normSubject) ||
-                    normTitle.includes(s) || s.includes(normTitle);
+                const subOk = normSubject === s ||
+                    (normSubject.length >= 3 && s.includes(normSubject)) ||
+                    (s.length >= 3 && normSubject.includes(s));
+                const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
+                    (normTitle.length >= 3 && s.includes(normTitle));
+                return subOk || titleOk;
             });
             const bIsDeadline = deadlineSubjects.some(s => {
                 const normSubject = normalize(b.subject_id);
                 const normTitle = normalize(b.big_title);
-                return normSubject.includes(s) || s.includes(normSubject) ||
-                    normTitle.includes(s) || s.includes(normTitle);
+                const subOk = normSubject === s ||
+                    (normSubject.length >= 3 && s.includes(normSubject)) ||
+                    (s.length >= 3 && normSubject.includes(s));
+                const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
+                    (normTitle.length >= 3 && s.includes(normTitle));
+                return subOk || titleOk;
             });
 
             if (aIsDeadline && !bIsDeadline) return -1;
