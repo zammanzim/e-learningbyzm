@@ -43,7 +43,7 @@
 .sidebar li.active a, .sidebar li.active i,
 .glass-modal-box h3 i, .drop-icon,
 .info-content-scroll h4,
-.final-badge, .color-blue,
+.final-badge,
 .hide-desk { color: ${a} !important; }
 
 .sidebar li.active {

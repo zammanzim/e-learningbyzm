@@ -507,99 +507,6 @@
             opacity: .25;
             cursor: not-allowed;
         }
-
-        /* SKELETON */
-        #feedSkeleton {
-            display: none;
-        }
-
-        .sk-card {
-            background: rgba(8, 10, 18, .6);
-            border: 1px solid rgba(255, 255, 255, .07);
-            border-radius: 14px;
-            overflow: hidden;
-            margin-bottom: 14px;
-        }
-
-        .sk-header {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            padding: 10px 12px;
-        }
-
-        .sk {
-            background: linear-gradient(90deg, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .10) 50%, rgba(255, 255, 255, .05) 75%);
-            background-size: 200% 100%;
-            animation: skShimmer 1.4s infinite;
-            border-radius: 6px;
-        }
-
-        @keyframes skShimmer {
-            0% {
-                background-position: 200% 0
-            }
-
-            100% {
-                background-position: -200% 0
-            }
-        }
-
-        .sk-circle {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .sk-line {
-            height: 11px;
-        }
-
-        .sk-img {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 0;
-        }
-
-        .sk-sm {
-            width: 42%;
-        }
-
-        .sk-md {
-            width: 68%;
-            margin-top: 5px;
-        }
-
-        .sk-pad {
-            padding: 10px 12px;
-        }
-
-        /* EMPTY */
-        #feedEmpty {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 64px 20px;
-            color: rgba(255, 255, 255, 0.3);
-            text-align: center;
-            gap: 10px;
-        }
-
-        #feedEmpty i {
-            font-size: 48px;
-            color: rgba(255, 255, 255, 0.1);
-        }
-
-        #feedEmpty p {
-            font-size: 15px;
-        }
-
-        #feedEmpty small {
-            font-size: 12.5px;
-            color: rgba(255, 255, 255, 0.2);
-        }
     </style>
 </head>
 
@@ -612,44 +519,19 @@
         <div class="right-section" style="padding:0">
             <div class="feed-wrap" style="margin-top: 0;">
 
-                <!-- SKELETON -->
-                <div id="feedSkeleton">
-                    <div class="sk-card">
-                        <div class="sk-header">
-                            <div class="sk sk-circle"></div>
-                            <div style="flex:1">
-                                <div class="sk sk-line sk-sm"></div>
-                                <div class="sk sk-line sk-md"></div>
-                            </div>
-                        </div>
-                        <div class="sk sk-img"></div>
-                        <div class="sk-pad">
-                            <div class="sk sk-line sk-sm"></div>
-                        </div>
-                    </div>
-                    <div class="sk-card">
-                        <div class="sk-header">
-                            <div class="sk sk-circle"></div>
-                            <div style="flex:1">
-                                <div class="sk sk-line sk-sm"></div>
-                                <div class="sk sk-line sk-md"></div>
-                            </div>
-                        </div>
-                        <div class="sk sk-img"></div>
-                        <div class="sk-pad">
-                            <div class="sk sk-line sk-sm"></div>
-                        </div>
-                    </div>
-                </div>
+                <!-- SKELETON (diisi SkeletonUI) -->
+                <div id="feedSkeleton"></div>
 
                 <!-- POSTS -->
                 <div id="feedList"></div>
 
                 <!-- EMPTY STATE -->
-                <div id="feedEmpty">
-                    <i class="fa-regular fa-image"></i>
-                    <p>Belum ada postingan</p>
-                    <small>Posting dulu di halaman profil kamu!</small>
+                <div id="feedEmpty"
+                    style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;color:rgba(255,255,255,0.3);text-align:center;gap:10px;">
+                    <i class="fa-regular fa-image" style="font-size:48px;color:rgba(255,255,255,0.1);"></i>
+                    <p style="font-size:15px;">Belum ada postingan</p>
+                    <small style="font-size:12.5px;color:rgba(255,255,255,0.2);">Posting dulu di halaman profil
+                        kamu!</small>
                 </div>
 
                 <!-- INFINITE SCROLL TRIGGER -->
@@ -658,6 +540,9 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => SkeletonUI.render('feedSkeleton', 'feed'));
+    </script>
     <script src="js/feed.js" defer></script>
 </body>
 

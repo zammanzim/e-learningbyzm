@@ -81,20 +81,10 @@
                 </button>
             </div>
 
-            <div id="taskList" class="announcements">
-                <div class="sk-card">
-                    <div class="skeleton sk-media"></div>
-                    <div class="skeleton sk-title"></div>
-                    <div class="skeleton sk-text"></div>
-                    <div class="skeleton sk-text short"></div>
-                </div>
-                <div class="sk-card">
-                    <div class="skeleton sk-media"></div>
-                    <div class="skeleton sk-title"></div>
-                    <div class="skeleton sk-text"></div>
-                    <div class="skeleton sk-text short"></div>
-                </div>
-            </div>
+            <div id="taskList" class="announcements"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => SkeletonUI.render('taskList', 'tugas', 2));
+            </script>
         </div>
     </div>
 
@@ -165,7 +155,7 @@
                     <div class="color-opt" data-color="green"
                         style="width:22px;height:22px;border-radius:50%;background:#2ed573;cursor:pointer;"></div>
                     <div class="color-opt" data-color="blue"
-                        style="width:22px;height:22px;border-radius:50%;background:#00eaff;cursor:pointer;"></div>
+                        style="width:22px;height:22px;border-radius:50%;background:#00c8ff;cursor:pointer;"></div>
                     <div class="color-opt" data-color="purple"
                         style="width:22px;height:22px;border-radius:50%;background:#a55eea;cursor:pointer;"></div>
                     <div class="color-opt" data-color="pink"
@@ -250,8 +240,12 @@
             // Warna picker — simpan draft saat ganti warna
             document.querySelectorAll('#tf_colors .color-opt').forEach(dot => {
                 dot.onclick = () => {
-                    document.querySelectorAll('#tf_colors .color-opt').forEach(d => d.style.outline = '');
+                    document.querySelectorAll('#tf_colors .color-opt').forEach(d => {
+                        d.style.outline = '';
+                        d.classList.remove('active');
+                    });
                     dot.style.outline = '2px solid white';
+                    dot.classList.add('active');
                     _tugasSelectedColor = dot.dataset.color;
                     _saveTugasDraft();
                 };
@@ -348,7 +342,15 @@
             if (hasDraft) {
                 _restoreTugasDraft();
             } else {
-                // Tidak ada draft → tanggal+jam hari ini + judul otomatis
+                // Tidak ada draft → random warna + tanggal+jam hari ini + judul otomatis
+                const availableColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink'];
+                const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                _tugasSelectedColor = randomColor;
+                document.querySelectorAll('#tf_colors .color-opt').forEach(opt => {
+                    opt.style.outline = '';
+                    opt.classList.toggle('active', opt.dataset.color === randomColor);
+                    opt.style.outline = opt.dataset.color === randomColor ? '2px solid white' : '';
+                });
                 const el = document.getElementById('tf_small');
                 if (el && !el.value) el.value = (typeof getTodayIndo === 'function')
                     ? getTodayIndo()

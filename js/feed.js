@@ -26,9 +26,9 @@ const FeedApp = {
         if (!this.state.user) { window.location.href = 'login'; return; }
 
         const nameEl = document.getElementById('headerName');
-        const ppEl   = document.getElementById('headerPP');
+        const ppEl = document.getElementById('headerPP');
         if (nameEl) nameEl.textContent = 'Haii, ' + (this.state.user.short_name || this.state.user.full_name?.split(' ')[0] || 'User');
-        if (ppEl)   ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
+        if (ppEl) ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
 
         this.bindScrollSentinel();
         await this.loadPosts();
@@ -45,7 +45,7 @@ const FeedApp = {
         this.setSkeleton(true);
 
         const from = this.state.page * this.state.pageSize;
-        const to   = from + this.state.pageSize - 1;
+        const to = from + this.state.pageSize - 1;
 
         try {
             const { data, error } = await supabase
@@ -57,10 +57,8 @@ const FeedApp = {
             if (error) throw error;
             if (!data || data.length < this.state.pageSize) this.state.hasMore = false;
 
-            // Filter postingan dari akun privat (kecuali punya sendiri)
-            const filtered = (data || []).filter(post =>
-                post.user_id === this.state.user.id || !post.users?.is_private
-            );
+            // Filter postingan dari akun privat
+            const filtered = (data || []).filter(post => !post.users?.is_private);
 
             // Batch fetch likes + comment counts
             const postIds = filtered.map(p => p.id);
@@ -96,24 +94,24 @@ const FeedApp = {
     },
 
     renderPost(post, likeCount = 0, commentCount = 0, prepend = false) {
-        const u        = post.users || {};
-        const avatar   = u.avatar_url || 'icons/profpicture.png';
+        const u = post.users || {};
+        const avatar = u.avatar_url || 'icons/profpicture.png';
         const username = u.username || u.short_name || u.full_name?.split(' ')[0] || 'User';
-        const liked    = this.state.likedPosts.has(post.id);
-        const isOwn    = post.user_id === this.state.user.id;
-        const isAdmin  = ['super_admin', 'class_admin'].includes(this.state.user.role);
-        const canDel   = isOwn || isAdmin;
+        const liked = this.state.likedPosts.has(post.id);
+        const isOwn = post.user_id === this.state.user.id;
+        const isAdmin = ['super_admin', 'class_admin'].includes(this.state.user.role);
+        const canDel = isOwn || isAdmin;
 
         const card = document.createElement('article');
         card.className = 'feed-card';
         card.dataset.postId = post.id;
         card.innerHTML = `
             <div class="fc-header">
-                <a class="fc-avatar-link" href="user?id=${u.id}">
+                <a class="fc-avatar-link" href="user?name=${u.username || u.short_name}">
                     <img class="fc-avatar" src="${avatar}" alt="${username}" onerror="this.src='icons/profpicture.png'">
                 </a>
                 <div class="fc-meta">
-                    <a class="fc-username" href="user?id=${u.id}">${u.full_name || username}</a>
+                    <a class="fc-username" href="user?name=${u.username || u.short_name}">${username}</a><span id=${u.Nickname}</span>
                     <span class="fc-time">${this.timeAgo(post.created_at)}</span>
                 </div>
                 ${canDel ? `
@@ -146,7 +144,7 @@ const FeedApp = {
 
             ${post.caption ? `
             <div class="fc-caption">
-                <a class="fc-cap-name" href="user?id=${u.id}">${username}</a>
+                <a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username}</a>
                 <span class="fc-cap-text">${this.escHtml(post.caption)}</span>
             </div>` : ''}
 
@@ -184,7 +182,7 @@ const FeedApp = {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendComment(post.id, card); }
         });
 
-        const menuBtn  = card.querySelector('.fc-menu-btn');
+        const menuBtn = card.querySelector('.fc-menu-btn');
         const dropdown = card.querySelector('.fc-dropdown');
         menuBtn?.addEventListener('click', e => {
             e.stopPropagation();
@@ -195,18 +193,18 @@ const FeedApp = {
             item.addEventListener('click', () => {
                 dropdown?.classList.add('hidden');
                 if (item.dataset.action === 'delete') this.deletePost(post.id, card);
-                if (item.dataset.action === 'edit')   this.editCaption(post, card);
+                if (item.dataset.action === 'edit') this.editCaption(post, card);
             });
         });
     },
 
     async toggleLike(postId, card, fromDblTap = false) {
-        const liked   = this.state.likedPosts.has(postId);
+        const liked = this.state.likedPosts.has(postId);
         if (fromDblTap && liked) return;
-        const btn     = card.querySelector('.fc-like-btn');
-        const icon    = btn.querySelector('i');
+        const btn = card.querySelector('.fc-like-btn');
+        const icon = btn.querySelector('i');
         const countEl = card.querySelector('.fc-like-count');
-        const prev    = parseInt(countEl.textContent) || 0;
+        const prev = parseInt(countEl.textContent) || 0;
 
         if (!liked) {
             this.state.likedPosts.add(postId);
@@ -235,7 +233,7 @@ const FeedApp = {
     },
 
     async toggleComments(postId, card) {
-        const section  = card.querySelector('.fc-comments');
+        const section = card.querySelector('.fc-comments');
         const isHidden = section.classList.toggle('hidden');
         if (!isHidden && !this.state.expandedComments.has(postId)) {
             this.state.expandedComments.add(postId);
@@ -269,9 +267,9 @@ const FeedApp = {
     },
 
     async sendComment(postId, card) {
-        const input   = card.querySelector('.fc-comment-input');
+        const input = card.querySelector('.fc-comment-input');
         const sendBtn = card.querySelector('.fc-comment-send');
-        const text    = input.value.trim();
+        const text = input.value.trim();
         if (!text) return;
         sendBtn.disabled = true; input.value = '';
 
@@ -290,8 +288,8 @@ const FeedApp = {
         }
 
         // Increment badge
-        const btn   = card.querySelector('.fc-comment-btn');
-        let badge   = btn.querySelector('.fc-comment-badge');
+        const btn = card.querySelector('.fc-comment-btn');
+        let badge = btn.querySelector('.fc-comment-badge');
         if (!badge) {
             badge = document.createElement('span');
             badge.className = 'fc-comment-badge';
@@ -325,8 +323,8 @@ const FeedApp = {
 
     async editCaption(post, card) {
         const capDiv = card.querySelector('.fc-caption');
-        const u      = post.users || {};
-        const prev   = post.caption || '';
+        const u = post.users || {};
+        const prev = post.caption || '';
         if (!capDiv) return;
 
         capDiv.innerHTML = `
@@ -338,14 +336,14 @@ const FeedApp = {
 
         capDiv.querySelector('.fc-edit-ta').focus();
         capDiv.querySelector('.fc-btn-cancel-edit').onclick = () => {
-            capDiv.innerHTML = `<a class="fc-cap-name" href="user?id=${u.id}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(prev)}</span>`;
+            capDiv.innerHTML = `<a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(prev)}</span>`;
         };
         capDiv.querySelector('.fc-btn-save-edit').onclick = async () => {
             const newCap = capDiv.querySelector('.fc-edit-ta').value.trim();
             const { error } = await supabase.from('user_posts').update({ caption: newCap }).eq('id', post.id);
             if (error) { showToast('Gagal simpan', 'error'); return; }
             post.caption = newCap;
-            capDiv.innerHTML = `<a class="fc-cap-name" href="user?id=${u.id}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(newCap)}</span>`;
+            capDiv.innerHTML = `<a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(newCap)}</span>`;
             showToast('Caption diupdate!');
         };
 
@@ -379,7 +377,12 @@ const FeedApp = {
 
     setSkeleton(show) {
         const el = document.getElementById('feedSkeleton');
-        if (el) el.style.display = show ? 'block' : 'none';
+        if (!el) return;
+        if (show) {
+            el.innerHTML = SkeletonUI.feed();
+        } else {
+            el.innerHTML = '';
+        }
     },
 
     checkEmpty() {
@@ -389,7 +392,7 @@ const FeedApp = {
 
     escHtml(s = '') {
         return String(s)
-            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/\n/g, '<br>');
     },
 
@@ -397,10 +400,10 @@ const FeedApp = {
         if (!iso) return '';
         const diff = (Date.now() - new Date(iso)) / 1000;
         if (diff < 60) return 'Baru saja';
-        if (diff < 3600) return `${Math.floor(diff/60)} mnt lalu`;
-        if (diff < 86400) return `${Math.floor(diff/3600)} jam lalu`;
-        if (diff < 604800) return `${Math.floor(diff/86400)} hari lalu`;
-        return new Date(iso).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+        if (diff < 3600) return `${Math.floor(diff / 60)} mnt lalu`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} hari lalu`;
+        return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     },
 };
 

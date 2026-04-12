@@ -88,7 +88,7 @@ const UIComponents = {
     <div class="color-opt" data-color="orange" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9f43; cursor: pointer;"></div>
     <div class="color-opt" data-color="yellow" style="width: 22px; height: 22px; border-radius: 50%; background: #ffd32a; cursor: pointer;"></div>
     <div class="color-opt" data-color="green" style="width: 22px; height: 22px; border-radius: 50%; background: #2ed573; cursor: pointer;"></div>
-    <div class="color-opt" data-color="blue" style="width: 22px; height: 22px; border-radius: 50%; background: var(--accent, #00eaff); cursor: pointer;"></div>
+    <div class="color-opt" data-color="blue" style="width: 22px; height: 22px; border-radius: 50%; background: #00c8ff; cursor: pointer;"></div>
     <div class="color-opt" data-color="purple" style="width: 22px; height: 22px; border-radius: 50%; background: #a55eea; cursor: pointer;"></div>
     <div class="color-opt" data-color="pink" style="width: 22px; height: 22px; border-radius: 50%; background: #ff9ff3; cursor: pointer;"></div>
     <div class="color-opt" data-color="brown" style="width: 22px; height: 22px; border-radius: 50%; background: #8b4513; cursor: pointer;"></div>
@@ -143,21 +143,135 @@ const UIComponents = {
 };
 
 const SkeletonUI = {
-    render(containerId, count = 3) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
 
+    // CSS yang dibutuhin semua skeleton — inject sekali ke <head>
+    _cssInjected: false,
+    injectCSS() {
+        if (this._cssInjected) return;
+        this._cssInjected = true;
+        const style = document.createElement('style');
+        style.textContent = `
+            /* ── Base skeleton shimmer ── */
+            .sk {
+                background: linear-gradient(90deg,
+                    rgba(255,255,255,.05) 25%,
+                    rgba(255,255,255,.10) 50%,
+                    rgba(255,255,255,.05) 75%);
+                background-size: 200% 100%;
+                animation: skShimmer 1.4s infinite;
+                border-radius: 6px;
+            }
+            @keyframes skShimmer {
+                0%   { background-position: 200% 0 }
+                100% { background-position: -200% 0 }
+            }
+
+            /* ── Shared sk-card ── */
+            .sk-card {
+                background: rgba(8,10,18,.6);
+                border: 1px solid rgba(255,255,255,.07);
+                border-radius: 14px;
+                overflow: hidden;
+                margin-bottom: 14px;
+            }
+
+            /* ── Feed skeleton parts ── */
+            .sk-header   { display:flex; gap:10px; align-items:center; padding:10px 12px; }
+            .sk-circle   { width:38px; height:38px; border-radius:50%; flex-shrink:0; }
+            .sk-line     { height:11px; }
+            .sk-img      { width:100%; aspect-ratio:1; border-radius:0; }
+            .sk-sm       { width:42%; }
+            .sk-md       { width:68%; margin-top:5px; }
+            .sk-pad      { padding:10px 12px; }
+
+            /* ── Tugas skeleton parts ── */
+            .sk-media    { height:120px; width:100%; border-radius:0; }
+            .sk-title    { height:16px; width:60%; margin:14px 14px 8px; border-radius:6px; }
+            .sk-text     { height:11px; width:80%; margin:0 14px 8px; border-radius:6px; }
+            .sk-text.short { width:45%; }
+
+            /* ── User profile skeleton ── */
+            .sk-cover    { height:90px; border-radius:0; }
+            .sk-avatar   { width:84px; height:84px; border-radius:50%; margin:-42px 0 0 20px; }
+            .sk-info-line{ height:13px; border-radius:7px; margin:11px 20px; }
+        `;
+        document.head.appendChild(style);
+    },
+
+    // Feed: 2 kartu post (avatar + gambar + caption)
+    feed() {
+        this.injectCSS();
+        const card = () => `
+            <div class="sk-card">
+                <div class="sk-header">
+                    <div class="sk sk-circle"></div>
+                    <div style="flex:1">
+                        <div class="sk sk-line sk-sm"></div>
+                        <div class="sk sk-line sk-md"></div>
+                    </div>
+                </div>
+                <div class="sk sk-img"></div>
+                <div class="sk-pad"><div class="sk sk-line sk-sm"></div></div>
+            </div>`;
+        return card() + card();
+    },
+
+    // Tugas: N kartu tugas (gambar + title + text)
+    tugas(count = 2) {
+        this.injectCSS();
         let html = '';
         for (let i = 0; i < count; i++) {
             html += `
             <div class="sk-card">
-                <div class="skeleton sk-title"></div>
-                <div class="skeleton sk-text"></div>
-                <div class="skeleton sk-text" style="width: 80%;"></div>
+                <div class="sk sk-media"></div>
+                <div class="sk sk-title"></div>
+                <div class="sk sk-text"></div>
+                <div class="sk sk-text short"></div>
             </div>`;
         }
-        container.innerHTML = html;
-    }
+        return html;
+    },
+
+    // Subject/announcements: N kartu materi (title + lines)
+    subject(count = 3) {
+        this.injectCSS();
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            html += `
+            <div class="sk-card" style="padding:18px">
+                <div class="sk sk-line" style="width:45%;height:16px;margin-bottom:12px;"></div>
+                <div class="sk sk-line" style="width:80%;margin-bottom:8px;"></div>
+                <div class="sk sk-line" style="width:65%;"></div>
+            </div>`;
+        }
+        return html;
+    },
+
+    // User profile header
+    userProfile() {
+        this.injectCSS();
+        return `
+            <div class="sk-card">
+                <div class="sk sk-cover"></div>
+                <div class="sk sk-avatar"></div>
+                <div class="sk sk-info-line" style="width:38%;"></div>
+                <div class="sk sk-info-line" style="width:22%;"></div>
+                <div class="sk sk-info-line" style="width:55%;"></div>
+            </div>`;
+    },
+
+    // Generic: render ke container by id
+    render(containerId, type = 'subject', count = 3) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        const map = {
+            feed: () => this.feed(),
+            tugas: () => this.tugas(count),
+            subject: () => this.subject(count),
+            userProfile: () => this.userProfile(),
+        };
+        el.innerHTML = (map[type] || map.subject)();
+    },
 };
 
 if (document.readyState === 'loading') {
