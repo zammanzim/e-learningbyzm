@@ -238,7 +238,10 @@ const SubjectApp = {
             const cacheKey = `announcements_${this.state.subjectId}`;
             let data, error;
             try {
-                const res = await query.order("display_order", { ascending: true }).order("created_at", { ascending: true });
+                // Lesson mode: sort by newest first. Announcement mode: sort by display_order
+                const res = this.state.isLessonMode
+                    ? await query.order("created_at", { ascending: false })
+                    : await query.order("display_order", { ascending: true }).order("created_at", { ascending: true });
                 data = res.data; error = res.error;
                 if (error) throw error;
                 this.state.announcements = data || [];
@@ -459,7 +462,8 @@ const SubjectApp = {
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
-                if (reorderHandle) reorderHandle.style.display = "flex";
+                // Reorder handle hanya tampil di announcements, bukan lesson mode
+                if (reorderHandle) reorderHandle.style.display = this.state.isLessonMode ? "none" : "flex";
                 if (cameraBtn) cameraBtn.style.display = "flex";
                 deletePhotoBtns.forEach(b => b.style.display = "flex");
             } else {
@@ -549,7 +553,8 @@ const SubjectApp = {
 
                 return {
                     id,
-                    display_order: index + 1,
+                    // Lesson mode tidak pakai display_order — urutan by created_at
+                    ...(this.state.isLessonMode ? {} : { display_order: index + 1 }),
                     big_title: getVal("big_title"),
                     title: getVal("title"),
                     content: getContent(),
