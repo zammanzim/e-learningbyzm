@@ -1,7 +1,7 @@
 // =====================================================
 // USER.JS — IG-Style Profile Page
 // /user           → profil sendiri
-// /user?id=X      → view profil orang lain (read-only)
+// /user?name=X    → view profil orang lain (read-only)
 // =====================================================
 
 const UserProfile = {
@@ -21,14 +21,18 @@ const UserProfile = {
         if (!this.state.me) { window.location.href = 'login'; return; }
 
         const params = new URLSearchParams(window.location.search);
-        const targetId = params.get('id');
-        this.state.isOwnProfile = !targetId || String(targetId) === String(this.state.me.id);
+        const targetName = params.get('name');
+
+        // Cek apakah ini profil sendiri
+        const me = this.state.me;
+        const myName = me.username || me.short_name;
+        this.state.isOwnProfile = !targetName || targetName === myName;
 
         if (this.state.isOwnProfile) {
             this.state.target = this.state.me;
             await this.refreshTargetFromDB(this.state.me.id);
         } else {
-            await this.loadTargetUser(targetId);
+            await this.loadTargetUser(targetName);
         }
 
         this.syncHeader();
@@ -60,12 +64,24 @@ const UserProfile = {
         } catch { /* pakai data lokal */ }
     },
 
-    async loadTargetUser(userId) {
+    async loadTargetUser(name) {
         try {
-            const { data, error } = await supabase
+            // Coba match username dulu, kalau ga ada coba short_name
+            let { data, error } = await supabase
                 .from('users')
                 .select('id, full_name, short_name, username, avatar_url, bio, class_id, is_private, classes(name)')
-                .eq('id', userId).single();
+                .eq('username', name)
+                .maybeSingle();
+
+            // Fallback: coba short_name kalau username ga ketemu
+            if (!data) {
+                ({ data, error } = await supabase
+                    .from('users')
+                    .select('id, full_name, short_name, username, avatar_url, bio, class_id, is_private, classes(name)')
+                    .eq('short_name', name)
+                    .maybeSingle());
+            }
+
             if (error || !data) {
                 document.getElementById('profilePageWrap').innerHTML =
                     `<div style="text-align:center;padding:4rem 1rem;color:#555;">
@@ -220,6 +236,15 @@ const UserProfile = {
 
         grid.innerHTML = this.state.posts.map((post, i) => {
             if (post.image_url) {
+                const isVid = this.isVideoUrl(post.image_url);
+                if (isVid) {
+                    return `<div class="post-thumb animate-fade-in" onclick="UserProfile.openPostDetail(${i})">
+                        <video src="${post.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" muted preload="metadata"></video>
+                        <div class="post-thumb-overlay" style="opacity:1;background:rgba(0,0,0,0.25);">
+                            <i class="fa-solid fa-circle-play" style="margin:0;font-size:2rem;color:rgba(255,255,255,0.9);filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));"></i>
+                        </div>
+                    </div>`;
+                }
                 return `<div class="post-thumb animate-fade-in" onclick="UserProfile.openPostDetail(${i})">
                     <img src="${post.image_url}" alt="" loading="lazy"
                          onerror="this.parentElement.style.background='rgba(255,255,255,0.04)'">
@@ -250,14 +275,25 @@ const UserProfile = {
         document.getElementById('detailPostTime').textContent = this.formatDate(post.created_at);
         document.getElementById('detailCapText').textContent = post.caption || '';
 
-        // Gambar — sembunyikan kalau text-only
+        // Media — gambar atau video
         const imgEl = document.getElementById('detailPostImg');
-        if (post.image_url) {
-            imgEl.src = post.image_url;
-            imgEl.style.display = 'block';
+        const vidEl = document.getElementById('detailPostVid');
+
+        if (post.image_url && this.isVideoUrl(post.image_url)) {
+            // Video
+            if (vidEl) {
+                vidEl.src = post.image_url;
+                vidEl.style.display = 'block';
+                vidEl.load();
+            }
+            if (imgEl) imgEl.style.display = 'none';
+        } else if (post.image_url) {
+            // Gambar
+            if (imgEl) { imgEl.src = post.image_url; imgEl.style.display = 'block'; }
+            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause?.(); }
         } else {
-            imgEl.src = '';
-            imgEl.style.display = 'none';
+            if (imgEl) imgEl.style.display = 'none';
+            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; }
         }
 
         // Tombol hapus — HANYA own profile
@@ -312,6 +348,15 @@ const UserProfile = {
         }
     },
 
+    // ── Helpers ─────────────────────────────────────
+    isVideo(file) {
+        return file?.type?.startsWith('video/') || /\.(mp4|mov|webm|mkv)$/i.test(file?.name || '');
+    },
+
+    isVideoUrl(url) {
+        return url && /\.(mp4|mov|webm|mkv)(\?|$)/i.test(url);
+    },
+
     // ── Upload ──────────────────────────────────────
     setupUploadListeners() {
         const fileInput = document.getElementById('uploadFileInput');
@@ -329,56 +374,90 @@ const UserProfile = {
             e.preventDefault();
             dropZone.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
-            if (file?.type.startsWith('image/')) this.previewFile(file);
+            if (file?.type.startsWith('image/') || file?.type.startsWith('video/')) this.previewFile(file);
         });
     },
 
     previewFile(file) {
         this.state.selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById('uploadPreviewImg').src = e.target.result;
-            document.getElementById('uploadDropZone').classList.add('hidden');
-            document.getElementById('uploadPreviewWrap').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+        const previewImg = document.getElementById('uploadPreviewImg');
+        const previewVid = document.getElementById('uploadPreviewVid');
+        const dropZone = document.getElementById('uploadDropZone');
+        const previewWrap = document.getElementById('uploadPreviewWrap');
+
+        dropZone?.classList.add('hidden');
+        previewWrap?.classList.remove('hidden');
+
+        if (this.isVideo(file)) {
+            const url = URL.createObjectURL(file);
+            if (previewVid) {
+                previewVid.src = url;
+                previewVid.style.display = 'block';
+            }
+            if (previewImg) previewImg.style.display = 'none';
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                }
+                if (previewVid) {
+                    previewVid.src = '';
+                    previewVid.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
     },
 
     async submitPost() {
         const caption = document.getElementById('uploadCaption').value.trim();
 
         if (!this.state.selectedFile && !caption) {
-            showPopup('Tulis caption atau pilih foto dulu!', 'error');
+            showPopup('Tulis caption atau pilih foto/video dulu!', 'error');
             return;
         }
 
         const btn = document.getElementById('btnPostSave');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mengunggah...';
 
         try {
-            let imageUrl = null;
+            let mediaUrl = null;
 
-            // Upload foto kalau ada
             if (this.state.selectedFile) {
                 const file = this.state.selectedFile;
-                const compressed = await this.compressImage(file, 1080, 0.82);
-                const ext = file.name.split('.').pop() || 'jpg';
-                const fileName = `${this.state.me.id}/${Date.now()}.${ext}`;
+                const isVid = this.isVideo(file);
 
-                const { error: uploadErr } = await supabase.storage
-                    .from('post-photos')
-                    .upload(fileName, compressed, { upsert: false, contentType: 'image/jpeg' });
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${isVid ? 'Upload video...' : 'Mengunggah...'}`;
 
-                if (uploadErr) throw uploadErr;
-
-                const { data: urlData } = supabase.storage.from('post-photos').getPublicUrl(fileName);
-                imageUrl = urlData.publicUrl;
+                if (isVid) {
+                    // Video — upload as-is, no compress
+                    const ext = file.name.split('.').pop() || 'mp4';
+                    const fileName = `${this.state.me.id}/${Date.now()}.${ext}`;
+                    const { error: uploadErr } = await supabase.storage
+                        .from('post-photos')
+                        .upload(fileName, file, { upsert: false, contentType: file.type });
+                    if (uploadErr) throw uploadErr;
+                    const { data: urlData } = supabase.storage.from('post-photos').getPublicUrl(fileName);
+                    mediaUrl = urlData.publicUrl;
+                } else {
+                    // Gambar — compress dulu
+                    const compressed = await this.compressImage(file, 1080, 0.82);
+                    const ext = file.name.split('.').pop() || 'jpg';
+                    const fileName = `${this.state.me.id}/${Date.now()}.${ext}`;
+                    const { error: uploadErr } = await supabase.storage
+                        .from('post-photos')
+                        .upload(fileName, compressed, { upsert: false, contentType: 'image/jpeg' });
+                    if (uploadErr) throw uploadErr;
+                    const { data: urlData } = supabase.storage.from('post-photos').getPublicUrl(fileName);
+                    mediaUrl = urlData.publicUrl;
+                }
             }
 
             const { error: dbErr } = await supabase.from('user_posts').insert({
                 user_id: this.state.me.id,
-                image_url: imageUrl,
+                image_url: mediaUrl,
                 caption: caption || null,
             });
 
@@ -401,22 +480,81 @@ const UserProfile = {
         }
     },
 
+    // Baca EXIF orientation dari raw bytes file
+    _getExifOrientation(file) {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const view = new DataView(e.target.result);
+                if (view.getUint16(0, false) !== 0xFFD8) return resolve(1);
+                let offset = 2;
+                while (offset < view.byteLength) {
+                    const marker = view.getUint16(offset, false);
+                    offset += 2;
+                    if (marker === 0xFFE1) {
+                        if (view.getUint32(offset += 2, false) !== 0x45786966) return resolve(1);
+                        const little = view.getUint16(offset += 6, false) === 0x4949;
+                        offset += view.getUint32(offset + 4, little);
+                        const tags = view.getUint16(offset, little);
+                        offset += 2;
+                        for (let i = 0; i < tags; i++) {
+                            if (view.getUint16(offset + i * 12, little) === 0x0112) {
+                                return resolve(view.getUint16(offset + i * 12 + 8, little));
+                            }
+                        }
+                    } else if ((marker & 0xFF00) !== 0xFF00) break;
+                    else offset += view.getUint16(offset, false);
+                }
+                resolve(1);
+            };
+            reader.readAsArrayBuffer(file.slice(0, 64 * 1024));
+        });
+    },
+
     compressImage(file, maxSize = 1080, quality = 0.82) {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
+            const orientation = await this._getExifOrientation(file);
             const img = new Image();
             const url = URL.createObjectURL(file);
             img.onload = () => {
                 URL.revokeObjectURL(url);
                 let { width, height } = img;
-                if (width > maxSize || height > maxSize) {
-                    const r = Math.min(maxSize / width, maxSize / height);
-                    width = Math.round(width * r);
-                    height = Math.round(height * r);
+
+                // Swap dimensi kalau rotate 90/270
+                const swapped = [5, 6, 7, 8].includes(orientation);
+                let dw = swapped ? height : width;
+                let dh = swapped ? width : height;
+
+                if (dw > maxSize || dh > maxSize) {
+                    const r = Math.min(maxSize / dw, maxSize / dh);
+                    dw = Math.round(dw * r);
+                    dh = Math.round(dh * r);
                 }
+
                 const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                canvas.width = dw;
+                canvas.height = dh;
+                const ctx = canvas.getContext('2d');
+
+                // Terapkan transformasi sesuai EXIF orientation
+                ctx.save();
+                switch (orientation) {
+                    case 2: ctx.transform(-1, 0, 0, 1, dw, 0); break;
+                    case 3: ctx.transform(-1, 0, 0, -1, dw, dh); break;
+                    case 4: ctx.transform(1, 0, 0, -1, 0, dh); break;
+                    case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+                    case 6: ctx.transform(0, 1, -1, 0, dh, 0); break;
+                    case 7: ctx.transform(0, -1, -1, 0, dh, dw); break;
+                    case 8: ctx.transform(0, -1, 1, 0, 0, dw); break;
+                    default: break;
+                }
+
+                // Draw dengan ukuran asli dulu, biar transform kena
+                const sw = swapped ? dh : dw;
+                const sh = swapped ? dw : dh;
+                ctx.drawImage(img, 0, 0, sw, sh);
+                ctx.restore();
+
                 canvas.toBlob(resolve, 'image/jpeg', quality);
             };
             img.src = url;
@@ -520,6 +658,10 @@ function closeUploadModal() {
     document.getElementById('uploadFileInput').value = '';
     document.getElementById('uploadPreviewWrap').classList.add('hidden');
     document.getElementById('uploadDropZone').classList.remove('hidden');
+    const vid = document.getElementById('uploadPreviewVid');
+    if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
+    const img = document.getElementById('uploadPreviewImg');
+    if (img) img.style.display = 'block';
     UserProfile.state.selectedFile = null;
     document.removeEventListener('keydown', _uploadKeyHandler);
     unlockScroll();
@@ -529,11 +671,17 @@ function removeUploadPreview() {
     document.getElementById('uploadPreviewWrap').classList.add('hidden');
     document.getElementById('uploadDropZone').classList.remove('hidden');
     document.getElementById('uploadFileInput').value = '';
+    const vid = document.getElementById('uploadPreviewVid');
+    if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
+    const img = document.getElementById('uploadPreviewImg');
+    if (img) img.style.display = 'block';
     UserProfile.state.selectedFile = null;
 }
 
 function closePostDetail() {
     document.getElementById('postDetailOverlay').classList.remove('show');
+    const vid = document.getElementById('detailPostVid');
+    if (vid) { vid.pause(); vid.src = ''; }
     unlockScroll();
 }
 

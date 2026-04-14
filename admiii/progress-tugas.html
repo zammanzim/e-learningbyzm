@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — Progress Tugas Siswa</title>
+    <title>Admin — Progress Tugas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ui-components.js" defer></script>
@@ -12,37 +12,139 @@
     <script src="../js/auth.js" defer></script>
     <script src="../js/visitor.js" defer></script>
     <script src="../js/theme.js"></script>
-<script src="../js/toast.js"></script>
+    <script src="../js/toast.js"></script>
     <link rel="stylesheet" href="../css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
     <style>
-        /* ── STAT CARDS ── */
+        /* ── BULK BANNER ── */
+        .bulk-banner {
+            margin-top: 16px;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .bulk-bar-wrap {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bulk-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .bulk-count {
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 7px;
+            flex-shrink: 0;
+        }
+
+        .btn-bulk-done {
+            padding: 7px 14px;
+            border-radius: 9px;
+            border: none;
+            background: #0be881;
+            color: #000;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-bulk-done:hover {
+            opacity: 0.85;
+        }
+
+        .btn-bulk-done:active {
+            transform: scale(0.97);
+        }
+
+        .btn-bulk-done:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-bulk-reset {
+            padding: 7px 12px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #888;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-bulk-reset:hover {
+            opacity: 0.8;
+        }
+
+        .btn-bulk-reset:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ── STAT ── */
         .stat-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 14px;
         }
 
         .stat-card {
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px;
             text-align: center;
         }
 
         .stat-val {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            color: #00eaff;
+            color: var(--accent, #00eaff);
+            display: block;
         }
 
         .stat-lbl {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 4px;
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
         /* ── CONTROLS ── */
@@ -50,7 +152,7 @@
         .ctrl-select {
             width: 100%;
             background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             color: #fff;
             padding: 9px 12px;
@@ -63,44 +165,209 @@
 
         .ctrl-input:focus,
         .ctrl-select:focus {
-            border-color: #00eaff;
+            border-color: var(--accent, #00eaff);
         }
 
         .ctrl-input::placeholder {
-            color: #555;
+            color: #444;
         }
 
         .ctrl-select option {
             background: #111;
         }
 
-        /* ── STUDENT CARDS ── */
+        .mapel-filter {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .mapel-chip {
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #777;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mapel-chip.active {
+            background: rgba(0, 234, 255, 0.1);
+            border-color: rgba(0, 234, 255, 0.3);
+            color: var(--accent, #00eaff);
+        }
+
+        /* ── GLOBAL BAR ── */
+        .global-bar-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+
+        .global-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .gbar-wrap {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .gbar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent, #00eaff), #0be881);
+            transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ── BULK ALL ── */
+        .btn-bulk-all {
+            width: 100%;
+            padding: 10px;
+            background: rgba(11, 232, 129, 0.08);
+            border: 1px solid rgba(11, 232, 129, 0.2);
+            border-radius: 10px;
+            color: #0be881;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .btn-bulk-all:hover {
+            background: rgba(11, 232, 129, 0.14);
+        }
+
+        .btn-bulk-all:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ── EMPTY / SKELETON ── */
+        .list-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #444;
+        }
+
+        .list-empty i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .sk {
+            background: linear-gradient(90deg, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .10) 50%, rgba(255, 255, 255, .05) 75%);
+            background-size: 200% 100%;
+            animation: skShimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes skShimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .sk-line {
+            height: 12px;
+        }
+
+        /* ── MAPEL BADGE ── */
+        .mapel-badge {
+            display: inline-block;
+            margin-bottom: 10px;
+            font-size: 10px;
+            padding: 2px 9px;
+            border-radius: 20px;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.18);
+            color: var(--accent, #00eaff);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── VIEW TABS ── */
+        .view-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 12px;
+            gap: 4px;
+        }
+
+        .view-tab {
+            flex: 1;
+            padding: 8px 4px;
+            border: none;
+            border-radius: 7px;
+            background: none;
+            color: #555;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .view-tab.active {
+            background: rgba(0, 234, 255, 0.1);
+            color: var(--accent, #00eaff);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+        }
+
+        /* ── STUDENT CARD (mode per-orang) ── */
         .student-card {
             background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 14px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            overflow: hidden;
             transition: border-color 0.2s;
         }
 
-        .student-card:hover {
-            border-color: rgba(0, 234, 255, 0.2);
+        .student-card.open {
+            border-color: rgba(0, 234, 255, 0.15);
         }
 
         .student-header {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 11px;
+            padding: 13px 14px;
             cursor: pointer;
             user-select: none;
         }
 
         .student-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            border: 1.5px solid rgba(0, 234, 255, 0.4);
+            border: 1.5px solid rgba(0, 234, 255, 0.3);
             object-fit: cover;
             flex-shrink: 0;
         }
@@ -111,96 +378,74 @@
         }
 
         .student-name {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
-            color: #fff;
+            color: #eee;
         }
 
         .student-sub {
             font-size: 11px;
-            color: #666;
+            color: #555;
             margin-top: 2px;
         }
 
-        .mini-bar-wrap {
-            width: 90px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.08);
+        .s-progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .s-mini-bar-wrap {
+            width: 70px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.07);
             border-radius: 3px;
             overflow: hidden;
-            flex-shrink: 0;
         }
 
-        .mini-bar {
+        .s-mini-bar {
             height: 100%;
             border-radius: 3px;
-            transition: width 0.4s ease;
+            transition: width 0.5s ease;
         }
 
-        .student-pct {
-            font-size: 13px;
-            font-weight: 800;
-            width: 38px;
-            text-align: right;
-            flex-shrink: 0;
-        }
-
-        .chevron {
+        .s-pct {
             font-size: 12px;
-            color: #555;
+            font-weight: 800;
+            width: 34px;
+            text-align: right;
+        }
+
+        .s-chevron {
+            font-size: 11px;
+            color: #444;
             transition: transform 0.25s;
             flex-shrink: 0;
         }
 
-        .student-card.open .chevron {
+        .student-card.open .s-chevron {
             transform: rotate(180deg);
         }
 
-        /* ── TASK PANEL ── */
-        .task-panel {
+        /* task panel di dalam student */
+        .s-task-panel {
             display: none;
-            margin-top: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.07);
-            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 10px 14px 14px;
         }
 
-        .student-card.open .task-panel {
+        .student-card.open .s-task-panel {
             display: block;
         }
 
-        .bulk-btns {
+        .s-bulk-btns {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 10px;
         }
 
-        .bulk-btn {
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: none;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .bulk-btn:hover {
-            opacity: 0.8;
-        }
-
-        .bulk-btn.all-done {
-            background: #0be881;
-            color: #000;
-        }
-
-        .bulk-btn.all-undone {
-            background: rgba(255, 255, 255, 0.08);
-            color: #aaa;
-        }
-
-        /* Task rows */
-        .task-row {
+        .s-task-row {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -208,7 +453,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .task-row:last-child {
+        .s-task-row:last-child {
             border-bottom: none;
         }
 
@@ -216,7 +461,7 @@
             width: 22px;
             height: 22px;
             border-radius: 50%;
-            border: 1.5px solid #444;
+            border: 1.5px solid #333;
             background: none;
             cursor: pointer;
             display: flex;
@@ -225,7 +470,7 @@
             flex-shrink: 0;
             transition: all 0.2s;
             color: transparent;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .task-toggle.done {
@@ -235,9 +480,10 @@
         }
 
         .task-toggle.spinning {
-            border-color: #00eaff;
+            border-color: var(--accent, #00eaff);
             border-top-color: transparent;
             animation: tspin 0.6s linear infinite;
+            pointer-events: none;
         }
 
         @keyframes tspin {
@@ -246,52 +492,38 @@
             }
         }
 
-        .task-label {
+        .t-label {
             flex: 1;
             min-width: 0;
         }
 
-        .task-label-title {
+        .t-label-title {
             font-size: 13px;
-            color: #ddd;
+            color: #ccc;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .task-label-sub {
+        .t-label-sub {
             font-size: 11px;
             color: #555;
             margin-top: 1px;
         }
 
-        .task-mapel {
+        .t-mapel {
             font-size: 10px;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 10px;
-            background: rgba(0, 234, 255, 0.08);
-            color: #00eaff;
-            border: 1px solid rgba(0, 234, 255, 0.18);
+            background: rgba(0, 234, 255, 0.07);
+            color: #5ec8d8;
+            border: 1px solid rgba(0, 234, 255, 0.12);
             flex-shrink: 0;
-            max-width: 80px;
+            max-width: 75px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-
-        /* ── EMPTY / LOADING ── */
-        .list-empty {
-            text-align: center;
-            padding: 50px 20px;
-            color: #555;
-        }
-
-        .list-empty i {
-            font-size: 30px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .list-empty p {
-            font-size: 13px;
         }
     </style>
 </head>
@@ -302,85 +534,83 @@
 
     <div class="main-content">
 
-        <!-- LEFT: Stats + Controls (sticky) -->
+        <!-- LEFT -->
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-clipboard-check" style="font-size:22px;"></i> Progress Tugas Siswa</h1>
+                <h1><i class="fa-solid fa-clipboard-check" style="font-size:20px;"></i> Progress Tugas</h1>
             </div>
 
-            <!-- Stat cards 2x2 -->
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div class="stat-val" id="statSiswa">—</div>
+                    <span class="stat-val" id="statSiswa">—</span>
                     <div class="stat-lbl">Siswa</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-val" id="statTugas">—</div>
+                    <span class="stat-val" id="statTugas">—</span>
                     <div class="stat-lbl">Total Tugas</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-val" id="statRataRata">—</div>
-                    <div class="stat-lbl">Rata-rata Selesai</div>
+                    <span class="stat-val" id="statRata">—</span>
+                    <div class="stat-lbl">Rata-rata</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-val" id="statLulus">—</div>
+                    <span class="stat-val" id="statLulus">—</span>
                     <div class="stat-lbl">100% Selesai</div>
                 </div>
             </div>
 
-            <!-- Search + Sort -->
-            <input class="ctrl-input" id="searchInput" placeholder="🔍 Cari nama siswa..." oninput="renderStudents()">
-            <select class="ctrl-select" id="sortSelect" onchange="renderStudents()">
-                <option value="name">Urutkan: Nama</option>
-                <option value="pct_desc">Progress ↓</option>
-                <option value="pct_asc">Progress ↑</option>
+            <div class="global-bar-card">
+                <div class="global-bar-label">
+                    <span>Progress Kelas</span>
+                    <span id="gPct">0%</span>
+                </div>
+                <div class="gbar-wrap">
+                    <div class="gbar" id="gBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="view-tabs">
+                <button class="view-tab active" id="tabTask" onclick="switchView('task')">
+                    <i class="fa-solid fa-list-check" style="font-size:11px;margin:0;"></i> Per Tugas
+                </button>
+                <button class="view-tab" id="tabStudent" onclick="switchView('student')">
+                    <i class="fa-solid fa-users" style="font-size:11px;margin:0;"></i> Per Orang
+                </button>
+            </div>
+
+            <input class="ctrl-input" id="searchInput" placeholder="🔍 Cari..." oninput="debounceRender()">
+
+            <select class="ctrl-select" id="sortSelect" onchange="renderCurrent()">
+                <option value="default">Urutan default</option>
+                <option value="pct_desc">Paling banyak selesai ↓</option>
+                <option value="pct_asc">Paling sedikit selesai ↑</option>
+                <option value="name">A–Z Judul</option>
             </select>
 
-            <!-- Bulk all -->
-            <button class="btn-glass-save" style="width:100%; margin-top:4px;" onclick="bulkAllDoneConfirm()">
-                <i class="fa-solid fa-check-double"></i> Selesaikan Semua Siswa
+            <div class="mapel-filter" id="mapelFilter"></div>
+
+            <button class="btn-bulk-all" id="btnBulkAll" onclick="bulkAllConfirm()">
+                <i class="fa-solid fa-check-double"></i> Selesaikan SEMUA untuk Semua Siswa
             </button>
         </div>
 
-        <!-- RIGHT: Student list -->
+        <!-- RIGHT: task cards dengan konten penuh -->
         <div class="right-section">
-            <div id="studentList">
-                <!-- Skeleton loading -->
-                <div class="student-card">
-                    <div class="student-header" style="pointer-events:none;">
-                        <div class="skeleton" style="width:40px;height:40px;border-radius:50%;"></div>
-                        <div class="student-info">
-                            <div class="skeleton" style="width:100px;height:12px;border-radius:4px;margin-bottom:6px;">
-                            </div>
-                            <div class="skeleton" style="width:70px;height:9px;border-radius:4px;"></div>
-                        </div>
-                        <div class="skeleton" style="width:90px;height:6px;border-radius:3px;"></div>
-                        <div class="skeleton" style="width:34px;height:12px;border-radius:4px;"></div>
-                    </div>
+            <div id="taskList">
+                <div class="course-card">
+                    <div class="sk sk-line" style="width:30%;margin-bottom:12px;height:10px;border-radius:20px;"></div>
+                    <div class="sk sk-line" style="width:55%;margin-bottom:10px;height:20px;"></div>
+                    <div class="sk sk-line" style="width:35%;margin-bottom:18px;"></div>
+                    <div class="sk sk-line" style="width:90%;margin-bottom:8px;"></div>
+                    <div class="sk sk-line" style="width:80%;margin-bottom:8px;"></div>
+                    <div class="sk sk-line" style="width:65%;"></div>
                 </div>
-                <div class="student-card">
-                    <div class="student-header" style="pointer-events:none;">
-                        <div class="skeleton" style="width:40px;height:40px;border-radius:50%;"></div>
-                        <div class="student-info">
-                            <div class="skeleton" style="width:80px;height:12px;border-radius:4px;margin-bottom:6px;">
-                            </div>
-                            <div class="skeleton" style="width:60px;height:9px;border-radius:4px;"></div>
-                        </div>
-                        <div class="skeleton" style="width:90px;height:6px;border-radius:3px;"></div>
-                        <div class="skeleton" style="width:34px;height:12px;border-radius:4px;"></div>
-                    </div>
-                </div>
-                <div class="student-card">
-                    <div class="student-header" style="pointer-events:none;">
-                        <div class="skeleton" style="width:40px;height:40px;border-radius:50%;"></div>
-                        <div class="student-info">
-                            <div class="skeleton" style="width:110px;height:12px;border-radius:4px;margin-bottom:6px;">
-                            </div>
-                            <div class="skeleton" style="width:75px;height:9px;border-radius:4px;"></div>
-                        </div>
-                        <div class="skeleton" style="width:90px;height:6px;border-radius:3px;"></div>
-                        <div class="skeleton" style="width:34px;height:12px;border-radius:4px;"></div>
-                    </div>
+                <div class="course-card">
+                    <div class="sk sk-line" style="width:25%;margin-bottom:12px;height:10px;border-radius:20px;"></div>
+                    <div class="sk sk-line" style="width:45%;margin-bottom:10px;height:20px;"></div>
+                    <div class="sk sk-line" style="width:30%;margin-bottom:18px;"></div>
+                    <div class="sk sk-line" style="width:85%;margin-bottom:8px;"></div>
+                    <div class="sk sk-line" style="width:70%;"></div>
                 </div>
             </div>
         </div>
@@ -388,51 +618,54 @@
     </div>
 
     <script>
-        let allStudents = [];
         let allTasks = [];
-        let progressMap = {}; // { userId: Set<announcementId(string)> }
-        let currentUser = null;
+        let allStudents = [];
+        let progressMap = {};
+        let activeMapel = 'all';
+        let currentView = 'task';
+        let renderTimer = null;
 
-        // ─────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async () => {
-            currentUser = getUser();
-            if (!currentUser) { window.location.href = '../login'; return; }
-            if (currentUser.role !== 'super_admin' && currentUser.role !== 'class_admin') {
-                window.location.href = '../index';
-                return;
+            const me = getUser();
+            if (!me) { window.location.href = '../login'; return; }
+            if (me.role !== 'super_admin' && me.role !== 'class_admin') {
+                window.location.href = '../index'; return;
             }
             await loadAll();
         });
 
-        // ─────────────────────────────────────────
         async function loadAll() {
             const classId = getEffectiveClassId();
 
             const [
-                { data: students },
                 { data: tasks },
-                { data: progress }
+                { data: students },
             ] = await Promise.all([
-                supabase.from('users')
-                    .select('id, nickname, avatar_url, role')
-                    .eq('class_id', classId)
-                    .neq('role', 'super_admin')
-                    .order('nickname', { ascending: true }),
-
                 supabase.from('subject_announcements')
-                    .select('id, big_title, title, subject_id')
+                    .select('id, big_title, title, content, small, subject_id, card_color')
                     .eq('class_id', classId)
                     .neq('subject_id', 'announcements')
                     .neq('subject_id', 'kisi-kisi')
                     .neq('subject_id', 'akuhutajakus')
+                    .order('display_order', { ascending: true })
                     .order('created_at', { ascending: false }),
 
-                supabase.from('user_progress')
-                    .select('user_id, announcement_id')
+                supabase.from('users')
+                    .select('id, full_name, short_name, nickname, avatar_url')
+                    .eq('class_id', classId)
+                    .neq('role', 'super_admin')
+                    .order('full_name', { ascending: true }),
             ]);
 
-            allStudents = students || [];
+            const taskIds = (tasks || []).map(t => t.id);
+            const { data: progress } = taskIds.length > 0
+                ? await supabase.from('user_progress')
+                    .select('user_id, announcement_id')
+                    .in('announcement_id', taskIds)
+                : { data: [] };
+
             allTasks = tasks || [];
+            allStudents = students || [];
 
             progressMap = {};
             allStudents.forEach(s => { progressMap[s.id] = new Set(); });
@@ -441,12 +674,27 @@
                 if (progressMap[uid]) progressMap[uid].add(String(p.announcement_id));
             });
 
+            buildMapelFilter();
             updateStats();
-            renderStudents();
+            renderCurrent();
         }
 
-        // ─────────────────────────────────────────
+        function buildMapelFilter() {
+            const mapels = [...new Set(allTasks.map(t => t.subject_id))].sort();
+            document.getElementById('mapelFilter').innerHTML =
+                `<div class="mapel-chip active" onclick="setMapel('all',this)">Semua</div>` +
+                mapels.map(m => `<div class="mapel-chip" onclick="setMapel(${JSON.stringify(m)},this)">${esc(m)}</div>`).join('');
+        }
+
+        function setMapel(mapel, chip) {
+            activeMapel = mapel;
+            document.querySelectorAll('.mapel-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            renderCurrent();
+        }
+
         function updateStats() {
+            const n = allStudents.length;
             const total = allTasks.length;
             const validIds = new Set(allTasks.map(t => String(t.id)));
             let totalDone = 0, lulus = 0;
@@ -457,25 +705,93 @@
                 if (total > 0 && done === total) lulus++;
             });
 
-            const rata = allStudents.length > 0 && total > 0
-                ? Math.round((totalDone / (allStudents.length * total)) * 100)
-                : 0;
-
-            document.getElementById('statSiswa').innerText = allStudents.length;
+            const rata = n > 0 && total > 0 ? Math.round((totalDone / (n * total)) * 100) : 0;
+            document.getElementById('statSiswa').innerText = n;
             document.getElementById('statTugas').innerText = total;
-            document.getElementById('statRataRata').innerText = rata + '%';
+            document.getElementById('statRata').innerText = rata + '%';
             document.getElementById('statLulus').innerText = lulus;
+            document.getElementById('gPct').innerText = rata + '%';
+            document.getElementById('gBar').style.width = rata + '%';
         }
 
-        // ─────────────────────────────────────────
-        function renderStudents() {
-            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+        function debounceRender() {
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(renderCurrent, 180);
+        }
+
+        function renderCurrent() {
+            currentView === 'task' ? renderTasks() : renderStudents();
+        }
+
+        function switchView(mode) {
+            currentView = mode;
+            document.getElementById('tabTask').classList.toggle('active', mode === 'task');
+            document.getElementById('tabStudent').classList.toggle('active', mode === 'student');
+
+            const sortEl = document.getElementById('sortSelect');
+            if (mode === 'task') {
+                sortEl.innerHTML = `
+                    <option value="default">Urutan default</option>
+                    <option value="pct_desc">Paling banyak selesai ↓</option>
+                    <option value="pct_asc">Paling sedikit selesai ↑</option>
+                    <option value="name">A–Z Judul</option>`;
+                document.getElementById('mapelFilter').style.display = 'flex';
+                document.getElementById('btnBulkAll').style.display = 'flex';
+                document.getElementById('searchInput').placeholder = '🔍 Cari judul / mapel...';
+            } else {
+                sortEl.innerHTML = `
+                    <option value="name">A–Z Nama</option>
+                    <option value="pct_desc">Progress ↓</option>
+                    <option value="pct_asc">Progress ↑</option>`;
+                document.getElementById('mapelFilter').style.display = 'none';
+                document.getElementById('btnBulkAll').style.display = 'flex';
+                document.getElementById('searchInput').placeholder = '🔍 Cari nama siswa...';
+            }
+            renderCurrent();
+        }
+
+        // ── MODE 1: Per Tugas ──────────────────────────────
+        function renderTasks() {
             const sort = document.getElementById('sortSelect').value;
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const n = allStudents.length;
+
+            let list = allTasks.filter(t =>
+                (activeMapel === 'all' || t.subject_id === activeMapel) &&
+                (!q || (t.big_title || '').toLowerCase().includes(q) ||
+                    (t.subject_id || '').toLowerCase().includes(q) ||
+                    (t.title || '').toLowerCase().includes(q))
+            ).map(t => {
+                const done = allStudents.filter(s => (progressMap[s.id] || new Set()).has(String(t.id))).length;
+                return { ...t, done, pct: n > 0 ? Math.round((done / n) * 100) : 0 };
+            });
+
+            if (sort === 'pct_desc') list.sort((a, b) => b.pct - a.pct);
+            else if (sort === 'pct_asc') list.sort((a, b) => a.pct - b.pct);
+            else if (sort === 'name') list.sort((a, b) => (a.big_title || '').localeCompare(b.big_title || ''));
+
+            const container = document.getElementById('taskList');
+            if (list.length === 0) {
+                container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-inbox"></i><p>Tidak ada tugas ditemukan.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            list.forEach(t => container.appendChild(buildCard(t)));
+        }
+
+        // ── MODE 2: Per Orang ──────────────────────────────
+        function renderStudents() {
+            const sort = document.getElementById('sortSelect').value;
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
             const total = allTasks.length;
             const validIds = new Set(allTasks.map(t => String(t.id)));
 
             let list = allStudents
-                .filter(s => (s.nickname || '').toLowerCase().includes(search))
+                .filter(s => {
+                    const name = sName(s).toLowerCase();
+                    return !q || name.includes(q) || (s.full_name || '').toLowerCase().includes(q);
+                })
                 .map(s => {
                     const done = [...(progressMap[s.id] || [])].filter(id => validIds.has(id)).length;
                     return { ...s, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
@@ -483,10 +799,9 @@
 
             if (sort === 'pct_desc') list.sort((a, b) => b.pct - a.pct);
             else if (sort === 'pct_asc') list.sort((a, b) => a.pct - b.pct);
-            else list.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''));
+            else list.sort((a, b) => sName(a).localeCompare(sName(b)));
 
-            const container = document.getElementById('studentList');
-
+            const container = document.getElementById('taskList');
             if (list.length === 0) {
                 container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-users-slash"></i><p>Tidak ada siswa ditemukan.</p></div>`;
                 return;
@@ -496,173 +811,144 @@
             list.forEach(s => container.appendChild(buildStudentCard(s)));
         }
 
-        // ─────────────────────────────────────────
+        function sName(s) {
+            return s.short_name || s.nickname || s.full_name?.split(' ')[0] || 'Tanpa Nama';
+        }
+
         function buildStudentCard(student) {
-            const { id, nickname, avatar_url, done, pct } = student;
+            const { id, avatar_url, done, pct } = student;
             const total = allTasks.length;
             const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
+            const avatar = avatar_url || '../icons/profpicture.png';
 
             const card = document.createElement('div');
             card.className = 'student-card';
             card.id = `sc-${id}`;
-
             card.innerHTML = `
-            <div class="student-header" onclick="toggleCard('${id}')">
-                <img class="student-avatar" src="${avatar_url || '../icons/profpicture.png'}"
-                    onerror="this.src='../icons/profpicture.png'">
+            <div class="student-header" onclick="toggleStudentCard('${id}')">
+                <img class="student-avatar" src="${avatar}" onerror="this.src='../icons/profpicture.png'">
                 <div class="student-info">
-                    <div class="student-name">${escHtml(nickname || 'Tanpa Nama')}</div>
-                    <div class="student-sub" id="sc-sub-${id}">${done}/${total} tugas selesai</div>
+                    <div class="student-name">${esc(sName(student))}</div>
+                    <div class="student-sub" id="ssub-${id}">${done}/${total} selesai</div>
                 </div>
-                <div class="mini-bar-wrap">
-                    <div class="mini-bar" id="sc-bar-${id}" style="width:${pct}%; background:${color};"></div>
+                <div class="s-progress-wrap">
+                    <div class="s-mini-bar-wrap">
+                        <div class="s-mini-bar" id="sbar-${id}" style="width:${pct}%;background:${color};"></div>
+                    </div>
+                    <div class="s-pct" id="spct-${id}" style="color:${color};">${pct}%</div>
                 </div>
-                <div class="student-pct" id="sc-pct-${id}" style="color:${color};">${pct}%</div>
-                <i class="fa-solid fa-chevron-down chevron"></i>
+                <i class="fa-solid fa-chevron-down s-chevron"></i>
             </div>
-
-            <div class="task-panel" id="tp-${id}">
-                <div class="bulk-btns">
-                    <button class="bulk-btn all-done" onclick="bulkStudent('${id}', true)">
-                        <i class="fa-solid fa-check-double"></i> Selesaikan Semua
+            <div class="s-task-panel" id="stp-${id}">
+                <div class="s-bulk-btns">
+                    <button class="btn-bulk-done" onclick="bulkStudent('${id}', true)">
+                        <i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua
                     </button>
-                    <button class="bulk-btn all-undone" onclick="bulkStudent('${id}', false)">
-                        <i class="fa-solid fa-rotate-left"></i> Reset Semua
+                    <button class="btn-bulk-reset" onclick="bulkStudent('${id}', false)">
+                        <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Reset
                     </button>
                 </div>
-                <div id="task-rows-${id}">${buildTaskRows(id)}</div>
-            </div>
-        `;
+                <div id="strows-${id}">${buildStudentTaskRows(id)}</div>
+            </div>`;
             return card;
         }
 
-        function buildTaskRows(studentId) {
-            if (allTasks.length === 0) return `<p style="color:#555;font-size:13px;padding:10px 0;">Belum ada tugas.</p>`;
+        function buildStudentTaskRows(studentId) {
+            if (allTasks.length === 0) return `<p style="color:#444;font-size:12px;padding:6px 0;">Belum ada tugas.</p>`;
             const doneSet = progressMap[studentId] || new Set();
-
             return allTasks.map(task => {
                 const isDone = doneSet.has(String(task.id));
                 return `
-                <div class="task-row">
+                <div class="s-task-row">
                     <button class="task-toggle ${isDone ? 'done' : ''}"
-                        id="toggle-${studentId}-${task.id}"
-                        onclick="toggleTask('${studentId}', '${task.id}', this)">
-                        ${isDone ? '<i class="fa-solid fa-check"></i>' : ''}
+                        id="stoggle-${studentId}-${task.id}"
+                        onclick="toggleTask('${studentId}','${task.id}',this)">
+                        ${isDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : ''}
                     </button>
-                    <div class="task-label">
-                        <div class="task-label-title">${escHtml(task.big_title)}</div>
-                        ${task.title ? `<div class="task-label-sub">${escHtml(task.title)}</div>` : ''}
+                    <div class="t-label">
+                        <div class="t-label-title">${esc(task.big_title)}</div>
+                        ${task.title ? `<div class="t-label-sub">${esc(task.title)}</div>` : ''}
                     </div>
-                    <span class="task-mapel">${escHtml(task.subject_id)}</span>
+                    <span class="t-mapel">${esc(task.subject_id)}</span>
                 </div>`;
             }).join('');
         }
 
-        function toggleCard(studentId) {
-            document.getElementById(`sc-${studentId}`)?.classList.toggle('open');
+        function toggleStudentCard(id) {
+            document.getElementById(`sc-${id}`)?.classList.toggle('open');
         }
 
-        // ─────────────────────────────────────────
         async function toggleTask(studentId, taskId, btn) {
             const wasDone = btn.classList.contains('done');
             btn.className = 'task-toggle spinning';
             btn.innerHTML = '';
-
             try {
                 if (wasDone) {
                     await supabase.from('user_progress').delete()
                         .eq('user_id', studentId).eq('announcement_id', taskId);
                     progressMap[studentId]?.delete(String(taskId));
                 } else {
-                    await supabase.from('user_progress').insert({ user_id: studentId, announcement_id: taskId });
+                    await supabase.from('user_progress')
+                        .upsert({ user_id: studentId, announcement_id: taskId },
+                            { onConflict: 'user_id,announcement_id', ignoreDuplicates: true });
                     if (!progressMap[studentId]) progressMap[studentId] = new Set();
                     progressMap[studentId].add(String(taskId));
                 }
                 btn.className = `task-toggle ${!wasDone ? 'done' : ''}`;
-                btn.innerHTML = !wasDone ? '<i class="fa-solid fa-check"></i>' : '';
+                btn.innerHTML = !wasDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : '';
                 refreshStudentBar(studentId);
                 updateStats();
             } catch (err) {
                 btn.className = `task-toggle ${wasDone ? 'done' : ''}`;
-                btn.innerHTML = wasDone ? '<i class="fa-solid fa-check"></i>' : '';
-                showPopup('Gagal update', 'error');
+                btn.innerHTML = wasDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : '';
+                showToast('Gagal update', 'error');
             }
         }
 
-        // ─────────────────────────────────────────
         async function bulkStudent(studentId, markDone) {
-            const panel = document.getElementById(`tp-${studentId}`);
-            panel.querySelectorAll('.bulk-btn').forEach(b => b.disabled = true);
-
+            const panel = document.getElementById(`stp-${studentId}`);
+            panel?.querySelectorAll('button').forEach(b => b.disabled = true);
             try {
                 if (markDone) {
-                    const doneSet = progressMap[studentId] || new Set();
-                    const pending = allTasks.filter(t => !doneSet.has(String(t.id)));
-                    if (pending.length > 0) {
+                    // Fetch yang sudah ada di DB beneran untuk siswa ini
+                    const { data: existing } = await supabase
+                        .from('user_progress')
+                        .select('announcement_id')
+                        .eq('user_id', studentId);
+
+                    const existingIds = new Set((existing || []).map(r => String(r.announcement_id)));
+                    const toInsert = allTasks
+                        .filter(t => !existingIds.has(String(t.id)))
+                        .map(t => ({ user_id: studentId, announcement_id: t.id }));
+
+                    for (let i = 0; i < toInsert.length; i += 50) {
                         const { error } = await supabase.from('user_progress')
-                            .insert(pending.map(t => ({ user_id: studentId, announcement_id: t.id })));
+                            .insert(toInsert.slice(i, i + 50));
                         if (error) throw error;
-                        if (!progressMap[studentId]) progressMap[studentId] = new Set();
-                        pending.forEach(t => progressMap[studentId].add(String(t.id)));
                     }
+
+                    if (!progressMap[studentId]) progressMap[studentId] = new Set();
+                    allTasks.forEach(t => progressMap[studentId].add(String(t.id)));
+                    showToast('Semua tugas diselesaikan!', 'success');
                 } else {
+                    // Delete semua progress siswa ini untuk task yang relevan
                     const { error } = await supabase.from('user_progress').delete()
                         .eq('user_id', studentId)
                         .in('announcement_id', allTasks.map(t => t.id));
                     if (error) throw error;
                     progressMap[studentId] = new Set();
+                    showToast('Progress direset.', 'info');
                 }
-
-                document.getElementById(`task-rows-${studentId}`).innerHTML = buildTaskRows(studentId);
+                document.getElementById(`strows-${studentId}`).innerHTML = buildStudentTaskRows(studentId);
                 refreshStudentBar(studentId);
                 updateStats();
-                showPopup(markDone ? 'Semua ditandai selesai!' : 'Progress direset!', 'success');
             } catch (err) {
-                showPopup('Gagal: ' + err.message, 'error');
+                showToast('Gagal: ' + err.message, 'error');
             } finally {
-                panel.querySelectorAll('.bulk-btn').forEach(b => b.disabled = false);
+                panel?.querySelectorAll('button').forEach(b => b.disabled = false);
             }
         }
 
-        // ─────────────────────────────────────────
-        async function bulkAllDoneConfirm() {
-            if (!confirm(`Selesaikan SEMUA tugas untuk SEMUA ${allStudents.length} siswa?`)) return;
-
-            const btn = document.querySelector('.left-section .btn-glass-save');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
-
-            try {
-                const rows = [];
-                allStudents.forEach(s => {
-                    const doneSet = progressMap[s.id] || new Set();
-                    allTasks.forEach(t => {
-                        if (!doneSet.has(String(t.id))) rows.push({ user_id: s.id, announcement_id: t.id });
-                    });
-                });
-
-                for (let i = 0; i < rows.length; i += 500) {
-                    const { error } = await supabase.from('user_progress').insert(rows.slice(i, i + 500));
-                    if (error) throw error;
-                }
-
-                allStudents.forEach(s => {
-                    if (!progressMap[s.id]) progressMap[s.id] = new Set();
-                    allTasks.forEach(t => progressMap[s.id].add(String(t.id)));
-                });
-
-                showPopup(`${rows.length} progress berhasil ditambahkan!`, 'success');
-                updateStats();
-                renderStudents();
-            } catch (err) {
-                showPopup('Gagal: ' + err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Selesaikan Semua Siswa';
-            }
-        }
-
-        // ─────────────────────────────────────────
         function refreshStudentBar(studentId) {
             const total = allTasks.length;
             const validIds = new Set(allTasks.map(t => String(t.id)));
@@ -670,18 +956,175 @@
             const pct = total > 0 ? Math.round((done / total) * 100) : 0;
             const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
 
-            const bar = document.getElementById(`sc-bar-${studentId}`);
-            const pctEl = document.getElementById(`sc-pct-${studentId}`);
-            const subEl = document.getElementById(`sc-sub-${studentId}`);
-
+            const bar = document.getElementById(`sbar-${studentId}`);
+            const pctEl = document.getElementById(`spct-${studentId}`);
+            const sub = document.getElementById(`ssub-${studentId}`);
             if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
             if (pctEl) { pctEl.innerText = pct + '%'; pctEl.style.color = color; }
-            if (subEl) subEl.innerText = `${done}/${total} tugas selesai`;
+            if (sub) sub.innerText = `${done}/${total} selesai`;
         }
 
-        function escHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        function buildCard(task) {
+            const { id, big_title, title, content, small, subject_id, card_color, done, pct } = task;
+            const n = allStudents.length;
+            const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
+            const colorClass = card_color && card_color !== 'default' ? `color-${card_color}` : '';
+
+            const el = document.createElement('div');
+            el.className = `course-card ${colorClass}`;
+
+            el.innerHTML = `
+                <span class="mapel-badge">${esc(subject_id)}</span>
+                ${big_title ? `<h3 style="margin:0 0 6px;">${big_title}</h3>` : ''}
+                ${title ? `<h4 style="margin:0 0 10px;">${title}</h4>` : ''}
+                ${content ? `<div style="margin-bottom:14px;font-size:14px;line-height:1.65;color:#ccc;">${content}</div>` : ''}
+                ${small ? `<small style="color:#666;display:block;margin-bottom:2px;">${esc(small)}</small>` : ''}
+
+                <div class="bulk-banner">
+                    <div class="bulk-progress">
+                        <div class="bulk-bar-wrap">
+                            <div class="bulk-bar" id="bar-${id}" style="width:${pct}%;background:${color};"></div>
+                        </div>
+                        <div class="bulk-count" id="cnt-${id}" style="color:${color};">${done}/${n} selesai</div>
+                    </div>
+                    <div class="bulk-actions">
+                        <button class="btn-bulk-done" id="bdone-${id}" onclick="bulkTask('${id}', true)">
+                            <i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua
+                        </button>
+                        <button class="btn-bulk-reset" id="breset-${id}" onclick="bulkTask('${id}', false)">
+                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Reset
+                        </button>
+                    </div>
+                </div>`;
+
+            return el;
+        }
+
+        async function bulkTask(taskId, markDone) {
+            const btnDone = document.getElementById(`bdone-${taskId}`);
+            const btnReset = document.getElementById(`breset-${taskId}`);
+            [btnDone, btnReset].forEach(b => { if (b) b.disabled = true; });
+            if (btnDone) btnDone.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin:0;"></i>';
+
+            try {
+                if (markDone) {
+                    // Fetch yang sudah ada di DB beneran (bukan dari local state)
+                    const { data: existing } = await supabase
+                        .from('user_progress')
+                        .select('user_id')
+                        .eq('announcement_id', taskId);
+
+                    const existingIds = new Set((existing || []).map(r => String(r.user_id)));
+                    const toInsert = allStudents
+                        .filter(s => !existingIds.has(String(s.id)))
+                        .map(s => ({ user_id: s.id, announcement_id: taskId }));
+
+                    // Insert batch kecil (50) biar ga timeout/limit
+                    for (let i = 0; i < toInsert.length; i += 50) {
+                        const { error } = await supabase.from('user_progress')
+                            .insert(toInsert.slice(i, i + 50));
+                        if (error) throw error;
+                    }
+
+                    // Update local state dari DB yang beneran
+                    allStudents.forEach(s => {
+                        if (!progressMap[s.id]) progressMap[s.id] = new Set();
+                        progressMap[s.id].add(String(taskId));
+                    });
+
+                    showToast(`Diselesaikan untuk ${allStudents.length} siswa!`, 'success');
+                } else {
+                    // Delete semua progress untuk task ini — tanpa .in() biar ga kena limit
+                    const { error } = await supabase.from('user_progress').delete()
+                        .eq('announcement_id', taskId);
+                    if (error) throw error;
+
+                    allStudents.forEach(s => progressMap[s.id]?.delete(String(taskId)));
+                    showToast('Progress direset.', 'info');
+                }
+
+                refreshCard(taskId);
+                updateStats();
+            } catch (err) {
+                showToast('Gagal: ' + err.message, 'error');
+            } finally {
+                if (btnDone) {
+                    btnDone.disabled = false;
+                    btnDone.innerHTML = '<i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua';
+                }
+                if (btnReset) btnReset.disabled = false;
+            }
+        }
+
+        async function bulkAllConfirm() {
+            const confirmed = await showPopup(
+                `Selesaikan SEMUA ${allTasks.length} tugas untuk semua ${allStudents.length} siswa?`, 'confirm'
+            );
+            if (!confirmed) return;
+
+            const btn = document.getElementById('btnBulkAll');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
+
+            try {
+                // Fetch semua yang sudah ada di DB
+                const taskIds = allTasks.map(t => t.id);
+                const { data: existing } = await supabase
+                    .from('user_progress')
+                    .select('user_id, announcement_id')
+                    .in('announcement_id', taskIds);
+
+                const existingSet = new Set(
+                    (existing || []).map(r => `${r.user_id}__${r.announcement_id}`)
+                );
+
+                // Hanya insert yang beneran belum ada
+                const rows = [];
+                allStudents.forEach(s => {
+                    allTasks.forEach(t => {
+                        if (!existingSet.has(`${s.id}__${t.id}`))
+                            rows.push({ user_id: s.id, announcement_id: t.id });
+                    });
+                });
+
+                // Insert batch kecil
+                for (let i = 0; i < rows.length; i += 50) {
+                    const { error } = await supabase.from('user_progress')
+                        .insert(rows.slice(i, i + 50));
+                    if (error) throw error;
+                }
+
+                // Update local state
+                allStudents.forEach(s => {
+                    if (!progressMap[s.id]) progressMap[s.id] = new Set();
+                    allTasks.forEach(t => progressMap[s.id].add(String(t.id)));
+                });
+
+                allTasks.forEach(t => refreshCard(t.id));
+                updateStats();
+                showToast(`${rows.length} progress berhasil ditambahkan!`, 'success');
+            } catch (err) {
+                showToast('Gagal: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Selesaikan SEMUA untuk Semua Siswa';
+            }
+        }
+
+        function refreshCard(taskId) {
+            const n = allStudents.length;
+            const done = allStudents.filter(s => (progressMap[s.id] || new Set()).has(String(taskId))).length;
+            const pct = n > 0 ? Math.round((done / n) * 100) : 0;
+            const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
+
+            const bar = document.getElementById(`bar-${taskId}`);
+            const cnt = document.getElementById(`cnt-${taskId}`);
+            if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
+            if (cnt) { cnt.innerText = `${done}/${n} selesai`; cnt.style.color = color; }
+        }
+
+        function esc(str) {
+            return str ? String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
         }
     </script>
 </body>

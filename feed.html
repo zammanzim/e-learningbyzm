@@ -165,17 +165,28 @@
         .fc-image-wrap {
             position: relative;
             width: 100%;
-            aspect-ratio: 1/1;
-            background: #000;
+            background: transparent;
             overflow: hidden;
             cursor: pointer;
         }
 
+        /* Gambar: ikut ukuran asli, max height biar ga kepanjangan */
         .fc-image {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
             display: block;
+            background: transparent;
+        }
+
+        /* Video: sama kayak gambar, ikut natural size */
+        .fc-video {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            display: block;
+            object-fit: contain;
         }
 
         .fc-heart-burst {
