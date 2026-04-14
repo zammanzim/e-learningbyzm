@@ -110,9 +110,12 @@ const FeedApp = {
         const mediaHTML = post.image_url
             ? isVid
                 ? `<div class="fc-image-wrap fc-video-wrap">
-                    <video class="fc-video" src="${post.image_url}" loop playsinline muted preload="metadata"
+                    <video class="fc-video" src="${post.image_url}" loop playsinline preload="metadata"
                         style="width:100%;display:block;cursor:pointer;"></video>
                     <div class="fc-heart-burst hidden"><i class="fa-solid fa-heart"></i></div>
+                    <button class="fc-mute-btn" aria-label="toggle mute">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </button>
                    </div>`
                 : `<div class="fc-image-wrap">
                     <img class="fc-image" src="${post.image_url}" alt="post" loading="lazy" onerror="this.parentElement.style.display='none'">
@@ -180,14 +183,35 @@ const FeedApp = {
 
 
     _bindVideo(card) {
-        const vid = card.querySelector('.fc-video');
+        const vid     = card.querySelector('.fc-video');
+        const muteBtn = card.querySelector('.fc-mute-btn');
         if (!vid) return;
 
-        // Autoplay/pause berdasarkan visibilitas — observe video element langsung
+        const updateMuteIcon = () => {
+            if (!muteBtn) return;
+            muteBtn.querySelector('i').className = vid.muted
+                ? 'fa-solid fa-volume-xmark'
+                : 'fa-solid fa-volume-high';
+        };
+
+        const tryPlay = () => {
+            vid.muted = false;
+            vid.play().then(() => {
+                // Unmuted play berhasil
+                updateMuteIcon();
+            }).catch(() => {
+                // Browser blokir unmuted autoplay — fallback ke muted
+                vid.muted = true;
+                vid.play().catch(() => {});
+                updateMuteIcon();
+            });
+        };
+
+        // Autoplay/pause berdasarkan visibilitas
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    vid.play().catch(() => {});
+                    tryPlay();
                 } else {
                     vid.pause();
                 }
@@ -195,12 +219,19 @@ const FeedApp = {
         }, { threshold: 0.5 });
         observer.observe(vid);
 
-        // Single tap: play/pause
-        // Double tap: like (sama kayak foto)
+        // Tombol mute/unmute
+        muteBtn?.addEventListener('click', e => {
+            e.stopPropagation();
+            vid.muted = !vid.muted;
+            // Kalau sebelumnya di-mute oleh browser, coba play ulang unmuted setelah interaksi user
+            if (!vid.muted && vid.paused) vid.play().catch(() => { vid.muted = true; });
+            updateMuteIcon();
+        });
+
+        // Single tap: play/pause — Double tap: like
         let tapTimer = null;
         vid.addEventListener('click', () => {
             if (tapTimer) {
-                // Double tap
                 clearTimeout(tapTimer);
                 tapTimer = null;
                 this.toggleLike(card.dataset.postId, card, true);

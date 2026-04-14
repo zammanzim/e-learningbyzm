@@ -518,6 +518,32 @@
             opacity: .25;
             cursor: not-allowed;
         }
+
+        /* MUTE TOGGLE BUTTON */
+        .fc-mute-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            transition: background .15s, transform .15s;
+        }
+
+        .fc-mute-btn:hover {
+            background: rgba(0, 0, 0, 0.78);
+            transform: scale(1.08);
+        }
     </style>
 </head>
 

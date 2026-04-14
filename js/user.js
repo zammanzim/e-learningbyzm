@@ -22,15 +22,20 @@ const UserProfile = {
 
         const params = new URLSearchParams(window.location.search);
         const targetName = params.get('name');
+        const targetId = params.get('id');
 
         // Cek apakah ini profil sendiri
         const me = this.state.me;
         const myName = me.username || me.short_name;
-        this.state.isOwnProfile = !targetName || targetName === myName;
+        this.state.isOwnProfile = (!targetName && !targetId)
+            || targetName === myName
+            || String(targetId) === String(me.id);
 
         if (this.state.isOwnProfile) {
             this.state.target = this.state.me;
             await this.refreshTargetFromDB(this.state.me.id);
+        } else if (targetId) {
+            await this.loadTargetById(targetId);
         } else {
             await this.loadTargetUser(targetName);
         }
@@ -62,6 +67,26 @@ const UserProfile = {
                 .eq('id', userId).single();
             if (data) this.state.target = data;
         } catch { /* pakai data lokal */ }
+    },
+
+    async loadTargetById(id) {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('id, full_name, short_name, username, avatar_url, bio, class_id, is_private, classes(name)')
+                .eq('id', id)
+                .maybeSingle();
+
+            if (error || !data) {
+                document.getElementById('profilePageWrap').innerHTML =
+                    `<div style="text-align:center;padding:4rem 1rem;color:#555;">
+                        <i class="fa-solid fa-user-slash" style="font-size:2rem;display:block;margin-bottom:1rem;color:#333;"></i>
+                        Pengguna tidak ditemukan.
+                    </div>`;
+                return;
+            }
+            this.state.target = data;
+        } catch (e) { console.error('Load user by id error:', e); }
     },
 
     async loadTargetUser(name) {
@@ -278,22 +303,28 @@ const UserProfile = {
         // Media — gambar atau video
         const imgEl = document.getElementById('detailPostImg');
         const vidEl = document.getElementById('detailPostVid');
+        const vidWrap = document.getElementById('detailVidWrap');
 
         if (post.image_url && this.isVideoUrl(post.image_url)) {
-            // Video
+            // Video — pakai custom player
             if (vidEl) {
                 vidEl.src = post.image_url;
-                vidEl.style.display = 'block';
                 vidEl.load();
+                vidEl.muted = false;
+                vidEl.play().catch(() => { vidEl.muted = true; vidEl.play().catch(() => { }); });
             }
+            if (vidWrap) vidWrap.style.display = 'block';
             if (imgEl) imgEl.style.display = 'none';
+            this._initVideoPlayer();
         } else if (post.image_url) {
             // Gambar
             if (imgEl) { imgEl.src = post.image_url; imgEl.style.display = 'block'; }
-            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause?.(); }
+            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
+            if (vidWrap) vidWrap.style.display = 'none';
         } else {
             if (imgEl) imgEl.style.display = 'none';
-            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; }
+            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
+            if (vidWrap) vidWrap.style.display = 'none';
         }
 
         // Tombol hapus — HANYA own profile
@@ -357,7 +388,119 @@ const UserProfile = {
         return url && /\.(mp4|mov|webm|mkv)(\?|$)/i.test(url);
     },
 
-    // ── Upload ──────────────────────────────────────
+    _initVideoPlayer() {
+        const wrap = document.getElementById('detailVidWrap');
+        if (!wrap || wrap._playerReady) return;
+        wrap._playerReady = true;
+
+        const vid = document.getElementById('detailPostVid');
+        const playBtn = document.getElementById('detailVidPlayBtn');
+        const muteBtn = document.getElementById('detailVidMuteBtn');
+        const fsBtn = document.getElementById('detailVidFsBtn');
+        const fill = document.getElementById('detailVidFill');
+        const thumb = document.getElementById('detailVidThumb');
+        const timeEl = document.getElementById('detailVidTime');
+        const progWrap = document.getElementById('detailVidProgress');
+        const tapArea = document.getElementById('detailVidTap');
+        const tapRipple = document.getElementById('detailVidTapIcon');
+
+        const fmt = s => {
+            s = Math.floor(s || 0);
+            return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+        };
+
+        const updateProgress = () => {
+            const pct = vid.duration ? (vid.currentTime / vid.duration) * 100 : 0;
+            fill.style.width = pct + '%';
+            thumb.style.left = pct + '%';
+            timeEl.textContent = `${fmt(vid.currentTime)} / ${fmt(vid.duration)}`;
+        };
+
+        const updatePlayBtn = () => {
+            playBtn.querySelector('i').className = vid.paused
+                ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+        };
+
+        const updateMuteBtn = () => {
+            muteBtn.querySelector('i').className = vid.muted
+                ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        };
+
+        vid.addEventListener('timeupdate', updateProgress);
+        vid.addEventListener('loadedmetadata', updateProgress);
+        vid.addEventListener('play', updatePlayBtn);
+        vid.addEventListener('pause', updatePlayBtn);
+        vid.addEventListener('volumechange', updateMuteBtn);
+
+        // Play / Pause button
+        playBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            vid.paused ? vid.play() : vid.pause();
+        });
+
+        // Mute toggle
+        muteBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            vid.muted = !vid.muted;
+        });
+
+        // Fullscreen
+        fsBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+                (wrap.requestFullscreen || wrap.webkitRequestFullscreen)?.call(wrap);
+            } else {
+                (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            fsBtn.querySelector('i').className = document.fullscreenElement
+                ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+        });
+
+        // Progress bar scrub
+        let scrubbing = false;
+        const scrub = (e) => {
+            const rect = progWrap.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            if (vid.duration) vid.currentTime = pct * vid.duration;
+        };
+        progWrap.addEventListener('mousedown', e => { scrubbing = true; scrub(e); e.stopPropagation(); });
+        document.addEventListener('mousemove', e => { if (scrubbing) scrub(e); });
+        document.addEventListener('mouseup', () => { scrubbing = false; });
+
+        // Center tap — play/pause + ripple
+        let rippleTimer;
+        const showRipple = (playing) => {
+            clearTimeout(rippleTimer);
+            tapRipple.innerHTML = `<i class="fa-solid fa-${playing ? 'pause' : 'play'}" style="margin:0"></i>`;
+            tapRipple.classList.remove('pop', 'pop-out');
+            void tapRipple.offsetWidth; // reflow
+            tapRipple.classList.add('pop');
+            rippleTimer = setTimeout(() => {
+                tapRipple.classList.remove('pop');
+                tapRipple.classList.add('pop-out');
+            }, 550);
+        };
+
+        tapArea.addEventListener('click', () => {
+            if (vid.paused) { vid.play(); showRipple(true); }
+            else { vid.pause(); showRipple(false); }
+        });
+
+        // Auto-show controls for a moment on any interaction
+        let ctrlTimer;
+        const flashControls = () => {
+            wrap.classList.add('ctrl-show');
+            clearTimeout(ctrlTimer);
+            ctrlTimer = setTimeout(() => wrap.classList.remove('ctrl-show'), 2800);
+        };
+        wrap.addEventListener('pointermove', flashControls);
+        wrap.addEventListener('pointerdown', flashControls);
+        vid.addEventListener('play', flashControls);
+        vid.addEventListener('pause', () => { clearTimeout(ctrlTimer); wrap.classList.add('ctrl-show'); });
+    },
     setupUploadListeners() {
         const fileInput = document.getElementById('uploadFileInput');
         const dropZone = document.getElementById('uploadDropZone');
@@ -681,7 +824,9 @@ function removeUploadPreview() {
 function closePostDetail() {
     document.getElementById('postDetailOverlay').classList.remove('show');
     const vid = document.getElementById('detailPostVid');
+    const wrap = document.getElementById('detailVidWrap');
     if (vid) { vid.pause(); vid.src = ''; }
+    if (wrap) { wrap.classList.remove('ctrl-show'); }
     unlockScroll();
 }
 
