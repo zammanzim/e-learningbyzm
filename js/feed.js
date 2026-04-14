@@ -17,6 +17,7 @@ const FeedApp = {
         hasMore: true,
         likedPosts: new Set(),
         expandedComments: new Set(),
+        activeVideo: null,          // video element yang lagi main
     },
 
     async init() {
@@ -91,6 +92,8 @@ const FeedApp = {
         this.setSkeleton(false);
         this.checkEmpty();
         this.state.loading = false;
+        // Re-evaluate video setelah post baru masuk
+        if (this._pickBestVideo) setTimeout(this._pickBestVideo, 120);
     },
 
     isVideoUrl(url) {
@@ -182,10 +185,88 @@ const FeedApp = {
     },
 
 
+    // ── Centralized IG-style video manager ──────────────────
+    // Dipanggil sekali saat init, lalu tiap scroll/resize
+    _initVideoManager() {
+        if (this._videoManagerReady) return;
+        this._videoManagerReady = true;
+
+        const pickBest = () => {
+            const videos = [...document.querySelectorAll('.fc-video')];
+            if (!videos.length) return;
+
+            const vh     = window.innerHeight;
+            const center = vh / 2;
+            let best = null, bestScore = -Infinity;
+
+            videos.forEach(v => {
+                const r    = v.getBoundingClientRect();
+                // Video harus minimal sedikit keliatan
+                if (r.bottom < 0 || r.top > vh) return;
+
+                // Seberapa banyak video keliatan (0–1)
+                const visible  = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+                const visRatio = visible / r.height;
+                if (visRatio < 0.5) return;          // kurang dari 50% skip
+
+                // Jarak titik tengah video ke tengah layar
+                const vidCenter = r.top + r.height / 2;
+                const dist      = Math.abs(vidCenter - center);
+                const score     = visRatio * 1000 - dist; // lebih visible + lebih tengah = lebih bagus
+
+                if (score > bestScore) { bestScore = score; best = v; }
+            });
+
+            // Play yang terpilih, pause sisanya
+            videos.forEach(v => {
+                if (v === best) {
+                    if (v.paused) this._playVideo(v);
+                } else {
+                    if (!v.paused) v.pause();
+                }
+            });
+            this.state.activeVideo = best || null;
+        };
+
+        let ticking = false;
+        const onScroll = () => {
+            if (!ticking) {
+                requestAnimationFrame(() => { pickBest(); ticking = false; });
+                ticking = true;
+            }
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+
+        // Jalankan sekali sekarang
+        setTimeout(pickBest, 100);
+        // Expose agar bisa dipanggil manual saat post baru di-render
+        this._pickBestVideo = pickBest;
+    },
+
+    _playVideo(vid) {
+        const muteBtn = vid.closest('.fc-video-wrap')?.querySelector('.fc-mute-btn');
+        const updateMuteIcon = () => {
+            if (!muteBtn) return;
+            muteBtn.querySelector('i').className = vid.muted
+                ? 'fa-solid fa-volume-xmark'
+                : 'fa-solid fa-volume-high';
+        };
+        // Pertahankan mute state dari video sebelumnya (user experience)
+        const prevMuted = this.state.activeVideo?.muted ?? false;
+        vid.muted = prevMuted;
+        vid.play().then(() => { updateMuteIcon(); })
+           .catch(() => { vid.muted = true; vid.play().catch(() => {}); updateMuteIcon(); });
+    },
+
     _bindVideo(card) {
         const vid     = card.querySelector('.fc-video');
         const muteBtn = card.querySelector('.fc-mute-btn');
         if (!vid) return;
+
+        // Init manager sekali
+        this._initVideoManager();
 
         const updateMuteIcon = () => {
             if (!muteBtn) return;
@@ -194,36 +275,12 @@ const FeedApp = {
                 : 'fa-solid fa-volume-high';
         };
 
-        const tryPlay = () => {
-            vid.muted = false;
-            vid.play().then(() => {
-                // Unmuted play berhasil
-                updateMuteIcon();
-            }).catch(() => {
-                // Browser blokir unmuted autoplay — fallback ke muted
-                vid.muted = true;
-                vid.play().catch(() => {});
-                updateMuteIcon();
-            });
-        };
-
-        // Autoplay/pause berdasarkan visibilitas
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    tryPlay();
-                } else {
-                    vid.pause();
-                }
-            });
-        }, { threshold: 0.5 });
-        observer.observe(vid);
-
-        // Tombol mute/unmute
+        // Tombol mute/unmute — apply ke semua video sekalian (kayak IG)
         muteBtn?.addEventListener('click', e => {
             e.stopPropagation();
-            vid.muted = !vid.muted;
-            // Kalau sebelumnya di-mute oleh browser, coba play ulang unmuted setelah interaksi user
+            const newMuted = !vid.muted;
+            // Sync semua video biar konsisten kalau nanti ganti video
+            document.querySelectorAll('.fc-video').forEach(v => { v.muted = newMuted; });
             if (!vid.muted && vid.paused) vid.play().catch(() => { vid.muted = true; });
             updateMuteIcon();
         });
@@ -238,7 +295,13 @@ const FeedApp = {
             } else {
                 tapTimer = setTimeout(() => {
                     tapTimer = null;
-                    vid.paused ? vid.play().catch(() => {}) : vid.pause();
+                    if (vid.paused) {
+                        this._playVideo(vid);
+                        this.state.activeVideo = vid;
+                    } else {
+                        vid.pause();
+                        if (this.state.activeVideo === vid) this.state.activeVideo = null;
+                    }
                 }, 250);
             }
         });
