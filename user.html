@@ -784,16 +784,64 @@
 
     <div class="main-content" style="padding-top: 4rem;">
         <div class="profile-page-wrap" id="profilePageWrap">
-            <!-- Skeleton -->
-            <div class="profile-header-card" id="profileSkeleton">
-                <div class="profile-sk-cover"></div>
-                <div style="padding: 0 1.25rem;">
-                    <div class="profile-sk-avatar" style="margin-top:-42px;"></div>
-                    <div class="profile-sk-line" style="width:38%;"></div>
-                    <div class="profile-sk-line" style="width:22%;"></div>
-                    <div class="profile-sk-line" style="width:55%;"></div>
+
+            <!-- Full skeleton — header card + posts grid -->
+            <div id="profileSkeleton">
+
+                <!-- Header card skeleton -->
+                <div class="profile-header-card" style="margin-bottom:1.25rem;">
+                    <!-- Cover -->
+                    <div class="profile-sk-cover"></div>
+
+                    <!-- Avatar row -->
+                    <div style="display:flex;align-items:flex-end;gap:14px;padding:0 1.25rem;margin-top:-42px;">
+                        <div class="profile-sk-avatar" style="flex-shrink:0;"></div>
+                        <div class="profile-sk-line"
+                            style="width:110px;height:32px;border-radius:20px;margin-bottom:6px;"></div>
+                    </div>
+
+                    <!-- Info lines -->
+                    <div style="padding:0.7rem 1.25rem 1.25rem;">
+                        <div class="profile-sk-line" style="width:52%;height:16px;"></div>
+                        <div class="profile-sk-line" style="width:28%;height:12px;"></div>
+                        <div class="profile-sk-line" style="width:75%;height:12px;"></div>
+                        <div class="profile-sk-line" style="width:60%;height:12px;"></div>
+
+                        <!-- Class badge -->
+                        <div class="profile-sk-line" style="width:90px;height:24px;border-radius:20px;margin-top:4px;">
+                        </div>
+
+                        <!-- Stats -->
+                        <div
+                            style="display:flex;gap:2rem;padding-top:0.7rem;margin-top:0.4rem;border-top:1px solid rgba(255,255,255,0.06);">
+                            <div>
+                                <div class="profile-sk-line" style="width:32px;height:18px;"></div>
+                                <div class="profile-sk-line" style="width:60px;height:10px;margin-top:4px;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Section label skeleton -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.65rem;padding:0 2px;">
+                    <div class="profile-sk-line" style="width:70px;height:10px;border-radius:5px;flex-shrink:0;"></div>
+                    <div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
+                </div>
+
+                <!-- Posts grid skeleton — 3 kolom, 2 baris -->
+                <div
+                    style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:0.75rem;overflow:hidden;">
+                    <div class="posts-skeleton"></div>
+                    <div class="posts-skeleton"></div>
+                    <div class="posts-skeleton"></div>
+                    <div class="posts-skeleton"></div>
+                    <div class="posts-skeleton"></div>
+                    <div class="posts-skeleton"></div>
+                </div>
+
             </div>
+            <!-- end skeleton -->
+
         </div>
     </div>
 
