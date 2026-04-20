@@ -175,6 +175,11 @@ const SubjectApp = {
 
     async toggleTaskStatus(card, btn) {
         const id = card.dataset.id;
+
+        // Block kalau task sudah diarsipkan
+        const ann = this.state.announcements.find(a => String(a.id) === String(id));
+        if (ann?.is_done === true) return;
+
         const isDone = btn.classList.contains("done");
 
         if (isDone) {
@@ -187,17 +192,44 @@ const SubjectApp = {
             if (isDone) {
                 await supabase.from("user_progress").delete().eq("user_id", this.state.user.id).eq("announcement_id", id);
                 this.state.completedTasks = this.state.completedTasks.filter(tid => tid !== id);
-                btn.innerHTML = '<i class="fa-regular fa-circle"></i> Tandai Selesai';
+                btn.innerHTML = '<i class="fa-regular fa-circle"></i> Selesai?';
             } else {
                 await supabase.from("user_progress").insert({ user_id: this.state.user.id, announcement_id: id });
                 this.state.completedTasks.push(id);
                 btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+                // Setelah insert, DB trigger akan auto-arsip kalau semua siswa selesai.
+                // Re-fetch status is_done setelah jeda singkat biar UI sinkron kalau diarsipkan
+                setTimeout(() => this._syncArchivedStatus(id, btn, card), 1500);
             }
         } catch (err) {
             console.error("Task toggle error:", err);
             if (isDone) btn.classList.add("done"); else btn.classList.remove("done");
+            btn.innerHTML = isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?';
             showPopup("Gagal update status tugas", "error");
         }
+    },
+
+    // Cek apakah task sudah diarsipkan oleh trigger DB setelah siswa terakhir selesai
+    async _syncArchivedStatus(id, btn, card) {
+        try {
+            const { data } = await supabase
+                .from("subject_announcements")
+                .select("is_done")
+                .eq("id", id)
+                .single();
+            if (data?.is_done === true) {
+                // Update state lokal
+                const ann = this.state.announcements.find(a => String(a.id) === String(id));
+                if (ann) ann.is_done = true;
+                // Ganti tombol jadi locked
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "default";
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+                btn.classList.add("done");
+                if (typeof showToast === "function") showToast("Tugas ini diarsipkan — semua siswa sudah selesai! 🎉", "success");
+            }
+        } catch (e) { /* silent fail */ }
     },
 
     async loadBookmarks() {
@@ -262,7 +294,12 @@ const SubjectApp = {
                     supabase.from("user_progress").select("announcement_id").eq("user_id", this.state.user.id),
                     this.loadBookmarks()
                 ]);
-                if (progressRes.data) this.state.completedTasks = progressRes.data.map(p => String(p.announcement_id));
+                const progressIds = (progressRes.data || []).map(p => String(p.announcement_id));
+                // Task yang is_done=true → otomatis selesai untuk siswa, meski progress row sudah dihapus
+                const archivedIds = this.state.announcements
+                    .filter(a => a.is_done === true)
+                    .map(a => String(a.id));
+                this.state.completedTasks = [...new Set([...progressIds, ...archivedIds])];
             } else {
                 await this.loadBookmarks();
             }
@@ -333,7 +370,12 @@ const SubjectApp = {
         let taskBtnHTML = "";
         if (this.state.isLessonMode) {
             const isDone = this.state.completedTasks.includes(String(data.id));
-            taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}</button>`;
+            if (data.is_done === true) {
+                // Diarsipkan — semua siswa selesai, tombol dikunci
+                taskBtnHTML = `<button class="task-btn done" disabled style="opacity:0.6; cursor:default;"><i class="fa-solid fa-circle-check"></i> Selesai</button>`;
+            } else {
+                taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}</button>`;
+            }
         }
 
         const colorTools = `

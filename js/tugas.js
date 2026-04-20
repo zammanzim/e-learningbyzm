@@ -114,7 +114,10 @@ async function initTugas() {
             // Tampilkan cache LANGSUNG biar kelihatan cepat
             allTasks = cachedTasks;
             const validIds = allTasks.map(t => String(t.id));
-            doneIds = cachedDone.filter(id => validIds.includes(id));
+            // Task is_done=true → otomatis selesai meski progress row sudah dihapus
+            const cachedArchived = allTasks.filter(t => t.is_done).map(t => String(t.id));
+            const cachedProgress = cachedDone.filter(id => validIds.includes(id));
+            doneIds = [...new Set([...cachedArchived, ...cachedProgress])];
 
             // Coba pakai rank dari cache juga
             const cachedRank = _tugasCacheGet(rankCacheKey, TUGAS_CACHE_TTL_RANK);
@@ -169,9 +172,14 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
 
         const freshTasks = tasks || [];
         const validIds = freshTasks.map(t => String(t.id));
-        const freshDone = (progress || [])
+
+        // Task yang is_done=true → otomatis selesai untuk siswa ini,
+        // meskipun user_progress sudah dihapus oleh trigger DB
+        const archivedIds = freshTasks.filter(t => t.is_done).map(t => String(t.id));
+        const progressIds = (progress || [])
             .map(p => String(p.announcement_id))
             .filter(id => validIds.includes(id));
+        const freshDone = [...new Set([...archivedIds, ...progressIds])];
 
         // Simpan ke cache
         _tugasCacheSet(tasksCacheKey, freshTasks);
@@ -355,9 +363,14 @@ function renderTasks(data) {
         <button class="task-btn-delete" onclick="deleteTugas(event, '${item.id}')" title="Hapus tugas ini">
             <i class="fa-solid fa-trash"></i>
         </button>` : '<span></span>'}
-        <button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
-            ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
-        </button>
+        ${item.is_done
+                ? `<button class="task-btn done" disabled style="opacity:0.6; cursor:default;">
+                <i class="fa-solid fa-circle-check"></i> Selesai
+               </button>`
+                : `<button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
+                ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
+               </button>`
+            }
     </div>
 `;
         fragment.appendChild(el);
@@ -373,6 +386,11 @@ async function toggleStatus(e, id, btn) {
         user = JSON.parse(localStorage.getItem("user"));
     } catch (err) { return; }
     if (!user) return;
+
+    // Block kalau task sudah diarsipkan (is_done=true) — tombol harusnya sudah disabled,
+    // tapi ini guard tambahan biar aman
+    const task = allTasks.find(t => String(t.id) === String(id));
+    if (task?.is_done) return;
 
     const isDone = btn.classList.contains('done');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -390,6 +408,13 @@ async function toggleStatus(e, id, btn) {
         const classId = getEffectiveClassId();
         _tugasCacheInvalidate(user.id, null); // tasks cache tetap valid, cukup done+rank
         sessionStorage.removeItem(`task_badge_${user.id}`);
+
+        // ── AUTO-ARSIP: cek apakah semua siswa sudah selesai ─────────
+        // Hanya dicek saat user baru mencentang selesai (bukan un-mark),
+        // dan hanya kalau bukan super_admin biar ga dobel sama bulkTask admin.
+        if (!isDone && user.role !== 'super_admin') {
+            _checkAndArchiveTask(id, classId).catch(() => { }); // background, jangan block UI
+        }
         if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
 
         // Update ranking via RPC
@@ -441,6 +466,55 @@ async function deleteTugas(e, id) {
         console.error('Hapus tugas gagal:', err);
         showPopup('Gagal menghapus: ' + err.message, 'error');
     }
+}
+
+// ── AUTO-ARSIP HELPER ────────────────────────────────────────────
+// Dipanggil di background setelah user centang selesai.
+// Kalau ternyata SEMUA siswa di kelas sudah done task ini →
+//   1. Set is_done = true di subject_announcements
+//   2. Hapus semua baris user_progress untuk task itu (biar ga jebol limit)
+//   3. Update state lokal (hapus dari allTasks & doneIds) + refresh UI
+async function _checkAndArchiveTask(taskId, classId) {
+    // Ambil jumlah siswa di kelas (exclude super_admin)
+    const { count: totalSiswa } = await supabase
+        .from('users')
+        .select('id', { count: 'exact', head: true })
+        .eq('class_id', classId)
+        .neq('role', 'super_admin');
+
+    if (!totalSiswa || totalSiswa === 0) return;
+
+    // Ambil jumlah yang sudah done untuk task ini
+    const { count: doneCount } = await supabase
+        .from('user_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('announcement_id', taskId);
+
+    if ((doneCount || 0) < totalSiswa) return; // belum semua selesai
+
+    // SEMUA SELESAI → arsipkan
+    // 1. Flag is_done = true
+    const { error: updateErr } = await supabase
+        .from('subject_announcements')
+        .update({ is_done: true })
+        .eq('id', taskId);
+    if (updateErr) throw updateErr;
+
+    // 2. Hapus semua progress row untuk task ini
+    await supabase.from('user_progress').delete().eq('announcement_id', taskId);
+
+    // 3. Update state lokal & UI
+    allTasks = allTasks.filter(t => String(t.id) !== String(taskId));
+    doneIds = doneIds.filter(d => d !== String(taskId));
+
+    // Invalidate tasks cache juga (task hilang dari list)
+    const tasksCacheKey = `tugas_tasks_${classId}`;
+    _tugasCacheInvalidate(null, classId);
+
+    updateProgressUI();
+    applyCurrentFilter();
+
+    if (typeof showToast === 'function') showToast('Tugas diarsipkan — semua siswa sudah selesai! 🎉', 'success');
 }
 
 function applyCurrentFilter() {

@@ -519,6 +519,61 @@
             cursor: not-allowed;
         }
 
+        /* Play/Pause tap overlay */
+        .fc-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        .fc-play-overlay.hidden {
+            display: none;
+        }
+
+        .fc-play-overlay i {
+            font-size: 52px;
+            color: rgba(255, 255, 255, 0.92);
+            filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.55));
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        @keyframes overlayIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes overlayOut {
+            to {
+                opacity: 0;
+                transform: scale(1.15);
+            }
+        }
+
+        .fc-play-overlay.fc-overlay-in i {
+            animation: overlayIn .35s cubic-bezier(.175, .885, .32, 1.275) forwards;
+        }
+
+        .fc-play-overlay.fc-overlay-out i {
+            animation: overlayOut .32s ease forwards;
+        }
+
         /* MUTE TOGGLE BUTTON */
         .fc-mute-btn {
             position: absolute;

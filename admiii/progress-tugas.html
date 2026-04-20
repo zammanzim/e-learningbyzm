@@ -590,7 +590,7 @@
             <div class="mapel-filter" id="mapelFilter"></div>
 
             <button class="btn-bulk-all" id="btnBulkAll" onclick="bulkAllConfirm()">
-                <i class="fa-solid fa-check-double"></i> Selesaikan SEMUA untuk Semua Siswa
+                <i class="fa-solid fa-check-double"></i> Arsipkan SEMUA Tugas
             </button>
         </div>
 
@@ -642,12 +642,11 @@
                 { data: students },
             ] = await Promise.all([
                 supabase.from('subject_announcements')
-                    .select('id, big_title, title, content, small, subject_id, card_color')
+                    .select('id, big_title, title, content, small, subject_id, card_color, is_done')
                     .eq('class_id', classId)
                     .neq('subject_id', 'announcements')
                     .neq('subject_id', 'kisi-kisi')
                     .neq('subject_id', 'akuhutajakus')
-                    .order('display_order', { ascending: true })
                     .order('created_at', { ascending: false }),
 
                 supabase.from('users')
@@ -699,8 +698,13 @@
             const validIds = new Set(allTasks.map(t => String(t.id)));
             let totalDone = 0, lulus = 0;
 
+            // Task yang is_done = true dianggap selesai oleh semua siswa (tapi progress row sudah dihapus)
+            const archivedCount = allTasks.filter(t => t.is_done).length;
+            const activeTaskIds = new Set(allTasks.filter(t => !t.is_done).map(t => String(t.id)));
+
             allStudents.forEach(s => {
-                const done = [...(progressMap[s.id] || [])].filter(id => validIds.has(id)).length;
+                const activeDone = [...(progressMap[s.id] || [])].filter(id => activeTaskIds.has(id)).length;
+                const done = activeDone + archivedCount; // task arsip = otomatis selesai
                 totalDone += done;
                 if (total > 0 && done === total) lulus++;
             });
@@ -762,22 +766,42 @@
                     (t.subject_id || '').toLowerCase().includes(q) ||
                     (t.title || '').toLowerCase().includes(q))
             ).map(t => {
-                const done = allStudents.filter(s => (progressMap[s.id] || new Set()).has(String(t.id))).length;
-                return { ...t, done, pct: n > 0 ? Math.round((done / n) * 100) : 0 };
+                // Kalau task sudah diarsipkan (is_done=true), progress row sudah dihapus —
+                // anggap done = semua siswa, pct = 100
+                const done = t.is_done
+                    ? n
+                    : allStudents.filter(s => (progressMap[s.id] || new Set()).has(String(t.id))).length;
+                const pct = t.is_done ? 100 : (n > 0 ? Math.round((done / n) * 100) : 0);
+                return { ...t, done, pct };
             });
 
             if (sort === 'pct_desc') list.sort((a, b) => b.pct - a.pct);
             else if (sort === 'pct_asc') list.sort((a, b) => a.pct - b.pct);
             else if (sort === 'name') list.sort((a, b) => (a.big_title || '').localeCompare(b.big_title || ''));
 
+            // Pisahkan task aktif vs arsip, arsip selalu di bawah
+            const active = list.filter(t => !t.is_done);
+            const archived = list.filter(t => t.is_done);
+            const sorted = [...active, ...archived];
+
             const container = document.getElementById('taskList');
-            if (list.length === 0) {
+            if (sorted.length === 0) {
                 container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-inbox"></i><p>Tidak ada tugas ditemukan.</p></div>`;
                 return;
             }
 
             container.innerHTML = '';
-            list.forEach(t => container.appendChild(buildCard(t)));
+            if (archived.length > 0 && active.length > 0) {
+                // Divider antara aktif dan arsip
+                const divider = document.createElement('div');
+                divider.style.cssText = 'text-align:center;color:#444;font-size:11px;letter-spacing:1px;padding:8px 0;margin:4px 0;border-top:1px solid rgba(255,255,255,0.05);';
+                divider.innerHTML = `<i class="fa-solid fa-archive" style="margin-right:6px;"></i>DIARSIPKAN (${archived.length})`;
+                active.forEach(t => container.appendChild(buildCard(t)));
+                container.appendChild(divider);
+                archived.forEach(t => container.appendChild(buildCard(t)));
+            } else {
+                sorted.forEach(t => container.appendChild(buildCard(t)));
+            }
         }
 
         // ── MODE 2: Per Orang ──────────────────────────────
@@ -785,7 +809,10 @@
             const sort = document.getElementById('sortSelect').value;
             const q = document.getElementById('searchInput').value.toLowerCase().trim();
             const total = allTasks.length;
-            const validIds = new Set(allTasks.map(t => String(t.id)));
+
+            // Task yang is_done = true dianggap selesai oleh semua siswa
+            const archivedCount = allTasks.filter(t => t.is_done).length;
+            const activeTaskIds = new Set(allTasks.filter(t => !t.is_done).map(t => String(t.id)));
 
             let list = allStudents
                 .filter(s => {
@@ -793,7 +820,8 @@
                     return !q || name.includes(q) || (s.full_name || '').toLowerCase().includes(q);
                 })
                 .map(s => {
-                    const done = [...(progressMap[s.id] || [])].filter(id => validIds.has(id)).length;
+                    const activeDone = [...(progressMap[s.id] || [])].filter(id => activeTaskIds.has(id)).length;
+                    const done = activeDone + archivedCount;
                     return { ...s, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
                 });
 
@@ -856,7 +884,26 @@
         function buildStudentTaskRows(studentId) {
             if (allTasks.length === 0) return `<p style="color:#444;font-size:12px;padding:6px 0;">Belum ada tugas.</p>`;
             const doneSet = progressMap[studentId] || new Set();
-            return allTasks.map(task => {
+
+            // Pisahkan: active tasks dulu, arsip di bawah dengan divider
+            const active = allTasks.filter(t => !t.is_done);
+            const archived = allTasks.filter(t => t.is_done);
+
+            const buildRow = (task) => {
+                if (task.is_done) {
+                    // Task diarsipkan — terkunci, selalu tampil selesai, tidak bisa diubah
+                    return `
+                    <div class="s-task-row" style="opacity:0.5;">
+                        <button class="task-toggle done" disabled title="Diarsipkan — semua siswa selesai" style="cursor:default;">
+                            <i class="fa-solid fa-check" style="margin:0;"></i>
+                        </button>
+                        <div class="t-label">
+                            <div class="t-label-title">${esc(task.big_title)}</div>
+                            ${task.title ? `<div class="t-label-sub">${esc(task.title)}</div>` : ''}
+                        </div>
+                        <span class="t-mapel" style="opacity:0.5;">${esc(task.subject_id)}</span>
+                    </div>`;
+                }
                 const isDone = doneSet.has(String(task.id));
                 return `
                 <div class="s-task-row">
@@ -871,7 +918,16 @@
                     </div>
                     <span class="t-mapel">${esc(task.subject_id)}</span>
                 </div>`;
-            }).join('');
+            };
+
+            let html = active.map(buildRow).join('');
+            if (archived.length > 0) {
+                html += `<div style="text-align:center;color:#333;font-size:10px;letter-spacing:0.8px;padding:6px 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);">
+                    <i class="fa-solid fa-archive" style="margin-right:4px;"></i>DIARSIPKAN (${archived.length})
+                </div>`;
+                html += archived.map(buildRow).join('');
+            }
+            return html;
         }
 
         function toggleStudentCard(id) {
@@ -884,13 +940,15 @@
             btn.innerHTML = '';
             try {
                 if (wasDone) {
-                    await supabase.from('user_progress').delete()
+                    const { error } = await supabase.from('user_progress').delete()
                         .eq('user_id', studentId).eq('announcement_id', taskId);
+                    if (error) throw error;
                     progressMap[studentId]?.delete(String(taskId));
                 } else {
-                    await supabase.from('user_progress')
-                        .upsert({ user_id: studentId, announcement_id: taskId },
-                            { onConflict: 'user_id,announcement_id', ignoreDuplicates: true });
+                    const { error } = await supabase.from('user_progress')
+                        .insert({ user_id: studentId, announcement_id: taskId });
+                    // 23505 = duplicate key, berarti sudah ada — aman diabaikan
+                    if (error && error.code !== '23505') throw error;
                     if (!progressMap[studentId]) progressMap[studentId] = new Set();
                     progressMap[studentId].add(String(taskId));
                 }
@@ -898,6 +956,17 @@
                 btn.innerHTML = !wasDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : '';
                 refreshStudentBar(studentId);
                 updateStats();
+
+                // Auto-arsip: kalau baru mark done, cek apakah semua siswa sudah selesai
+                if (!wasDone) {
+                    await _checkAndArchiveAll([taskId]);
+                    // Kalau task diarsipkan, refresh row siswa ini juga
+                    const task = allTasks.find(t => String(t.id) === String(taskId));
+                    if (task?.is_done) {
+                        document.getElementById(`strows-${studentId}`).innerHTML = buildStudentTaskRows(studentId);
+                        refreshStudentBar(studentId);
+                    }
+                }
             } catch (err) {
                 btn.className = `task-toggle ${wasDone ? 'done' : ''}`;
                 btn.innerHTML = wasDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : '';
@@ -910,33 +979,45 @@
             panel?.querySelectorAll('button').forEach(b => b.disabled = true);
             try {
                 if (markDone) {
-                    // Fetch yang sudah ada di DB beneran untuk siswa ini
-                    const { data: existing } = await supabase
-                        .from('user_progress')
-                        .select('announcement_id')
-                        .eq('user_id', studentId);
+                    // Hanya proses task yang AKTIF (belum diarsipkan)
+                    const activeTasks = allTasks.filter(t => !t.is_done);
+                    if (activeTasks.length === 0) {
+                        showToast('Semua tugas sudah diarsipkan.', 'info');
+                    } else {
+                        // Fetch yang sudah ada di DB beneran untuk siswa ini
+                        const { data: existing } = await supabase
+                            .from('user_progress')
+                            .select('announcement_id')
+                            .eq('user_id', studentId);
 
-                    const existingIds = new Set((existing || []).map(r => String(r.announcement_id)));
-                    const toInsert = allTasks
-                        .filter(t => !existingIds.has(String(t.id)))
-                        .map(t => ({ user_id: studentId, announcement_id: t.id }));
+                        const existingIds = new Set((existing || []).map(r => String(r.announcement_id)));
+                        const toInsert = activeTasks
+                            .filter(t => !existingIds.has(String(t.id)))
+                            .map(t => ({ user_id: studentId, announcement_id: t.id }));
 
-                    for (let i = 0; i < toInsert.length; i += 50) {
-                        const { error } = await supabase.from('user_progress')
-                            .insert(toInsert.slice(i, i + 50));
+                        for (let i = 0; i < toInsert.length; i += 50) {
+                            const { error } = await supabase.from('user_progress')
+                                .insert(toInsert.slice(i, i + 50));
+                            if (error && error.code !== '23505') throw error;
+                        }
+
+                        if (!progressMap[studentId]) progressMap[studentId] = new Set();
+                        activeTasks.forEach(t => progressMap[studentId].add(String(t.id)));
+                        showToast('Semua tugas aktif diselesaikan!', 'success');
+
+                        // Auto-cek: ada task yang sekarang semua siswa sudah done? → arsipkan
+                        await _checkAndArchiveAll(activeTasks.map(t => t.id));
+                    }
+                } else {
+                    // Reset: hapus semua progress siswa ini untuk task aktif saja
+                    const activeTaskIds = allTasks.filter(t => !t.is_done).map(t => t.id);
+                    if (activeTaskIds.length > 0) {
+                        const { error } = await supabase.from('user_progress').delete()
+                            .eq('user_id', studentId)
+                            .in('announcement_id', activeTaskIds);
                         if (error) throw error;
                     }
-
-                    if (!progressMap[studentId]) progressMap[studentId] = new Set();
-                    allTasks.forEach(t => progressMap[studentId].add(String(t.id)));
-                    showToast('Semua tugas diselesaikan!', 'success');
-                } else {
-                    // Delete semua progress siswa ini untuk task yang relevan
-                    const { error } = await supabase.from('user_progress').delete()
-                        .eq('user_id', studentId)
-                        .in('announcement_id', allTasks.map(t => t.id));
-                    if (error) throw error;
-                    progressMap[studentId] = new Set();
+                    allTasks.filter(t => !t.is_done).forEach(t => progressMap[studentId]?.delete(String(t.id)));
                     showToast('Progress direset.', 'info');
                 }
                 document.getElementById(`strows-${studentId}`).innerHTML = buildStudentTaskRows(studentId);
@@ -949,10 +1030,44 @@
             }
         }
 
+        // Cek task mana yang sekarang sudah done oleh semua siswa → auto-arsip
+        async function _checkAndArchiveAll(taskIds) {
+            const n = allStudents.length;
+            if (!n) return;
+            for (const taskId of taskIds) {
+                const taskIdStr = String(taskId);
+                // Sudah diarsipkan, skip
+                const task = allTasks.find(t => String(t.id) === taskIdStr);
+                if (!task || task.is_done) continue;
+
+                const doneCount = allStudents.filter(s =>
+                    (progressMap[s.id] || new Set()).has(taskIdStr)
+                ).length;
+
+                if (doneCount >= n) {
+                    // Semua selesai → arsipkan
+                    const { error: upErr } = await supabase
+                        .from('subject_announcements').update({ is_done: true }).eq('id', taskId);
+                    if (upErr) continue;
+
+                    await supabase.from('user_progress').delete().eq('announcement_id', taskId);
+
+                    task.is_done = true;
+                    allStudents.forEach(s => progressMap[s.id]?.delete(taskIdStr));
+                    showToast(`"${task.big_title}" diarsipkan otomatis 🎉`, 'success');
+                }
+            }
+            // Re-render task list kalau ada yang berubah
+            if (currentView === 'task') renderTasks();
+            updateStats();
+        }
+
         function refreshStudentBar(studentId) {
             const total = allTasks.length;
-            const validIds = new Set(allTasks.map(t => String(t.id)));
-            const done = [...(progressMap[studentId] || [])].filter(id => validIds.has(id)).length;
+            const archivedCount = allTasks.filter(t => t.is_done).length;
+            const activeTaskIds = new Set(allTasks.filter(t => !t.is_done).map(t => String(t.id)));
+            const activeDone = [...(progressMap[studentId] || [])].filter(id => activeTaskIds.has(id)).length;
+            const done = activeDone + archivedCount;
             const pct = total > 0 ? Math.round((done / total) * 100) : 0;
             const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
 
@@ -965,22 +1080,31 @@
         }
 
         function buildCard(task) {
-            const { id, big_title, title, content, small, subject_id, card_color, done, pct } = task;
+            const { id, big_title, title, content, small, subject_id, card_color, done, pct, is_done } = task;
             const n = allStudents.length;
-            const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
+            const color = is_done ? '#0be881' : (pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757');
             const colorClass = card_color && card_color !== 'default' ? `color-${card_color}` : '';
 
             const el = document.createElement('div');
             el.className = `course-card ${colorClass}`;
+            el.style.opacity = is_done ? '0.65' : '1';
 
-            el.innerHTML = `
-                <span class="mapel-badge">${esc(subject_id)}</span>
-                ${big_title ? `<h3 style="margin:0 0 6px;">${big_title}</h3>` : ''}
-                ${title ? `<h4 style="margin:0 0 10px;">${title}</h4>` : ''}
-                ${content ? `<div style="margin-bottom:14px;font-size:14px;line-height:1.65;color:#ccc;">${content}</div>` : ''}
-                ${small ? `<small style="color:#666;display:block;margin-bottom:2px;">${esc(small)}</small>` : ''}
+            const archivedBadge = is_done
+                ? `<span style="display:inline-block;background:rgba(11,232,129,0.15);color:#0be881;border:1px solid rgba(11,232,129,0.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:8px;letter-spacing:0.5px;">✓ DIARSIPKAN</span><br>`
+                : '';
 
-                <div class="bulk-banner">
+            const bulkBanner = is_done
+                ? `<div class="bulk-banner">
+                    <div class="bulk-progress">
+                        <small style="color:#0be881;font-size:12px;"><i class="fa-solid fa-circle-check"></i> Semua siswa selesai — progress dihapus dari DB</small>
+                    </div>
+                    <div class="bulk-actions">
+                        <button class="btn-bulk-reset" id="breset-${id}" onclick="bulkTask('${id}', false)">
+                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Un-arsip
+                        </button>
+                    </div>
+                </div>`
+                : `<div class="bulk-banner">
                     <div class="bulk-progress">
                         <div class="bulk-bar-wrap">
                             <div class="bulk-bar" id="bar-${id}" style="width:${pct}%;background:${color};"></div>
@@ -989,13 +1113,22 @@
                     </div>
                     <div class="bulk-actions">
                         <button class="btn-bulk-done" id="bdone-${id}" onclick="bulkTask('${id}', true)">
-                            <i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua
+                            <i class="fa-solid fa-check-double" style="margin:0;"></i> Arsipkan Semua
                         </button>
                         <button class="btn-bulk-reset" id="breset-${id}" onclick="bulkTask('${id}', false)">
                             <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Reset
                         </button>
                     </div>
                 </div>`;
+
+            el.innerHTML = `
+                ${archivedBadge}
+                <span class="mapel-badge">${esc(subject_id)}</span>
+                ${big_title ? `<h3 style="margin:0 0 6px;">${big_title}</h3>` : ''}
+                ${title ? `<h4 style="margin:0 0 10px;">${title}</h4>` : ''}
+                ${content ? `<div style="margin-bottom:14px;font-size:14px;line-height:1.65;color:#ccc;">${content}</div>` : ''}
+                ${small ? `<small style="color:#666;display:block;margin-bottom:2px;">${esc(small)}</small>` : ''}
+                ${bulkBanner}`;
 
             return el;
         }
@@ -1008,39 +1141,47 @@
 
             try {
                 if (markDone) {
-                    // Fetch yang sudah ada di DB beneran (bukan dari local state)
-                    const { data: existing } = await supabase
-                        .from('user_progress')
-                        .select('user_id')
+                    // ── ARSIP: set is_done = true, hapus semua progress row ──
+                    // Tidak perlu insert user_progress dulu — langsung arsip saja.
+                    // Data progress row = 0 untuk task ini, UI admin tetap bisa lihat (is_done=true).
+                    const confirmed = await showPopup(
+                        `Arsipkan tugas ini? <br><small style="opacity:0.7">Progress semua siswa akan dianggap selesai dan dihapus dari tabel (hemat kuota). Task tetap terlihat di panel ini sebagai arsip.</small>`,
+                        'confirm'
+                    );
+                    if (!confirmed) { [btnDone, btnReset].forEach(b => { if (b) b.disabled = false; }); return; }
+
+                    // 1. Flag is_done = true
+                    const { error: upErr } = await supabase
+                        .from('subject_announcements')
+                        .update({ is_done: true })
+                        .eq('id', taskId);
+                    if (upErr) throw upErr;
+
+                    // 2. Hapus semua progress row untuk task ini
+                    const { error: delErr } = await supabase
+                        .from('user_progress').delete()
                         .eq('announcement_id', taskId);
+                    if (delErr) throw delErr;
 
-                    const existingIds = new Set((existing || []).map(r => String(r.user_id)));
-                    const toInsert = allStudents
-                        .filter(s => !existingIds.has(String(s.id)))
-                        .map(s => ({ user_id: s.id, announcement_id: taskId }));
-
-                    // Insert batch kecil (50) biar ga timeout/limit
-                    for (let i = 0; i < toInsert.length; i += 50) {
-                        const { error } = await supabase.from('user_progress')
-                            .insert(toInsert.slice(i, i + 50));
-                        if (error) throw error;
-                    }
-
-                    // Update local state dari DB yang beneran
-                    allStudents.forEach(s => {
-                        if (!progressMap[s.id]) progressMap[s.id] = new Set();
-                        progressMap[s.id].add(String(taskId));
-                    });
-
-                    showToast(`Diselesaikan untuk ${allStudents.length} siswa!`, 'success');
-                } else {
-                    // Delete semua progress untuk task ini — tanpa .in() biar ga kena limit
-                    const { error } = await supabase.from('user_progress').delete()
-                        .eq('announcement_id', taskId);
-                    if (error) throw error;
-
+                    // 3. Update local state
+                    const taskIdx = allTasks.findIndex(t => String(t.id) === String(taskId));
+                    if (taskIdx !== -1) allTasks[taskIdx].is_done = true;
                     allStudents.forEach(s => progressMap[s.id]?.delete(String(taskId)));
-                    showToast('Progress direset.', 'info');
+
+                    showToast('Tugas diarsipkan! Progress dihapus dari DB 🎉', 'success');
+                } else {
+                    // ── UN-ARSIP (Reset): kembalikan is_done = false ──
+                    // Progress row tidak perlu dikembalikan (user bisa centang sendiri lagi)
+                    const { error: upErr } = await supabase
+                        .from('subject_announcements')
+                        .update({ is_done: false })
+                        .eq('id', taskId);
+                    if (upErr) throw upErr;
+
+                    const taskIdx = allTasks.findIndex(t => String(t.id) === String(taskId));
+                    if (taskIdx !== -1) allTasks[taskIdx].is_done = false;
+
+                    showToast('Tugas di-unarsip. Siswa perlu centang ulang.', 'info');
                 }
 
                 refreshCard(taskId);
@@ -1050,70 +1191,78 @@
             } finally {
                 if (btnDone) {
                     btnDone.disabled = false;
-                    btnDone.innerHTML = '<i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua';
+                    btnDone.innerHTML = '<i class="fa-solid fa-check-double" style="margin:0;"></i> Arsipkan Semua';
                 }
                 if (btnReset) btnReset.disabled = false;
             }
         }
 
         async function bulkAllConfirm() {
+            const activeTasks = allTasks.filter(t => !t.is_done);
+            if (activeTasks.length === 0) {
+                showToast('Semua tugas sudah diarsipkan.', 'info');
+                return;
+            }
+
             const confirmed = await showPopup(
-                `Selesaikan SEMUA ${allTasks.length} tugas untuk semua ${allStudents.length} siswa?`, 'confirm'
+                `Arsipkan SEMUA ${activeTasks.length} tugas aktif? <br><small style="opacity:0.7">Semua progress row akan dihapus dari DB. Siswa dianggap selesai semua.</small>`, 'confirm'
             );
             if (!confirmed) return;
 
             const btn = document.getElementById('btnBulkAll');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengarsipkan...';
 
             try {
-                // Fetch semua yang sudah ada di DB
-                const taskIds = allTasks.map(t => t.id);
-                const { data: existing } = await supabase
-                    .from('user_progress')
-                    .select('user_id, announcement_id')
-                    .in('announcement_id', taskIds);
+                const activeIds = activeTasks.map(t => t.id);
 
-                const existingSet = new Set(
-                    (existing || []).map(r => `${r.user_id}__${r.announcement_id}`)
-                );
-
-                // Hanya insert yang beneran belum ada
-                const rows = [];
-                allStudents.forEach(s => {
-                    allTasks.forEach(t => {
-                        if (!existingSet.has(`${s.id}__${t.id}`))
-                            rows.push({ user_id: s.id, announcement_id: t.id });
-                    });
-                });
-
-                // Insert batch kecil
-                for (let i = 0; i < rows.length; i += 50) {
-                    const { error } = await supabase.from('user_progress')
-                        .insert(rows.slice(i, i + 50));
+                // 1. Set semua is_done = true — batch per 50 ID
+                for (let i = 0; i < activeIds.length; i += 50) {
+                    const batch = activeIds.slice(i, i + 50);
+                    const { error } = await supabase
+                        .from('subject_announcements')
+                        .update({ is_done: true })
+                        .in('id', batch);
                     if (error) throw error;
                 }
 
-                // Update local state
-                allStudents.forEach(s => {
-                    if (!progressMap[s.id]) progressMap[s.id] = new Set();
-                    allTasks.forEach(t => progressMap[s.id].add(String(t.id)));
+                // 2. Hapus semua progress row untuk task-task itu
+                for (let i = 0; i < activeIds.length; i += 50) {
+                    const batch = activeIds.slice(i, i + 50);
+                    await supabase.from('user_progress').delete().in('announcement_id', batch);
+                }
+
+                // 3. Update local state
+                activeTasks.forEach(t => {
+                    t.is_done = true;
+                    allStudents.forEach(s => progressMap[s.id]?.delete(String(t.id)));
                 });
 
-                allTasks.forEach(t => refreshCard(t.id));
+                renderTasks();
                 updateStats();
-                showToast(`${rows.length} progress berhasil ditambahkan!`, 'success');
+                showToast(`${activeTasks.length} tugas berhasil diarsipkan! 🎉`, 'success');
             } catch (err) {
                 showToast('Gagal: ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Selesaikan SEMUA untuk Semua Siswa';
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Arsipkan SEMUA Tugas';
             }
         }
 
         function refreshCard(taskId) {
+            const taskIdStr = String(taskId);
+            const task = allTasks.find(t => String(t.id) === taskIdStr);
+            if (!task) return;
+
+            if (task.is_done) {
+                // Task diarsipkan — re-render seluruh task list (struktur card berubah total)
+                renderTasks();
+                return;
+            }
+
+            // Task aktif — cukup update bar dan count saja
             const n = allStudents.length;
-            const done = allStudents.filter(s => (progressMap[s.id] || new Set()).has(String(taskId))).length;
+            const done = allStudents.filter(s => (progressMap[s.id] || new Set()).has(taskIdStr)).length;
             const pct = n > 0 ? Math.round((done / n) * 100) : 0;
             const color = pct === 100 ? '#0be881' : pct >= 60 ? '#ff8c00' : '#ff4757';
 
