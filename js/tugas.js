@@ -255,53 +255,6 @@ function updateProgressUI() {
     if (centerEl) {
         centerEl.innerText = `kamu sudah ngejain ${done} dari ${total} tugas`;
     }
-
-    // 2. Logika Motivasi
-    if (motivEl) {
-        let msg = "";
-        if (percent === 100) {
-            msg = "dak rajin";
-        } else if (percent > 50) {
-            msg = "kejaken kabeh kagok";
-        } else {
-            msg = "kejaken tugas na, mun ngarasa entos pencet selesai";
-        }
-        motivEl.innerText = msg;
-        motivEl.style.color = themeColor;
-    }
-
-    // 3. Player rank box
-    const rankTextEl = document.getElementById('playerRankText');
-    const rankEmojiEl = document.getElementById('playerRankEmoji');
-    if (rankTextEl) {
-        const rankPct = (typeof window._taskRankPercent !== 'undefined') ? window._taskRankPercent : null;
-        let emoji = '', rankMsg = '';
-
-        if (total === 0) {
-            emoji = '📭';
-            rankMsg = 'belum ada tugas nih';
-        } else if (rankPct === null) {
-            emoji = '⏳';
-            rankMsg = 'menghitung ranking...';
-        } else if (rankPct === 100 || percent === 100) {
-            emoji = '🏆';
-            rankMsg = 'tugas kamu selesai <span style="color:#00eaff; font-size:16px;">99%</span> lebih tinggi daripada orang lain';
-        } else if (rankPct >= 70) {
-            emoji = '🔥';
-            rankMsg = `tugas kamu selesai <span style="color:#0be881; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else if (rankPct >= 30) {
-            emoji = '⚡';
-            rankMsg = `tugas kamu selesai <span style="color:#ff8c00; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else if (rankPct > 0) {
-            emoji = '😴';
-            rankMsg = `tugas kamu selesai <span style="color:#ff4757; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else {
-            emoji = '💀';
-            rankMsg = 'tugas kamu selesai <span style="color:#ff4757; font-size:16px;">0%</span> lebih tinggi daripada orang lain';
-        }
-        if (rankEmojiEl) rankEmojiEl.innerText = emoji;
-        rankTextEl.innerHTML = rankMsg;
-    }
 }
 
 function renderTasks(data) {
