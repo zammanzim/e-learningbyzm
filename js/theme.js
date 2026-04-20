@@ -156,7 +156,7 @@ input:focus + .slider { background: ${a} !important; }
             border-top: 1px solid rgba(255,255,255,0.08);
             display: flex;
             align-items: stretch;
-            z-index: 8000;
+            z-index: 4000;
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 

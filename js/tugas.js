@@ -5,7 +5,9 @@ let allTasks = [];
 let doneIds = [];
 let deadlineSubjects = [];
 let currentFilter = 'pending';
+let currentMapel = 'all'; // filter mapel aktif
 let _isAdminUser = false;
+let subjectNameMap = {}; // { subject_id → subject_name }
 
 // ==========================================
 // CACHE HELPERS
@@ -83,6 +85,17 @@ async function initTugas() {
         const doneCacheKey = `tugas_done_${user.id}`;
         const rankCacheKey = `tugas_rank_${user.id}`;
 
+        // ── Fetch subject names (sekali, ringan) ─────────────────────
+        if (Object.keys(subjectNameMap).length === 0) {
+            supabase.from('subjects_config')
+                .select('subject_id, subject_name')
+                .eq('class_id', classId)
+                .then(({ data }) => {
+                    if (data) data.forEach(s => { subjectNameMap[s.subject_id] = s.subject_name; });
+                    buildMapelFilter(); // rebuild chips dengan nama yang bener
+                }).catch(() => { });
+        }
+
         // ── 2. JADWAL DEADLINE (cache 30 menit) ──────────────────────
         const cachedSched = _tugasCacheGet(schedCacheKey, TUGAS_CACHE_TTL_SCHED);
         if (cachedSched !== null) {
@@ -125,6 +138,7 @@ async function initTugas() {
 
             updateProgressUI();
             applyCurrentFilter();
+            buildMapelFilter();
 
             // Fetch fresh di background (stale-while-revalidate)
             _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey });
@@ -206,6 +220,7 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
         // Kalau render = false (background refresh), cukup update UI kalau ada perubahan
         updateProgressUI();
         applyCurrentFilter();
+        buildMapelFilter(); // rebuild chips kalau task list berubah
     } catch (e) {
         if (render) console.error("Fetch tugas gagal:", e);
         // Kalau background fetch gagal, diam saja (sudah ada cache di layar)
@@ -364,7 +379,7 @@ function renderTasks(data) {
             <i class="fa-solid fa-trash"></i>
         </button>` : '<span></span>'}
         ${item.is_done
-                ? `<button class="task-btn done" disabled style="opacity:0.6; cursor:default;">
+                ? `<button class="task-btn done" disabled>
                 <i class="fa-solid fa-circle-check"></i> Selesai
                </button>`
                 : `<button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
@@ -510,6 +525,7 @@ async function _checkAndArchiveTask(taskId, classId) {
     // Invalidate tasks cache juga (task hilang dari list)
     const tasksCacheKey = `tugas_tasks_${classId}`;
     _tugasCacheInvalidate(null, classId);
+    sessionStorage.setItem('task_badge_dirty', '1'); // biar badge re-fetch
 
     updateProgressUI();
     applyCurrentFilter();
@@ -517,9 +533,59 @@ async function _checkAndArchiveTask(taskId, classId) {
     if (typeof showToast === 'function') showToast('Tugas diarsipkan — semua siswa sudah selesai! 🎉', 'success');
 }
 
+// ── MAPEL FILTER ─────────────────────────────────────────────────
+function buildMapelFilter() {
+    const wrap = document.getElementById('mapelFilterWrap');
+    const chips = document.getElementById('mapelFilterChips');
+    if (!wrap || !chips) return;
+
+    const mapels = [...new Set(allTasks.map(t => t.subject_id))].sort();
+
+    if (mapels.length <= 1) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = 'block';
+
+    chips.innerHTML = `
+        <div class="mapel-chip-tugas active" data-mapel="all" onclick="filterMapel('all', this)">
+            <i class="fa-solid fa-layer-group" style="font-size:10px;"></i> Semua
+        </div>
+        ${mapels.map(id => {
+        const nama = subjectNameMap[id] || id;
+        const safeId = id.replace(/'/g, "\\'"); // escape single quote dalam id
+        return `<div class="mapel-chip-tugas" data-mapel="${id}" onclick="filterMapel('${safeId}', this)">${nama}</div>`;
+    }).join('')}
+    `;
+
+    // Restore active state kalau ada filter aktif
+    if (currentMapel !== 'all') {
+        const activeChip = chips.querySelector(`[data-mapel="${currentMapel}"]`);
+        if (activeChip) {
+            chips.querySelector('[data-mapel="all"]').classList.remove('active');
+            activeChip.classList.add('active');
+        } else {
+            currentMapel = 'all';
+        }
+    }
+}
+
+function filterMapel(mapel, chip) {
+    currentMapel = mapel;
+    document.querySelectorAll('.mapel-chip-tugas').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    applyCurrentFilter();
+}
+
 function applyCurrentFilter() {
+    // Terapkan filter mapel dulu ke pool task yang relevan
+    const byMapel = currentMapel === 'all'
+        ? allTasks
+        : allTasks.filter(t => t.subject_id === currentMapel);
+
     if (currentFilter === 'pending') {
-        const filtered = allTasks.filter(t => !doneIds.includes(String(t.id)));
+        const filtered = byMapel.filter(t => !doneIds.includes(String(t.id)));
 
         // Urutkan: Deadline (merah) dulu, baru Pending (kuning)
         filtered.sort((a, b) => {
@@ -551,7 +617,7 @@ function applyCurrentFilter() {
 
         renderTasks(filtered);
     } else {
-        renderTasks(allTasks);
+        renderTasks(byMapel);
     }
 }
 

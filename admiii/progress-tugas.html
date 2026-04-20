@@ -581,7 +581,7 @@
             <input class="ctrl-input" id="searchInput" placeholder="🔍 Cari..." oninput="debounceRender()">
 
             <select class="ctrl-select" id="sortSelect" onchange="renderCurrent()">
-                <option value="default">Urutan default</option>
+                <option value="default">Terbaru dulu</option>
                 <option value="pct_desc">Paling banyak selesai ↓</option>
                 <option value="pct_asc">Paling sedikit selesai ↑</option>
                 <option value="name">A–Z Judul</option>
@@ -735,7 +735,7 @@
             const sortEl = document.getElementById('sortSelect');
             if (mode === 'task') {
                 sortEl.innerHTML = `
-                    <option value="default">Urutan default</option>
+                    <option value="default">Terbaru dulu</option>
                     <option value="pct_desc">Paling banyak selesai ↓</option>
                     <option value="pct_asc">Paling sedikit selesai ↑</option>
                     <option value="name">A–Z Judul</option>`;
@@ -1167,11 +1167,11 @@
                     const taskIdx = allTasks.findIndex(t => String(t.id) === String(taskId));
                     if (taskIdx !== -1) allTasks[taskIdx].is_done = true;
                     allStudents.forEach(s => progressMap[s.id]?.delete(String(taskId)));
+                    sessionStorage.setItem('task_badge_dirty', '1'); // invalidate badge cache siswa
 
                     showToast('Tugas diarsipkan! Progress dihapus dari DB 🎉', 'success');
                 } else {
-                    // ── UN-ARSIP (Reset): kembalikan is_done = false ──
-                    // Progress row tidak perlu dikembalikan (user bisa centang sendiri lagi)
+                    // ── UN-ARSIP: kembalikan is_done = false ──
                     const { error: upErr } = await supabase
                         .from('subject_announcements')
                         .update({ is_done: false })
@@ -1181,7 +1181,11 @@
                     const taskIdx = allTasks.findIndex(t => String(t.id) === String(taskId));
                     if (taskIdx !== -1) allTasks[taskIdx].is_done = false;
 
+                    // Rebuild card itu langsung in-place (tanpa re-render seluruh list)
+                    _rebuildCard(taskId);
+                    updateStats();
                     showToast('Tugas di-unarsip. Siswa perlu centang ulang.', 'info');
+                    return; // skip refreshCard + updateStats di bawah (sudah done di atas)
                 }
 
                 refreshCard(taskId);
@@ -1246,6 +1250,36 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Arsipkan SEMUA Tugas';
+            }
+        }
+
+        // Ganti satu card in-place tanpa re-render seluruh list
+        function _rebuildCard(taskId) {
+            const taskIdStr = String(taskId);
+            const task = allTasks.find(t => String(t.id) === taskIdStr);
+            if (!task) return;
+
+            // Cari elemen card lama di DOM
+            // Card di-render lewat buildCard() yang return <div class="course-card">
+            // Tidak ada data-id di card, jadi cari via bar/cnt id atau tombol
+            const container = document.getElementById('taskList');
+            if (!container) return;
+
+            // Hitung done/pct untuk card ini (state lokal)
+            const n = allStudents.length;
+            const done = task.is_done ? n : allStudents.filter(s => (progressMap[s.id] || new Set()).has(taskIdStr)).length;
+            const pct = task.is_done ? 100 : (n > 0 ? Math.round((done / n) * 100) : 0);
+            const enriched = { ...task, done, pct };
+            const newCard = buildCard(enriched);
+
+            // Cari card lama: card yang mengandung btn dengan id bdone-X atau breset-X
+            const oldBtn = document.getElementById(`bdone-${taskId}`) || document.getElementById(`breset-${taskId}`);
+            const oldCard = oldBtn?.closest('.course-card');
+            if (oldCard && oldCard.parentNode) {
+                oldCard.parentNode.replaceChild(newCard, oldCard);
+            } else {
+                // Fallback: re-render full list
+                renderTasks();
             }
         }
 

@@ -1409,7 +1409,7 @@ li.nav-locked a::after {
     border-radius: 1.5938rem;
     cursor: pointer;
     box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
-    z-index: 30;
+    z-index: 5002;
     display: none;
     align-items: center;
     gap: 0.425rem;
@@ -1494,7 +1494,7 @@ li.nav-locked a::after {
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
         border-radius: 1.275rem 1.275rem 0 0;
-        z-index: 1000;
+        z-index: 5001;
         display: flex;
         flex-direction: column;
 
@@ -1976,6 +1976,18 @@ li.nav-locked a::after {
 
 .task-btn.done:hover {
     background: #009624;
+}
+
+/* Tombol selesai yang dikunci (is_done = true, diarsipkan) */
+.task-btn.done:disabled,
+.task-btn.done[disabled] {
+    background: rgba(0, 200, 83, 0.18);
+    border-color: rgba(0, 200, 83, 0.25);
+    color: rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+    filter: grayscale(0.6);
 }
 
 .task-btn-delete {
@@ -3575,7 +3587,37 @@ input:checked+.slider:before {
     color: #000000;
 }
 
-/* --- 3. TASK CARD STATUS (BACKGROUND MODE) --- */
+/* --- MAPEL FILTER CHIPS (tugas.html) --- */
+.mapel-chip-tugas {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mapel-chip-tugas:hover {
+    border-color: rgba(0, 234, 255, 0.35);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.mapel-chip-tugas.active {
+    background: rgba(0, 234, 255, 0.12);
+    border-color: rgba(0, 234, 255, 0.5);
+    color: var(--accent, #00eaff);
+    box-shadow: 0 0 12px rgba(0, 234, 255, 0.2);
+}
+
+
 
 /* --- 3. TASK CARD STATUS (VIBRANT GRADIENT) --- */
 

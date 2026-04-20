@@ -372,7 +372,7 @@ const SubjectApp = {
             const isDone = this.state.completedTasks.includes(String(data.id));
             if (data.is_done === true) {
                 // Diarsipkan — semua siswa selesai, tombol dikunci
-                taskBtnHTML = `<button class="task-btn done" disabled style="opacity:0.6; cursor:default;"><i class="fa-solid fa-circle-check"></i> Selesai</button>`;
+                taskBtnHTML = `<button class="task-btn done" disabled><i class="fa-solid fa-circle-check"></i> Selesai</button>`;
             } else {
                 taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}</button>`;
             }
@@ -1544,4 +1544,4 @@ function toggleMobileInfo(e) {
 
 function formatText(size) {
     document.execCommand('fontSize', false, size);
-}
+}   

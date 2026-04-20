@@ -331,7 +331,11 @@ function processAndRenderSidebar(allConfigs, user) {
             if (itemUrl.includes('id=')) {
                 if (currentId === itemUrl.split('id=')[1]) isActive = "active";
             } else {
-                if (currentPath.endsWith(itemUrl.split('/').pop())) isActive = "active";
+                // Ambil segment terakhir dari item URL dan current path
+                const itemSegment = itemUrl.split('/').pop();
+                const pathSegment = currentPath.split('/').pop();
+                // Exact match segment — biar "tugas" tidak ikut active saat di "progress-tugas"
+                if (pathSegment === itemSegment) isActive = "active";
             }
 
             let iconClass = item.icon || "fa-solid fa-book";

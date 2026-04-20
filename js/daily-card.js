@@ -491,10 +491,13 @@ async function updateTaskBadge(user) {
     let cached = null;
     try { cached = JSON.parse(sessionStorage.getItem(cacheKey)); } catch (e) { }
 
-    if (cached && (Date.now() - cached.time < 5 * 60 * 1000)) {
+    // Kalau ada flag dirty (admin baru arsipkan task), paksa re-fetch
+    const isDirty = sessionStorage.getItem('task_badge_dirty') === '1';
+    if (!isDirty && cached && (Date.now() - cached.time < 5 * 60 * 1000)) {
         renderBadgeUI(cached.count);
         return;
     }
+    sessionStorage.removeItem('task_badge_dirty');
 
     try {
         const [{ count: total }, { count: done }] = await Promise.all([
@@ -503,12 +506,13 @@ async function updateTaskBadge(user) {
                 .eq('class_id', getEffectiveClassId())
                 .neq('subject_id', 'announcements')
                 .neq('subject_id', 'kisi-kisi')
-                .neq('subject_id', 'akuhutajakus'),
+                .neq('subject_id', 'akuhutajakus')
+                .neq('is_done', true),          // ← skip task yang sudah diarsipkan
             supabase.from('user_progress')
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', user.id)
         ]);
-        const pending = (total || 0) - (done || 0);
+        const pending = Math.max(0, (total || 0) - (done || 0));
         sessionStorage.setItem(cacheKey, JSON.stringify({ count: pending, time: Date.now() }));
         renderBadgeUI(pending);
     } catch (e) {
