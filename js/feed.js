@@ -1,606 +1,558 @@
-// File: js/tugas.js
-document.addEventListener('DOMContentLoaded', initTugas);
+// ============================================================
+// FEED APP — js/feed.js
+// Nampilin user_posts dari halaman user.html
+// Schema: user_posts { id, user_id, image_url, caption, created_at }
+// Users:  { id, full_name, short_name, username, avatar_url, class_id }
+// Like:   post_likes { id, post_id, user_id }
+// Komen:  post_comments { id, post_id, user_id, content, created_at }
+// ============================================================
 
-let allTasks = [];
-let doneIds = [];
-let deadlineSubjects = [];
-let currentFilter = 'pending';
-let _isAdminUser = false;
+const FeedApp = {
+    state: {
+        user: null,
+        posts: [],
+        page: 0,
+        pageSize: 8,
+        loading: false,
+        hasMore: true,
+        likedPosts: new Set(),
+        expandedComments: new Set(),
+        activeVideo: null,          // video element yang lagi main
+    },
 
-// ==========================================
-// CACHE HELPERS
-// ==========================================
-const TUGAS_CACHE_TTL_TASKS = 5 * 60 * 1000; // 5 menit — list tugas
-const TUGAS_CACHE_TTL_DONE = 2 * 60 * 1000; // 2 menit — progress user
-const TUGAS_CACHE_TTL_SCHED = 30 * 60 * 1000; // 30 menit — jadwal deadline
-const TUGAS_CACHE_TTL_RANK = 2 * 60 * 1000; // 2 menit — rank
+    async init() {
+        if (typeof supabase === 'undefined') { setTimeout(() => this.init(), 150); return; }
 
-function _tugasCacheGet(key, ttl) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const { data, ts } = JSON.parse(raw);
-        if (Date.now() - ts > ttl) return null; // expired
-        return data;
-    } catch (e) { return null; }
-}
+        this.state.user = this.getUser();
+        if (!this.state.user) { window.location.href = 'login'; return; }
 
-function _tugasCacheSet(key, data) {
-    try {
-        localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
-    } catch (e) { /* storage penuh, skip */ }
-}
+        const nameEl = document.getElementById('headerName');
+        const ppEl   = document.getElementById('headerPP');
+        if (nameEl) nameEl.textContent = 'Haii, ' + (this.state.user.short_name || this.state.user.full_name?.split(' ')[0] || 'User');
+        if (ppEl)   ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
 
-function _tugasCacheInvalidate(userId, classId) {
-    try {
-        if (userId) localStorage.removeItem(`tugas_done_${userId}`);
-        if (userId) localStorage.removeItem(`tugas_rank_${userId}`);
-        if (classId) localStorage.removeItem(`tugas_tasks_${classId}`);
-    } catch (e) { }
-}
+        this.bindScrollSentinel();
+        await this.loadPosts();
+        this.subscribeRealtime();
+    },
 
-// Fungsi Normalisasi: Hapus spasi & tanda baca (biar "B. Inggris" == "binggris")
-function normalize(str) {
-    return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-}
+    getUser() {
+        try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+    },
 
-// ===== PWA SW REGISTER =====
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => { });
-    });
-}
+    async loadPosts() {
+        if (this.state.loading || !this.state.hasMore) return;
+        this.state.loading = true;
+        this.setSkeleton(true);
 
-async function initTugas() {
-    let user;
-    try {
-        user = JSON.parse(localStorage.getItem("user"));
-    } catch (e) { user = null; }
-    if (!user) { window.location.href = 'index'; return; }
+        const from = this.state.page * this.state.pageSize;
+        const to   = from + this.state.pageSize - 1;
 
-    // Set flag admin untuk renderTasks
-    _isAdminUser = (user.role === 'class_admin' || user.role === 'super_admin');
+        try {
+            const { data, error } = await supabase
+                .from('user_posts')
+                .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url, class_id, is_private)')
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
-    // Set Profil di Card
-    document.getElementById('userTaskName').innerText = user.nickname;
-    document.getElementById('userTaskPP').src = user.avatar_url || '../icons/profpicture.png';
+            if (error) throw error;
+            if (!data || data.length < this.state.pageSize) this.state.hasMore = false;
 
-    try {
-        // 1. Tentukan Hari Target Deadline (Logika jam 15:00)
-        const now = new Date();
-        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        let targetDayName = days[now.getDay()];
+            // Filter postingan dari akun privat
+            const filtered = (data || []).filter(post => !post.users?.is_private);
 
-        if (now.getHours() >= 15) {
-            const tomorrow = new Date(now);
-            tomorrow.setDate(now.getDate() + 1);
-            targetDayName = days[tomorrow.getDay()];
-        }
-
-        const classId = getEffectiveClassId();
-        const schedCacheKey = `tugas_sched_${classId}_${targetDayName}`;
-        const tasksCacheKey = `tugas_tasks_${classId}`;
-        const doneCacheKey = `tugas_done_${user.id}`;
-        const rankCacheKey = `tugas_rank_${user.id}`;
-
-        // ── 2. JADWAL DEADLINE (cache 30 menit) ──────────────────────
-        const cachedSched = _tugasCacheGet(schedCacheKey, TUGAS_CACHE_TTL_SCHED);
-        if (cachedSched !== null) {
-            deadlineSubjects = cachedSched;
-            // Refresh di background
-            supabase.from('daily_schedules').select('lessons')
-                .eq('class_id', classId).eq('day_name', targetDayName).single()
-                .then(({ data }) => {
-                    if (data?.lessons) {
-                        const fresh = _parseDeadlineSubjects(data.lessons);
-                        _tugasCacheSet(schedCacheKey, fresh);
-                    }
-                }).catch(() => { });
-        } else {
-            const { data: sched } = await supabase
-                .from('daily_schedules').select('lessons')
-                .eq('class_id', classId).eq('day_name', targetDayName).single();
-            if (sched?.lessons) {
-                deadlineSubjects = _parseDeadlineSubjects(sched.lessons);
-                _tugasCacheSet(schedCacheKey, deadlineSubjects);
+            // Batch fetch likes + comment counts
+            const postIds = filtered.map(p => p.id);
+            let likeMap = {}, commentMap = {};
+            if (postIds.length > 0) {
+                const [{ data: likes }, { data: comments }] = await Promise.all([
+                    supabase.from('post_likes').select('post_id, user_id').in('post_id', postIds),
+                    supabase.from('post_comments').select('post_id').in('post_id', postIds),
+                ]);
+                (likes || []).forEach(l => {
+                    likeMap[l.post_id] = (likeMap[l.post_id] || 0) + 1;
+                    if (l.user_id === this.state.user.id) this.state.likedPosts.add(l.post_id);
+                });
+                (comments || []).forEach(c => {
+                    commentMap[c.post_id] = (commentMap[c.post_id] || 0) + 1;
+                });
             }
-        }
 
-        // ── 3. TASKS + DONE — coba dari cache dulu, render langsung ──
-        const cachedTasks = _tugasCacheGet(tasksCacheKey, TUGAS_CACHE_TTL_TASKS);
-        const cachedDone = _tugasCacheGet(doneCacheKey, TUGAS_CACHE_TTL_DONE);
-
-        if (cachedTasks !== null && cachedDone !== null) {
-            // Tampilkan cache LANGSUNG biar kelihatan cepat
-            allTasks = cachedTasks;
-            const validIds = allTasks.map(t => String(t.id));
-            doneIds = cachedDone.filter(id => validIds.includes(id));
-
-            // Coba pakai rank dari cache juga
-            const cachedRank = _tugasCacheGet(rankCacheKey, TUGAS_CACHE_TTL_RANK);
-            window._taskRankPercent = cachedRank ?? 0;
-
-            updateProgressUI();
-            applyCurrentFilter();
-
-            // Fetch fresh di background (stale-while-revalidate)
-            _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey });
-        } else {
-            // Tidak ada cache — fetch langsung (first load / expired)
-            await _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey, render: true });
-        }
-    } catch (e) {
-        console.error("Load tugas gagal:", e);
-    }
-}
-
-// ── Helper: parse lessons string → deadlineSubjects array ────────
-function _parseDeadlineSubjects(lessons) {
-    // Format DB: "07.00-08.00 - PPK; 08.00-09.00 - PP" → split pakai ";"
-    // Sama kayak daily-card.js: lastIndexOf("-") untuk ambil nama subject-nya
-    return lessons.split(';')
-        .map(item => {
-            const trimmed = item.trim();
-            if (!trimmed) return '';
-            const dashIdx = trimmed.lastIndexOf('-');
-            const subject = dashIdx !== -1 ? trimmed.substring(dashIdx + 1).trim() : trimmed;
-            return normalize(subject);
-        })
-        .filter(s => s.length > 0);
-}
-
-// ── Helper: fetch fresh dari DB, update cache & UI ───────────────
-async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey, render = false }) {
-    try {
-        const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
-            supabase.from('subject_announcements')
-                .select('*')
-                .eq('class_id', classId)
-                .neq('subject_id', 'announcements')
-                .neq('subject_id', 'kisi-kisi')
-                .neq('subject_id', 'akuhutajakus')
-                .neq('is_done', true)   // ← skip tugas yang sudah selesai semua siswa
-                .order('created_at', { ascending: false }),
-            supabase.from('user_progress')
-                .select('announcement_id')
-                .eq('user_id', user.id)
-        ]);
-
-        if (err1 || err2) throw (err1 || err2);
-
-        const freshTasks = tasks || [];
-        const validIds = freshTasks.map(t => String(t.id));
-        const freshDone = (progress || [])
-            .map(p => String(p.announcement_id))
-            .filter(id => validIds.includes(id));
-
-        // Simpan ke cache
-        _tugasCacheSet(tasksCacheKey, freshTasks);
-        _tugasCacheSet(doneCacheKey, freshDone);
-
-        // Update global state
-        allTasks = freshTasks;
-        doneIds = freshDone;
-
-        // Rank
-        if (validIds.length > 0) {
-            const { data: rankData } = await supabase.rpc('get_task_rank', {
-                p_user_id: String(user.id),
-                p_task_ids: validIds
-            });
-            const rank = rankData ?? 0;
-            window._taskRankPercent = rank;
-            _tugasCacheSet(rankCacheKey, rank);
-        } else {
-            window._taskRankPercent = 0;
-            _tugasCacheSet(rankCacheKey, 0);
-        }
-
-        // Kalau render = false (background refresh), cukup update UI kalau ada perubahan
-        updateProgressUI();
-        applyCurrentFilter();
-    } catch (e) {
-        if (render) console.error("Fetch tugas gagal:", e);
-        // Kalau background fetch gagal, diam saja (sudah ada cache di layar)
-    }
-}
-
-function updateProgressUI() {
-    const total = allTasks.length;
-    const done = doneIds.length;
-    const countEl = document.getElementById('userTaskCount');
-    const barEl = document.getElementById('userTaskBar');
-    const centerEl = document.getElementById('taskProgressCenter');
-    const motivEl = document.getElementById('taskMotivation');
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-
-    let grad = '', themeColor = '';
-    if (percent === 100) { grad = 'linear-gradient(90deg, var(--accent, #00eaff), #007bff)'; themeColor = 'var(--accent, #00eaff)'; }
-    else if (percent >= 70) { grad = 'linear-gradient(90deg, #0be881, #05c46b)'; themeColor = '#0be881'; }
-    else if (percent >= 30) { grad = 'linear-gradient(90deg, #ff8c00, #ffd700)'; themeColor = '#ff8c00'; }
-    else { grad = 'linear-gradient(90deg, #ff4757, #ff6b81)'; themeColor = '#ff4757'; }
-
-    if (countEl) {
-        countEl.innerText = `${done}/${total} (${percent}%)`;
-        countEl.style.color = themeColor;
-    }
-    if (barEl) {
-        barEl.style.width = percent + "%";
-        barEl.style.background = grad;
-    }
-
-    // 1. Teks di tengah progress bar
-    if (centerEl) {
-        centerEl.innerText = `kamu sudah ngejain ${done} dari ${total} tugas`;
-    }
-
-    // 2. Logika Motivasi
-    if (motivEl) {
-        let msg = "";
-        if (percent === 100) {
-            msg = "dak rajin";
-        } else if (percent > 50) {
-            msg = "kejaken kabeh kagok";
-        } else {
-            msg = "kejaken tugas na, mun ngarasa entos pencet selesai";
-        }
-        motivEl.innerText = msg;
-        motivEl.style.color = themeColor;
-    }
-
-    // 3. Player rank box
-    const rankTextEl = document.getElementById('playerRankText');
-    const rankEmojiEl = document.getElementById('playerRankEmoji');
-    if (rankTextEl) {
-        const rankPct = (typeof window._taskRankPercent !== 'undefined') ? window._taskRankPercent : null;
-        let emoji = '', rankMsg = '';
-
-        if (total === 0) {
-            emoji = '📭';
-            rankMsg = 'belum ada tugas nih';
-        } else if (rankPct === null) {
-            emoji = '⏳';
-            rankMsg = 'menghitung ranking...';
-        } else if (rankPct === 100 || percent === 100) {
-            emoji = '🏆';
-            rankMsg = 'tugas kamu selesai <span style="color:#00eaff; font-size:16px;">99%</span> lebih tinggi daripada orang lain';
-        } else if (rankPct >= 70) {
-            emoji = '🔥';
-            rankMsg = `tugas kamu selesai <span style="color:#0be881; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else if (rankPct >= 30) {
-            emoji = '⚡';
-            rankMsg = `tugas kamu selesai <span style="color:#ff8c00; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else if (rankPct > 0) {
-            emoji = '😴';
-            rankMsg = `tugas kamu selesai <span style="color:#ff4757; font-size:16px;">${rankPct}%</span> lebih tinggi daripada orang lain`;
-        } else {
-            emoji = '💀';
-            rankMsg = 'tugas kamu selesai <span style="color:#ff4757; font-size:16px;">0%</span> lebih tinggi daripada orang lain';
-        }
-        if (rankEmojiEl) rankEmojiEl.innerText = emoji;
-        rankTextEl.innerHTML = rankMsg;
-    }
-}
-
-function renderTasks(data) {
-    const container = document.getElementById('taskList');
-    if (!container) return;
-    const total = allTasks.length;
-
-    const fragment = document.createDocumentFragment();
-
-    data.forEach((item) => {
-        const isDone = doneIds.includes(String(item.id));
-        const isDeadline = !isDone && deadlineSubjects.some(s => {
-            const normSubject = normalize(item.subject_id);
-            const normTitle = normalize(item.big_title);
-            // Exact match selalu aman. Includes boleh tapi KEDUANYA harus >= 3 huruf
-            // biar "pp" (2 huruf) ga nyangkut ke "ppk" (atau sebaliknya)
-            const subOk = normSubject === s ||
-                (normSubject.length >= 3 && s.includes(normSubject)) ||
-                (s.length >= 3 && normSubject.includes(s));
-            const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
-                (normTitle.length >= 3 && s.includes(normTitle));
-            return subOk || titleOk;
-        });
-
-        const autoNumber = total - allTasks.indexOf(item);
-        let statusClass = isDone ? 'task-green-done' : (isDeadline ? 'task-red-deadline' : 'task-yellow-pending');
-
-        // Logic Parsing Foto Identik Subject Manager
-        let photos = [];
-        if (item.photo_url) {
-            if (Array.isArray(item.photo_url)) photos = item.photo_url;
-            else if (typeof item.photo_url === 'string') {
-                try {
-                    if (item.photo_url.startsWith('[')) photos = JSON.parse(item.photo_url);
-                    else photos = [item.photo_url];
-                } catch (e) { photos = [item.photo_url]; }
-            }
-        }
-
-        let photoHTML = '';
-        if (photos.length > 0) {
-            let gridClass = `grid-${Math.min(photos.length, 4)}`;
-            let imgsHTML = photos.slice(0, 4).map((url, i) => {
-                const isLast = i === 3 && photos.length > 4;
-                return `
-                    <div class="photo-item photo-wrapper">
-                        <img src="${url}" loading="lazy">
-                        ${isLast ? `<div class="more-overlay">+${photos.length - 4}</div>` : ''}
-                    </div>`;
-            }).join('');
-            photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
-        }
-
-        const el = document.createElement('div');
-        el.className = `course-card ${statusClass}`;
-        el.dataset.id = item.id;
-
-        // BLOKIR KLIK: openDetail hanya dipasang jika ada foto
-        if (photos.length > 0) {
-            el.classList.add('clickable-card');
-            el.onclick = () => openDetail(item);
-        } else {
-            el.style.cursor = 'default';
-        }
-
-        el.innerHTML = `
-    ${photoHTML}
-    <h3 style="margin:5px 0; font-size: 20px;">${item.big_title}</h3>
-    <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
-    <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5; white-space: pre-wrap;">${item.content}</p>
-    ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        ${_isAdminUser ? `
-        <button class="task-btn-delete" onclick="deleteTugas(event, '${item.id}')" title="Hapus tugas ini">
-            <i class="fa-solid fa-trash"></i>
-        </button>` : '<span></span>'}
-        <button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
-            ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
-        </button>
-    </div>
-`;
-        fragment.appendChild(el);
-    });
-
-    container.replaceChildren(fragment);
-}
-
-async function toggleStatus(e, id, btn) {
-    e.stopPropagation();
-    let user;
-    try {
-        user = JSON.parse(localStorage.getItem("user"));
-    } catch (err) { return; }
-    if (!user) return;
-
-    const isDone = btn.classList.contains('done');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-    try {
-        if (isDone) {
-            await supabase.from('user_progress').delete().eq('user_id', user.id).eq('announcement_id', id);
-            doneIds = doneIds.filter(d => d !== id);
-        } else {
-            await supabase.from('user_progress').insert({ user_id: user.id, announcement_id: id });
-            doneIds.push(id);
-        }
-
-        // Invalidate cache done & rank biar next load fresh
-        const classId = getEffectiveClassId();
-        _tugasCacheInvalidate(user.id, null); // tasks cache tetap valid, cukup done+rank
-        sessionStorage.removeItem(`task_badge_${user.id}`);
-
-        // ── AUTO-ARSIP: cek apakah semua siswa sudah selesai ─────────
-        // Hanya dicek saat user baru mencentang selesai (bukan un-mark),
-        // dan hanya kalau bukan super_admin biar ga dobel sama bulkTask admin.
-        if (!isDone && user.role !== 'super_admin') {
-            _checkAndArchiveTask(id, classId).catch(() => { }); // background, jangan block UI
-        }
-        if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
-
-        // Update ranking via RPC
-        const validTaskIds = allTasks.map(t => String(t.id));
-        if (validTaskIds.length > 0) {
-            const { data: rankData } = await supabase.rpc('get_task_rank', {
-                p_user_id: String(user.id),
-                p_task_ids: validTaskIds
-            });
-            window._taskRankPercent = rankData ?? 0;
-        }
-
-        updateProgressUI();
-        applyCurrentFilter();
-    } catch (err) {
-        console.error(err);
-        applyCurrentFilter();
-    }
-}
-
-async function deleteTugas(e, id) {
-    e.stopPropagation();
-
-    const yakin = await showPopup('Yakin mau hapus tugas ini? <br><small style="opacity:0.6">Data akan terhapus permanen.</small>', 'confirm');
-    if (!yakin) return;
-
-    try {
-        // Hapus progress user yang terkait dulu
-        await supabase.from('user_progress').delete().eq('announcement_id', id);
-
-        // Hapus tugas dari subject_announcements
-        const { error } = await supabase.from('subject_announcements').delete().eq('id', id);
-        if (error) throw error;
-
-        // Update state lokal langsung (tanpa reload)
-        allTasks = allTasks.filter(t => String(t.id) !== String(id));
-        doneIds = doneIds.filter(d => d !== String(id));
-
-        // Invalidate cache
-        const classId = getEffectiveClassId();
-        const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
-        _tugasCacheInvalidate(user?.id, classId);
-
-        updateProgressUI();
-        applyCurrentFilter();
-
-        if (typeof showToast === 'function') showToast('Tugas berhasil dihapus', 'success');
-    } catch (err) {
-        console.error('Hapus tugas gagal:', err);
-        showPopup('Gagal menghapus: ' + err.message, 'error');
-    }
-}
-
-// ── AUTO-ARSIP HELPER ────────────────────────────────────────────
-// Dipanggil di background setelah user centang selesai.
-// Kalau ternyata SEMUA siswa di kelas sudah done task ini →
-//   1. Set is_done = true di subject_announcements
-//   2. Hapus semua baris user_progress untuk task itu (biar ga jebol limit)
-//   3. Update state lokal (hapus dari allTasks & doneIds) + refresh UI
-async function _checkAndArchiveTask(taskId, classId) {
-    // Ambil jumlah siswa di kelas (exclude super_admin)
-    const { count: totalSiswa } = await supabase
-        .from('users')
-        .select('id', { count: 'exact', head: true })
-        .eq('class_id', classId)
-        .neq('role', 'super_admin');
-
-    if (!totalSiswa || totalSiswa === 0) return;
-
-    // Ambil jumlah yang sudah done untuk task ini
-    const { count: doneCount } = await supabase
-        .from('user_progress')
-        .select('id', { count: 'exact', head: true })
-        .eq('announcement_id', taskId);
-
-    if ((doneCount || 0) < totalSiswa) return; // belum semua selesai
-
-    // SEMUA SELESAI → arsipkan
-    // 1. Flag is_done = true
-    const { error: updateErr } = await supabase
-        .from('subject_announcements')
-        .update({ is_done: true })
-        .eq('id', taskId);
-    if (updateErr) throw updateErr;
-
-    // 2. Hapus semua progress row untuk task ini
-    await supabase.from('user_progress').delete().eq('announcement_id', taskId);
-
-    // 3. Update state lokal & UI
-    allTasks = allTasks.filter(t => String(t.id) !== String(taskId));
-    doneIds = doneIds.filter(d => d !== String(taskId));
-
-    // Invalidate tasks cache juga (task hilang dari list)
-    const tasksCacheKey = `tugas_tasks_${classId}`;
-    _tugasCacheInvalidate(null, classId);
-
-    updateProgressUI();
-    applyCurrentFilter();
-
-    if (typeof showToast === 'function') showToast('Tugas diarsipkan — semua siswa sudah selesai! 🎉', 'success');
-}
-
-function applyCurrentFilter() {
-    if (currentFilter === 'pending') {
-        const filtered = allTasks.filter(t => !doneIds.includes(String(t.id)));
-
-        // Urutkan: Deadline (merah) dulu, baru Pending (kuning)
-        filtered.sort((a, b) => {
-            const aIsDeadline = deadlineSubjects.some(s => {
-                const normSubject = normalize(a.subject_id);
-                const normTitle = normalize(a.big_title);
-                const subOk = normSubject === s ||
-                    (normSubject.length >= 3 && s.includes(normSubject)) ||
-                    (s.length >= 3 && normSubject.includes(s));
-                const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
-                    (normTitle.length >= 3 && s.includes(normTitle));
-                return subOk || titleOk;
-            });
-            const bIsDeadline = deadlineSubjects.some(s => {
-                const normSubject = normalize(b.subject_id);
-                const normTitle = normalize(b.big_title);
-                const subOk = normSubject === s ||
-                    (normSubject.length >= 3 && s.includes(normSubject)) ||
-                    (s.length >= 3 && normSubject.includes(s));
-                const titleOk = (s.length >= 3 && normTitle.includes(s)) ||
-                    (normTitle.length >= 3 && s.includes(normTitle));
-                return subOk || titleOk;
+            filtered.forEach(post => {
+                this.state.posts.push(post);
+                this.renderPost(post, likeMap[post.id] || 0, commentMap[post.id] || 0);
             });
 
-            if (aIsDeadline && !bIsDeadline) return -1;
-            if (!aIsDeadline && bIsDeadline) return 1;
-            return 0;
-        });
+            this.state.page++;
+        } catch (err) {
+            console.error('loadPosts error:', err);
+            showToast('Gagal memuat feed', 'error');
+        }
 
-        renderTasks(filtered);
-    } else {
-        renderTasks(allTasks);
-    }
-}
+        this.setSkeleton(false);
+        this.checkEmpty();
+        this.state.loading = false;
+        // Re-evaluate video setelah post baru masuk
+        if (this._pickBestVideo) setTimeout(this._pickBestVideo, 120);
+    },
 
-function filterTasks(type, btn) {
-    currentFilter = type;
-    const wrapper = document.getElementById('taskFilters');
-    const buttons = document.querySelectorAll('.filter-btn-new');
-    buttons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    isVideoUrl(url) {
+        return url && /\.(mp4|mov|webm|mkv)(\?|$)/i.test(url);
+    },
 
-    if (type === 'all') wrapper.classList.add('all-active');
-    else wrapper.classList.remove('all-active');
+    renderPost(post, likeCount = 0, commentCount = 0, prepend = false) {
+        const u        = post.users || {};
+        const avatar   = u.avatar_url || 'icons/profpicture.png';
+        const username = u.username || u.short_name || u.full_name?.split(' ')[0] || 'User';
+        const liked    = this.state.likedPosts.has(post.id);
+        const isOwn    = post.user_id === this.state.user.id;
+        const isAdmin  = ['super_admin', 'class_admin'].includes(this.state.user.role);
+        const canDel   = isOwn || isAdmin;
+        const isVid    = this.isVideoUrl(post.image_url);
 
-    applyCurrentFilter();
-}
+        const mediaHTML = post.image_url
+            ? isVid
+                ? `<div class="fc-image-wrap fc-video-wrap">
+                    <video class="fc-video" src="${post.image_url}" loop playsinline preload="metadata"
+                        style="width:100%;display:block;cursor:pointer;"></video>
+                    <div class="fc-heart-burst hidden"><i class="fa-solid fa-heart"></i></div>
+                    <button class="fc-mute-btn" aria-label="toggle mute">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </button>
+                   </div>`
+                : `<div class="fc-image-wrap">
+                    <img class="fc-image" src="${post.image_url}" alt="post" loading="lazy" onerror="this.parentElement.style.display='none'">
+                    <div class="fc-heart-burst hidden"><i class="fa-solid fa-heart"></i></div>
+                   </div>`
+            : '';
 
-// ── DETAIL OVERLAY: klik area kosong → tutup ─────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    const detailOverlay = document.getElementById('detailOverlay');
-    if (detailOverlay) {
-        detailOverlay.onclick = (e) => {
-            if (e.target === detailOverlay) {
-                if (typeof closeDetail === 'function') closeDetail();
+        const card = document.createElement('article');
+        card.className = 'feed-card';
+        card.dataset.postId = post.id;
+        card.innerHTML = `
+            <div class="fc-header">
+                <a class="fc-avatar-link" href="user?name=${u.username || u.short_name}">
+                    <img class="fc-avatar" src="${avatar}" alt="${username}" onerror="this.src='icons/profpicture.png'">
+                </a>
+                <div class="fc-meta">
+                    <a class="fc-username" href="user?name=${u.username || u.short_name}">${u.full_name || username}</a>
+                    <span class="fc-time">${this.timeAgo(post.created_at)}</span>
+                </div>
+                ${canDel ? `
+                <div class="fc-menu-wrap" style="position:relative">
+                    <button class="fc-menu-btn"><i class="fa-solid fa-ellipsis"></i></button>
+                    <div class="fc-dropdown hidden">
+                        ${isOwn ? `<div class="fc-dd-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i> Edit caption</div>` : ''}
+                        <div class="fc-dd-item fc-dd-del" data-action="delete"><i class="fa-solid fa-trash"></i> Hapus</div>
+                    </div>
+                </div>` : ''}
+            </div>
+
+            ${mediaHTML}
+
+            <div class="fc-actions">
+                <button class="fc-like-btn ${liked ? 'liked' : ''}" aria-label="like">
+                    <i class="fa-${liked ? 'solid' : 'regular'} fa-heart"></i>
+                </button>
+                <button class="fc-comment-btn" aria-label="komentar">
+                    <i class="fa-regular fa-comment"></i>
+                    ${commentCount > 0 ? `<span class="fc-comment-badge">${commentCount}</span>` : ''}
+                </button>
+            </div>
+
+            <div class="fc-likes"><span class="fc-like-count">${likeCount}</span> suka</div>
+
+            ${post.caption ? `
+            <div class="fc-caption">
+                <a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username}</a>
+                <span class="fc-cap-text">${this.escHtml(post.caption)}</span>
+            </div>` : ''}
+
+            <div class="fc-comments hidden">
+                <div class="fc-comment-list"></div>
+                <div class="fc-comment-form">
+                    <img class="fc-self-avatar" src="${this.state.user.avatar_url || 'icons/profpicture.png'}" onerror="this.src='icons/profpicture.png'">
+                    <input class="fc-comment-input" type="text" placeholder="Tambahkan komentar...">
+                    <button class="fc-comment-send"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        `;
+
+        const list = document.getElementById('feedList');
+        if (prepend) list.prepend(card); else list.appendChild(card);
+        this._bindCard(card, post);
+        if (isVid) this._bindVideo(card);
+    },
+
+
+    // ── Centralized IG-style video manager ──────────────────
+    // Dipanggil sekali saat init, lalu tiap scroll/resize
+    _initVideoManager() {
+        if (this._videoManagerReady) return;
+        this._videoManagerReady = true;
+
+        const pickBest = () => {
+            const videos = [...document.querySelectorAll('.fc-video')];
+            if (!videos.length) return;
+
+            const vh     = window.innerHeight;
+            const center = vh / 2;
+            let best = null, bestScore = -Infinity;
+
+            videos.forEach(v => {
+                const r    = v.getBoundingClientRect();
+                // Video harus minimal sedikit keliatan
+                if (r.bottom < 0 || r.top > vh) return;
+
+                // Seberapa banyak video keliatan (0–1)
+                const visible  = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+                const visRatio = visible / r.height;
+                if (visRatio < 0.5) return;          // kurang dari 50% skip
+
+                // Jarak titik tengah video ke tengah layar
+                const vidCenter = r.top + r.height / 2;
+                const dist      = Math.abs(vidCenter - center);
+                const score     = visRatio * 1000 - dist; // lebih visible + lebih tengah = lebih bagus
+
+                if (score > bestScore) { bestScore = score; best = v; }
+            });
+
+            // Play yang terpilih, pause sisanya
+            videos.forEach(v => {
+                if (v === best) {
+                    if (v.paused) this._playVideo(v);
+                } else {
+                    if (!v.paused) v.pause();
+                }
+            });
+            this.state.activeVideo = best || null;
+        };
+
+        let ticking = false;
+        const onScroll = () => {
+            if (!ticking) {
+                requestAnimationFrame(() => { pickBest(); ticking = false; });
+                ticking = true;
             }
         };
-    }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+
+        // Jalankan sekali sekarang
+        setTimeout(pickBest, 100);
+        // Expose agar bisa dipanggil manual saat post baru di-render
+        this._pickBestVideo = pickBest;
+    },
+
+    _playVideo(vid) {
+        const muteBtn = vid.closest('.fc-video-wrap')?.querySelector('.fc-mute-btn');
+        const updateMuteIcon = () => {
+            if (!muteBtn) return;
+            muteBtn.querySelector('i').className = vid.muted
+                ? 'fa-solid fa-volume-xmark'
+                : 'fa-solid fa-volume-high';
+        };
+        // Pertahankan mute state dari video sebelumnya (user experience)
+        const prevMuted = this.state.activeVideo?.muted ?? false;
+        vid.muted = prevMuted;
+        vid.play().then(() => { updateMuteIcon(); })
+           .catch(() => { vid.muted = true; vid.play().catch(() => {}); updateMuteIcon(); });
+    },
+
+    _bindVideo(card) {
+        const vid     = card.querySelector('.fc-video');
+        const muteBtn = card.querySelector('.fc-mute-btn');
+        if (!vid) return;
+
+        // Init manager sekali
+        this._initVideoManager();
+
+        const updateMuteIcon = () => {
+            if (!muteBtn) return;
+            muteBtn.querySelector('i').className = vid.muted
+                ? 'fa-solid fa-volume-xmark'
+                : 'fa-solid fa-volume-high';
+        };
+
+        // Tombol mute/unmute — apply ke semua video sekalian (kayak IG)
+        muteBtn?.addEventListener('click', e => {
+            e.stopPropagation();
+            const newMuted = !vid.muted;
+            // Sync semua video biar konsisten kalau nanti ganti video
+            document.querySelectorAll('.fc-video').forEach(v => { v.muted = newMuted; });
+            if (!vid.muted && vid.paused) vid.play().catch(() => { vid.muted = true; });
+            updateMuteIcon();
+        });
+
+        // Single tap: play/pause — Double tap: like
+        let tapTimer = null;
+        vid.addEventListener('click', () => {
+            if (tapTimer) {
+                clearTimeout(tapTimer);
+                tapTimer = null;
+                this.toggleLike(card.dataset.postId, card, true);
+            } else {
+                tapTimer = setTimeout(() => {
+                    tapTimer = null;
+                    if (vid.paused) {
+                        this._playVideo(vid);
+                        this.state.activeVideo = vid;
+                    } else {
+                        vid.pause();
+                        if (this.state.activeVideo === vid) this.state.activeVideo = null;
+                    }
+                }, 250);
+            }
+        });
+    },
+
+    _bindCard(card, post) {
+        card.querySelector('.fc-like-btn')?.addEventListener('click', () => this.toggleLike(post.id, card));
+
+        const imgWrap = card.querySelector('.fc-image-wrap:not(.fc-video-wrap)');
+        if (imgWrap) {
+            let lastTap = 0;
+            imgWrap.addEventListener('click', () => {
+                const now = Date.now();
+                if (now - lastTap < 300) this.toggleLike(post.id, card, true);
+                lastTap = now;
+            });
+        }
+
+        card.querySelector('.fc-comment-btn')?.addEventListener('click', () => this.toggleComments(post.id, card));
+        card.querySelector('.fc-comment-send')?.addEventListener('click', () => this.sendComment(post.id, card));
+        card.querySelector('.fc-comment-input')?.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendComment(post.id, card); }
+        });
+
+        const menuBtn  = card.querySelector('.fc-menu-btn');
+        const dropdown = card.querySelector('.fc-dropdown');
+        menuBtn?.addEventListener('click', e => {
+            e.stopPropagation();
+            document.querySelectorAll('.fc-dropdown').forEach(d => { if (d !== dropdown) d.classList.add('hidden'); });
+            dropdown?.classList.toggle('hidden');
+        });
+        card.querySelectorAll('.fc-dd-item').forEach(item => {
+            item.addEventListener('click', () => {
+                dropdown?.classList.add('hidden');
+                if (item.dataset.action === 'delete') this.deletePost(post.id, card);
+                if (item.dataset.action === 'edit')   this.editCaption(post, card);
+            });
+        });
+    },
+
+    async toggleLike(postId, card, fromDblTap = false) {
+        const liked   = this.state.likedPosts.has(postId);
+        if (fromDblTap && liked) return;
+        const btn     = card.querySelector('.fc-like-btn');
+        const icon    = btn.querySelector('i');
+        const countEl = card.querySelector('.fc-like-count');
+        const prev    = parseInt(countEl.textContent) || 0;
+
+        if (!liked) {
+            this.state.likedPosts.add(postId);
+            btn.classList.add('liked', 'like-pop'); icon.className = 'fa-solid fa-heart';
+            countEl.textContent = prev + 1;
+            setTimeout(() => btn.classList.remove('like-pop'), 350);
+            if (fromDblTap) this._burst(card);
+            const { error } = await supabase.from('post_likes').insert({ post_id: postId, user_id: this.state.user.id });
+            if (error) { this.state.likedPosts.delete(postId); btn.classList.remove('liked'); icon.className = 'fa-regular fa-heart'; countEl.textContent = prev; }
+        } else {
+            this.state.likedPosts.delete(postId);
+            btn.classList.remove('liked'); icon.className = 'fa-regular fa-heart';
+            countEl.textContent = Math.max(0, prev - 1);
+            const { error } = await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', this.state.user.id);
+            if (error) { this.state.likedPosts.add(postId); btn.classList.add('liked'); icon.className = 'fa-solid fa-heart'; countEl.textContent = prev; }
+        }
+    },
+
+    _burst(card) {
+        const b = card.querySelector('.fc-heart-burst');
+        if (!b) return;
+        b.classList.remove('hidden', 'burst-out');
+        b.classList.add('burst-in');
+        setTimeout(() => { b.classList.remove('burst-in'); b.classList.add('burst-out'); }, 600);
+        setTimeout(() => { b.classList.add('hidden'); b.classList.remove('burst-out'); }, 1050);
+    },
+
+    async toggleComments(postId, card) {
+        const section  = card.querySelector('.fc-comments');
+        const isHidden = section.classList.toggle('hidden');
+        if (!isHidden && !this.state.expandedComments.has(postId)) {
+            this.state.expandedComments.add(postId);
+            await this.loadComments(postId, card);
+        }
+        if (!isHidden) card.querySelector('.fc-comment-input')?.focus();
+    },
+
+    async loadComments(postId, card) {
+        const { data } = await supabase
+            .from('post_comments')
+            .select('id, content, created_at, user_id, users:user_id(short_name, full_name, avatar_url)')
+            .eq('post_id', postId).order('created_at', { ascending: true });
+        const list = card.querySelector('.fc-comment-list');
+        if (!list) return;
+        list.innerHTML = (!data || data.length === 0)
+            ? '<p class="fc-no-comments">Belum ada komentar.</p>'
+            : (data || []).map(c => this._commentHTML(c)).join('');
+    },
+
+    _commentHTML(c) {
+        const u = c.users || {};
+        return `<div class="fc-comment-item">
+            <img class="fc-comment-avatar" src="${u.avatar_url || 'icons/profpicture.png'}" onerror="this.src='icons/profpicture.png'">
+            <div class="fc-comment-body">
+                <span class="fc-comment-name">${u.short_name || u.full_name?.split(' ')[0] || 'User'}</span>
+                <span class="fc-comment-text">${this.escHtml(c.content)}</span>
+                <span class="fc-comment-time">${this.timeAgo(c.created_at)}</span>
+            </div>
+        </div>`;
+    },
+
+    async sendComment(postId, card) {
+        const input   = card.querySelector('.fc-comment-input');
+        const sendBtn = card.querySelector('.fc-comment-send');
+        const text    = input.value.trim();
+        if (!text) return;
+        sendBtn.disabled = true; input.value = '';
+
+        const { data, error } = await supabase.from('post_comments')
+            .insert({ post_id: postId, user_id: this.state.user.id, content: text })
+            .select('id, content, created_at, user_id, users:user_id(short_name, full_name, avatar_url)')
+            .single();
+
+        sendBtn.disabled = false;
+        if (error) { showToast('Gagal kirim komentar', 'error'); input.value = text; return; }
+
+        const list = card.querySelector('.fc-comment-list');
+        if (list) {
+            list.querySelector('.fc-no-comments')?.remove();
+            list.insertAdjacentHTML('beforeend', this._commentHTML(data));
+        }
+
+        // Increment badge
+        const btn   = card.querySelector('.fc-comment-btn');
+        let badge   = btn.querySelector('.fc-comment-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'fc-comment-badge';
+            badge.textContent = '0';
+            btn.appendChild(badge);
+        }
+        badge.textContent = parseInt(badge.textContent || '0') + 1;
+        badge.classList.add('badge-bump');
+        setTimeout(() => badge.classList.remove('badge-bump'), 350);
+    },
+
+    async deletePost(postId, card) {
+        const ok = await showPopup('Hapus postingan ini?', 'confirm');
+        if (!ok) return;
+
+        const post = this.state.posts.find(p => p.id === postId);
+        if (post?.image_url) {
+            const fileName = post.image_url.split('/post-photos/')[1]?.split('?')[0];
+            if (fileName) await supabase.storage.from('post-photos').remove([fileName]);
+        }
+
+        const { error } = await supabase.from('user_posts').delete().eq('id', postId);
+        if (error) { showToast('Gagal hapus', 'error'); return; }
+
+        card.style.animation = 'fadeOutCard .3s ease forwards';
+        setTimeout(() => card.remove(), 300);
+        this.state.posts = this.state.posts.filter(p => p.id !== postId);
+        showToast('Postingan dihapus');
+        this.checkEmpty();
+    },
+
+    async editCaption(post, card) {
+        const capDiv = card.querySelector('.fc-caption');
+        const u      = post.users || {};
+        const prev   = post.caption || '';
+        if (!capDiv) return;
+
+        capDiv.innerHTML = `
+            <textarea class="fc-edit-ta">${prev}</textarea>
+            <div class="fc-edit-controls">
+                <button class="fc-btn-cancel-edit">Batal</button>
+                <button class="fc-btn-save-edit">Simpan</button>
+            </div>`;
+
+        capDiv.querySelector('.fc-edit-ta').focus();
+        capDiv.querySelector('.fc-btn-cancel-edit').onclick = () => {
+            capDiv.innerHTML = `<a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(prev)}</span>`;
+        };
+        capDiv.querySelector('.fc-btn-save-edit').onclick = async () => {
+            const newCap = capDiv.querySelector('.fc-edit-ta').value.trim();
+            const { error } = await supabase.from('user_posts').update({ caption: newCap }).eq('id', post.id);
+            if (error) { showToast('Gagal simpan', 'error'); return; }
+            post.caption = newCap;
+            capDiv.innerHTML = `<a class="fc-cap-name" href="user?name=${u.username || u.short_name}">${username(u)}</a><span class="fc-cap-text">${this.escHtml(newCap)}</span>`;
+            showToast('Caption diupdate!');
+        };
+
+        function username(u) { return u.username || u.short_name || u.full_name?.split(' ')[0] || 'User'; }
+    },
+
+    subscribeRealtime() {
+        supabase.channel('feed_realtime_v2')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_posts' }, async payload => {
+                if (payload.new.user_id === this.state.user.id) return;
+                const { data } = await supabase
+                    .from('user_posts')
+                    .select('id, image_url, caption, created_at, user_id, users:user_id(id, full_name, short_name, username, avatar_url, is_private)')
+                    .eq('id', payload.new.id).single();
+                if (data && !data.users?.is_private) {
+                    this.state.posts.unshift(data);
+                    this.renderPost(data, 0, 0, true);
+                    this.checkEmpty();
+                }
+            })
+            .subscribe();
+    },
+
+    bindScrollSentinel() {
+        const sentinel = document.getElementById('scrollSentinel');
+        if (!sentinel) return;
+        new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && !this.state.loading && this.state.hasMore) this.loadPosts();
+        }, { rootMargin: '300px' }).observe(sentinel);
+    },
+
+    setSkeleton(show) {
+        const el = document.getElementById('feedSkeleton');
+        if (!el) return;
+        if (show) {
+            el.innerHTML = SkeletonUI.feed();
+        } else {
+            el.innerHTML = '';
+        }
+    },
+
+    checkEmpty() {
+        const el = document.getElementById('feedEmpty');
+        if (el) el.style.display = (this.state.posts.length === 0 && !this.state.hasMore) ? 'flex' : 'none';
+    },
+
+    escHtml(s = '') {
+        return String(s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/\n/g, '<br>');
+    },
+
+    timeAgo(iso) {
+        if (!iso) return '';
+        const diff = (Date.now() - new Date(iso)) / 1000;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return `${Math.floor(diff/60)} mnt lalu`;
+        if (diff < 86400) return `${Math.floor(diff/3600)} jam lalu`;
+        if (diff < 604800) return `${Math.floor(diff/86400)} hari lalu`;
+        return new Date(iso).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+    },
+};
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.fc-dropdown').forEach(d => d.classList.add('hidden'));
 });
 
-// ── SHORTCUTS ─────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-    const detailOverlay = document.getElementById('detailOverlay');
-    const isDetailActive = detailOverlay && detailOverlay.classList.contains('active');
-
-    if (isDetailActive) {
-        if (e.key === 'ArrowRight') { e.preventDefault(); if (typeof nextSlide === 'function') nextSlide(); }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); if (typeof prevSlide === 'function') prevSlide(); }
-        if (e.key === 'Escape') { if (typeof closeDetail === 'function') closeDetail(); return; }
-    }
-
-    if (e.ctrlKey && e.key === 'Enter') {
-        const pickerOpen = !document.getElementById('tugasPickerOverlay')?.classList.contains('hidden');
-        const formOpen = !document.getElementById('tugasFormOverlay')?.classList.contains('hidden');
-        const fab = document.getElementById('tugasFabWrap');
-
-        if (!pickerOpen && !formOpen && fab && fab.style.display !== 'none') {
-            e.preventDefault();
-            if (typeof openTugasModal === 'function') openTugasModal();
-        }
-    }
-});
-
-// ── CLICK OUTSIDE TO CLOSE ────────────────────────────────────────
-document.addEventListener('click', e => {
-    const picker = document.getElementById('tugasPickerOverlay');
-    if (picker && !picker.classList.contains('hidden')) {
-        if (e.target === picker) {
-            picker.classList.add('hidden');
-            if (typeof unlockScroll === 'function') unlockScroll();
-        }
-    }
-
-    const form = document.getElementById('tugasFormOverlay');
-    if (form && !form.classList.contains('hidden')) {
-        if (e.target === form) {
-            form.classList.add('hidden');
-            if (typeof unlockScroll === 'function') unlockScroll();
-        }
-    }
-});
+document.addEventListener('DOMContentLoaded', () => FeedApp.init());
