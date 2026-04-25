@@ -322,7 +322,7 @@ function renderTasks(data) {
 
         el.innerHTML = `
     ${photoHTML}
-    <h3 style="margin:5px 0; font-size: 20px;">${item.big_title}</h3>
+    <h3 style="margin:5px 0; font-size: 20px; color:white;">${item.big_title}</h3>
     <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
     <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5; white-space: pre-wrap;">${item.content}</p>
     ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
