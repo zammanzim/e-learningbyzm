@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updates</title>
+    <title>Updates • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js" defer></script>
     <script src="js/ui-components.js" defer></script>
@@ -13,7 +13,8 @@
     <script src="js/visitor.js" defer></script>
     <script src="js/subject-manager.js" defer></script>
     <script src="js/theme.js"></script>
-    <script src="js/toast.js"></script><script src="js/bottom-nav.js"></script>
+    <script src="js/bottom-nav.js"></script>
+    <script src="js/toast.js"></script>
     <link rel="stylesheet" href="css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/announcements.png" type="image/png">
@@ -32,9 +33,9 @@
             bottom: 0;
             width: 2px;
             background: linear-gradient(to bottom,
-                rgba(0, 234, 255, 0.6) 0%,
-                rgba(0, 234, 255, 0.15) 70%,
-                transparent 100%);
+                    rgba(0, 234, 255, 0.6) 0%,
+                    rgba(0, 234, 255, 0.15) 70%,
+                    transparent 100%);
         }
 
         /* ── SINGLE UPDATE CARD ── */
@@ -45,15 +46,36 @@
             animation: fadeInUp 0.4s ease both;
         }
 
-        .update-entry:nth-child(1) { animation-delay: 0.05s; }
-        .update-entry:nth-child(2) { animation-delay: 0.1s; }
-        .update-entry:nth-child(3) { animation-delay: 0.15s; }
-        .update-entry:nth-child(4) { animation-delay: 0.2s; }
-        .update-entry:nth-child(5) { animation-delay: 0.25s; }
+        .update-entry:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .update-entry:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .update-entry:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .update-entry:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .update-entry:nth-child(5) {
+            animation-delay: 0.25s;
+        }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Dot di timeline */
@@ -210,8 +232,8 @@
 
         .badge-remove {
             background: rgba(255, 255, 255, 0.06);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* ── EMPTY STATE ── */
@@ -259,8 +281,8 @@
         }
 
         .item-row select {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: #fff;
             border-radius: 8px;
             padding: 8px 10px;
@@ -271,7 +293,9 @@
             width: 100px;
         }
 
-        .item-row select option { background: #111; }
+        .item-row select option {
+            background: #111;
+        }
 
         .item-row input {
             flex: 1;
@@ -280,7 +304,7 @@
         .item-row .remove-item-btn {
             background: transparent;
             border: none;
-            color: rgba(255,71,87,0.5);
+            color: rgba(255, 71, 87, 0.5);
             cursor: pointer;
             font-size: 14px;
             padding: 4px;
@@ -288,15 +312,17 @@
             transition: color 0.2s;
         }
 
-        .item-row .remove-item-btn:hover { color: #ff4757; }
+        .item-row .remove-item-btn:hover {
+            color: #ff4757;
+        }
 
         .add-item-btn {
             width: 100%;
             padding: 10px;
-            background: rgba(0,234,255,0.05);
-            border: 1px dashed rgba(0,234,255,0.25);
+            background: rgba(0, 234, 255, 0.05);
+            border: 1px dashed rgba(0, 234, 255, 0.25);
             border-radius: 10px;
-            color: rgba(0,234,255,0.6);
+            color: rgba(0, 234, 255, 0.6);
             cursor: pointer;
             font-size: 13px;
             margin-top: 4px;
@@ -304,7 +330,7 @@
         }
 
         .add-item-btn:hover {
-            background: rgba(0,234,255,0.1);
+            background: rgba(0, 234, 255, 0.1);
             color: #00eaff;
         }
 
@@ -335,23 +361,72 @@
             box-shadow: 0 8px 30px rgba(0, 234, 255, 0.5);
         }
 
-        /* ── PAGE HEADER ── */
-        .updates-page-header {
-            margin-bottom: 28px;
-        }
-
-        .updates-page-header h1 {
-            margin: 0 0 6px 0;
-            font-size: 22px;
+        /* ── FILTER PILLS ── */
+        .filter-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 6px 13px;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.3px;
         }
 
-        .updates-page-header p {
-            margin: 0;
-            font-size: 12px;
-            color: rgba(255,255,255,0.35);
+        .filter-pill:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .filter-pill.active {
+            background: rgba(0, 234, 255, 0.1);
+            border-color: rgba(0, 234, 255, 0.35);
+            color: var(--accent, #00eaff);
+        }
+
+        .filter-pill[data-filter="new"].active {
+            background: rgba(46, 213, 115, 0.1);
+            border-color: rgba(46, 213, 115, 0.35);
+            color: #2ed573;
+        }
+
+        .filter-pill[data-filter="fix"].active {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: rgba(255, 71, 87, 0.35);
+            color: #ff6b7a;
+        }
+
+        .filter-pill[data-filter="improve"].active {
+            background: rgba(255, 159, 67, 0.1);
+            border-color: rgba(255, 159, 67, 0.35);
+            color: #ff9f43;
+        }
+
+        .filter-pill[data-filter="remove"].active {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Filtered out entries */
+        .update-entry.filtered-out {
+            display: none;
+        }
+
+        /* Stat breakdown badges */
+        .stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 20px;
         }
     </style>
 </head>
@@ -365,17 +440,82 @@
         <div class="left-section">
             <div class="glow">
                 <h1><i class="fa-solid fa-rocket" style="font-size:22px;"></i> Updates</h1>
+                <p style="color:rgba(255,255,255,0.35); font-size:12px; margin-top:4px;">
+                    Catatan perubahan & fitur baru yang udah ditambahin
+                </p>
             </div>
-            <p style="color:rgba(255,255,255,0.35); font-size:12px; margin-top:4px;">
-                Catatan perubahan & fitur baru yang udah ditambahin
-            </p>
+
+            <!-- Stats Card -->
+            <div id="updatesStatsCard" style="
+                background: rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 16px;
+                padding: 16px;
+                margin-top: 16px;
+                display: none;
+            ">
+                <div
+                    style="font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; color:rgba(0,234,255,0.5); margin-bottom:14px;">
+                    <i class="fa-solid fa-chart-simple" style="margin-right:6px;"></i>Ringkasan
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div
+                        style="background:rgba(0,234,255,0.05); border:1px solid rgba(0,234,255,0.1); border-radius:12px; padding:12px; text-align:center;">
+                        <div id="statTotal" style="font-size:24px; font-weight:800; color:#fff; line-height:1;">—</div>
+                        <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; font-weight:600;">
+                            Total Update</div>
+                    </div>
+                    <div
+                        style="background:rgba(0,234,255,0.05); border:1px solid rgba(0,234,255,0.1); border-radius:12px; padding:12px; text-align:center;">
+                        <div id="statVersion"
+                            style="font-size:15px; font-weight:800; color:var(--accent,#00eaff); line-height:1;">—</div>
+                        <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; font-weight:600;">
+                            Versi Terbaru</div>
+                    </div>
+                </div>
+                <!-- Type breakdown -->
+                <div id="statBreakdown" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;"></div>
+                <!-- Last updated -->
+                <div id="statLastDate"
+                    style="font-size:11px; color:rgba(255,255,255,0.25); margin-top:12px; text-align:center;"></div>
+            </div>
+
+            <!-- Filter Pills -->
+            <div id="filterWrap" style="margin-top:14px; display:none;">
+                <div
+                    style="font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; color:rgba(0,234,255,0.5); margin-bottom:10px;">
+                    <i class="fa-solid fa-filter" style="margin-right:6px;"></i>Filter
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button class="filter-pill active" data-filter="all" onclick="applyFilter('all', this)">
+                        <i class="fa-solid fa-border-all"></i> Semua
+                    </button>
+                    <button class="filter-pill" data-filter="new" onclick="applyFilter('new', this)"
+                        style="--pill-color: rgba(46,213,115,0.7);">
+                        <i class="fa-solid fa-star"></i> NEW
+                    </button>
+                    <button class="filter-pill" data-filter="fix" onclick="applyFilter('fix', this)"
+                        style="--pill-color: rgba(255,107,118,0.7);">
+                        <i class="fa-solid fa-bug"></i> FIX
+                    </button>
+                    <button class="filter-pill" data-filter="improve" onclick="applyFilter('improve', this)"
+                        style="--pill-color: rgba(255,159,67,0.7);">
+                        <i class="fa-solid fa-bolt"></i> IMPROVE
+                    </button>
+                    <button class="filter-pill" data-filter="remove" onclick="applyFilter('remove', this)"
+                        style="--pill-color: rgba(255,255,255,0.35);">
+                        <i class="fa-solid fa-trash"></i> REMOVE
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="right-section">
             <div id="updatesContainer">
                 <!-- skeleton -->
                 <div style="position:relative; padding-left:50px; margin-bottom:28px;">
-                    <div class="skeleton" style="position:absolute;left:10px;top:16px;width:18px;height:18px;border-radius:50%;"></div>
+                    <div class="skeleton"
+                        style="position:absolute;left:10px;top:16px;width:18px;height:18px;border-radius:50%;"></div>
                     <div class="course-card" style="padding:16px 18px;">
                         <div class="skeleton sk-title" style="width:55%; margin-bottom:12px;"></div>
                         <div class="skeleton sk-text"></div>
@@ -383,7 +523,8 @@
                     </div>
                 </div>
                 <div style="position:relative; padding-left:50px; margin-bottom:28px;">
-                    <div class="skeleton" style="position:absolute;left:10px;top:16px;width:18px;height:18px;border-radius:50%;"></div>
+                    <div class="skeleton"
+                        style="position:absolute;left:10px;top:16px;width:18px;height:18px;border-radius:50%;"></div>
                     <div class="course-card" style="padding:16px 18px;">
                         <div class="skeleton sk-title" style="width:40%; margin-bottom:12px;"></div>
                         <div class="skeleton sk-text"></div>
@@ -407,8 +548,10 @@
         <div class="glass-modal-box">
             <h3 style="margin-bottom:18px;"><i class="fa-solid fa-rocket"></i> Update Baru</h3>
 
-            <input type="text" id="um_title" class="glass-input" placeholder="Judul update  (cth: Update 31 Maret)" spellcheck="false">
-            <input type="text" id="um_version" class="glass-input" placeholder="Versi  (opsional, cth: v2.3)" spellcheck="false" style="font-size:12px;">
+            <input type="text" id="um_title" class="glass-input" placeholder="Judul update  (cth: Update 31 Maret)"
+                spellcheck="false">
+            <input type="text" id="um_version" class="glass-input" placeholder="Versi  (opsional, cth: v2.3)"
+                spellcheck="false" style="font-size:12px;">
 
             <label style="font-size:12px; color:#aaa; margin:12px 0 8px; display:block;">
                 <i class="fa-solid fa-list-ul" style="margin-right:6px;"></i>Daftar Perubahan
@@ -429,13 +572,13 @@
 
     <script>
         const TYPE_LABELS = { new: 'NEW', fix: 'FIX', improve: 'IMPROVE', remove: 'REMOVE' };
-        const TYPE_CLASS  = { new: 'badge-new', fix: 'badge-fix', improve: 'badge-improve', remove: 'badge-remove' };
+        const TYPE_CLASS = { new: 'badge-new', fix: 'badge-fix', improve: 'badge-improve', remove: 'badge-remove' };
 
         let _isAdmin = false;
 
         // ── INIT ──────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch(e) { return null; } })();
+            const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
             if (!user) return;
 
             _isAdmin = user.role === 'class_admin' || user.role === 'super_admin';
@@ -542,10 +685,10 @@
             row.className = 'item-row';
             row.innerHTML = `
                 <select>
-                    <option value="new"  ${type==='new'?'selected':''}>✨ NEW</option>
-                    <option value="fix"  ${type==='fix'?'selected':''}>🐛 FIX</option>
-                    <option value="improve" ${type==='improve'?'selected':''}>⚡ IMPROVE</option>
-                    <option value="remove" ${type==='remove'?'selected':''}>🗑️ REMOVE</option>
+                    <option value="new"  ${type === 'new' ? 'selected' : ''}>✨ NEW</option>
+                    <option value="fix"  ${type === 'fix' ? 'selected' : ''}>🐛 FIX</option>
+                    <option value="improve" ${type === 'improve' ? 'selected' : ''}>⚡ IMPROVE</option>
+                    <option value="remove" ${type === 'remove' ? 'selected' : ''}>🗑️ REMOVE</option>
                 </select>
                 <input type="text" class="glass-input" placeholder="Deskripsi perubahan..." value="${text}" spellcheck="false" style="margin:0;">
                 <button class="remove-item-btn" onclick="this.parentElement.remove()">
@@ -558,7 +701,7 @@
         // ── SAVE ──────────────────────────────────────────────────────
         async function saveUpdate() {
             const title = document.getElementById('um_title').value.trim();
-            if (!title) { if (typeof showPopup==='function') showPopup('Judul wajib diisi!', 'error'); return; }
+            if (!title) { if (typeof showPopup === 'function') showPopup('Judul wajib diisi!', 'error'); return; }
 
             const rows = document.querySelectorAll('#um_itemsWrap .item-row');
             const items = [];
@@ -622,7 +765,7 @@
 
         // Tutup modal klik luar
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('updatesModal').addEventListener('click', function(e) {
+            document.getElementById('updatesModal').addEventListener('click', function (e) {
                 if (e.target === this) closeUpdatesModal();
             });
         });
@@ -637,6 +780,99 @@
                 saveUpdate();
             }
         });
+
+        // ── STATS ─────────────────────────────────────────────────────
+        let _cachedData = [];
+
+        function renderStats(data) {
+            if (!data || data.length === 0) return;
+            _cachedData = data;
+
+            document.getElementById('updatesStatsCard').style.display = 'block';
+            document.getElementById('filterWrap').style.display = 'block';
+
+            // Total
+            document.getElementById('statTotal').textContent = data.length;
+
+            // Latest version
+            const withVersion = data.filter(d => d.version);
+            document.getElementById('statVersion').textContent =
+                withVersion.length ? withVersion[0].version : '—';
+
+            // Last updated date
+            const lastDate = new Date(data[0].created_at).toLocaleDateString('id-ID', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+            document.getElementById('statLastDate').textContent =
+                `Terakhir diupdate ${lastDate}`;
+
+            // Type breakdown
+            const counts = { new: 0, fix: 0, improve: 0, remove: 0 };
+            data.forEach(entry => {
+                (entry.items || []).forEach(it => {
+                    if (counts[it.type] !== undefined) counts[it.type]++;
+                });
+            });
+
+            const chips = [
+                { key: 'new', label: 'NEW', color: '#2ed573', bg: 'rgba(46,213,115,0.1)', border: 'rgba(46,213,115,0.25)' },
+                { key: 'fix', label: 'FIX', color: '#ff6b7a', bg: 'rgba(255,71,87,0.1)', border: 'rgba(255,71,87,0.25)' },
+                { key: 'improve', label: 'IMPROVE', color: '#ff9f43', bg: 'rgba(255,159,67,0.1)', border: 'rgba(255,159,67,0.25)' },
+                { key: 'remove', label: 'REMOVE', color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.1)' },
+            ].filter(c => counts[c.key] > 0);
+
+            const breakdown = document.getElementById('statBreakdown');
+            breakdown.innerHTML = chips.map(c => `
+                <div class="stat-chip" style="
+                    background: ${c.bg};
+                    border: 1px solid ${c.border};
+                    color: ${c.color};
+                ">
+                    <span>${counts[c.key]}</span>
+                    <span>${c.label}</span>
+                </div>`).join('');
+        }
+
+        // ── FILTER ────────────────────────────────────────────────────
+        function applyFilter(type, btn) {
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Show/hide entries
+            document.querySelectorAll('.update-entry').forEach(entry => {
+                if (type === 'all') {
+                    entry.classList.remove('filtered-out');
+                    return;
+                }
+                const items = _cachedData.find(d => String(d.id) === String(entry.dataset.id))?.items || [];
+                const hasType = items.some(it => it.type === type);
+                entry.classList.toggle('filtered-out', !hasType);
+            });
+
+            // Empty state kalau semua ke-filter
+            const timeline = document.querySelector('.updates-timeline');
+            if (!timeline) return;
+            const visible = timeline.querySelectorAll('.update-entry:not(.filtered-out)');
+            let emptyMsg = timeline.querySelector('.filter-empty-msg');
+            if (visible.length === 0) {
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'filter-empty-msg updates-empty';
+                    emptyMsg.innerHTML = '<i class="fa-solid fa-filter"></i><p>Tidak ada update dengan tipe ini.</p>';
+                    timeline.appendChild(emptyMsg);
+                }
+            } else {
+                emptyMsg?.remove();
+            }
+        }
+
+        // Hook ke renderUpdates — inject renderStats setelah data dimuat
+        const _origRenderUpdates = renderUpdates;
+        window.renderUpdates = function (data) {
+            _origRenderUpdates(data);
+            renderStats(data);
+        };
     </script>
 </body>
 

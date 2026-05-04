@@ -50,7 +50,7 @@ const SubjectApp = {
 
     // Update baris 44
     updatePageTitle() {
-        document.title = this.state.subjectName.replace(/<[^>]*>/g, ''); // Strip HTML tags
+        document.title = `${this.state.subjectName.replace(/<[^>]*>/g, '')} • E-Learning Nizam`; // Strip HTML tags
         const pageTitle = document.getElementById("pageTitle");
         if (pageTitle) pageTitle.innerHTML = this.state.subjectName;
     },
@@ -1544,4 +1544,4 @@ function toggleMobileInfo(e) {
 
 function formatText(size) {
     document.execCommand('fontSize', false, size);
-}   
+}

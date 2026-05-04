@@ -16,7 +16,9 @@ async function logVisitor() {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
 
-    const currentPage = document.title || "Unknown Page";
+    const currentPage = (document.title || "Unknown Page")
+        .replace(/\s*[•|·|-]\s*E-Learning Nizam\s*/i, '')
+        .trim() || "Unknown Page";
     if (currentPage.toLowerCase().includes("loading")) return;
 
     // Debounce: skip kalau halaman & user sama dalam 2 menit terakhir
@@ -144,15 +146,19 @@ async function renderVisitorStats() {
             const nickname = u.nickname || u.full_name || 'User';
             const avatar = u.avatar_url || '../icons/profpicture.png';
 
+            const ts = new Date(v.visited_at);
+            const tanggal = ts.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+            const jam = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
             const item = document.createElement('div');
             item.className = 'visitor-item';
             item.innerHTML = `
                 <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; flex-shrink:0;">
                 <div style="flex:1; margin-left:10px;">
                     <div style="font-size:13px; font-weight:bold;">${nickname}</div>
-                    <div style="font-size:11px; color:#aaa;">
-                        <span style="color:var(--accent, #00eaff)">${v.last_page || 'Muter-muter'}</span>
-                        • ${new Date(v.visited_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                    <div style="font-size:11px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <span style="color:var(--accent, #00eaff);">${v.last_page || 'Muter-muter'}</span>
+                        <span style="color:#aaa; white-space:nowrap;">${tanggal} • ${jam}</span>
                     </div>
                 </div>`;
             listEl2.appendChild(item);
@@ -215,6 +221,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (closeBtn) closeBtn.onclick = closeAction;
     if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeAction(); };
+
+    // Shortcut Ctrl+Q → buka/tutup visitor popup
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'q') {
+            e.preventDefault();
+            if (overlay?.classList.contains('show')) {
+                closeAction();
+            } else {
+                trigger?.click();
+            }
+        }
+    });
 
     // Reset (admin only)
     if (resetBtn) {

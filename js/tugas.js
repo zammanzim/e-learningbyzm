@@ -228,13 +228,22 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
 }
 
 function updateProgressUI() {
-    const total = allTasks.length;
-    const done = doneIds.length;
-    const countEl = document.getElementById('userTaskCount');
-    const barEl = document.getElementById('userTaskBar');
+    const archivedTasks = allTasks.filter(t => t.is_done);
+    const activeTasks   = allTasks.filter(t => !t.is_done);
+    const archivedCount = archivedTasks.length;
+    const activeTotal   = activeTasks.length;
+
+    // Hanya hitung done dari task yang belum diarsipkan
+    const activeDone = doneIds.filter(id =>
+        activeTasks.some(t => String(t.id) === String(id))
+    ).length;
+
+    const percent = activeTotal > 0 ? Math.round((activeDone / activeTotal) * 100) : 0;
+
+    const countEl  = document.getElementById('userTaskCount');
+    const barEl    = document.getElementById('userTaskBar');
     const centerEl = document.getElementById('taskProgressCenter');
-    const motivEl = document.getElementById('taskMotivation');
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const motivEl  = document.getElementById('taskMotivation');
 
     let grad = '', themeColor = '';
     if (percent === 100) { grad = 'linear-gradient(90deg, var(--accent, #00eaff), #007bff)'; themeColor = 'var(--accent, #00eaff)'; }
@@ -243,17 +252,19 @@ function updateProgressUI() {
     else { grad = 'linear-gradient(90deg, #ff4757, #ff6b81)'; themeColor = '#ff4757'; }
 
     if (countEl) {
-        countEl.innerText = `${done}/${total} (${percent}%)`;
+        let txt = `${activeDone}/${activeTotal} (${percent}%)`;
+        if (archivedCount > 0) txt += ` · ${archivedCount} diarsipkan`;
+        countEl.innerText = txt;
         countEl.style.color = themeColor;
     }
     if (barEl) {
         barEl.style.width = percent + "%";
         barEl.style.background = grad;
     }
-
-    // 1. Teks di tengah progress bar
     if (centerEl) {
-        centerEl.innerText = `kamu sudah ngejain ${done} dari ${total} tugas`;
+        let txt = `kamu sudah ngejain ${activeDone} dari ${activeTotal} tugas`;
+        if (archivedCount > 0) txt += ` · ${archivedCount} diarsipkan`;
+        centerEl.innerText = txt;
     }
 }
 
