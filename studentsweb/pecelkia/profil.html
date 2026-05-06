@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyWeb — Profil</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .sparkle, .moon {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.8;
+      animation: float 3s infinite ease-in-out;
+      z-index: 5;
+    }
+
+    .sparkle {
+      color: white;
+      font-size: 18px;
+    }
+
+    .moon {
+      font-size: 22px;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+
+  <style>
+    .auto-sparkle {
+      position: fixed;
+      color: white;
+      font-size: 16px;
+      pointer-events: none;
+      animation: pop 1.5s ease-out forwards;
+      z-index: 999;
+    }
+
+    @keyframes pop {
+      0% { opacity: 0; transform: scale(0); }
+      30% { opacity: 1; }
+      100% { opacity: 0; transform: scale(1.5) translateY(-20px); }
+    }
+  </style>
+  
+</head>
+
+<body>
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+
+  <div class="sparkle s1">✦</div>
+  <div class="sparkle s2">✧</div>
+  <div class="sparkle s3">✦</div>
+  <div class="moon m1">🌙</div>
+
+  <nav>
+    <div class="nav-logo">✦Pecel✦</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profil.html" class="active">Profil</a></li>
+      <li><a href="galeri.html">Gallery</a></li>
+      <li><a href="kontak.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="profile-wrap">
+    <div class="profile-card">
+
+      <div class="avatar-side">
+        <div class="avatar-frame">
+          <img src="me mirror.jpg" alt="Foto Profil" class="avatar-img">
+        </div>
+        <div class="avatar-name">Excel</div>
+        <div class="avatar-role">Pelajar · Kreator</div>
+      </div>
+
+      <div class="info-side">
+        <div class="page-badge">✦ Halaman Profil</div>
+        <h1>Halo, Saya <span>Excel adila putra </span></h1>
+
+        <p class="bio-text">
+          Nama saya Excel sering di panggil pecel dan minat belajar bahasa dengan cita cita kuliah di luar negri
+        </p>
+
+        <div class="biodata-grid">
+          <div class="bio-item">
+            <div class="bio-label">Nama Lengkap</div>
+            <div class="bio-value">Excel adila putra</div>
+          </div>
+          <div class="bio-item">
+            <div class="bio-label">Tanggal Lahir</div>
+            <div class="bio-value">29 May 2010</div>
+          </div>
+          <div class="bio-item">
+            <div class="bio-label">Asal</div>
+            <div class="bio-value">Bandung, Indonesia</div>
+          </div>
+          <div class="bio-item">
+            <div class="bio-label">Sekolah</div>
+            <div class="bio-value">SMK Taruna Harapan 1 Cipatat </div>
+          </div>
+          <div class="bio-item">
+            <div class="bio-label">Hobi</div>
+            <div class="bio-value">Bermain game, belajar bahasa </div>
+          </div>
+          <div class="bio-item">
+            <div class="bio-label">Email</div>
+            <div class="bio-value">Exceladila123@gmail.com</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="skill-title">Keahlian & Minat</div>
+          <div class="skill-tags">
+            <span class="skill-tag">HTML & CSS</span>
+            <span class="skill-tag">Bahasa</span>
+            <span class="skill-tag">EN</span>
+            <span class="skill-tag">Fotografi</span>
+            <span class="skill-tag">Drawing</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p></p>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="profil.html">Profil</a>
+      <a href="galeri.html">Gallery</a>
+      <a href="kontak.html">Contact</a>
+    </div>
+  </footer>
+
+  <script>
+  const icons = ["✦", "✧", "✩", "🌙", "✨"];
+
+  function spawnSparkle() {
+    const s = document.createElement("div");
+    s.className = "auto-sparkle";
+
+    s.innerHTML = icons[Math.floor(Math.random() * icons.length)];
+
+    s.style.left = Math.random() * window.innerWidth + "px";
+    s.style.top = Math.random() * window.innerHeight + "px";
+    s.style.fontSize = (10 + Math.random() * 22) + "px";
+    s.style.opacity = Math.random();
+
+    document.body.appendChild(s);
+
+    setTimeout(() => {
+      s.remove();
+    }, 1500);
+  }
+
+  setInterval(spawnSparkle, 180);
+</script>
+
+</body>
+
+</html>

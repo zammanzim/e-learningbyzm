@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ui-components.js" defer></script>
+    <script src="../js/sidebar.js"></script>
     <script src="../js/basicfeat.js" defer></script>
     <script src="../js/visitor.js" defer></script>
     <script src="../js/auth.js" defer></script>
@@ -561,11 +562,7 @@
                     <div class="form-group" style="margin:0;">
                         <label>Grup Menu</label>
                         <select id="mGroup" class="glass-input" onchange="autoCalculateOrder()">
-                            <option value="lessons">Lessons (Materi)</option>
-                            <option value="main">Main Menu</option>
-                            <option value="admin">Admin Panel</option>
-                            <option value="system">System (Super Admin)</option>
-                            <option value="bottomnav">Bottom Nav</option>
+                            <option value="">-- Pilih Kelas Dulu --</option>
                         </select>
                     </div>
                 </div>
@@ -627,6 +624,77 @@
                     </button>
                 </div>
             </div>
+
+            <!-- ──────── CARD: KELOLA GRUP ──────── -->
+            <div class="admin-box" style="margin-top:14px;">
+                <div class="section-label" style="margin-bottom:16px;">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Kelola Grup Sidebar</span>
+                </div>
+
+                <!-- Daftar grup yang sudah ada -->
+                <div id="groupListWrap">
+                    <div
+                        style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:10px;">
+                        Grup yang Ada
+                    </div>
+                    <div id="groupListEl" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+                        <div style="color:#555;font-size:12px;">— belum ada, pilih kelas dulu —</div>
+                    </div>
+                    <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:16px;"></div>
+                </div>
+
+                <!-- Form tambah/edit grup -->
+                <div
+                    style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:10px;">
+                    Tambah / Edit Grup
+                </div>
+                <input type="hidden" id="cgEditId">
+                <div class="form-row" style="margin-bottom:10px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Kelas</label>
+                        <select id="cgClassId" class="glass-input" onchange="onCgClassChange()">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Tipe</label>
+                        <select id="cgType" class="glass-input">
+                            <option value="main">Main Menu</option>
+                            <option value="lessons">Lessons</option>
+                            <option value="custom">Menu Tambahan</option>
+                            <option value="admin">Admin Panel</option>
+                            <option value="system">System (Super Admin)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:10px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>ID Grup <span style="opacity:0.4;font-size:9px;text-transform:none;">huruf kecil +
+                                _</span></label>
+                        <input type="text" id="cgKey" class="glass-input" placeholder="mis: referensi"
+                            oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); cgAutoLabel(this.value)">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Nama Tampil</label>
+                        <input type="text" id="cgLabel" class="glass-input" placeholder="mis: Referensi"
+                            oninput="this.dataset.dirty='1'">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Urutan</label>
+                    <input type="number" id="cgOrder" class="glass-input" value="0" min="0" style="width:100px;">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button id="cgBtnReset" type="button" onclick="cgResetForm()" class="btn-glass-cancel"
+                        style="flex:1;display:none;">
+                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Batal
+                    </button>
+                    <button type="button" onclick="cgSave()" class="btn-glass-save" style="flex:2;">
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i>Simpan Grup
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- ──────── RIGHT: LIST ──────── -->
@@ -638,11 +706,6 @@
                 </select>
                 <div class="filter-pills">
                     <span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>
-                    <span class="pill" data-group="main" onclick="filterGroup(this)">Main</span>
-                    <span class="pill" data-group="lessons" onclick="filterGroup(this)">Lessons</span>
-                    <span class="pill" data-group="admin" onclick="filterGroup(this)">Admin</span>
-                    <span class="pill" data-group="system" onclick="filterGroup(this)">System</span>
-                    <span class="pill" data-group="bottomnav" onclick="filterGroup(this)">Bottom Nav</span>
                 </div>
             </div>
 
@@ -781,8 +844,24 @@
         // ══════════════════════════════════════════════════
         // INIT
         // ══════════════════════════════════════════════════
-        document.addEventListener('DOMContentLoaded', () => {
-            setupClassDropdown();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await setupClassDropdown();
+
+            // Default filter ke kelas user yang login
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const classId = user?.role === 'super_admin'
+                    ? (sessionStorage.getItem('class_override') || user?.class_id)
+                    : user?.class_id;
+                if (classId) {
+                    document.getElementById('targetClassId').value = classId;
+                    document.getElementById('mClassId').value = classId;
+                    document.getElementById('cgClassId').value = classId;
+                    syncGroupDropdown(classId);
+                    loadGroupList(classId);
+                }
+            } catch (e) { }
+
             loadClassMenus();
 
             // Tutup modal klik di luar
@@ -838,22 +917,217 @@
             });
         });
 
-        async function setupClassDropdown() {
-            const filterSel = document.getElementById('targetClassId');
-            const formSel = document.getElementById('mClassId');
+        // ══════════════════════════════════════════════════
+        // DATA
+        // ══════════════════════════════════════════════════
+        let allMenuGroups = [];
 
+        // ── SETUP CLASS DROPDOWN ──────────────────────────
+        async function setupClassDropdown() {
             const { data } = await supabase.from('classes').select('id, name').order('id');
             if (!data) return;
-
             data.forEach(cls => {
-                [filterSel, formSel].forEach(sel => {
+                classNameMap[String(cls.id)] = cls.name;
+                ['targetClassId', 'mClassId', 'cgClassId'].forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (!sel) return;
                     const opt = document.createElement('option');
                     opt.value = cls.id;
                     opt.textContent = cls.name;
                     sel.appendChild(opt);
                 });
-                classNameMap[String(cls.id)] = cls.name;
             });
+        }
+
+        // ── SYNC mGroup DARI menu_groups TABLE ────────────
+        function syncGroupDropdown(classId) {
+            const sel = document.getElementById('mGroup');
+            const prev = sel.value;
+            sel.innerHTML = '';
+
+            if (!classId) {
+                sel.innerHTML = '<option value="">-- Pilih Kelas Dulu --</option>';
+                return;
+            }
+
+            const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
+            const TYPE_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+
+            // Prioritas: dari menu_groups table
+            let groups = allMenuGroups
+                .filter(g => String(g.class_id) === String(classId) && g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav')
+                .sort((a, b) => a.display_order - b.display_order);
+
+            // Fallback: kalau menu_groups kosong, generate dari subjects_config
+            if (!groups.length) {
+                const seen = new Set();
+                const fallback = [];
+                allMenuData
+                    .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
+                    .forEach(m => {
+                        if (seen.has(m.menu_group)) return;
+                        seen.add(m.menu_group);
+                        fallback.push({
+                            group_key: m.menu_group,
+                            group_label: TYPE_LABEL[m.menu_group] || m.menu_group.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            group_type: TYPE_ORDER.hasOwnProperty(m.menu_group) ? m.menu_group : 'custom',
+                            display_order: TYPE_ORDER[m.menu_group] ?? 99
+                        });
+                    });
+                groups = fallback.sort((a, b) => a.display_order - b.display_order);
+            }
+
+            if (!groups.length) {
+                sel.innerHTML = '<option value="">-- Belum ada grup, buat di bawah --</option>';
+                return;
+            }
+
+            groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.group_key;
+                opt.textContent = g.group_label;
+                sel.appendChild(opt);
+            });
+
+            if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+        }
+
+        // ── CLASS CHANGE ──────────────────────────────────
+        function onClassChange() {
+            const val = document.getElementById('mClassId').value;
+            document.getElementById('targetClassId').value = val || 'all';
+            syncGroupDropdown(val);
+            autoCalculateOrder();
+            loadClassMenus();
+        }
+
+        function onFilterChange() {
+            const val = document.getElementById('targetClassId').value;
+            if (val !== 'all') {
+                document.getElementById('mClassId').value = val;
+                syncGroupDropdown(val);
+            }
+            loadClassMenus();
+        }
+
+        function onCgClassChange() {
+            loadGroupList(document.getElementById('cgClassId').value);
+        }
+
+        // ── LOAD GROUP LIST (card bawah) ──────────────────
+        async function loadGroupList(classId) {
+            const el = document.getElementById('groupListEl');
+            if (!classId) {
+                el.innerHTML = '<div style="color:#555;font-size:12px;">— pilih kelas dulu —</div>';
+                return;
+            }
+            const { data } = await supabase.from('menu_groups')
+                .select('*').eq('class_id', classId).order('display_order');
+
+            // Update allMenuGroups untuk kelas ini
+            allMenuGroups = allMenuGroups.filter(g => String(g.class_id) !== String(classId));
+            if (data?.length) allMenuGroups.push(...data.filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav'));
+
+            renderGroupList(data || [], el);
+            syncGroupDropdown(document.getElementById('mClassId').value);
+        }
+
+        function renderGroupList(groups, el) {
+            const TYPE_COLOR = { system: '#00eaff', admin: '#ffd700', main: '#a0a0a0', lessons: '#0be881', custom: '#c084fc' };
+            const TYPE_LABEL = { system: 'System', admin: 'Admin', main: 'Main', lessons: 'Lessons', custom: 'Custom' };
+            if (!groups.length) {
+                el.innerHTML = '<div style="color:#555;font-size:12px;">— belum ada grup —</div>';
+                return;
+            }
+            el.innerHTML = groups.map(g => `
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;
+                    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);">
+                    <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${TYPE_COLOR[g.group_type] || '#666'};"></span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:#ddd;">${g.group_label}</div>
+                        <div style="font-size:10px;color:#555;">${g.group_key} · <span style="color:${TYPE_COLOR[g.group_type] || '#666'}">${TYPE_LABEL[g.group_type] || g.group_type}</span> · urutan: ${g.display_order}</div>
+                    </div>
+                    <button onclick="cgEdit(${g.id})" style="background:none;border:none;color:#555;cursor:pointer;padding:4px;font-size:12px;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="cgDelete(${g.id},'${g.group_label}')" style="background:none;border:none;color:#ff4757;cursor:pointer;padding:4px;font-size:12px;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>`).join('');
+        }
+
+        // ── CG FORM ───────────────────────────────────────
+        function cgAutoLabel(key) {
+            const el = document.getElementById('cgLabel');
+            if (!el.dataset.dirty)
+                el.value = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function cgResetForm() {
+            document.getElementById('cgEditId').value = '';
+            document.getElementById('cgKey').value = '';
+            document.getElementById('cgKey').disabled = false;
+            document.getElementById('cgLabel').value = '';
+            document.getElementById('cgLabel').dataset.dirty = '';
+            document.getElementById('cgType').value = 'custom';
+            document.getElementById('cgOrder').value = '0';
+            document.getElementById('cgBtnReset').style.display = 'none';
+        }
+
+        function cgEdit(id) {
+            const g = allMenuGroups.find(x => x.id === id);
+            if (!g) return;
+            document.getElementById('cgEditId').value = g.id;
+            document.getElementById('cgClassId').value = g.class_id;
+            document.getElementById('cgType').value = g.group_type;
+            document.getElementById('cgKey').value = g.group_key;
+            document.getElementById('cgKey').disabled = true;
+            document.getElementById('cgLabel').value = g.group_label;
+            document.getElementById('cgLabel').dataset.dirty = '1';
+            document.getElementById('cgOrder').value = g.display_order;
+            document.getElementById('cgBtnReset').style.display = '';
+            document.querySelector('.admin-box:last-of-type').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function cgDelete(id, label) {
+            const ok = await showPopup(`Hapus grup "${label}"? Item di grup ini tidak ikut terhapus.`, 'confirm');
+            if (!ok) return;
+            const { error } = await supabase.from('menu_groups').delete().eq('id', id);
+            if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+            showToast(`"${label}" dihapus ✓`);
+            allMenuGroups = allMenuGroups.filter(g => g.id !== id);
+            renderGroupList(allMenuGroups.filter(g => String(g.class_id) === document.getElementById('cgClassId').value), document.getElementById('groupListEl'));
+            syncGroupDropdown(document.getElementById('mClassId').value);
+        }
+
+        async function cgSave() {
+            const editId = document.getElementById('cgEditId').value;
+            const classId = document.getElementById('cgClassId').value;
+            const type = document.getElementById('cgType').value;
+            const key = document.getElementById('cgKey').value.trim();
+            const label = document.getElementById('cgLabel').value.trim();
+            const order = parseInt(document.getElementById('cgOrder').value) || 0;
+
+            if (!classId) { showPopup('Pilih kelas!', 'error'); return; }
+            if (!key) { showPopup('ID Grup wajib diisi!', 'error'); return; }
+            if (!label) { showPopup('Nama tampil wajib diisi!', 'error'); return; }
+
+            const payload = { class_id: classId, group_key: key, group_label: label, group_type: type, display_order: order };
+            let error;
+            if (editId) {
+                ({ error } = await supabase.from('menu_groups').update(payload).eq('id', editId));
+            } else {
+                ({ error } = await supabase.from('menu_groups').insert(payload));
+            }
+            if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+
+            showToast(editId ? 'Grup diperbarui ✓' : 'Grup ditambahkan ✓');
+            cgResetForm();
+            await loadGroupList(classId);
+            // Auto-set form atas ke grup baru ini
+            document.getElementById('mClassId').value = classId;
+            syncGroupDropdown(classId);
+            document.getElementById('mGroup').value = key;
         }
 
         // ══════════════════════════════════════════════════
@@ -861,16 +1135,24 @@
         // ══════════════════════════════════════════════════
         async function loadClassMenus() {
             const container = document.getElementById('menuListContainer');
-            container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff);opacity:0.5;"></i><p style="font-size:13px;">Memuat...</p></div>`;
+            container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent,#00eaff);opacity:0.5;"></i><p style="font-size:13px;">Memuat...</p></div>`;
 
             const classId = document.getElementById('targetClassId').value;
-            let q = supabase.from('subjects_config').select('*').order('class_id').order('display_order');
-            if (classId !== 'all') q = q.eq('class_id', classId);
 
-            const { data, error } = await q;
-            if (error) return showPopup && showPopup('Gagal ambil data: ' + error.message, 'error');
+            let itemsQ = supabase.from('subjects_config').select('*').order('class_id').order('display_order');
+            let groupsQ = supabase.from('menu_groups').select('*').order('display_order');
+            if (classId !== 'all') {
+                itemsQ = itemsQ.eq('class_id', classId);
+                groupsQ = groupsQ.eq('class_id', classId);
+            }
 
-            allMenuData = data || [];
+            const [{ data: items }, { data: groups }] = await Promise.all([itemsQ, groupsQ]);
+            allMenuData = (items || []).filter(m => m.menu_group !== 'bottomnav');
+            allMenuGroups = (groups || []).filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav');
+
+            const formClass = document.getElementById('mClassId').value;
+            syncGroupDropdown(formClass);
+            updateGroupPills(allMenuGroups.filter(g => !classId || classId === 'all' || String(g.class_id) === String(classId)));
             renderFilteredList();
         }
 
@@ -880,6 +1162,20 @@
             if (classId !== 'all') data = data.filter(i => String(i.class_id) === classId);
             if (activeGroup !== 'all') data = data.filter(i => i.menu_group === activeGroup);
             renderList(data, classId);
+        }
+
+        function updateGroupPills(groups) {
+            const pillsContainer = document.querySelector('.filter-pills');
+            pillsContainer.innerHTML = '<span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>';
+            groups.sort((a, b) => a.display_order - b.display_order).forEach(g => {
+                const pill = document.createElement('span');
+                pill.className = 'pill';
+                pill.dataset.group = g.group_key;
+                pill.dataset.dynamic = '1';
+                pill.textContent = g.group_label;
+                pill.onclick = function () { filterGroup(this); };
+                pillsContainer.appendChild(pill);
+            });
         }
 
         function renderList(data, classId) {
@@ -892,14 +1188,27 @@
             }
 
             container.innerHTML = '';
-            const ORDER = ['system', 'admin', 'main', 'lessons'];
-            const COLOR = { system: 'var(--accent, #00eaff)', admin: '#ff4757', main: '#ffd700', lessons: '#0be881' };
-            const LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+
+            // Helper: ambil label & color dari allMenuGroups
+            const TYPE_COLOR = { system: 'var(--accent,#00eaff)', admin: '#ff4757', main: '#ffd700', lessons: '#0be881', custom: '#c084fc' };
+            const FALLBACK_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
+            const FALLBACK_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+            function groupMeta(key) {
+                const g = allMenuGroups.find(x => x.group_key === key);
+                return {
+                    label: g?.group_label ?? FALLBACK_LABEL[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    color: g ? (TYPE_COLOR[g.group_type] || '#c084fc') : (TYPE_COLOR[key] || '#aaa'),
+                    order: g?.display_order ?? FALLBACK_ORDER[key] ?? 99
+                };
+            }
+
+            // Urutkan grup berdasarkan display_order di menu_groups
+            const allGroupKeys = [...new Set(data.map(i => i.menu_group))]
+                .sort((a, b) => groupMeta(a).order - groupMeta(b).order);
 
             const shouldGroup = (classId === 'all' && activeGroup === 'all');
 
             if (shouldGroup) {
-                // Group by class dulu
                 const byClass = {};
                 data.forEach(item => {
                     const cid = String(item.class_id);
@@ -908,34 +1217,34 @@
                 });
 
                 for (const [cid, items] of Object.entries(byClass)) {
-                    // Header kelas
                     const className = classNameMap[cid] || `Kelas ID: ${cid}`;
                     appendGroupHeader(container, '#ffd700', `<i class="fa-solid fa-users"></i> ${className}`);
 
-                    // Group by menu_group dalam kelas ini
                     const byGroup = {};
                     items.forEach(item => {
                         if (!byGroup[item.menu_group]) byGroup[item.menu_group] = [];
                         byGroup[item.menu_group].push(item);
                     });
 
-                    ORDER.forEach(group => {
-                        if (!byGroup[group]) return;
-                        appendGroupHeader(container, COLOR[group] || '#aaa', `<i class="fa-solid fa-layer-group"></i> ${LABEL[group] || group}`, true);
-                        byGroup[group].forEach(item => container.appendChild(createItemEl(item)));
-                    });
+                    [...new Set(items.map(i => i.menu_group))]
+                        .sort((a, b) => groupMeta(a).order - groupMeta(b).order)
+                        .forEach(group => {
+                            const { label, color } = groupMeta(group);
+                            appendGroupHeader(container, color, `<i class="fa-solid fa-layer-group"></i> ${label}`, true);
+                            byGroup[group].sort((a, b) => a.display_order - b.display_order).forEach(item => container.appendChild(createItemEl(item)));
+                        });
                 }
             } else {
-                // Group by menu group
                 const byGroup = {};
                 data.forEach(item => {
                     if (!byGroup[item.menu_group]) byGroup[item.menu_group] = [];
                     byGroup[item.menu_group].push(item);
                 });
-                ORDER.forEach(group => {
+                allGroupKeys.forEach(group => {
                     if (!byGroup[group]) return;
-                    appendGroupHeader(container, COLOR[group] || '#aaa', `<i class="fa-solid fa-layer-group"></i> ${LABEL[group] || group}`);
-                    byGroup[group].forEach(item => container.appendChild(createItemEl(item)));
+                    const { label, color } = groupMeta(group);
+                    appendGroupHeader(container, color, `<i class="fa-solid fa-layer-group"></i> ${label}`);
+                    byGroup[group].sort((a, b) => a.display_order - b.display_order).forEach(item => container.appendChild(createItemEl(item)));
                 });
             }
         }
@@ -1089,25 +1398,15 @@
         // ══════════════════════════════════════════════════
         // FORM LOGIC
         // ══════════════════════════════════════════════════
-        function onClassChange() {
-            // Sync filter kanan
-            const val = document.getElementById('mClassId').value;
-            document.getElementById('targetClassId').value = val || 'all';
-            autoCalculateOrder();
-            loadClassMenus();
+        function getResolvedGroup() {
+            return document.getElementById('mGroup').value;
         }
 
-        function onFilterChange() {
-            loadClassMenus();
-            // Sync form kelas
-            const val = document.getElementById('targetClassId').value;
-            if (val !== 'all') document.getElementById('mClassId').value = val;
-        }
 
         async function autoCalculateOrder() {
             const editId = document.getElementById('editId').value;
             const classId = document.getElementById('mClassId').value;
-            const group = document.getElementById('mGroup').value;
+            const group = getResolvedGroup();
             if (editId || !classId || !group) return;
 
             const { data, error } = await supabase.from('subjects_config')
@@ -1148,7 +1447,11 @@
             document.getElementById('mSubjectId').value = item.subject_id;
             document.getElementById('mIcon').value = item.icon;
             document.getElementById('mOrder').value = item.display_order;
+
+            // Sync dropdown grup berdasarkan kelas item ini
+            syncGroupDropdown(item.class_id);
             document.getElementById('mGroup').value = item.menu_group;
+
             document.getElementById('mBadge').value = item.badge || '';
             document.getElementById('mBadgeType').value = item.badge_type || '';
             document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
@@ -1182,12 +1485,15 @@
             const subjectName = document.getElementById('mSubjectName').value.trim();
             const subjectId = document.getElementById('mSubjectId').value.trim();
             const icon = document.getElementById('mIcon').value.trim() || 'fa-book';
-            const menuGroup = document.getElementById('mGroup').value;
+            const menuGroup = getResolvedGroup();
             const badge = document.getElementById('mBadge').value.trim();
             const badgeType = document.getElementById('mBadgeType').value;
 
             if (!classId || !subjectName) {
                 showPopup && showPopup('Kelas dan nama menu wajib diisi!', 'error'); return;
+            }
+            if (!menuGroup) {
+                showPopup && showPopup('Pilih atau buat grup menu terlebih dahulu!', 'error'); return;
             }
 
             let displayOrder = parseInt(document.getElementById('mOrder').value) || 1;
