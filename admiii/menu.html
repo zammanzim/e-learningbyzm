@@ -615,6 +615,24 @@
                     </div>
                 </div>
 
+                <!-- Toggle Locked -->
+                <label onclick="document.getElementById('mLocked').click()" style="display:flex;align-items:center;gap:10px;
+                    margin-top:12px; padding:10px 14px; border-radius:10px; cursor:pointer;
+                    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
+                    transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                    <input type="checkbox" id="mLocked" style="display:none;">
+                    <div id="mLockedToggle" style="width:36px;height:20px;border-radius:10px;
+                        background:#333;border:1.5px solid #444;position:relative;transition:all 0.2s;flex-shrink:0;">
+                        <div id="mLockedDot" style="width:14px;height:14px;border-radius:50%;
+                            background:#666;position:absolute;top:2px;left:2px;transition:all 0.2s;"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:#ddd;">Kunci Menu</div>
+                        <div style="font-size:11px;color:#555;">Item jadi abu-abu & tidak bisa diklik</div>
+                    </div>
+                </label>
+
                 <div style="display:flex; gap:10px; margin-top:14px;">
                     <button id="btnReset" onclick="resetForm()" class="btn-glass-cancel" style="flex:1; display:none;">
                         <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Batal
@@ -708,18 +726,19 @@
                     <span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>
                 </div>
             </div>
+        </div>
 
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
-                <span id="itemCount" style="font-size:11px; color:#555;"></span>
-            </div>
-            <div id="menuListContainer">
-                <div class="empty-state">
-                    <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
-                    <p style="font-size:13px;">Memuat data...</p>
-                </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
+            <span id="itemCount" style="font-size:11px; color:#555;"></span>
+        </div>
+        <div id="menuListContainer">
+            <div class="empty-state">
+                <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
+                <p style="font-size:13px;">Memuat data...</p>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- ── ICON PICKER MODAL ── -->
@@ -857,12 +876,19 @@
                     document.getElementById('targetClassId').value = classId;
                     document.getElementById('mClassId').value = classId;
                     document.getElementById('cgClassId').value = classId;
+                }
+            } catch (e) { }
+
+            await loadClassMenus();
+
+            // Setelah allMenuData terisi, baru load group list
+            try {
+                const classId = document.getElementById('cgClassId').value;
+                if (classId) {
                     syncGroupDropdown(classId);
                     loadGroupList(classId);
                 }
             } catch (e) { }
-
-            loadClassMenus();
 
             // Tutup modal klik di luar
             ['iconPickerModal', 'slugPickerModal'].forEach(id => {
@@ -1024,11 +1050,37 @@
             const { data } = await supabase.from('menu_groups')
                 .select('*').eq('class_id', classId).order('display_order');
 
+            const filtered = (data || []).filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav');
+
             // Update allMenuGroups untuk kelas ini
             allMenuGroups = allMenuGroups.filter(g => String(g.class_id) !== String(classId));
-            if (data?.length) allMenuGroups.push(...data.filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav'));
+            if (filtered.length) allMenuGroups.push(...filtered);
 
-            renderGroupList(data || [], el);
+            // Fallback: kalau menu_groups kosong, generate dari subjects_config
+            let displayGroups = filtered;
+            if (!displayGroups.length) {
+                const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
+                const TYPE_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+                const seen = new Set();
+                displayGroups = allMenuData
+                    .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
+                    .reduce((acc, m) => {
+                        if (seen.has(m.menu_group)) return acc;
+                        seen.add(m.menu_group);
+                        acc.push({
+                            id: null,
+                            class_id: classId,
+                            group_key: m.menu_group,
+                            group_label: TYPE_LABEL[m.menu_group] || m.menu_group.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            group_type: TYPE_ORDER.hasOwnProperty(m.menu_group) ? m.menu_group : 'custom',
+                            display_order: TYPE_ORDER[m.menu_group] ?? 99
+                        });
+                        return acc;
+                    }, [])
+                    .sort((a, b) => a.display_order - b.display_order);
+            }
+
+            renderGroupList(displayGroups, el);
             syncGroupDropdown(document.getElementById('mClassId').value);
         }
 
@@ -1272,13 +1324,15 @@
             div.dataset.order = item.display_order;
 
             const badgeHtml = item.badge
-                ? `<span class="badge-chip ${item.badge_type || ''}">${item.badge}</span>` : '';
+                ? `<span class="badge-chip ${item.badge_type || ''}">` + item.badge + `</span>` : '';
+            const lockedHtml = item.locked
+                ? `<span style="font-size:10px;color:#ff4757;"><i class="fa-solid fa-lock"></i></span>` : '';
 
             div.innerHTML = `
             <i class="fa-solid fa-grip-vertical drag-handle"></i>
             <div class="menu-icon-box"><i class="fa-solid ${item.icon || 'fa-question'}"></i></div>
             <div class="menu-item-info">
-                <h4>${item.subject_name}${badgeHtml}</h4>
+                <h4>${item.subject_name}${badgeHtml}${lockedHtml}</h4>
                 <small>/${item.subject_id} &nbsp;·&nbsp; #${item.display_order}</small>
             </div>
             <div class="menu-item-actions">
@@ -1403,24 +1457,44 @@
         }
 
 
-        async function autoCalculateOrder() {
-            const editId = document.getElementById('editId').value;
-            const classId = document.getElementById('mClassId').value;
-            const group = getResolvedGroup();
-            if (editId || !classId || !group) return;
-
-            const { data, error } = await supabase.from('subjects_config')
-                .select('display_order')
-                .eq('class_id', classId)
-                .eq('menu_group', group)
-                .order('display_order', { ascending: false })
-                .limit(1);
-
-            if (!error) {
-                document.getElementById('mOrder').value = (data && data.length > 0)
-                    ? data[0].display_order + 1 : 1;
+        // ── LOCKED TOGGLE ────────────────────────────────
+        function setLocked(val) {
+            const cb = document.getElementById('mLocked');
+            const track = document.getElementById('mLockedToggle');
+            const dot = document.getElementById('mLockedDot');
+            cb.checked = val;
+            if (val) {
+                track.style.background = '#ff4757';
+                track.style.borderColor = '#ff4757';
+                dot.style.background = '#fff';
+                dot.style.left = '18px';
+            } else {
+                track.style.background = '#333';
+                track.style.borderColor = '#444';
+                dot.style.background = '#666';
+                dot.style.left = '2px';
             }
         }
+        document.getElementById('mLocked').addEventListener('change', function () {
+            setLocked(this.checked);
+        });
+        const editId = document.getElementById('editId').value;
+        const classId = document.getElementById('mClassId').value;
+        const group = getResolvedGroup();
+        if (editId || !classId || !group) return;
+
+        const { data, error } = await supabase.from('subjects_config')
+            .select('display_order')    
+            .eq('class_id', classId)
+            .eq('menu_group', group)
+            .order('display_order', { ascending: false })
+            .limit(1);
+
+        if (!error) {
+            document.getElementById('mOrder').value = (data && data.length > 0)
+                ? data[0].display_order + 1 : 1;
+        }
+        
 
         function autoSlug(val) {
             if (!document.getElementById('editId').value) {
@@ -1454,6 +1528,7 @@
 
             document.getElementById('mBadge').value = item.badge || '';
             document.getElementById('mBadgeType').value = item.badge_type || '';
+            setLocked(!!item.locked);
             document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1473,6 +1548,7 @@
             document.getElementById('mOrder').value = '1';
             document.getElementById('mBadge').value = '';
             document.getElementById('mBadgeType').value = '';
+            setLocked(false);
             document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid fa-book"></i>`;
 
             const filterVal = document.getElementById('targetClassId').value;
@@ -1486,6 +1562,7 @@
             const subjectId = document.getElementById('mSubjectId').value.trim();
             const icon = document.getElementById('mIcon').value.trim() || 'fa-book';
             const menuGroup = getResolvedGroup();
+            const locked = document.getElementById('mLocked').checked;
             const badge = document.getElementById('mBadge').value.trim();
             const badgeType = document.getElementById('mBadgeType').value;
 
@@ -1521,6 +1598,7 @@
                 menu_group: menuGroup,
                 badge,
                 badge_type: badgeType,
+                locked,
             };
 
             const { error } = id

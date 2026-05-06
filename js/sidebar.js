@@ -16,7 +16,7 @@ function getEffectiveClassId() {
             if (override) return override;
         }
         return String(user.class_id);
-    } catch(e) { return null; }
+    } catch (e) { return null; }
 }
 
 function getEffectiveClassName() {
@@ -25,7 +25,7 @@ function getEffectiveClassName() {
         if (override) return override;
         const user = JSON.parse(localStorage.getItem('user'));
         return user?.class_name || `Kelas ${user?.class_id}` || '';
-    } catch(e) { return ''; }
+    } catch (e) { return ''; }
 }
 
 async function switchClass(classId, className) {
@@ -58,8 +58,8 @@ async function renderClassSwitcher() {
     if (!user || user.role !== 'super_admin') return;
 
     const switcher = document.getElementById('classSwitcher');
-    const wrapper  = document.getElementById('classSwitcherWrapper');
-    const label    = document.getElementById('classSwitcherLabel');
+    const wrapper = document.getElementById('classSwitcherWrapper');
+    const label = document.getElementById('classSwitcherLabel');
     if (!switcher || !wrapper) return;
 
     const { data: classes } = await supabase.from('classes').select('id, name').order('id');
@@ -72,14 +72,14 @@ async function renderClassSwitcher() {
     switcher.innerHTML = classes.map(c => `
         <div onclick="switchClass('${c.id}','${c.name}')" style="
             padding:10px 14px; font-size:13px; cursor:pointer;
-            color:${String(c.id)===current?'var(--accent,#00eaff)':'#ddd'};
-            background:${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'};
+            color:${String(c.id) === current ? 'var(--accent,#00eaff)' : '#ddd'};
+            background:${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'};
             display:flex; align-items:center; gap:8px; transition:background 0.15s;"
             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'}'">
-            ${String(c.id)===current
-                ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
-                : '<span style="width:12px;"></span>'}
+            onmouseout="this.style.background='${String(c.id) === current ? 'rgba(0,234,255,0.08)' : 'transparent'}'">
+            ${String(c.id) === current
+            ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
+            : '<span style="width:12px;"></span>'}
             ${c.name}
         </div>`).join('');
 
@@ -97,7 +97,7 @@ function readCache(classId) {
         // Cache format: { groups: [...], items: [...] }
         if (parsed?.groups && parsed?.items) return parsed;
         return null;
-    } catch(e) {
+    } catch (e) {
         localStorage.removeItem(getCacheKey(classId));
         return null;
     }
@@ -106,7 +106,7 @@ function readCache(classId) {
 function writeCache(classId, groups, items) {
     try {
         localStorage.setItem(getCacheKey(classId), JSON.stringify({ groups, items }));
-    } catch(e) { /* storage penuh, skip */ }
+    } catch (e) { /* storage penuh, skip */ }
 }
 
 function isCacheSame(classId, groups, items) {
@@ -140,7 +140,7 @@ async function fetchSidebarData(classId, retries = 0) {
         let resolvedGroups = (!gErr && groups?.length) ? groups : generateGroupsFromItems(items || [], classId);
 
         return { groups: resolvedGroups, items: items || [] };
-    } catch(err) {
+    } catch (err) {
         console.error('[Sidebar] Fetch error:', err);
         if (retries === 0) {
             await new Promise(r => setTimeout(r, 1000));
@@ -164,12 +164,12 @@ function generateGroupsFromItems(items, classId) {
             id: null,
             class_id: classId,
             group_key: item.menu_group,
-            group_label: TYPE_LABEL[item.menu_group] || item.menu_group.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+            group_label: TYPE_LABEL[item.menu_group] || item.menu_group.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
             group_type: type,
             display_order: TYPE_ORDER[item.menu_group] ?? 99
         });
     });
-    return groups.sort((a,b) => a.display_order - b.display_order);
+    return groups.sort((a, b) => a.display_order - b.display_order);
 }
 
 // ── REALTIME ──────────────────────────────────────────────────
@@ -212,11 +212,11 @@ async function renderSidebar() {
     if (!sidebar) return;
 
     let user;
-    try { user = JSON.parse(localStorage.getItem('user')); } catch(e) { return; }
+    try { user = JSON.parse(localStorage.getItem('user')); } catch (e) { return; }
     if (!user) return;
 
     const classId = getEffectiveClassId() || String(user.class_id);
-    const cached  = readCache(classId);
+    const cached = readCache(classId);
 
     if (cached) {
         // Render langsung dari cache (no blink)
@@ -248,19 +248,19 @@ function processAndRenderSidebar(groups, items, user) {
 
     const role = user.role;
     const isInAdmin = window.location.pathname.includes('/admiii/');
-    const rootPrefix  = isInAdmin ? '../' : '';
+    const rootPrefix = isInAdmin ? '../' : '';
     const adminPrefix = isInAdmin ? '' : 'admiii/';
 
     const currentPath = window.location.pathname.toLowerCase();
-    const currentId   = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
+    const currentId = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
 
     // ── Filter grup berdasarkan role ──
     const visibleGroups = groups.filter(g => {
         if (g.group_type === 'bottomnav' || g.group_key === 'bottomnav') return false;
-        switch(g.group_type) {
+        switch (g.group_type) {
             case 'system': return role === 'super_admin';
-            case 'admin':  return role === 'super_admin' || role === 'class_admin';
-            default:       return true; // main, lessons, custom → semua user
+            case 'admin': return role === 'super_admin' || role === 'class_admin';
+            default: return true; // main, lessons, custom → semua user
         }
     });
 
@@ -272,11 +272,11 @@ function processAndRenderSidebar(groups, items, user) {
 
         // ── Warna header per tipe ──
         const COLOR = {
-            system:  'var(--accent, #00eaff)',
-            admin:   '#ffd700',
-            main:    '',
+            system: 'var(--accent, #00eaff)',
+            admin: '#ffd700',
+            main: '',
             lessons: '',
-            custom:  ''
+            custom: ''
         };
         const headerColor = COLOR[group.group_type] || '';
         const headerStyle = headerColor ? `style="color:${headerColor};"` : '';
@@ -286,7 +286,7 @@ function processAndRenderSidebar(groups, items, user) {
         groupItems.forEach(item => {
             // ── Build URL berdasarkan tipe grup ──
             let url;
-            switch(group.group_type) {
+            switch (group.group_type) {
                 case 'system':
                 case 'admin':
                     url = adminPrefix + item.subject_id;
@@ -324,6 +324,18 @@ function processAndRenderSidebar(groups, items, user) {
             const badge = item.badge
                 ? `<span class="sidebar-badge ${item.badge_type || 'badge-new'}">${item.badge}</span>`
                 : '';
+
+            // ── Locked ──
+            if (item.locked) {
+                html += `
+                <li style="opacity:0.35; pointer-events:none; cursor:default;">
+                    <a href="#" onclick="return false;" style="cursor:default;">
+                        <i class="fa-solid fa-lock" style="font-size:11px;"></i>
+                        <span style="text-decoration:line-through;">${item.subject_name}</span>
+                    </a>
+                </li>`;
+                return;
+            }
 
             html += `
             <li class="${isActive}">
