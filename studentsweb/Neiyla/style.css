@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=DynaPuff:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Baloo 2', cursive;
+  line-height: 1.7;
+  color: #1e3a8a;
+  background-color: #eff6ff;
+  background-image: 
+    linear-gradient(rgba(191, 219, 254, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(191, 219, 254, 0.3) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+header {
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  padding: 1.4rem 0;
+  text-align: center;
+  border-radius: 0 0 35px 35px;
+  box-shadow: 0 4px 12px rgba(147, 197, 253, 0.5);
+  border-bottom: 3px solid #93c5fd;
+}
+
+header h1 {
+  font-family: 'DynaPuff', cursive;
+  font-size: 30px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0 16px;
+}
+
+nav a {
+  color: #1d4ed8;
+  text-decoration: none;
+  margin: 0 7px;
+  font-weight: 600;
+  font-size: 17px;
+  padding: 8px 20px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #93c5fd;
+  transition: 0.25s;
+  display: inline-block;
+}
+
+nav a:hover {
+  background: white;
+  color: #1e40af;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(147, 197, 253, 0.4);
+}
+
+section {
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 26px;
+  background: #ffffff;
+  border-radius: 28px;
+  border: 3px solid #bfdbfe;
+  box-shadow: 0 6px 20px rgba(147, 197, 253, 0.35);
+}
+
+section h2 {
+  font-family: 'DynaPuff', cursive;
+  font-size: 28px;
+  color: #2563eb;
+  margin-bottom: 18px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.profil {
+  text-align: center;
+}
+
+.profil img {
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 24px auto;
+  border: 8px solid white;
+  box-shadow: 0 0 0 4px #93c5fd, 0 6px 15px rgba(59, 130, 246, 0.25);
+  transition: 0.3s;
+}
+
+.profil img:hover {
+  transform: scale(1.05);
+}
+
+.profil p {
+  max-width: 440px;
+  margin: 0 auto 14px auto;
+  padding: 14px 18px;
+  background: #eff6ff;
+  border: 2px solid #bfdbfe;
+  border-radius: 20px;
+  text-align: left;
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 17px;
+  box-shadow: inset 0 2px 4px rgba(191, 219, 254, 0.3);
+}
+
+.galeri {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.galeri img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 5px solid white;
+  box-shadow: 0 0 0 3px #bfdbfe, 0 4px 12px rgba(147, 197, 253, 0.3);
+  transition: 0.3s;
+}
+
+.galeri img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px #93c5fd, 0 8px 18px rgba(147, 197, 253, 0.4);
+}
+
+/* FORM KONTAK UDAH RAPI + GA GEDE */
+form {
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+form label {
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+form input, 
+form textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  border: 2px solid #bfdbfe;
+  border-radius: 16px;
+  font-family: 'Baloo 2', cursive;
+  background: #f8fbff;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: inset 0 2px 5px rgba(191, 219, 254, 0.25);
+  box-sizing: border-box;
+}
+
+form input:focus,
+form textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.4);
+}
+
+form textarea {
+  height: 100px;
+  resize: none;
+}
+
+form button {
+  background: linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%);
+  color: white;
+  padding: 11px 28px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Baloo 2', cursive;
+  display: block;
+  margin: 8px auto 0 auto;
+  transition: 0.3s;
+  box-shadow: 0 5px 12px rgba(96, 165, 250, 0.4);
+}
+
+form button:hover {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(59, 130, 246, 0.45);
+}
+
+@media (max-width: 600px) {
+  header h1 { font-size: 26px; }
+  section h2 { font-size: 24px; }
+  nav a { margin: 4px; font-size: 16px; padding: 7px 16px; }
+  section { margin: 16px; padding: 22px; }
+  .galeri img { width: 46%; height: 140px; }
+  .profil img { width: 130px; height: 130px; }
+  form { max-width: 100%; }
+}

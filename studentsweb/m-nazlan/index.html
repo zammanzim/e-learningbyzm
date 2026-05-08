@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nazlan X-RPL2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a1a, #2c3e50);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease-out;
+}
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #34495e;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    margin-bottom: 20px;
+}
+.loader-text {
+    color: #ecf0f1;
+    font-size: 1.2rem;
+    font-weight: bold;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+</style>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Nazlan X-RPL2</div>
+            <ul>
+               <li><a href="index.html">🏠</a></li>
+                <li><a href="profil.html">👤</a></li>
+                <li><a href="galeri.html">📸</a></li>
+                <li><a href="diri.html" class="active">✨</a></li>
+                <li><a href="kontak.html">✉️</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-bg">
+                <img src="gambar/foto1.jpg" alt="Background">
+            </div>
+            <div class="hero-content">
+                <h1 style="font-size:3.5rem; color:#3498db; margin-bottom:20px;">
+    🏠 Ini Website Saya
+</h1>
+                <p class="subtitle">Website sederhana buatan Nazlan X-RPL2 untuk tugas DASPROGRPL 1</p>
+                <div class="hero-buttons">
+    <a href="profil.html" class="cta primary">👤 Profil</a>
+    <a href="galeri.html" class="cta secondary">📸 Galeri</a>
+    <li><a href="diri.html" class="active">✨</a></li>
+    <a href="kontak.html" class="cta accent">✉️ Kontak</a>
+</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2 FOTO TAMBAHAN -->
+        <section class="home-gallery">
+            <div class="container">
+                <h2 style="text-align:center; color:#3498db; margin-bottom:40px;">Preview Galeri</h2>
+                <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+                    <div class="home-photo">
+                        <img src="issei.jpg" alt="Preview 1">
+                        <p>Issei Hyudo</p>
+                    </div>
+                    <div class="home-photo">
+                        <img src="sasuke.jpg" alt="Preview 2">
+                        <p>Uchihs Sasuke</p>
+                    </div>
+                       <div class="home-photo">
+                        <img src="leon.jpg" alt="Preview 2">
+                        <p>Leon S. Kenedy</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section class="features">
+            <div class="container">
+                <h2>Tentang Website Ini</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏠</div>
+                        <h3>Website Pribadi</h3>
+                        <p>Tempat saya perkenalkan diri ke teman dan guru</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📸</div>
+                        <h3>Galeri Foto</h3>
+                        <p>Menampilkan aktivitas sehari-hari saya</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">✉️</div>
+                        <h3>Hubungi Saya</h3>
+                        <p>Ada pertanyaan? Isi form kontak!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUOTE -->
+        <section class="quote">
+            <div class="container">
+                <blockquote>
+                    <p>"Website sederhana, cerita lengkap tentang saya"</p>
+                    <span>- Nazlan X-RPL2</span>
+                </blockquote>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Nazlan X-RPL2 </p>
+    </footer>
+    <div class="loading-screen" id="loadingScreen">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<script>
+window.addEventListener('load', function() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    loadingScreen.style.opacity = '0';
+    setTimeout(() => loadingScreen.style.display = 'none', 800);
+});
+</script>
+</body>
+</html> 

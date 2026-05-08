@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fachri — Galeri</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="orb-right"></div>
+
+    <nav>
+        <div class="nav-logo"></div>
+        <ul class="nav-links">
+            <li><a href="index2.html">Home</a></li>
+            <li><a href="profil2.html">Profil</a></li>
+            <li><a href="galeri2.html" class="active">Galeri</a></li>
+            <li><a href="kontak2.html">Kontak</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <div class="page-header-eyebrow">✦ Koleksi Foto</div>
+        <h1>Galeri <em>Foto</em></h1>
+        <p>Momen yang saya abadikan</p>
+    </div>
+
+    <div class="gallery-wrap">
+        <div class="gallery-grid">
+
+            <div class="gallery-item featured" onclick="openLightbox(this)">
+                <img src="img/foto1.jpg" class="gallery-img" alt="Foto 1">
+                <div class="gallery-overlay">
+                    <h3>Foto 1</h3>
+                    <p>Keterangan foto</p>
+                </div>
+            </div>
+
+            <div class="gallery-item" onclick="openLightbox(this)">
+                <img src="img/foto2.jpg" class="gallery-img" alt="Foto 2">
+                <div class="gallery-overlay">
+                    <h3>Foto 2</h3>
+                    <p>Keterangan foto</p>
+                </div>
+            </div>
+
+            <div class="gallery-item" onclick="openLightbox(this)">
+                <img src="img/foto3.jpg" class="gallery-img" alt="Foto 3">
+                <div class="gallery-overlay">
+                    <h3>Foto 3</h3>
+                    <p>Keterangan foto</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-inner" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+            <div id="lightbox-content"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 M.Fachri Syahreza</p>
+        <div class="footer-links">
+            <a href="index2.html">Home</a>
+            <a href="profil2.html">Profil</a>
+            <a href="galeri2.html">Galeri</a>
+            <a href="kontak2.html">Kontak</a>
+        </div>
+    </footer>
+
+    <script>
+        function openLightbox(el) {
+            const img = el.querySelector('img').cloneNode(true);
+            img.style.cssText = 'position:static;width:auto;height:auto;max-width:92vw;max-height:84vh;object-fit:contain;border-radius:12px;';
+            document.getElementById('lightbox-content').innerHTML = '';
+            document.getElementById('lightbox-content').appendChild(img);
+            document.getElementById('lightbox').classList.add('open');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('open');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    </script>
+</body>
+
+</html>

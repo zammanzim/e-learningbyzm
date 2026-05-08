@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saya - Nazlan X-RPL2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Nazlan X-RPL2</div>
+            <ul>
+                <li><a href="index.html">🏠</a></li>
+                <li><a href="profil.html">👤</a></li>
+                <li><a href="galeri.html">📸</a></li>
+                <li><a href="diri.html" class="active">✨</a></li>
+                <li><a href="kontak.html">✉️</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div style="text-align:center; margin:80px 0 60px 0;">
+            <h1 style="font-size:4rem; color:#3498db; margin-bottom:20px;">✨ Tentang Saya</h1>
+            <div class="quick-links">
+                <a href="index.html" class="cta" style="background:#3498db;">🏠 Beranda</a>
+                <a href="galeri.html" class="cta" style="background:#27ae60;">📸 Galeri</a>
+                <a href="kontak.html" class="cta" style="background:#9b59b6;">✉️ Kontak</a>
+            </div>
+        </div>
+
+        <div class="story-grid">
+            <!-- Masa Kecil -->
+            <div class="story-card">
+                <div style="font-size:5rem; margin-bottom:20px;">👶</div>
+                <h2>Masa Kecil</h2>
+                <p>Dari SD saya sering main pc di warnet, kemudian saya ketagihan hingga sekarang"</p>
+            </div>
+
+            <!-- Masuk RPL -->
+            <div class="story-card">
+                <div style="font-size:5rem; margin-bottom:20px;">🚪</div>
+                <h2>Masuk RPL</h2>
+                <p>Kelas 10 pilih RPL karena suka komputer. Hari pertama kaget, tapi saya menikmatinya, karena itu pilihan saya</p>
+            </div>
+
+            <!-- Belajar Coding -->
+            <div class="story-card">
+                <div style="font-size:5rem; margin-bottom:20px;">💻</div>
+                <h2>Belajar Coding</h2>
+                <p>HTML susah di awal, CSS bikin pusing, tapi JS? WAH! Sekarang udah bisa bikin website kayak gini 😎</p>
+            </div>
+
+            <!-- Tugas Ini -->
+            <div class="story-card">
+                <div style="font-size:5rem; margin-bottom:20px;">🏆</div>
+                <h2>Coba - Coba Dulu</h2>
+                <p>Awalnya saya coba coba, eh kok ketagihan (wkwk 😅)</p>
+            </div>
+
+            <!-- Masa Depan -->
+            <div class="story-card">
+                <div style="font-size:5rem; margin-bottom:20px;">🌟</div>
+                <h2>Masa Depan</h2>
+                <p>Mau jadi Bos Muda kaya Raya. Doain ya! AMIIN 🙏</p>
+            </div>
+        </div>
+
+        <!-- TIMELINE -->
+        <div style="margin:60px 0;">
+              <!-- TIMELINE 3 GAME: ML, eFootball, CS2 -->
+        <div class="timeline-section">
+            <h2>Game Journey Timeline</h2>
+            <div class="timeline">
+                <!-- MOBILE LEGENDS -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2023 - Mythic Honor </div>
+                    <div class="timeline-game">
+                        <img src="ml.jpg" alt="MLBB" class="game-logo" style="filter: brightness(1.2);">
+                        Mobile Legends
+                    </div>
+                    <div class="timeline-desc">
+                        Mobile - Marksman Pro (Brody/Granger). Solo Mythic Honor. 33 Stars. WR 65%.
+                    </div>
+                </div>
+
+                <!-- eFOOTBALL -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2023-2024 - Division 3</div>
+                    <div class="timeline-game">
+                        <img src="cutdol.jpg" alt="eFootball" class="game-logo">
+                        eFootball 2026
+                    </div>
+                    <div class="timeline-desc">
+                        Mobile/PC - Biasa main menggunakan strategi counter attack. Online ranked Division 3.
+                    </div>
+                </div>
+
+                <!-- COUNTER STRIKE 2 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2024 - Silver Elite</div>
+                    <div class="timeline-game">
+                        <img src="cs.jpg" alt="CS2" class="game-logo" style="filter: brightness(1.1);">
+                        Counter-Strike 2
+                    </div>
+                    <div class="timeline-desc">
+                        PC - AWPer (AWP + Deagle). Silver Elite Master. 1.3 K/D ratio.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+         
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Nazlan X-RPL2 | Cerita dari hati</p>
+    </footer>
+
+    <style>
+    .story-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin: 60px 0;
+    }
+    .story-card {
+        background: #2c3e50;
+        padding: 40px 30px;
+        border-radius: 25px;
+        text-align: center;
+        border: 1px solid #34495e;
+        transition: all 0.3s;
+    }
+    .story-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(52, 152, 219, 0.2);
+        border-color: #3498db;
+    }
+    .story-card h2 {
+        color: #3498db;
+        margin: 20px 0 15px 0;
+        font-size: 1.8rem;
+    }
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: #34495e;
+        padding: 25px;
+        border-radius: 15px;
+        border-left: 5px solid #3498db;
+    }
+    .timeline-icon {
+        background: #3498db;
+        color: #1a1a1a;
+        padding: 10px 15px;
+        border-radius: 50%;
+        font-weight: bold;
+        min-width: 50px;
+        text-align: center;
+    }
+    /* TIMELINE GAMING - 3 GAME SAJA */
+        .timeline-section{margin-top:5rem;}
+        .timeline-section h2{color:#00d4ff;font-size:2.5rem;margin-bottom:3rem;text-align:center;text-shadow:0 0 20px rgba(0,212,255,0.5);}
+        .timeline{position:relative;max-width:900px;margin:0 auto;}
+        .timeline::before{content:'';position:absolute;top:0;left:50%;width:5px;height:100%;background:linear-gradient(to bottom,#00d4ff,#0099cc);transform:translateX(-50%);box-shadow:0 0 20px rgba(0,212,255,0.4);}
+        .timeline-item{position:relative;margin:4rem 0;padding:2.5rem;background:linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05));border-radius:20px;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(15px);box-shadow:0 15px 40px rgba(0,0,0,0.4);transition:all 0.4s;}
+        .timeline-item:nth-child(odd){margin-left:0;transform:translateX(-30px);}
+        .timeline-item:nth-child(even){margin-right:0;transform:translateX(30px);}
+        .timeline-item:hover{transform:translateY(-10px) scale(1.02)!important;box-shadow:0 25px 60px rgba(0,212,255,0.4);}
+        .timeline-item::before{content:'';position:absolute;top:35px;width:25px;height:25px;border-radius:50%;background:linear-gradient(45deg,#00d4ff,#fff);left:50%;transform:translateX(-50%);box-shadow:0 0 25px rgba(0,212,255,0.8);z-index:1;}
+        .timeline-date{font-size:1.2rem;color:#00d4ff;font-weight:bold;margin-bottom:0.8rem;text-shadow:0 0 10px rgba(0,212,255,0.3);}
+        .timeline-game{display:flex;align-items:center;gap:1rem;font-size:2.2rem;color:#fff;margin-bottom:1rem;font-weight:900;text-shadow:0 0 15px rgba(255,255,255,0.5);}
+        .game-logo{width:65px;height:65px;border-radius:15px;box-shadow:0 0 25px rgba(0,212,255,0.5);image-rendering:-webkit-optimize-contrast;}
+        .timeline-desc{font-size:1.1rem;line-height:1.7;padding:1rem 0;border-left:3px solid rgba(0,212,255,0.3);margin-left:1rem;padding-left:2rem;}
+        footer{background:rgba(0,0,0,0.95);text-align:center;padding:2.5rem;margin-top:5rem;border-top:2px solid rgba(0,212,255,0.3);box-shadow:0 -10px 30px rgba(0,0,0,0.5);}
+        @media(max-width:768px){.profil-container{grid-template-columns:1fr;gap:2rem;text-align:center;}.info-grid{grid-template-columns:1fr;}.timeline::before{left:40px;}.timeline-item{margin-left:70px;transform:none;}.timeline-item::before{left:35px;}.timeline-game{font-size:1.8rem;}.game-logo{width:55px;height:55px;}}
+    </style>
+</head>
+    </style>
+</body>
+</html>
