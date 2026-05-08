@@ -404,8 +404,12 @@
     // Parse raw sidebar cache, filter bottomnav, update nav kalau berubah
     function applyFromRaw(raw) {
         try {
-            const all = JSON.parse(raw);
-            if (!Array.isArray(all)) return;
+            const parsed = JSON.parse(raw);
+
+            // Support format baru { groups, items } maupun format lama (array langsung)
+            const all = Array.isArray(parsed) ? parsed : (parsed?.items || []);
+            if (!all.length) return;
+
             const bnRows = all
                 .filter(r => r.menu_group === 'bottomnav')
                 .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));

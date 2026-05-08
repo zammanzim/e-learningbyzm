@@ -726,7 +726,6 @@
                     <span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>
                 </div>
             </div>
-        </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
             <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
@@ -1478,23 +1477,25 @@
         document.getElementById('mLocked').addEventListener('change', function () {
             setLocked(this.checked);
         });
-        const editId = document.getElementById('editId').value;
-        const classId = document.getElementById('mClassId').value;
-        const group = getResolvedGroup();
-        if (editId || !classId || !group) return;
 
-        const { data, error } = await supabase.from('subjects_config')
-            .select('display_order')    
-            .eq('class_id', classId)
-            .eq('menu_group', group)
-            .order('display_order', { ascending: false })
-            .limit(1);
+        async function autoCalculateOrder() {
+            const editId = document.getElementById('editId').value;
+            const classId = document.getElementById('mClassId').value;
+            const group = getResolvedGroup();
+            if (editId || !classId || !group) return;
 
-        if (!error) {
-            document.getElementById('mOrder').value = (data && data.length > 0)
-                ? data[0].display_order + 1 : 1;
+            const { data, error } = await supabase.from('subjects_config')
+                .select('display_order')
+                .eq('class_id', classId)
+                .eq('menu_group', group)
+                .order('display_order', { ascending: false })
+                .limit(1);
+
+            if (!error) {
+                document.getElementById('mOrder').value = (data && data.length > 0)
+                    ? data[0].display_order + 1 : 1;
+            }
         }
-        
 
         function autoSlug(val) {
             if (!document.getElementById('editId').value) {
@@ -1531,7 +1532,6 @@
             setLocked(!!item.locked);
             document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetForm() {

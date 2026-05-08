@@ -1,0 +1,6 @@
+<?php
+echo "Halo, nama saya nabila yulaikar<br>";
+echo "Saya berumur 16 tahun<br>";
+echo "Saya seorang pelajar di SMK Taruna Harapan 1 Cipatat<br>";
+echo "Hobi saya membaca";
+?>
