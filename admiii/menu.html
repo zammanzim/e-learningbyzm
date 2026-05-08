@@ -231,6 +231,23 @@
             color: #ff4757;
         }
 
+        .btn-act.btn-lock-toggle {
+            color: #555;
+        }
+
+        .btn-act.btn-lock-toggle:hover {
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .btn-act.btn-lock-toggle.locked {
+            color: #ff4757;
+        }
+
+        .btn-act.btn-lock-toggle.locked:hover {
+            background: rgba(255, 71, 87, 0.12);
+        }
+
         .order-badge {
             font-size: 10px;
             font-weight: 700;
@@ -615,24 +632,6 @@
                     </div>
                 </div>
 
-                <!-- Toggle Locked -->
-                <label onclick="document.getElementById('mLocked').click()" style="display:flex;align-items:center;gap:10px;
-                    margin-top:12px; padding:10px 14px; border-radius:10px; cursor:pointer;
-                    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
-                    transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'"
-                    onmouseout="this.style.background='rgba(255,255,255,0.03)'">
-                    <input type="checkbox" id="mLocked" style="display:none;">
-                    <div id="mLockedToggle" style="width:36px;height:20px;border-radius:10px;
-                        background:#333;border:1.5px solid #444;position:relative;transition:all 0.2s;flex-shrink:0;">
-                        <div id="mLockedDot" style="width:14px;height:14px;border-radius:50%;
-                            background:#666;position:absolute;top:2px;left:2px;transition:all 0.2s;"></div>
-                    </div>
-                    <div>
-                        <div style="font-size:13px;font-weight:600;color:#ddd;">Kunci Menu</div>
-                        <div style="font-size:11px;color:#555;">Item jadi abu-abu & tidak bisa diklik</div>
-                    </div>
-                </label>
-
                 <div style="display:flex; gap:10px; margin-top:14px;">
                     <button id="btnReset" onclick="resetForm()" class="btn-glass-cancel" style="flex:1; display:none;">
                         <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Batal
@@ -727,17 +726,17 @@
                 </div>
             </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
-            <span id="itemCount" style="font-size:11px; color:#555;"></span>
-        </div>
-        <div id="menuListContainer">
-            <div class="empty-state">
-                <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
-                <p style="font-size:13px;">Memuat data...</p>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
+                <span id="itemCount" style="font-size:11px; color:#555;"></span>
+            </div>
+            <div id="menuListContainer">
+                <div class="empty-state">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
+                    <p style="font-size:13px;">Memuat data...</p>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- ── ICON PICKER MODAL ── -->
@@ -1324,22 +1323,42 @@
 
             const badgeHtml = item.badge
                 ? `<span class="badge-chip ${item.badge_type || ''}">` + item.badge + `</span>` : '';
-            const lockedHtml = item.locked
-                ? `<span style="font-size:10px;color:#ff4757;"><i class="fa-solid fa-lock"></i></span>` : '';
+
+            const isLocked = !!item.locked;
 
             div.innerHTML = `
             <i class="fa-solid fa-grip-vertical drag-handle"></i>
             <div class="menu-icon-box"><i class="fa-solid ${item.icon || 'fa-question'}"></i></div>
-            <div class="menu-item-info">
-                <h4>${item.subject_name}${badgeHtml}${lockedHtml}</h4>
+            <div class="menu-item-info" style="opacity:${isLocked ? '0.45' : '1'}">
+                <h4>${item.subject_name}${badgeHtml}</h4>
                 <small>/${item.subject_id} &nbsp;·&nbsp; #${item.display_order}</small>
             </div>
             <div class="menu-item-actions">
+                <button class="btn-act btn-lock-toggle${isLocked ? ' locked' : ''}" title="${isLocked ? 'Buka Kunci' : 'Kunci'}" id="lock-${item.id}">
+                    <i class="fa-solid ${isLocked ? 'fa-lock' : 'fa-lock-open'}"></i>
+                </button>
                 <button class="btn-act" title="Edit" id="edit-${item.id}"><i class="fa-solid fa-pen"></i></button>
                 <button class="btn-act del" title="Hapus" onclick="deleteMenu(${item.id})"><i class="fa-solid fa-trash"></i></button>
             </div>`;
 
             div.querySelector(`#edit-${item.id}`).onclick = () => triggerEdit(item);
+
+            // Quick lock toggle
+            div.querySelector(`#lock-${item.id}`).onclick = async () => {
+                const newLocked = !item.locked;
+                const { error } = await supabase.from('subjects_config')
+                    .update({ locked: newLocked })
+                    .eq('id', item.id);
+                if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+                item.locked = newLocked;
+                const btn = div.querySelector(`#lock-${item.id}`);
+                const info = div.querySelector('.menu-item-info');
+                btn.classList.toggle('locked', newLocked);
+                btn.title = newLocked ? 'Buka Kunci' : 'Kunci';
+                btn.querySelector('i').className = `fa-solid ${newLocked ? 'fa-lock' : 'fa-lock-open'}`;
+                info.style.opacity = newLocked ? '0.45' : '1';
+                showToast(newLocked ? `"${item.subject_name}" dikunci 🔒` : `"${item.subject_name}" dibuka 🔓`);
+            };
 
             // Drag & Drop events
             div.addEventListener('dragstart', onDragStart);
