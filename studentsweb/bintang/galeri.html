@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Galeri Website</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    overflow-x:hidden;
+    color:white;
+
+    background:
+    linear-gradient(
+    135deg,
+    #1e1e2f,
+    #2b1055,
+    #7597de
+    );
+
+    position:relative;
+}
+
+/* =========================
+   MENU GARIS 3
+========================= */
+
+#menu-toggle{
+    display:none;
+}
+
+.hamburger{
+    position:fixed;
+    top:20px;
+    left:20px;
+    z-index:1000;
+    cursor:pointer;
+}
+
+.hamburger span{
+    display:block;
+    width:32px;
+    height:4px;
+    margin:6px;
+    border-radius:5px;
+    background:white;
+    transition:0.3s;
+}
+
+/* =========================
+   SIDEBAR MENU
+========================= */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:-250px;
+
+    width:220px;
+    height:100%;
+
+    background:
+    rgba(0,0,0,0.4);
+
+    backdrop-filter:blur(10px);
+
+    padding-top:80px;
+
+    transition:0.4s;
+
+    z-index:999;
+}
+
+.sidebar a{
+    display:block;
+
+    padding:16px 25px;
+
+    text-decoration:none;
+
+    color:white;
+
+    font-size:18px;
+
+    transition:0.3s;
+}
+
+.sidebar a:hover{
+    background:
+    rgba(255,255,255,0.2);
+}
+
+#menu-toggle:checked ~ .sidebar{
+    left:0;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container{
+    width:90%;
+    max-width:1100px;
+
+    margin:50px auto;
+
+    padding:40px;
+
+    border-radius:25px;
+
+    text-align:center;
+
+    background:
+    rgba(255,255,255,0.1);
+
+    backdrop-filter:blur(10px);
+
+    box-shadow:
+    0 0 25px rgba(0,0,0,0.3);
+
+    position:relative;
+
+    z-index:2;
+}
+
+.container h1{
+    font-size:42px;
+    margin-bottom:20px;
+}
+
+/* =========================
+   GALERI FOTO
+========================= */
+
+.gallery{
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:20px;
+}
+
+.gallery img{
+    width:100%;
+    height:220px;
+
+    object-fit:cover;
+
+    border-radius:18px;
+
+    border:3px solid white;
+
+    transition:0.3s;
+}
+
+.gallery img:hover{
+    transform:scale(1.05);
+
+    box-shadow:
+    0 0 15px rgba(255,255,255,0.5);
+}
+
+/* =========================
+   ANIMASI BUBBLE
+========================= */
+
+.bubbles{
+    position:fixed;
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    z-index:1;
+}
+
+.bubbles span{
+    position:absolute;
+
+    bottom:-120px;
+
+    border-radius:50%;
+
+    background:
+    rgba(255,255,255,0.2);
+
+    animation:bubble 15s linear infinite;
+}
+
+.bubbles span:nth-child(1){
+    left:10%;
+    width:40px;
+    height:40px;
+    animation-duration:10s;
+}
+
+.bubbles span:nth-child(2){
+    left:25%;
+    width:60px;
+    height:60px;
+    animation-duration:14s;
+}
+
+.bubbles span:nth-child(3){
+    left:45%;
+    width:30px;
+    height:30px;
+    animation-duration:8s;
+}
+
+.bubbles span:nth-child(4){
+    left:65%;
+    width:70px;
+    height:70px;
+    animation-duration:16s;
+}
+
+.bubbles span:nth-child(5){
+    left:85%;
+    width:50px;
+    height:50px;
+    animation-duration:12s;
+}
+
+@keyframes bubble{
+
+0%{
+    transform:translateY(0);
+    opacity:0;
+}
+
+20%{
+    opacity:1;
+}
+
+100%{
+    transform:
+    translateY(-1200px)
+    scale(1.5);
+
+    opacity:0;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<!-- MENU GARIS 3 -->
+<input type="checkbox"
+id="menu-toggle">
+
+<label for="menu-toggle"
+class="hamburger">
+
+<span></span>
+<span></span>
+<span></span>
+
+</label>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<a href="index.html">
+👤 Profil
+</a>
+
+<a href="galeri.html" class="active">
+📸 Galeri
+</a>
+
+<a href="kontak.html">
+📞 Kontak
+</a>
+
+<a href="biodata.html">
+📝 Biodata
+</a>
+
+</div>
+
+<!-- ANIMASI -->
+<div class="bubbles">
+
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+<h1>Galeri Saya</h1>
+
+<div class="gallery">
+
+<img src="ChatGPT Image 5 Mei 2026, 18.55.45.png">
+
+<img src="IMG-20251224-WA0003.jpg">
+
+<img src="IMG-20260414-WA0010.jpg">
+
+<img src="IMG-20260423-WA0056.jpg">
+
+<img src="IMG1723923381086829543.jpg">
+
+<img src="IMG-20260423-WA0022.jpg">
+
+</div>
+
+</div>
+
+</body>
+</html>

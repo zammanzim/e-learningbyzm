@@ -3,216 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Saya</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .profile-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .profile-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .profile-image {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid #fff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .profile-image:hover {
-            transform: scale(1.05);
-        }
-
-        .profile-name {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .profile-title {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 30px;
-            font-weight: 400;
-        }
-
-        .contact-info {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .contact-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #f8f9ff, #e8ecff);
-            border-radius: 12px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .contact-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-            color: #667eea;
-        }
-
-        .contact-icon {
-            width: 22px;
-            height: 22px;
-            color: #667eea;
-            font-size: 1.1em;
-        }
-
-        .contact-text {
-            text-align: left;
-        }
-
-        .contact-label {
-            font-size: 0.85em;
-            color: #888;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-
-        .contact-value {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .social-link {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            font-size: 1.2em;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .social-link:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
-        }
-
-        @media (max-width: 480px) {
-            .profile-container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-            
-            .profile-name {
-                font-size: 1.8em;
-            }
-            
-            .profile-image {
-                width: 120px;
-                height: 120px;
-            }
-        }
-    </style>
+    <title>Profil - Web Sederhana</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="profile-container">
-        <img src="safa.jpg" 
-             alt="Foto Profil" class="profile-image">
-        
-        <h1 class="profile-name">Nakisa Safa Hamida</h1>
-        <p class="profile-title"></p>
-        
-        <div class="contact-info">
-            <a href="https://maps.google.com/?q=Jl.+Merpati+No.123,+Jakarta+Selatan" 
-               target="_blank" class="contact-item">
-                <i class="fas fa-map-marker-alt contact-icon"></i>
-                <div class="contact-text">
-                    <div class="contact-label">Alamat</div>
-                    <div class="contact-value">Kp.Sindang Hurip RT/02 RW/10<br>Indonesia</div>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">WebSederhana</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Beranda</a></li>
+                <li><a href="profil.html">Profil</a></li>
+                <li><a href="galeri.html">Galeri</a></li>
+                <li><a href="kontak.html">Kontak</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section>
+            <h2>Profil Saya</h2>
+            <div class="profil-container">
+                <div class="profil-foto">
+                    <img src="safa.jpg" alt="Foto Profil" id="profilImg">
                 </div>
-            </a>
-            
-            <a href="tel:+6281234567890" class="contact-item">
-                <i class="fas fa-phone contact-icon"></i>
-                <div class="contact-text">
-                    <div class="contact-label">Telepon</div>
-                    <div class="contact-value">083822732249</div>
+                <div class="profil-info">
+                    <h3>Nakisa Safa Hamida</h3>
+                    <p><strong>Pelajar</strong></p>
+               <p>saya adalah seorang pelajar yang sedang belajar membuat website</p>
+                    <p><strong>Umur:</strong> 16 tahun</p>
+                    <p><strong>Email:</strong> nakisasafahamida@email.com</p>
+                    <p><strong>Telepon:</strong> 083822732249</p>
+                    <p><strong>Lokasi:</strong> Bandung Barat, Indonesia</p>
                 </div>
-            </a>
-            
-            <a href="mailto:ahmad.rizky@email.com" class="contact-item">
-                <i class="fas fa-envelope contact-icon"></i>
-                <div class="contact-text">
-                    <div class="contact-label">Email</div>
-                    <div class="contact-value">nakisasafahamida@email.com</div>
-                </div>
-            </a>
-        </div>
-        
-      
-        </div>
-    </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Web Sederhana. All rights reserved.</p>
+    </footer>
 </body>
 </html>

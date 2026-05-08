@@ -1,0 +1,90 @@
+/* Import font lucu dari Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Pacifico&display=swap');
+
+body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: #f3e8ff; /* lilac soft */
+    margin: 0;
+    padding: 0;
+    color: #4b3f72;
+}
+
+/* HEADER */
+header {
+    background-color: #c8a2ff; /* lilac utama */
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-family: 'Pacifico', cursive; /* font lucu */
+    margin: 0;
+}
+
+/* NAVIGATION */
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    color: white;
+    margin: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+/* Hover lucu */
+nav a:hover {
+    background-color: #e6ccff;
+    color: #6a4c93;
+}
+
+/* MAIN CONTENT */
+main {
+    padding: 20px;
+}
+
+/* CARD STYLE BIAR LEBIH MODERN */
+main {
+    background-color: #ffffff;
+    margin: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* IMAGE */
+img {
+    margin: 10px;
+    border-radius: 15px;
+    border: 3px solid #e6ccff;
+}
+
+/* FORM */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #d8b4ff;
+    border-radius: 10px;
+    margin-top: 5px;
+    font-family: 'Quicksand', sans-serif;
+}
+
+button {
+    background-color: #c8a2ff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+/* Hover tombol */
+button:hover {
+    background-color: #a678ff;
+}
