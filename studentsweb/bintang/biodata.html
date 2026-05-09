@@ -1,383 +1,378 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Profil Biodata</title>
+    <title>Profil Biodata</title>
 
-<style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,sans-serif;
-}
+        body {
+            min-height: 100vh;
 
-body{
-    min-height:100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
+            overflow: hidden;
 
-    overflow:hidden;
+            position: relative;
 
-    position:relative;
+            color: white;
 
-    color:white;
+            background:
+                linear-gradient(135deg,
+                    #1e1e2f,
+                    #2b1055,
+                    #7597de);
+        }
 
-    background:
-    linear-gradient(
-    135deg,
-    #1e1e2f,
-    #2b1055,
-    #7597de
-    );
-}
-
-/* =========================
+        /* =========================
    MENU GARIS 3
 ========================= */
 
-#menu-toggle{
-    display:none;
-}
+        #menu-toggle {
+            display: none;
+        }
 
-.hamburger{
-    position:fixed;
+        .hamburger {
+            position: fixed;
 
-    top:20px;
-    left:20px;
+            top: 20px;
+            left: 20px;
 
-    z-index:1000;
+            z-index: 1000;
 
-    cursor:pointer;
-}
+            cursor: pointer;
+        }
 
-.hamburger span{
-    display:block;
+        .hamburger span {
+            display: block;
 
-    width:32px;
-    height:4px;
+            width: 32px;
+            height: 4px;
 
-    margin:6px;
+            margin: 6px;
 
-    border-radius:5px;
+            border-radius: 5px;
 
-    background:white;
-}
+            background: white;
+        }
 
-/* SIDEBAR */
+        /* SIDEBAR */
 
-.sidebar{
-    position:fixed;
+        .sidebar {
+            position: fixed;
 
-    top:0;
-    left:-250px;
+            top: 0;
+            left: -250px;
 
-    width:220px;
-    height:100%;
+            width: 220px;
+            height: 100%;
 
-    background:
-    rgba(0,0,0,0.4);
+            background:
+                rgba(0, 0, 0, 0.4);
 
-    backdrop-filter:blur(10px);
+            backdrop-filter: blur(10px);
 
-    padding-top:80px;
+            padding-top: 80px;
 
-    transition:0.4s;
+            transition: 0.4s;
 
-    z-index:999;
-}
+            z-index: 999;
+        }
 
-.sidebar a{
-    display:block;
+        .sidebar a {
+            display: block;
 
-    padding:16px 25px;
+            padding: 16px 25px;
 
-    text-decoration:none;
+            text-decoration: none;
 
-    color:white;
+            color: white;
 
-    font-size:18px;
+            font-size: 18px;
 
-    transition:0.3s;
-}
+            transition: 0.3s;
+        }
 
-.sidebar a:hover{
-    background:
-    rgba(255,255,255,0.2);
-}
+        .sidebar a:hover {
+            background:
+                rgba(255, 255, 255, 0.2);
+        }
 
-#menu-toggle:checked ~ .sidebar{
-    left:0;
-}
+        #menu-toggle:checked~.sidebar {
+            left: 0;
+        }
 
-/* =========================
+        /* =========================
    CONTAINER
 ========================= */
 
-.container{
-    width:90%;
-    max-width:700px;
+        .container {
+            width: 90%;
+            max-width: 700px;
 
-    padding:40px;
+            padding: 40px;
 
-    border-radius:25px;
+            border-radius: 25px;
 
-    text-align:center;
+            text-align: center;
 
-    background:
-    rgba(255,255,255,0.1);
+            background:
+                rgba(255, 255, 255, 0.1);
 
-    backdrop-filter:blur(10px);
+            backdrop-filter: blur(10px);
 
-    box-shadow:
-    0 0 25px rgba(0,0,0,0.3);
+            box-shadow:
+                0 0 25px rgba(0, 0, 0, 0.3);
 
-    z-index:2;
-}
+            z-index: 2;
+        }
 
-.container h1{
-    font-size:42px;
+        .container h1 {
+            font-size: 42px;
 
-    margin-bottom:30px;
-}
+            margin-bottom: 30px;
+        }
 
-/* =========================
+        /* =========================
    BIODATA
 ========================= */
 
-.biodata{
-    text-align:left;
-}
+        .biodata {
+            text-align: left;
+        }
 
-.biodata-item{
-    margin:18px 0;
+        .biodata-item {
+            margin: 18px 0;
 
-    padding:15px;
+            padding: 15px;
 
-    border-radius:15px;
+            border-radius: 15px;
 
-    background:
-    rgba(255,255,255,0.1);
+            background:
+                rgba(255, 255, 255, 0.1);
 
-    transition:0.3s;
-}
+            transition: 0.3s;
+        }
 
-.biodata-item:hover{
-    transform:scale(1.03);
+        .biodata-item:hover {
+            transform: scale(1.03);
 
-    background:
-    rgba(255,255,255,0.2);
-}
+            background:
+                rgba(255, 255, 255, 0.2);
+        }
 
-.label{
-    font-weight:bold;
+        .label {
+            font-weight: bold;
 
-    color:white;
-}
+            color: white;
+        }
 
-.value{
-    margin-top:5px;
+        .value {
+            margin-top: 5px;
 
-    color:#e0e0e0;
-}
+            color: #e0e0e0;
+        }
 
-/* =========================
+        /* =========================
    ANIMASI BUBBLE
 ========================= */
 
-.bubbles{
-    position:absolute;
+        .bubbles {
+            position: absolute;
 
-    width:100%;
-    height:100%;
+            width: 100%;
+            height: 100%;
 
-    overflow:hidden;
+            overflow: hidden;
 
-    z-index:1;
-}
+            z-index: 1;
+        }
 
-.bubbles span{
-    position:absolute;
+        .bubbles span {
+            position: absolute;
 
-    bottom:-120px;
+            bottom: -120px;
 
-    border-radius:50%;
+            border-radius: 50%;
 
-    background:
-    rgba(255,255,255,0.2);
+            background:
+                rgba(255, 255, 255, 0.2);
 
-    animation:bubble 15s linear infinite;
-}
+            animation: bubble 15s linear infinite;
+        }
 
-.bubbles span:nth-child(1){
-    left:10%;
-    width:40px;
-    height:40px;
-    animation-duration:10s;
-}
+        .bubbles span:nth-child(1) {
+            left: 10%;
+            width: 40px;
+            height: 40px;
+            animation-duration: 10s;
+        }
 
-.bubbles span:nth-child(2){
-    left:25%;
-    width:60px;
-    height:60px;
-    animation-duration:14s;
-}
+        .bubbles span:nth-child(2) {
+            left: 25%;
+            width: 60px;
+            height: 60px;
+            animation-duration: 14s;
+        }
 
-.bubbles span:nth-child(3){
-    left:45%;
-    width:30px;
-    height:30px;
-    animation-duration:8s;
-}
+        .bubbles span:nth-child(3) {
+            left: 45%;
+            width: 30px;
+            height: 30px;
+            animation-duration: 8s;
+        }
 
-.bubbles span:nth-child(4){
-    left:65%;
-    width:70px;
-    height:70px;
-    animation-duration:16s;
-}
+        .bubbles span:nth-child(4) {
+            left: 65%;
+            width: 70px;
+            height: 70px;
+            animation-duration: 16s;
+        }
 
-.bubbles span:nth-child(5){
-    left:85%;
-    width:50px;
-    height:50px;
-    animation-duration:12s;
-}
+        .bubbles span:nth-child(5) {
+            left: 85%;
+            width: 50px;
+            height: 50px;
+            animation-duration: 12s;
+        }
 
-@keyframes bubble{
+        @keyframes bubble {
 
-0%{
-    transform:translateY(0);
-    opacity:0;
-}
+            0% {
+                transform: translateY(0);
+                opacity: 0;
+            }
 
-20%{
-    opacity:1;
-}
+            20% {
+                opacity: 1;
+            }
 
-100%{
-    transform:
-    translateY(-1200px)
-    scale(1.5);
+            100% {
+                transform:
+                    translateY(-1200px) scale(1.5);
 
-    opacity:0;
-}
+                opacity: 0;
+            }
 
-}
-
-</style>
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- MENU GARIS 3 -->
-<input type="checkbox"
-id="menu-toggle">
+    <!-- MENU GARIS 3 -->
+    <input type="checkbox" id="menu-toggle">
 
-<label for="menu-toggle"
-class="hamburger">
+    <label for="menu-toggle" class="hamburger">
 
-<span></span>
-<span></span>
-<span></span>
+        <span></span>
+        <span></span>
+        <span></span>
 
-</label>
+    </label>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
 
-<a href="index.html">
-👤 Profil
-</a>
+        <a href="index.html">
+            👤 Profil
+        </a>
 
-<a href="galeri.html">
-📸 Galeri
-</a>
+        <a href="galeri.html">
+            📸 Galeri
+        </a>
 
-<a href="kontak.html">
-📞 Kontak
-</a>
+        <a href="kontak.html">
+            📞 Kontak
+        </a>
 
-<a href="biodata.html" class="active">
-📝 Biodata
-</a>
+        <a href="biodata.html" class="active">
+            📝 Biodata
+        </a>
 
-</div>
+    </div>
 
-<!-- BUBBLE -->
-<div class="bubbles">
+    <!-- BUBBLE -->
+    <div class="bubbles">
 
-<span></span>
-<span></span>
-<span></span>
-<span></span>
-<span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
 
-</div>
+    </div>
 
-<!-- CONTENT -->
-<div class="container">
+    <!-- CONTENT -->
+    <div class="container">
 
-<h1>Biodata Saya</h1>
+        <h1>Biodata Saya</h1>
 
-<div class="biodata">
+        <div class="biodata">
 
-<div class="biodata-item">
+            <div class="biodata-item">
 
-<div class="label">
-Nama Lengkap
-</div>
+                <div class="label">
+                    Nama Lengkap
+                </div>
 
-<div class="value">
-Bintang Alim.M
-</div>
+                <div class="value">
+                    Bintang Alim.M
+                </div>
 
-</div>
+            </div>
 
-<div class="biodata-item">
+            <div class="biodata-item">
 
-<div class="label">
-Tempat / Tanggal Lahir
-</div>
+                <div class="label">
+                    Tempat / Tanggal Lahir
+                </div>
 
-<div class="value">
-Bandung Barat, 17 Juni 2008
-</div>
+                <div class="value">
+                    Bandung Barat, 17 Juni 2008
+                </div>
 
-</div>
+            </div>
 
-<div class="biodata-item">
+            <div class="biodata-item">
 
-<div class="label">
-Alamat
-</div>
+                <div class="label">
+                    Alamat
+                </div>
 
-<div class="value">
-Kp.Girimulya, GunungMasigit
-</div>
+                <div class="value">
+                    Kp.Girimulya, GunungMasigit
+                </div>
 
-</div>
+            </div>
 
-<div class="biodata-item">
+            <div class="biodata-item">
 
-<div class="label">
-Hobi
-</div>
+                <div class="label">
+                    Hobi
+                </div>
 
-<div class="value">
-Gaming, Coding, Editing
-</div>
+                <div class="value">
+                    Gaming, Coding, Editing
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </body>
+
 </html>
