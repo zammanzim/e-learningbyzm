@@ -8,7 +8,7 @@
 //           data-offset-y="24"></script>
 
 (() => {
-    const HOME    = 'http://10.73.191.1:5173';
+    const HOME    = 'https://e-learniz.my.id';
     const SB_URL  = 'https://vttmwtlqzbbiaromohrp.supabase.co';
     const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dG13dGxxemJiaWFyb21vaHJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNjg4NTMsImV4cCI6MjA4MDg0NDg1M30.16SwOEqD5ZNAgk1oWhLrL41Eqw4kkeAKTyHxkSqmpiY';
 
