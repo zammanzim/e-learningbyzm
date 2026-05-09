@@ -52,6 +52,7 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s;
+    display: flex;
 }
 
 .nav-link:hover,
@@ -294,7 +295,6 @@ footer {
 /* Responsive */
 @media (max-width: 768px) {
     .nav-menu {
-        flex-direction: column;
         gap: 1rem;
     }
     

@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - Portfolio Saya</title>
-    <script src="../../js/back-button.js" data-position="top-left" data-offset-x="10" data-offset-y="70"></script><link rel="stylesheet" href="css/style.css">
+    <title>Dila - Profil</title>
+    <script src="../../js/back-button.js" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* CSS tambahan untuk gambar profil bulat */
@@ -14,13 +21,13 @@
             border-radius: 50%;
             object-fit: cover;
             border: 5px solid #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .profile-image:hover {
             transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
         .profile-image-container {
@@ -38,12 +45,13 @@
             width: 210px;
             height: 210px;
             border-radius: 50%;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
             z-index: -1;
-            border: 2px solid rgba(255,255,255,0.5);
+            border: 2px solid rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar">
@@ -104,4 +112,5 @@
         </div>
     </section>
 </body>
+
 </html>
