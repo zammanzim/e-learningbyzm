@@ -11,33 +11,38 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/announcements</loc>
+    <loc>https://e-learniz.my.id/a/announcements</loc>
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/tugas</loc>
+    <loc>https://e-learniz.my.id/a/tugas</loc>
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/feed</loc>
+    <loc>https://e-learniz.my.id/a/feed</loc>
     <priority>0.7</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/forum</loc>
+    <loc>https://e-learniz.my.id/a/forum</loc>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/kisi-kisi</loc>
+    <loc>https://e-learniz.my.id/a/kisi-kisi</loc>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://e-learniz.my.id/search</loc>
+    <loc>https://e-learniz.my.id/a/search</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/updates</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
   </url>
 </urlset>

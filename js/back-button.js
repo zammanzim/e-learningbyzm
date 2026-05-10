@@ -1,6 +1,6 @@
 // studentsweb.js
 // Taruh di halaman web siswa:
-//   <script src="https://e-learniz.my.id/js/studentsweb.js"
+//   <script src="https://127.0.0.1:5500/js/studentsweb.js"
 //           data-group="students_web"
 //           data-class-id="2"
 //           data-position="bottom-right"
@@ -8,18 +8,19 @@
 //           data-offset-y="24"></script>
 
 (() => {
-    const HOME    = 'https://e-learniz.my.id';
-    const SB_URL  = 'https://vttmwtlqzbbiaromohrp.supabase.co';
+    const HOME = 'https://e-learniz.my.id/a/announcements'; // tombol kembali
+    const BASE = 'https://e-learniz.my.idj';                  // base untuk item URL
+    const SB_URL = 'https://vttmwtlqzbbiaromohrp.supabase.co';
     const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dG13dGxxemJiaWFyb21vaHJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNjg4NTMsImV4cCI6MjA4MDg0NDg1M30.16SwOEqD5ZNAgk1oWhLrL41Eqw4kkeAKTyHxkSqmpiY';
 
-    const scriptEl  = document.currentScript || document.querySelector('script[src*="studentsweb"]');
-    const GROUP_KEY = scriptEl?.dataset.group    || 'Web Siswa';
-    const CLASS_ID  = scriptEl?.dataset.classId  || '';
-    const pos  = scriptEl?.dataset.position || 'bottom-right';
-    const offX = scriptEl?.dataset.offsetX  || '24';
-    const offY = scriptEl?.dataset.offsetY  || '24';
+    const scriptEl = document.currentScript || documenjt.querySelector('script[src*="studentsweb"]');
+    const GROUP_KEY = scriptEl?.dataset.group || 'Web Siswa';
+    const CLASS_ID = scriptEl?.dataset.classId || '';
+    const pos = scriptEl?.dataset.position || 'bottom-right';
+    const offX = scriptEl?.dataset.offsetX || '24';
+    const offY = scriptEl?.dataset.offsetY || '24';
     const isLeft = pos.includes('left');
-    const isTop  = pos.includes('top');
+    const isTop = pos.includes('top');
 
     // ── Helpers ────────────────────────────────────────────
     function getUser() {
@@ -34,12 +35,12 @@
                     if (v?.access_token) return v.access_token;
                 }
             }
-        } catch {}
+        } catch { }
         return SB_ANON;
     }
     function getFolderKey() {
         const parts = window.location.pathname.split('/').filter(Boolean);
-        const last  = parts[parts.length - 1] || '';
+        const last = parts[parts.length - 1] || '';
         if (last.includes('.') || last === 'index') parts.pop();
         return '/' + parts.join('/') + (parts.length ? '/' : '');
     }
@@ -51,7 +52,7 @@
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json',
                 'Prefer': opts.prefer || 'return=minimal',
-                ...(opts.headers||{})
+                ...(opts.headers || {})
             }
         });
         const t = await r.text();
@@ -60,7 +61,7 @@
 
     // ── Fetch students web items dari subjects_config ──────
     async function fetchStudents() {
-        const user    = getUser();
+        const user = getUser();
         const classId = CLASS_ID || user?.class_id || '';
         let query = `subjects_config?menu_group=eq.${GROUP_KEY}&order=display_order.asc&select=*`;
         if (classId) query += `&class_id=eq.${classId}`;
@@ -75,9 +76,9 @@
         const user = getUser();
         if (!user?.id) return;
 
-        const pageKey     = getFolderKey();
+        const pageKey = getFolderKey();
         const throttleKey = `pv_${user.id}_${pageKey}`;
-        const last        = parseInt(localStorage.getItem(throttleKey) || '0');
+        const last = parseInt(localStorage.getItem(throttleKey) || '0');
         if (Date.now() - last < 5 * 60 * 1000) return; // throttle 5 menit
 
         try {
@@ -85,17 +86,17 @@
                 method: 'POST',
                 prefer: 'resolution=merge-duplicates,return=minimal',
                 body: JSON.stringify({
-                    page_key:      pageKey,
-                    page_title:    document.title || pageKey,
-                    user_id:       user.id,
-                    visitor_name:  user.nickname || user.full_name || user.name || 'User',
+                    page_key: pageKey,
+                    page_title: document.title || pageKey,
+                    user_id: user.id,
+                    visitor_name: user.nickname || user.full_name || user.name || 'User',
                     visitor_class: user.class_name || String(user.class_id || '-'),
-                    avatar_url:    user.avatar_url || null,
-                    visited_at:    new Date().toISOString(),
+                    avatar_url: user.avatar_url || null,
+                    visited_at: new Date().toISOString(),
                 })
             });
             localStorage.setItem(throttleKey, String(Date.now()));
-        } catch(e) {}
+        } catch (e) { }
     }
     async function fetchVisitors() {
         return await sb(
@@ -105,7 +106,7 @@
     }
     function fmtTime(iso) {
         return new Date(iso).toLocaleString('id-ID', {
-            day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     }
 
@@ -113,7 +114,7 @@
     function ensureFontAwesome() {
         if (document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) return;
         const fa = document.createElement('link');
-        fa.rel  = 'stylesheet';
+        fa.rel = 'stylesheet';
         fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
         document.head.appendChild(fa);
     }
@@ -253,13 +254,17 @@
         }
         ._sw_mitem.active ._sw_mitem_icon { color: #00eaff; }
 
-        /* Visitor popup */
+        /* Visitor popup — centered overlay */
         #_sw_vpopup {
             position: fixed; inset: 0; z-index: 99999;
-            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
             padding: 16px; box-sizing: border-box;
             animation: _swFadeIn .2s ease forwards;
+        }
+        #_sw_vpopup.closing {
+            animation: _swFadeOut .18s ease forwards;
         }
 
         @media (max-width: 480px) {
@@ -283,7 +288,7 @@
         const itemsHTML = items.map(item => {
             const url = item.subject_id?.includes('://') || item.subject_id?.includes('?')
                 ? item.subject_id
-                : HOME + '/' + item.subject_id;
+                : BASE + '/' + item.subject_id;
 
             // Check active: apakah url ini bagian dari current folder
             let isActive = false;
@@ -292,8 +297,8 @@
                 const uFolder = u.pathname.split('/').filter(Boolean);
                 const cFolder = curFolder.split('/').filter(Boolean);
                 // Aktif kalau folder pertama sama (nama siswa)
-                isActive = uFolder.length > 0 && cFolder.length > 0 && uFolder[uFolder.length-1] === cFolder[cFolder.length-1];
-            } catch {}
+                isActive = uFolder.length > 0 && cFolder.length > 0 && uFolder[uFolder.length - 1] === cFolder[cFolder.length - 1];
+            } catch { }
 
             const locked = !!item.locked;
             let icon = item.icon || 'fa-globe';
@@ -304,8 +309,8 @@
                 ${locked ? 'onclick="return false;"' : ''}>
                 <div class="_sw_mitem_icon">
                     ${locked
-                        ? `<i class="fa-solid fa-lock" style="font-size:11px;"></i>`
-                        : `<i class="${icon}" style="font-size:12px;"></i>`}
+                    ? `<i class="fa-solid fa-lock" style="font-size:11px;"></i>`
+                    : `<i class="${icon}" style="font-size:12px;"></i>`}
                 </div>
                 ${item.subject_name}
             </a>`;
@@ -348,9 +353,9 @@
 
     function closeMenu() {
         const overlay = document.getElementById('_sw_mpopup_overlay');
-        const popup   = document.getElementById('_sw_mpopup');
+        const popup = document.getElementById('_sw_mpopup');
         fadeOutRemove(overlay, 150);
-        fadeOutRemove(popup,   180);
+        fadeOutRemove(popup, 180);
         menuOpen = false;
         document.removeEventListener('keydown', onEsc);
     }
@@ -359,13 +364,18 @@
 
     // ── Visitor Popup ──────────────────────────────────────
     function closeVisitor() {
-        fadeOutRemove(document.getElementById('_sw_vpopup'), 180);
+        const el = document.getElementById('_sw_vpopup');
+        if (!el) return;
+        el.classList.add('closing');
+        setTimeout(() => el.remove(), 180);
     }
 
     function showVisitorPopup(visitors) {
         closeVisitor();
+
         const pop = document.createElement('div');
         pop.id = '_sw_vpopup';
+        pop.onclick = e => { if (e.target === pop) closeVisitor(); };
 
         const rows = visitors.length
             ? visitors.map((v, i) => {
@@ -374,15 +384,15 @@
                     : `<div style="width:28px;height:28px;border-radius:50%;background:rgba(0,234,255,0.1);
                         border:1px solid rgba(0,234,255,0.2);display:flex;align-items:center;justify-content:center;
                         font-size:11px;font-weight:700;color:#00eaff;flex-shrink:0;">
-                        ${(v.visitor_name||'?')[0].toUpperCase()}</div>`;
+                        ${(v.visitor_name || '?')[0].toUpperCase()}</div>`;
                 return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-                    <td style="padding:8px 10px;color:#444;font-size:11px;">${i+1}</td>
+                    <td style="padding:8px 10px;color:#444;font-size:11px;">${i + 1}</td>
                     <td style="padding:8px 10px;"><div style="display:flex;align-items:center;gap:8px;">${av}
-                        <span style="font-size:13px;font-weight:600;color:#ddd;">${v.visitor_name||'—'}</span></div></td>
-                    <td style="padding:8px 10px;font-size:12px;color:#777;">${v.visitor_class||'—'}</td>
+                        <span style="font-size:13px;font-weight:600;color:#ddd;">${v.visitor_name || '—'}</span></div></td>
+                    <td style="padding:8px 10px;font-size:12px;color:#777;">${v.visitor_class || '—'}</td>
                     <td style="padding:8px 10px;font-size:11px;color:#555;white-space:nowrap;">${fmtTime(v.visited_at)}</td>
                 </tr>`;
-              }).join('')
+            }).join('')
             : `<tr><td colspan="4" style="padding:32px;text-align:center;color:#444;font-size:13px;">Belum ada yang berkunjung</td></tr>`;
 
         pop.innerHTML = `
@@ -403,13 +413,13 @@
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:13px;font-weight:700;color:#fff;">Pengunjung</div>
                         <div style="font-size:11px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${document.title||window.location.pathname}</div>
+                            ${document.title || window.location.pathname}</div>
                     </div>
                     <div style="font-size:12px;font-weight:700;color:#00eaff;flex-shrink:0;
                         background:rgba(0,234,255,0.08);padding:3px 12px;border-radius:20px;">
-                        ${visitors.length} Visitor
+                        ${visitors.length}×
                     </div>
-                    <button onclick="document.querySelector('#_sw_vpopup') && (document.querySelector('#_sw_vpopup').style.animation='_swFadeOut 180ms ease forwards', setTimeout(()=>document.getElementById('_sw_vpopup')?.remove(),180))"
+                    <button id="_sw_vclose"
                         style="background:none;border:none;color:#444;cursor:pointer;font-size:18px;
                         padding:2px 6px;line-height:1;flex-shrink:0;transition:color .15s;"
                         onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'">✕</button>
@@ -427,9 +437,10 @@
                 </div>
             </div>`;
 
-        pop.onclick = e => { if (e.target === pop) pop.remove(); };
         document.body.appendChild(pop);
+        pop.querySelector('#_sw_vclose').onclick = closeVisitor;
     }
+
 
     // ── Build Pill ─────────────────────────────────────────
     const pill = document.createElement('div');
@@ -462,7 +473,11 @@
     eyeBtn.onclick = async () => {
         closeMenu();
         eyeBtn.style.opacity = '0.5'; eyeBtn.style.pointerEvents = 'none';
-        try   { showVisitorPopup(await fetchVisitors()); }
+        try {
+            const data = await fetchVisitors();
+            sessionStorage.setItem(`_sw_vc_${getFolderKey()}`, String(data.length));
+            showVisitorPopup(data);
+        }
         catch { showVisitorPopup([]); }
         finally { eyeBtn.style.opacity = ''; eyeBtn.style.pointerEvents = ''; }
     };
@@ -479,18 +494,35 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key === 'q') { e.preventDefault(); eyeBtn.click(); }
+            if (e.ctrlKey && e.key === 'q') {
+                e.preventDefault();
+                document.getElementById('_sw_vpopup') ? closeVisitor() : eyeBtn.click();
+            }
             if (e.ctrlKey && e.key === '`') { e.preventDefault(); menuBtn.click(); }
         });
 
         recordVisit();
-        fetchVisitors().then(data => {
+
+        // Badge: pakai cache kalau folder sama, fetch kalau beda
+        const cacheKey = `_sw_vc_${getFolderKey()}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached !== null) {
+            const count = parseInt(cached);
             const el = document.getElementById('_sw_badge');
-            if (el && data.length) {
-                el.textContent = data.length > 99 ? '99+' : data.length;
+            if (el && count > 0) {
+                el.textContent = count > 99 ? '99+' : count;
                 el.style.display = 'flex';
             }
-        }).catch(() => {});
+        } else {
+            fetchVisitors().then(data => {
+                const el = document.getElementById('_sw_badge');
+                if (el && data.length) {
+                    el.textContent = data.length > 99 ? '99+' : data.length;
+                    el.style.display = 'flex';
+                }
+                sessionStorage.setItem(cacheKey, String(data.length));
+            }).catch(() => { });
+        }
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);

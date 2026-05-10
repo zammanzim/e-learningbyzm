@@ -248,8 +248,9 @@ function processAndRenderSidebar(groups, items, user) {
 
     const role = user.role;
     const isInAdmin = window.location.pathname.includes('/admiii/');
-    const rootPrefix  = isInAdmin ? '../' : '';
-    const adminPrefix = isInAdmin ? '' : 'admiii/';
+    const isInA     = window.location.pathname.includes('/a/');
+    const rootPrefix  = isInAdmin ? '../a/' : isInA ? '' : 'a/';
+    const adminPrefix = isInAdmin ? '' : isInA ? '../admiii/' : 'admiii/';
 
     const currentPath = window.location.pathname.toLowerCase();
     const currentId   = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
@@ -299,10 +300,14 @@ function processAndRenderSidebar(groups, items, user) {
                     break;
                 case 'custom':
                 default:
-                    // Kalau ada :// atau ? pakai as-is, kalau tidak prefix root
-                    url = (item.subject_id?.includes('://') || item.subject_id?.includes('?'))
-                        ? item.subject_id
-                        : rootPrefix + item.subject_id;
+                    if (item.subject_id?.includes('://') || item.subject_id?.includes('?')) {
+                        url = item.subject_id;
+                    } else if (item.subject_id?.startsWith('/')) {
+                        url = item.subject_id;
+                    } else {
+                        // Absolute dari root biar ga kena prefix /a/
+                        url = '/' + item.subject_id;
+                    }
             }
 
             // ── Active state ──

@@ -21,8 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-clients.js" defer></script>
     <script src="js/ui-components.js" defer></script>
-    <script src="js/sidebar.js"></script>
-<script src="js/basicfeat.js"></script>
+    <script src="js/basicfeat.js" defer></script>
     <script src="js/auth.js" defer></script>
     <script src="js/visitor.js" defer></script>
     <script src="js/subject-manager.js" defer></script>
@@ -92,12 +91,12 @@
                 try {
                     const localUser = localStorage.getItem("user");
                     if (localUser && JSON.parse(localUser)) {
-                        window.location.href = 'announcements';
+                        window.location.href = 'a/announcements';
                         return;
                     }
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session) {
-                        window.location.href = 'announcements';
+                        window.location.href = 'a/announcements';
                     } else {
                         window.location.href = 'login';
                     }

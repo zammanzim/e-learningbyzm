@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const isInAdmin = window.location.pathname.includes("/admiii/");
-    const pathPrefix = isInAdmin ? "../" : "";
+    const isInA     = window.location.pathname.includes("/a/");
+    const pathPrefix = isInAdmin ? "../" : isInA ? "../" : "";
 
     const isPublicPage = window.location.pathname.includes("login");
     if (isPublicPage) return;
@@ -97,7 +98,8 @@ async function logout() {
             try {
                 // Deteksi folder untuk redirect yang bener (Path Guard)
                 const isInAdmin = window.location.pathname.includes('/admiii/');
-                const prefix = isInAdmin ? '../' : '';
+                const isInA_logout = window.location.pathname.includes('/a/');
+                const prefix = (isInAdmin || isInA_logout) ? '../' : '';
 
                 // Update hitungan tracker HANYA jika bukan Super Admin
                 if (!isSuperAdmin) {
@@ -117,7 +119,8 @@ async function logout() {
                 console.error("Logout Error:", e);
                 // Fallback jika terjadi error
                 const isInAdmin = window.location.pathname.includes('/admiii/');
-                window.location.href = (isInAdmin ? "../" : "") + "login";
+                const isInA_fb  = window.location.pathname.includes('/a/');
+                window.location.href = (isInAdmin || isInA_fb ? "../" : "") + "login";
             }
         } else {
             // Jika kuota habis (hanya user biasa)

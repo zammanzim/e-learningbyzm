@@ -6,35 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>E-Learning Nizam | Web Nizam</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Taruh ini di dalam <head> login.html, setelah <meta charset> -->
+    <meta property="og:title" content="E-Learning Nizam (Web Nizam)">
 
     <meta name="description"
-        content="E-Learning Nizam — platform belajar online untuk siswa. Login untuk akses materi, tugas, kisi-kisi, dan pengumuman kelas.">
-    <meta name="keywords"
-        content="e-learning nizam, web nizam, nizam web, e-learniz, belajar online, platform belajar siswa">
-    <meta name="author" content="Nizam">
-    <meta name="robots" content="index, follow">
+        content="platform pembelajaran yang isinya jadwal harian, pengumuman, tugas, nilai, dan lain lain. e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
 
-    <!-- Open Graph (buat preview di Google & sosmed) -->
-    <meta property="og:title" content="E-Learning Nizam — Platform Belajar Online">
+    <meta name="keywords" content="e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
+
+    <meta property="og:title" content="e-learniz by zam">
     <meta property="og:description"
-        content="Platform e-learning untuk siswa. Akses materi, tugas, dan pengumuman kelas secara online.">
-    <meta property="og:url" content="https://e-learniz.my.id/login">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://e-learniz.my.id/icons/app-icon.png">
-
-    <!-- Ini sudah ada tapi taruh di semua halaman -->
-    <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "E-Learning Nizam",
-  "alternateName": ["Web Nizam", "Nizam Web", "E-Learniz"],
-  "url": "https://e-learniz.my.id",
-  "description": "Platform e-learning untuk siswa oleh Nizam"
-}
-</script>
+        content="Platform pembelajaran yang berisi jadwal harian, pengumuman, daftar tugas, nilai, dan lain lainnya">
+    <meta property="og:url" content="https://e-learniz.my.id">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
     <script src="js/supabase-clients.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -1107,7 +1091,7 @@
 
         // AUTO REDIRECT IF LOGGED IN
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user) window.location.href = "announcements";
+        if (user) window.location.href = "a/announcements";
 
         // VARIABLES
         let selectedClassId = forcedClassId || null;
@@ -1355,7 +1339,7 @@
             // 2. Cek Password
             if (pwInput === selectedUserObj.password) {
                 localStorage.setItem("user", JSON.stringify(selectedUserObj));
-                window.location.href = "announcements";
+                window.location.href = "a/announcements";
             } else {
                 // Password Salah
                 pwInputEl.classList.add('error');
@@ -1366,7 +1350,7 @@
         function loginDirect() {
             if (!selectedUserObj) return;
             localStorage.setItem("user", JSON.stringify(selectedUserObj));
-            window.location.href = "announcements";
+            window.location.href = "a/announcements";
         }
 
         // Close modal when clicking outside
@@ -1538,7 +1522,7 @@
             // Simpan ke localStorage — user session + riwayat tamu
             localStorage.setItem('user', JSON.stringify(guestObj));
             localStorage.setItem('prevGuest', JSON.stringify(guestObj));
-            window.location.href = 'announcements';
+            window.location.href = 'a/announcements';
         }
 
         // Hapus guest yang sudah 3 hari tidak aktif (dipanggil saat halaman login dibuka)
