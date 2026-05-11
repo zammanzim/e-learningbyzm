@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nizam — contactme</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="scanline"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index" class="nav-logo">&lt;/<span>a</span>&gt;</a>
+    <ul class="nav-links">
+      <li><a href="index">Home</a></li>
+      <li><a href="profil">Profile</a></li>
+      <li><a href="galeri">Gallery</a></li>
+      <li><a href="kontak" class="active">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index" class="mobile-nav-link">Home</a>
+    <a href="profil" class="mobile-nav-link">Profile</a>
+    <a href="galeri" class="mobile-nav-link">Gallery</a>
+    <a href="kontak" class="mobile-nav-link active">Contact</a>
+  </div>
+
+  <!-- KONTAK HERO -->
+  <section class="kontak-hero">
+
+    <!-- Kiri: Info -->
+    <div class="kontak-info">
+      <div class="section-tag">Contact Me</div>
+      <h1>Tinggalkan pesan<span style="color:var(--accent)">.</span></h1>
+      <p>
+        Tinggalkan pesan untuk saya. Mau itu komentar, saran. Dan contact saya jika butuh bantuan!
+      </p>
+
+      <div class="kontak-links">
+        <div class="kontak-link">
+          <div class="kl-icon"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <span class="kl-label">Email</span>
+            <span class="kl-value">nizzcuy@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="kontak-link">
+          <div class="kl-icon"><i class="fa-brands fa-whatsapp"></i></div>
+          <div>
+            <span class="kl-label">WhatsApp</span>
+            <span class="kl-value">+62 838-5108-8843</span>
+          </div>
+        </div>
+
+        <div class="kontak-link">
+          <div class="kl-icon"><i class="fa-brands fa-instagram"></i></div>
+          <div>
+            <span class="kl-label">Instagram</span>
+            <span class="kl-value">@zammanzim</span>
+          </div>
+        </div>
+
+        <div class="kontak-link">
+          <div class="kl-icon"><i class="fa-brands fa-github"></i></div>
+          <div>
+            <span class="kl-label">GitHub</span>
+            <span class="kl-value">github.com/zammanzim/</span>
+          </div>
+        </div>
+        <div class="kontak-link">
+          <div class="kl-icon">e</div>
+          <div>
+            <span class="kl-label">Project Website</span>
+            <span class="kl-value"><a href="https://e-learniz.my.id" style="text-decoration: underline;" target="_blank">E-Learniz</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanan: Form -->
+    <div class="kontak-form-wrap">
+      <p class="form-header">send_message --to=nizam</p>
+
+      <div id="contact-form">
+        <div class="form-group">
+          <label>Nama <span>*</span></label>
+          <input type="text" id="f-name" placeholder="Nizam" />
+        </div>
+
+        <div class="form-group">
+          <label>Pesan <span>*</span></label>
+          <textarea id="f-message"
+            placeholder="Haiii Nizammm"></textarea>
+        </div>
+
+        <button class="form-submit" onclick="submitForm()">
+          Kirim Pesan →
+        </button>
+      </div>
+
+      <!-- Success state -->
+      <div class="form-success" id="form-success">
+        <div class="fs-icon">✅</div>
+        <p style="font-size:1rem;color:var(--white);font-weight:700;margin-bottom:8px;">Pesan Terkirim!</p>
+        <p style="color:var(--text2);font-size:0.82rem;">Terima kasih! Saya akan membalas dalam 1-2 hari kerja.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p class="copy">© 2026 <span>Nizam</span></p>
+    <div class="foot-links">
+      <a href="index">Home</a>
+      <a href="profil">Profile</a>
+      <a href="galeri">Gallery</a>
+    </div>
+  </footer>
+
+  <script>
+    function submitForm() {
+      const name = document.getElementById('f-name').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      const message = document.getElementById('f-message').value.trim();
+
+      if (!name || !email || !message) {
+        // Shake effect on empty fields
+        [['f-name', name], ['f-email', email], ['f-message', message]].forEach(([id, val]) => {
+          if (!val) {
+            const el = document.getElementById(id);
+            el.style.borderColor = 'var(--accent3)';
+            el.style.boxShadow = '0 0 12px rgba(255,77,166,0.3)';
+            el.style.animation = 'none';
+            setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 2000);
+          }
+        });
+        return;
+      }
+
+      // Simulate sending
+      const btn = document.querySelector('.form-submit');
+      btn.textContent = 'Mengirim...';
+      btn.style.opacity = '0.7';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        document.getElementById('contact-form').style.display = 'none';
+        document.getElementById('form-success').style.display = 'block';
+        document.getElementById('form-success').style.animation = 'fadeIn 0.5s ease';
+      }, 1200);
+    }
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobile-nav');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+      document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+    });
+    mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        mobileNav.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+
+</html>

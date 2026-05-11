@@ -93,7 +93,7 @@ main {
   padding-top: var(--nav-height);
 }
 
-/* ===== HERO (index.html) ===== */
+/* ===== HERO (index) ===== */
 .hero {
   min-height: calc(100vh - var(--nav-height));
   display: flex;

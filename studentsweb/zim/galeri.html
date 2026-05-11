@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nizam — mygalleryy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="scanline"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index" class="nav-logo">&lt;/<span>a</span>&gt;</a>
+    <ul class="nav-links">
+      <li><a href="index">Home</a></li>
+      <li><a href="profil">Profile</a></li>
+      <li><a href="galeri" class="active">Gallery</a></li>
+      <li><a href="kontak">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index" class="mobile-nav-link">Home</a>
+    <a href="profil" class="mobile-nav-link">Profile</a>
+    <a href="galeri" class="mobile-nav-link active">Gallery</a>
+    <a href="kontak" class="mobile-nav-link">Contact</a>
+  </div>
+
+  <!-- GALERI HEADER -->
+  <section class="galeri-hero">
+    <div class="section-tag">Karya & Momen</div>
+    <h2 class="section-title">Galeri</h2>
+
+    <!-- Filter Buttons -->
+    <div class="galeri-filter">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="random">Random</button>
+      <button class="filter-btn" data-filter="web">Code</button>
+      <button class="filter-btn" data-filter="music">Music</button>
+      <button class="filter-btn" data-filter="tech">Tech</button>
+    </div>
+  </section>
+
+  <!-- GALLERY GRID -->
+  <div class="galeri-grid">
+
+    <!-- Item 1 (wide) -->
+    <div class="galeri-item" data-cat="web" data-title="aku, vscode, dan firefox"
+      data-desc="Web app dashboard untuk manajemen konten" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <img src="img/code1.jpeg" alt="">
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// dashboard-admin.jsx</span>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="galeri-item" data-cat="music" data-title="Studio Session 🎸"
+      data-desc="Sesi rekaman di kamar, gitar akustik + loop pedal" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <div class="gp-icon">🎸</div>
+        <strong style="color:var(--text)">Studio Session</strong>
+        <span>Home Recording</span>
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// home_studio.jpg</span>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="galeri-item" data-cat="tech" data-title="PC Build 🔧"
+      data-desc="Custom build gaming PC, termasuk cable management" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <div class="gp-icon">🔧</div>
+        <strong style="color:var(--text)">PC Custom Build</strong>
+        <span>Hardware Project</span>
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// pc_build_2024.jpg</span>
+      </div>
+    </div>
+
+    <!-- Item 4 (wide) -->
+    <div class="galeri-item" data-cat="web" data-title="E-Commerce App"
+      data-desc="Full-stack toko online dengan PHP, MySQL, dan Midtrans" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <div class="gp-icon">🛒</div>
+        <strong style="color:var(--text)">E-Commerce App</strong>
+        <span>PHP + MySQL + Bootstrap</span>
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// ecommerce_project.php</span>
+      </div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="galeri-item" data-cat="music" data-title="Chord Progression"
+      data-desc="Noodling jam session dengan chord em7 - Cmaj7" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <div class="gp-icon">🎵</div>
+        <strong style="color:var(--text)">Chord Progression</strong>
+        <span>Fingerstyle Guitar</span>
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// jam_session.mp4</span>
+      </div>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="galeri-item" data-cat="tech" data-title="Arduino Project"
+      data-desc="Smart home mini: kontrol lampu via web interface" onclick="openLightbox(this)">
+      <div class="galeri-placeholder">
+        <div class="gp-icon">⚡</div>
+        <strong style="color:var(--text)">Arduino IoT</strong>
+        <span>Smart Home Mini</span>
+      </div>
+      <div class="galeri-overlay">
+        <span class="galeri-caption">// arduino_iot.ino</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <div class="lightbox-inner">
+      <div class="lightbox-content" id="lightbox-content">
+        <!-- diisi dinamis oleh JS -->
+      </div>
+      <button class="lightbox-close" onclick="closeLightbox()">
+        ✕ &nbsp; Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p class="copy">© 2026 <span>Nizam</span></p>
+    <div class="foot-links">
+      <a href="index">Home</a>
+      <a href="profil">Profile</a>
+      <a href="kontak">Contact</a>
+    </div>
+  </footer>
+
+  <script>
+    // ─── FILTER ───────────────────────────────────────────
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const items = document.querySelectorAll('.galeri-item');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+
+        items.forEach(item => {
+          if (filter === 'all' || item.dataset.cat === filter) {
+            item.style.display = '';
+            item.style.animation = 'fadeIn 0.4s ease both';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // ─── LIGHTBOX ─────────────────────────────────────────
+    const iconMap = { web: '🖥️', music: '🎸', tech: '🔧' };
+
+    function openLightbox(el) {
+      const lb = document.getElementById('lightbox');
+      const content = document.getElementById('lightbox-content');
+      const img = el.querySelector('img');
+      const title = el.dataset.title;
+      const desc = el.dataset.desc;
+
+      if (img && img.src) {
+        // Ada gambar — tampilkan gambar beneran
+        content.innerHTML = `
+          <img src="${img.src}" alt="${title}" class="lb-image" />
+          <div class="lb-meta">
+            <div class="lb-title">${title}</div>
+            <div class="lb-sub">${desc}</div>
+          </div>
+        `;
+      } else {
+        // Fallback emoji
+        const icon = iconMap[el.dataset.cat] || '🖼️';
+        content.innerHTML = `
+          <div class="lb-icon">${icon}</div>
+          <div class="lb-title">${title}</div>
+          <div class="lb-sub">${desc}</div>
+        `;
+      }
+
+      lb.classList.add('active');
+    }
+
+    function closeLightbox(e) {
+      if (!e || e.target === document.getElementById('lightbox') || e.target.closest('.lightbox-close')) {
+        document.getElementById('lightbox').classList.remove('active');
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobile-nav');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+      document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+    });
+    mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        mobileNav.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+
+</html>
