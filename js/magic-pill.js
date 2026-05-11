@@ -427,7 +427,7 @@
         const tbody = document.getElementById('_sw_vtbody');
         const badge = document.getElementById('_sw_vbadge');
         if (tbody) tbody.innerHTML = visitorRowsHTML(visitors);
-        if (badge) badge.textContent = `<span id="_sw_vbadge">${visitors ? visitors.length + "×" : "…"}</span>`;
+        if (badge) badge.textContent = `${visitors ? visitors.length + "×" : "…"}`;
     }
 
     // Render popup langsung (visitors=null → skeleton)
@@ -460,7 +460,7 @@
                     </div>
                     <div style="font-size:12px;font-weight:700;color:#00eaff;flex-shrink:0;
                         background:rgba(0,234,255,0.08);padding:3px 12px;border-radius:20px;">
-                        <span id="_sw_vbadge">${visitors ? visitors.length + "×" : "…"}</span>
+                        <span id="_sw_vbadge">${visitors ? visitors.length + "visitor" : "…"}</span>
                     </div>
                     <button id="_sw_vclose"
                         style="background:none;border:none;color:#444;cursor:pointer;font-size:18px;
