@@ -39,10 +39,11 @@
         return SB_ANON;
     }
     function getFolderKey() {
+        const depth = parseInt(scriptEl?.dataset.folderDepth || '2');
         const parts = window.location.pathname.split('/').filter(Boolean);
-        const last = parts[parts.length - 1] || '';
-        if (last.includes('.') || last === 'index') parts.pop();
-        return '/' + parts.join('/') + (parts.length ? '/' : '');
+        // Ambil N segmen pertama sesuai depth
+        const folder = parts.slice(0, depth);
+        return '/' + folder.join('/') + (folder.length ? '/' : '');
     }
     async function sb(path, opts = {}) {
         const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
@@ -124,6 +125,12 @@
     style.textContent = `
         @keyframes _swFadeIn  { from{opacity:0;transform:scale(.97) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
         @keyframes _swFadeOut { from{opacity:1;transform:scale(1) translateY(0)} to{opacity:0;transform:scale(.97) translateY(6px)} }
+        @keyframes _swSkeleton { 0%,100%{opacity:.3} 50%{opacity:.7} }
+        ._sw_skel {
+            height: 12px; border-radius: 6px;
+            background: rgba(255,255,255,0.08);
+            animation: _swSkeleton 1.2s ease infinite;
+        }
         @keyframes _swOverlayIn  { from{opacity:0} to{opacity:1} }
         @keyframes _swOverlayOut { from{opacity:1} to{opacity:0} }
 
@@ -277,51 +284,49 @@
     // ── Menu Popup ─────────────────────────────────────────
     let menuOpen = false;
 
-    async function toggleMenu() {
-        if (menuOpen) return closeMenu();
-
-        // Fetch & render
-        const items = await fetchStudents().catch(() => []);
-        const curFolder = getFolderKey();
-
-        // Render items
-        const itemsHTML = items.map(item => {
+    function buildItemsHTML(items, curFolder) {
+        return items.map(item => {
             const url = item.subject_id?.includes('://') || item.subject_id?.includes('?')
                 ? item.subject_id
                 : BASE + '/' + item.subject_id;
-
-            // Check active: apakah url ini bagian dari current folder
             let isActive = false;
             try {
                 const u = new URL(url, window.location.href);
-                const uFolder = u.pathname.split('/').filter(Boolean);
-                const cFolder = curFolder.split('/').filter(Boolean);
-                // Aktif kalau folder pertama sama (nama siswa)
-                isActive = uFolder.length > 0 && cFolder.length > 0 && uFolder[uFolder.length - 1] === cFolder[cFolder.length - 1];
-            } catch { }
-
+                const uF = u.pathname.split('/').filter(Boolean);
+                const cF = curFolder.split('/').filter(Boolean);
+                isActive = uF.length > 0 && cF.length > 0 && uF[uF.length-1] === cF[cF.length-1];
+            } catch {}
             const locked = !!item.locked;
             let icon = item.icon || 'fa-globe';
             if (!icon.includes(' ')) icon = `fa-solid ${icon}`;
-
             return `<a href="${locked ? '#' : url}"
                 class="_sw_mitem ${isActive ? 'active' : ''} ${locked ? 'locked' : ''}"
-                ${locked ? 'onclick="return false;"' : ''}>
+                ${locked ? 'onclick="event.preventDefault();"' : ''}>
                 <div class="_sw_mitem_icon">
-                    ${locked
-                    ? `<i class="fa-solid fa-lock" style="font-size:11px;"></i>`
-                    : `<i class="${icon}" style="font-size:12px;"></i>`}
+                    ${locked ? `<i class="fa-solid fa-lock" style="font-size:11px;"></i>` : `<i class="${icon}" style="font-size:12px;"></i>`}
                 </div>
                 ${item.subject_name}
             </a>`;
         }).join('');
+    }
+
+    function skeletonMenuItems(n = 5) {
+        return Array.from({length: n}, (_, i) => `
+            <div class="_sw_mitem" style="pointer-events:none;">
+                <div class="_sw_mitem_icon" style="background:rgba(255,255,255,0.05);"></div>
+                <div class="_sw_skel" style="width:${55 + (i*13)%35}%;"></div>
+            </div>`).join('');
+    }
+
+    function toggleMenu() {
+        if (menuOpen) return closeMenu();
 
         // Overlay
         const overlay = document.createElement('div');
         overlay.id = '_sw_mpopup_overlay';
         overlay.onclick = closeMenu;
 
-        // Popup
+        // Popup — tampil langsung dengan skeleton
         const popup = document.createElement('div');
         popup.id = '_sw_mpopup';
         popup.innerHTML = `
@@ -332,16 +337,27 @@
                 </svg>
                 kembali ke e-learniz
             </a>
-            ${items.length ? `
-                <div class="_sw_section_label">Web Siswa</div>
-                <div id="_sw_mpopup_items">${itemsHTML}</div>
-            ` : `<div style="padding:16px;text-align:center;color:#444;font-size:12px;">Tidak ada data</div>`}
-        `;
+            <div class="_sw_section_label">Web Siswa</div>
+            <div id="_sw_mpopup_items">${skeletonMenuItems()}</div>`;
 
         document.body.appendChild(overlay);
         document.body.appendChild(popup);
         menuOpen = true;
         document.addEventListener('keydown', onEsc);
+
+        // Fetch di background, update pas datang
+        fetchStudents().then(items => {
+            const el = document.getElementById('_sw_mpopup_items');
+            if (!el) return;
+            if (!items.length) {
+                el.innerHTML = `<div style="padding:16px;text-align:center;color:#444;font-size:12px;">Tidak ada data</div>`;
+                return;
+            }
+            el.innerHTML = buildItemsHTML(items, getFolderKey());
+        }).catch(() => {
+            const el = document.getElementById('_sw_mpopup_items');
+            if (el) el.innerHTML = `<div style="padding:16px;text-align:center;color:#444;font-size:12px;">Gagal memuat</div>`;
+        });
     }
 
     // ── Fade out helper ────────────────────────────────────
@@ -370,30 +386,57 @@
         setTimeout(() => el.remove(), 180);
     }
 
+    function skeletonVisitorRows(n = 4) {
+        return Array.from({length: n}, () => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:10px 10px;"><div class="_sw_skel" style="width:16px;height:10px;"></div></td>
+                <td style="padding:10px 10px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);animation:_swSkeleton 1.2s ease infinite;flex-shrink:0;"></div>
+                        <div class="_sw_skel" style="width:80px;"></div>
+                    </div>
+                </td>
+                <td style="padding:10px 10px;"><div class="_sw_skel" style="width:50px;"></div></td>
+                <td style="padding:10px 10px;"><div class="_sw_skel" style="width:70px;"></div></td>
+            </tr>`).join('');
+    }
+
+    // Render visitor row HTML dari data
+    function visitorRowsHTML(visitors) {
+        if (!visitors.length)
+            return `<tr><td colspan="4" style="padding:32px;text-align:center;color:#444;font-size:13px;">Belum ada yang berkunjung</td></tr>`;
+        return visitors.map((v, i) => {
+            const av = v.avatar_url
+                ? `<img src="${v.avatar_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+                : `<div style="width:28px;height:28px;border-radius:50%;background:rgba(0,234,255,0.1);
+                    border:1px solid rgba(0,234,255,0.2);display:flex;align-items:center;justify-content:center;
+                    font-size:11px;font-weight:700;color:#00eaff;flex-shrink:0;">
+                    ${(v.visitor_name||'?')[0].toUpperCase()}</div>`;
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:8px 10px;color:#444;font-size:11px;">${i+1}</td>
+                <td style="padding:8px 10px;"><div style="display:flex;align-items:center;gap:8px;">${av}
+                    <span style="font-size:13px;font-weight:600;color:#ddd;">${v.visitor_name||'—'}</span></div></td>
+                <td style="padding:8px 10px;font-size:12px;color:#777;">${v.visitor_class||'—'}</td>
+                <td style="padding:8px 10px;font-size:11px;color:#555;white-space:nowrap;">${fmtTime(v.visited_at)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Update tbody + badge count setelah data datang
+    function populateVisitorPopup(visitors) {
+        const tbody = document.getElementById('_sw_vtbody');
+        const badge = document.getElementById('_sw_vbadge');
+        if (tbody) tbody.innerHTML = visitorRowsHTML(visitors);
+        if (badge) badge.textContent = `<span id="_sw_vbadge">${visitors ? visitors.length + "×" : "…"}</span>`;
+    }
+
+    // Render popup langsung (visitors=null → skeleton)
     function showVisitorPopup(visitors) {
         closeVisitor();
-
         const pop = document.createElement('div');
         pop.id = '_sw_vpopup';
         pop.onclick = e => { if (e.target === pop) closeVisitor(); };
-
-        const rows = visitors.length
-            ? visitors.map((v, i) => {
-                const av = v.avatar_url
-                    ? `<img src="${v.avatar_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-                    : `<div style="width:28px;height:28px;border-radius:50%;background:rgba(0,234,255,0.1);
-                        border:1px solid rgba(0,234,255,0.2);display:flex;align-items:center;justify-content:center;
-                        font-size:11px;font-weight:700;color:#00eaff;flex-shrink:0;">
-                        ${(v.visitor_name || '?')[0].toUpperCase()}</div>`;
-                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-                    <td style="padding:8px 10px;color:#444;font-size:11px;">${i + 1}</td>
-                    <td style="padding:8px 10px;"><div style="display:flex;align-items:center;gap:8px;">${av}
-                        <span style="font-size:13px;font-weight:600;color:#ddd;">${v.visitor_name || '—'}</span></div></td>
-                    <td style="padding:8px 10px;font-size:12px;color:#777;">${v.visitor_class || '—'}</td>
-                    <td style="padding:8px 10px;font-size:11px;color:#555;white-space:nowrap;">${fmtTime(v.visited_at)}</td>
-                </tr>`;
-            }).join('')
-            : `<tr><td colspan="4" style="padding:32px;text-align:center;color:#444;font-size:13px;">Belum ada yang berkunjung</td></tr>`;
+        const rows = visitors ? visitorRowsHTML(visitors) : skeletonVisitorRows();
 
         pop.innerHTML = `
             <div style="background:#0e0f16;border:1px solid rgba(0,234,255,0.15);border-radius:16px;
@@ -417,7 +460,7 @@
                     </div>
                     <div style="font-size:12px;font-weight:700;color:#00eaff;flex-shrink:0;
                         background:rgba(0,234,255,0.08);padding:3px 12px;border-radius:20px;">
-                        ${visitors.length}×
+                        <span id="_sw_vbadge">${visitors ? visitors.length + "×" : "…"}</span>
                     </div>
                     <button id="_sw_vclose"
                         style="background:none;border:none;color:#444;cursor:pointer;font-size:18px;
@@ -432,7 +475,7 @@
                             <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;color:#333;text-transform:uppercase;">Kelas</th>
                             <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;color:#333;text-transform:uppercase;">Waktu</th>
                         </tr></thead>
-                        <tbody>${rows}</tbody>
+                        <tbody id="_sw_vtbody">${rows}</tbody>
                     </table>
                 </div>
             </div>`;
@@ -470,16 +513,15 @@
             <circle cx="12" cy="12" r="3"/>
         </svg>
         <span id="_sw_badge"></span>`;
-    eyeBtn.onclick = async () => {
+    eyeBtn.onclick = () => {
         closeMenu();
-        eyeBtn.style.opacity = '0.5'; eyeBtn.style.pointerEvents = 'none';
-        try {
-            const data = await fetchVisitors();
+        // Tampilkan popup skeleton langsung
+        showVisitorPopup(null);
+        // Fetch di background, update popup
+        fetchVisitors().then(data => {
             sessionStorage.setItem(`_sw_vc_${getFolderKey()}`, String(data.length));
-            showVisitorPopup(data);
-        }
-        catch { showVisitorPopup([]); }
-        finally { eyeBtn.style.opacity = ''; eyeBtn.style.pointerEvents = ''; }
+            populateVisitorPopup(data);
+        }).catch(() => populateVisitorPopup([]));
     };
 
     pill.appendChild(menuBtn);

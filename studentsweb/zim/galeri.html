@@ -5,7 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nizam — mygalleryy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <script src="../../js/magic-pill.js" data-position="top-right" data-offset-x="20" data-offset-y="80"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -53,79 +60,147 @@
   <!-- GALLERY GRID -->
   <div class="galeri-grid">
 
-    <!-- Item 1 (wide) -->
     <div class="galeri-item" data-cat="web" data-title="aku, vscode, dan firefox"
-      data-desc="Web app dashboard untuk manajemen konten" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <img src="img/code1.jpeg" alt="">
-      </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// dashboard-admin.jsx</span>
-      </div>
-    </div>
-
-    <!-- Item 2 -->
-    <div class="galeri-item" data-cat="music" data-title="Studio Session 🎸"
-      data-desc="Sesi rekaman di kamar, gitar akustik + loop pedal" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <div class="gp-icon">🎸</div>
-        <strong style="color:var(--text)">Studio Session</strong>
-        <span>Home Recording</span>
-      </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// home_studio.jpg</span>
+      data-desc="Coding session seru bareng VSCode dan Firefox" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/random4.jpg" alt="VSCode & Firefox"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">miaw</span>
+        <span class="galeri-caption-file">// random4.jpg</span>
       </div>
     </div>
 
-    <!-- Item 3 -->
-    <div class="galeri-item" data-cat="tech" data-title="PC Build 🔧"
-      data-desc="Custom build gaming PC, termasuk cable management" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <div class="gp-icon">🔧</div>
-        <strong style="color:var(--text)">PC Custom Build</strong>
-        <span>Hardware Project</span>
-      </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// pc_build_2024.jpg</span>
+    <div class="galeri-item" data-cat="web" data-title="Code Session #2" data-desc="Ngulik project web, ngejar deadline"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/random1.jpeg" alt="Code Session 2"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">ukas hutaj uka</span>
+        <span class="galeri-caption-file">// random1.jpeg</span>
       </div>
     </div>
 
-    <!-- Item 4 (wide) -->
-    <div class="galeri-item" data-cat="web" data-title="E-Commerce App"
-      data-desc="Full-stack toko online dengan PHP, MySQL, dan Midtrans" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <div class="gp-icon">🛒</div>
-        <strong style="color:var(--text)">E-Commerce App</strong>
-        <span>PHP + MySQL + Bootstrap</span>
-      </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// ecommerce_project.php</span>
+    <div class="galeri-item" data-cat="web" data-title="Code Session #3" data-desc="Full-stack development, PHP + MySQL"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/music.jpeg" alt="Code Session 3"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">pyano</span>
+        <span class="galeri-caption-file">// music.jpeg</span>
       </div>
     </div>
 
-    <!-- Item 5 -->
-    <div class="galeri-item" data-cat="music" data-title="Chord Progression"
-      data-desc="Noodling jam session dengan chord em7 - Cmaj7" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <div class="gp-icon">🎵</div>
-        <strong style="color:var(--text)">Chord Progression</strong>
-        <span>Fingerstyle Guitar</span>
-      </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// jam_session.mp4</span>
+    <div class="galeri-item" data-cat="music" data-title="Music Session 🎵" data-desc="Ngulik melodi dan chord di kamar"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech6.jpg" alt="Music"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">benerin hp samwan</span>
+        <span class="galeri-caption-file">// tech6.jpg</span>
       </div>
     </div>
 
-    <!-- Item 6 -->
-    <div class="galeri-item" data-cat="tech" data-title="Arduino Project"
-      data-desc="Smart home mini: kontrol lampu via web interface" onclick="openLightbox(this)">
-      <div class="galeri-placeholder">
-        <div class="gp-icon">⚡</div>
-        <strong style="color:var(--text)">Arduino IoT</strong>
-        <span>Smart Home Mini</span>
+    <div class="galeri-item" data-cat="music" data-title="Studio Vibes 🎸"
+      data-desc="Sesi latihan, earphone in, dunia luar off" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/music3.jpg" alt="Music 2"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">miaw piano</span>
+        <span class="galeri-caption-file">// music3.jpg</span>
       </div>
-      <div class="galeri-overlay">
-        <span class="galeri-caption">// arduino_iot.ino</span>
+    </div>
+
+    <div class="galeri-item" data-cat="music" data-title="Piano & Feelings 🎹"
+      data-desc="Main piano, belajar lagu baru, repeat" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech7.jpg" alt="Music 3"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">bongkar proyektor</span>
+        <span class="galeri-caption-file">// tech7.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="random" data-title="Random Moment #1"
+      data-desc="Momen random yang layak diabadiin" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech1.jpg" alt="Random 1"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">bongkar laptop</span>
+        <span class="galeri-caption-file">// tech1.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="random" data-title="Random Moment #3"
+      data-desc="Kadang yang random itu yang paling berkesan" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech5.jpg" alt="Random 3"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">flash hape</span>
+        <span class="galeri-caption-file">// tech5.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="random" data-title="Random Moment #4" data-desc="Life outside the screen"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/code1.jpeg" alt="Random 4"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">aku, vscode, dan firefox</span>
+        <span class="galeri-caption-file">// code1.jpeg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #1"
+      data-desc="Ngulik hardware, bongkar pasang komponen" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech4.jpg" alt="Tech 1"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">rakit speaker</span>
+        <span class="galeri-caption-file">// tech4.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #2" data-desc="Eksplorasi komponen elektronik"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/code2.jpg" alt="Tech 2"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">ngoding di temenin cucunguk</span>
+        <span class="galeri-caption-file">// code2.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #3" data-desc="Rakit, uji, benerin, ulangi"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech2.jpg" alt="Tech 3"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">nyoba microcontroller</span>
+        <span class="galeri-caption-file">// tech2.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #4" data-desc="Project IoT smart room ESP32"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/tech3.jpg" alt="Tech 4"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">bass booster cenah</span>
+        <span class="galeri-caption-file">// tech3.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #5" data-desc="Bongkar pasang, namanya juga hobi"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/music2.jpeg" alt="Tech 5"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">bongkar pyano</span>
+        <span class="galeri-caption-file">// music2.jpeg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #6" data-desc="Flashing, modding, ngulik firmware"
+      onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/code3.jpg" alt="Tech 6"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">claudeai the best</span>
+        <span class="galeri-caption-file">// code3.jpg</span>
+      </div>
+    </div>
+
+    <div class="galeri-item" data-cat="tech" data-title="Tech Project #7"
+      data-desc="Speaker, kipas, PSU — semuanya dicoba" onclick="openLightbox(this)">
+      <div class="galeri-photo"><img src="img/random3.jpg" alt="Tech 7"></div>
+      <div class="galeri-caption">
+        <span class="galeri-caption-title">miau</span>
+        <span class="galeri-caption-file">// random.jpg</span>
       </div>
     </div>
 
@@ -181,12 +256,11 @@
     function openLightbox(el) {
       const lb = document.getElementById('lightbox');
       const content = document.getElementById('lightbox-content');
-      const img = el.querySelector('img');
+      const img = el.querySelector('.galeri-photo img');
       const title = el.dataset.title;
       const desc = el.dataset.desc;
 
       if (img && img.src) {
-        // Ada gambar — tampilkan gambar beneran
         content.innerHTML = `
           <img src="${img.src}" alt="${title}" class="lb-image" />
           <div class="lb-meta">
@@ -195,7 +269,6 @@
           </div>
         `;
       } else {
-        // Fallback emoji
         const icon = iconMap[el.dataset.cat] || '🖼️';
         content.innerHTML = `
           <div class="lb-icon">${icon}</div>
