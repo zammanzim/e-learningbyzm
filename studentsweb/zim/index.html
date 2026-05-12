@@ -44,7 +44,7 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-left">
+    <div class="hero-left" data-anim="fade-up">
       <p class="hero-prompt">whoami</p>
       <h1 class="hero-name">
         Haii, Saya<br>
@@ -62,7 +62,7 @@
       </div>
     </div>
 
-    <div class="hero-right">
+    <div class="hero-right" data-anim="fade-left" data-delay="200">
       <div class="terminal-window">
         <div class="terminal-bar">
           <div class="t-dot red"></div>
@@ -97,7 +97,7 @@
   </section>
 
   <!-- SKILL CHIPS -->
-  <div class="skills-marquee-wrap">
+  <div class="skills-marquee-wrap" data-anim="fade-up">
     <div class="skills-row">
       <div class="skill-chip">HTML5</div>
       <div class="skill-chip">CSS3</div>
@@ -128,14 +128,14 @@
   <!-- HOBI SECTION -->
   <section class="hobi-section">
     <div class="hobi-header">
-      <div class="section-tag">hobbies</div>
-      <h2 class="section-title">What I Like To Do</h2>
+      <div class="section-tag" data-anim="fade-up">hobbies</div>
+      <h2 class="section-title" data-anim="fade-up" data-delay="100">What I Like To Do</h2>
     </div>
 
     <!-- Music -->
     <div class="hobi-block music-block">
-      <div class="hobi-block-icon">🎹</div>
-      <div class="hobi-block-body">
+      <div class="hobi-block-icon" data-anim="fade-right">🎹</div>
+      <div class="hobi-block-body" data-anim="fade-left" data-delay="150">
         <h3>Playing Music</h3>
         <p>I like playing piano. Berawal dari nekat beli piano 1jt an, saya terus berlatih dan memainkannya setiap hari. Sampai saya bisa tau semua chord, sinkron main 2 tangan, dan hafal banyak lagu. Awalnya mungkin tidak mudah, tapi saya terus berlatih dan berlatih sampai saat ini. I wish I can become a skilled musician.</p>
       </div>
@@ -143,17 +143,17 @@
 
     <!-- Tech -->
     <div class="hobi-block tech-block reverse">
-      <div class="hobi-block-body">
+      <div class="hobi-block-body" data-anim="fade-right">
         <h3>Electronic Enthusiast</h3>
         <p>Selain membuat program, saya juga suka ngulik gimana cara kerja hardware menjalankan program itu. Mulai dari suka bongkar/benerin HP, bongkar laptop, bikin project smart room ESP32, flashing HP. Bahkan sesuatu yang non-programmable seperti speaker, kipas, power supply, LED sering saya bongkar dan ulik.</p>
       </div>
-      <div class="hobi-block-icon">🔧</div>
+      <div class="hobi-block-icon" data-anim="fade-left" data-delay="150">🔧</div>
     </div>
 
     <!-- Code -->
     <div class="hobi-block code-block">
-      <div class="hobi-block-icon">💻</div>
-      <div class="hobi-block-body">
+      <div class="hobi-block-icon" data-anim="fade-right">💻</div>
+      <div class="hobi-block-body" data-anim="fade-left" data-delay="150">
         <h3>Programming</h3>
         <p>Dari frontend sampe backend, saya hampir kuasai semuanya yang basic. Seperti HTML, CSS, JS, SQL, Database, dll. Saya awalnya ga kenal coding, pas masuk SMK RPL saya cari tau dan belajar sendiri apa itu coding, eh malah kejauhan. Seperti project e-learniz yang setiap hari selalu saya improve.</p>
       </div>
@@ -190,6 +190,20 @@
       setTimeout(typeRole, deleting ? 60 : 100);
     }
     typeRole();
+  </script>
+
+  <script>
+    // ── Scroll Reveal ──────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+        } else {
+          e.target.classList.remove('is-visible');
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
   </script>
 
   <script>

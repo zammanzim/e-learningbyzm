@@ -46,7 +46,7 @@
   <section class="kontak-hero">
 
     <!-- Kiri: Info -->
-    <div class="kontak-info">
+    <div class="kontak-info" data-anim="fade-right">
       <div class="section-tag">Contact Me</div>
       <h1>Tinggalkan pesan<span style="color:var(--accent)">.</span></h1>
       <p>
@@ -100,7 +100,7 @@
     <div class="kontak-right">
 
       <!-- Form -->
-      <div class="kontak-form-wrap">
+      <div class="kontak-form-wrap" data-anim="fade-left" data-delay="150">
         <p class="form-header">send_message --to=nizam</p>
 
         <div id="contact-form">
@@ -128,7 +128,7 @@
       </div>
 
       <!-- Pesan masuk -->
-      <div class="pesan-list-wrap">
+      <div class="pesan-list-wrap" data-anim="fade-left" data-delay="250">
         <p class="form-header">incoming_messages --all</p>
         <div id="pesan-list">
           <div class="pesan-loading">Memuat pesan...</div>
@@ -244,6 +244,18 @@
     }
 
     // ── Hamburger ────────────────────────────────────────────
+    // ── Scroll Reveal ──────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+        } else {
+          e.target.classList.remove('is-visible');
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
+
     const hamburger = document.getElementById('hamburger');
     const mobileNav = document.getElementById('mobile-nav');
     hamburger.addEventListener('click', () => {

@@ -45,7 +45,7 @@
   <!-- PROFIL HERO -->
   <section class="profil-hero">
     <!-- Foto -->
-    <div class="profil-photo-wrap">
+    <div class="profil-photo-wrap" data-anim="fade-right">
       <div class="profil-photo-placeholder">
         <img src="img/a1.jpg" alt="">
       </div>
@@ -59,7 +59,7 @@
     </div>
 
     <!-- Info -->
-    <div class="profil-info">
+    <div class="profil-info" data-anim="fade-left" data-delay="150">
       <div class="section-tag">About Me</div>
       <h1>Nizam F<span class="dot">.</span> Arafli</h1>
       <p class="profil-subtitle">// Web Developer & Multitalented Creator</p>
@@ -119,80 +119,41 @@
 
   <!-- SKILLS SECTION -->
   <section class="skills-section">
-    <div class="section-tag">skills</div>
-    <h2 class="section-title">Tech Stack &amp; Skills</h2>
+    <div class="section-tag" data-anim="fade-up">skills</div>
+    <h2 class="section-title" data-anim="fade-up" data-delay="100">Tech Stack &amp; Skills</h2>
 
     <div class="skills-grid">
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>HTML / CSS</span><span>95%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:95%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="100">
+        <div class="skill-bar-label"><span>HTML / CSS</span><span>95%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:95%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>JavaScript</span><span>90%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:90%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="150">
+        <div class="skill-bar-label"><span>JavaScript</span><span>90%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:90%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>C++ / Microcontroller</span><span>75%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:75%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="200">
+        <div class="skill-bar-label"><span>C++ / Microcontroller</span><span>75%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:75%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>PHP / Laravel</span><span>70%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:70%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="250">
+        <div class="skill-bar-label"><span>PHP / Laravel</span><span>70%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:70%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>MySQL / Database</span><span>80%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:80%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="100">
+        <div class="skill-bar-label"><span>MySQL / Database</span><span>80%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:80%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>Hardware / Teknisi</span><span>88%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:88%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="150">
+        <div class="skill-bar-label"><span>Hardware / Teknisi</span><span>88%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:88%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>Git / Version Control</span><span>82%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:82%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="200">
+        <div class="skill-bar-label"><span>Git / Version Control</span><span>82%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:82%"></div></div>
       </div>
-
-      <div class="skill-bar-item">
-        <div class="skill-bar-label">
-          <span>Electrician / Elektro</span><span>90%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div class="skill-bar-fill" style="width:90%"></div>
-        </div>
+      <div class="skill-bar-item" data-anim="fade-up" data-delay="250">
+        <div class="skill-bar-label"><span>Electrician / Elektro</span><span>90%</span></div>
+        <div class="skill-bar-track"><div class="skill-bar-fill" style="width:90%"></div></div>
       </div>
     </div>
   </section>
@@ -208,6 +169,17 @@
   </footer>
 
   <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+        } else {
+          e.target.classList.remove('is-visible');
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
+
     const hamburger = document.getElementById('hamburger');
     const mobileNav = document.getElementById('mobile-nav');
     hamburger.addEventListener('click', () => {

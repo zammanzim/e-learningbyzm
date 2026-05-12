@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Masuk • Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/toast.js"></script>
+    <script src="../js/basicfeat.js" defer></script>
+    <script src="../js/sidebar.js" defer></script>
+    <script src="../js/auth.js" defer></script>
+    <link rel="stylesheet" href="../css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .page-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header h2 i { color: var(--accent, #00eaff); }
+        .badge-count {
+            font-size: .75rem;
+            font-weight: 700;
+            background: rgba(0,234,255,0.1);
+            color: #00eaff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0,234,255,0.2);
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: border-color .2s;
+        }
+        .file-item:hover { border-color: rgba(255,255,255,0.12); }
+
+        .fi-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: rgba(0,234,255,0.08);
+            border: 1px solid rgba(0,234,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: #00eaff; font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .fi-info { flex: 1; min-width: 0; }
+        .fi-name {
+            font-size: .9rem;
+            font-weight: 600;
+            color: #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .fi-meta {
+            font-size: .75rem;
+            color: #555;
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .fi-meta span { display: flex; align-items: center; gap: 4px; }
+        .fi-msg {
+            font-size: .78rem;
+            color: #777;
+            margin-top: 5px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            padding: 5px 8px;
+            border-left: 2px solid rgba(0,234,255,0.3);
+        }
+
+        .fi-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn-dl {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--accent, #00eaff);
+            color: #0a0a0c;
+            border: none;
+            border-radius: 8px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .btn-dl:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-dl:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+        .btn-del {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            background: none;
+            border: 1px solid rgba(255,71,87,0.25);
+            color: #ff4757;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+        }
+        .btn-del:hover { background: rgba(255,71,87,0.1); }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #444;
+        }
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: .3;
+        }
+
+        .skeleton {
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            height: 80px;
+            animation: skPulse 1.2s ease infinite;
+        }
+        @keyframes skPulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
+
+        @media (max-width: 600px) {
+            .fi-actions { flex-direction: column; }
+            .btn-dl span { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="right-section">
+            <div class="page-header">
+                <h2>
+                    <i class="fa-solid fa-inbox"></i>
+                    File Masuk
+                    <span class="badge-count" id="countBadge">—</span>
+                </h2>
+                <button onclick="loadFiles()" style="background:none;border:1px solid rgba(255,255,255,0.1);
+                    color:#777;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;
+                    display:flex;align-items:center;gap:6px;transition:all .2s;"
+                    onmouseover="this.style.color='#ddd'" onmouseout="this.style.color='#777'">
+                    <i class="fa-solid fa-rotate-right"></i> Refresh
+                </button>
+            </div>
+
+            <div class="file-list" id="fileList">
+                <div class="skeleton"></div>
+                <div class="skeleton" style="height:70px;opacity:.6;"></div>
+                <div class="skeleton" style="height:60px;opacity:.3;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getFileIcon(type, name) {
+            const ext = (name || '').split('.').pop().toLowerCase();
+            if (!type) type = '';
+            if (type.startsWith('image/')) return 'fa-image';
+            if (type.startsWith('video/')) return 'fa-film';
+            if (type.startsWith('audio/')) return 'fa-music';
+            if (['zip','rar','7z','tar','gz'].includes(ext)) return 'fa-file-zipper';
+            if (ext === 'pdf') return 'fa-file-pdf';
+            if (['doc','docx'].includes(ext)) return 'fa-file-word';
+            if (['xls','xlsx'].includes(ext)) return 'fa-file-excel';
+            if (['ppt','pptx'].includes(ext)) return 'fa-file-powerpoint';
+            if (['js','ts','py','html','css','php','java','cpp','c','json'].includes(ext)) return 'fa-file-code';
+            return 'fa-file';
+        }
+
+        function formatSize(bytes) {
+            if (!bytes) return '—';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/(1024*1024)).toFixed(1) + ' MB';
+        }
+
+        function fmtTime(iso) {
+            return new Date(iso).toLocaleString('id-ID', {
+                day:'2-digit', month:'short', year:'numeric',
+                hour:'2-digit', minute:'2-digit'
+            });
+        }
+
+        async function loadFiles() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = `
+                <div class="skeleton"></div>
+                <div class="skeleton" style="height:70px;opacity:.6;"></div>
+                <div class="skeleton" style="height:60px;opacity:.3;"></div>`;
+
+            const { data, error } = await supabase
+                .from('file_transfers')
+                .select('*')
+                .order('uploaded_at', { ascending: false });
+
+            if (error) {
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat file.</div>`;
+                return;
+            }
+
+            document.getElementById('countBadge').textContent = data.length || '0';
+
+            if (!data.length) {
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada file masuk.</div>`;
+                return;
+            }
+
+            list.innerHTML = data.map(f => `
+                <div class="file-item" id="fi-${f.id}">
+                    <div class="fi-icon">
+                        <i class="fa-solid ${getFileIcon(f.file_type, f.file_name)}"></i>
+                    </div>
+                    <div class="fi-info">
+                        <div class="fi-name" title="${f.file_name}">${f.file_name}</div>
+                        <div class="fi-meta">
+                            <span><i class="fa-solid fa-user" style="font-size:9px;color:#444;"></i>${f.uploader_name || '—'}</span>
+                            <span style="color:#333;">·</span>
+                            <span>${f.uploader_class || '—'}</span>
+                            <span style="color:#333;">·</span>
+                            <span>${formatSize(f.file_size)}</span>
+                            <span style="color:#333;">·</span>
+                            <span>${fmtTime(f.uploaded_at)}</span>
+                        </div>
+                        ${f.message ? `<div class="fi-msg">${f.message}</div>` : ''}
+                    </div>
+                    <div class="fi-actions">
+                        <button class="btn-dl" id="dl-${f.id}" onclick="downloadAndDelete(${f.id}, '${f.file_path}', '${f.file_name}')">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Download</span>
+                        </button>
+                        <button class="btn-del" title="Hapus tanpa download" onclick="deleteOnly(${f.id}, '${f.file_path}')">
+                            <i class="fa-solid fa-trash" style="font-size:.8rem;"></i>
+                        </button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function downloadAndDelete(id, filePath, fileName) {
+            const btn = document.getElementById(`dl-${id}`);
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Mengunduh...</span>`;
+
+            try {
+                // Download file dari Supabase Storage
+                const { data: blob, error } = await supabase.storage
+                    .from('transfers')
+                    .download(filePath);
+
+                if (error) throw error;
+
+                // Trigger download di browser
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // Hapus dari storage & DB
+                await supabase.storage.from('transfers').remove([filePath]);
+                await supabase.from('file_transfers').delete().eq('id', id);
+
+                // Remove dari UI dengan animasi
+                const el = document.getElementById(`fi-${id}`);
+                el.style.transition = 'all .3s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    el.remove();
+                    const remaining = document.querySelectorAll('.file-item').length;
+                    document.getElementById('countBadge').textContent = remaining;
+                    if (!remaining) {
+                        document.getElementById('fileList').innerHTML =
+                            `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada file masuk.</div>`;
+                    }
+                }, 300);
+
+                showToast(`"${fileName}" berhasil diunduh & dihapus ✓`);
+            } catch(err) {
+                showToast('Gagal download: ' + (err.message || err), 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-download"></i><span>Download</span>`;
+            }
+        }
+
+        async function deleteOnly(id, filePath) {
+            const ok = await showPopup('Hapus file ini tanpa download?', 'confirm');
+            if (!ok) return;
+
+            await supabase.storage.from('transfers').remove([filePath]);
+            await supabase.from('file_transfers').delete().eq('id', id);
+
+            const el = document.getElementById(`fi-${id}`);
+            el.style.transition = 'all .3s ease';
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.remove();
+                const remaining = document.querySelectorAll('.file-item').length;
+                document.getElementById('countBadge').textContent = remaining;
+                if (!remaining) {
+                    document.getElementById('fileList').innerHTML =
+                        `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada file masuk.</div>`;
+                }
+            }, 300);
+
+            showToast('File dihapus ✓');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFiles);
+
+        // Realtime — auto refresh kalau ada file baru masuk
+        document.addEventListener('DOMContentLoaded', () => {
+            supabase.channel('file_transfers_changes')
+                .on('postgres_changes', {
+                    event: 'INSERT', schema: 'public', table: 'file_transfers'
+                }, () => {
+                    showToast('📥 File baru masuk!');
+                    loadFiles();
+                })
+                .subscribe();
+        });
+    </script>
+</body>
+</html>
