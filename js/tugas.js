@@ -271,8 +271,29 @@ function updateProgressUI() {
 function renderTasks(data) {
     const container = document.getElementById('taskList');
     if (!container) return;
-    const total = allTasks.length;
 
+    if (data.length === 0) {
+        const isEmptyPending = currentFilter === 'pending';
+        const emptyState = document.createElement("div");
+        emptyState.className = isEmptyPending ? "empty-state success" : "empty-state";
+        
+        if (isEmptyPending) {
+            emptyState.innerHTML = `
+                <i class="fa-solid fa-circle-check"></i>
+                <p>Hore! Semua tugas sudah selesai kamu kerjakan.</p>
+            `;
+        } else {
+            emptyState.innerHTML = `
+                <i class="fa-solid fa-clipboard-list"></i>
+                <p>Belum ada tugas yang tercatat.</p>
+            `;
+        }
+        
+        container.replaceChildren(emptyState);
+        return;
+    }
+
+    const total = allTasks.length;
     const fragment = document.createDocumentFragment();
 
     data.forEach((item) => {
@@ -377,10 +398,16 @@ async function toggleStatus(e, id, btn) {
     try {
         if (isDone) {
             await supabase.from('user_progress').delete().eq('user_id', user.id).eq('announcement_id', id);
-            doneIds = doneIds.filter(d => d !== id);
+            doneIds = doneIds.filter(d => String(d) !== String(id));
         } else {
             await supabase.from('user_progress').insert({ user_id: user.id, announcement_id: id });
-            doneIds.push(id);
+            doneIds.push(String(id));
+
+            // LOG ACTIVITY: User menandai tugas selesai (+10 poin)
+            const taskTitle = task?.big_title || 'Tugas';
+            if (typeof logActivity === 'function') {
+                logActivity(`Menyelesaikan Tugas: ${taskTitle}`, "Tugas", 10, String(id));
+            }
         }
 
         // Invalidate cache done & rank biar next load fresh

@@ -313,16 +313,28 @@ const SubjectApp = {
 
     renderAnnouncements() {
         const container = document.getElementById("announcements");
+        if (!container) return;
 
         const header = document.createElement("h3");
         header.style.marginTop = "30px";
-        header.textContent = "Materi & Pengumuman";
+        header.textContent = this.state.isLessonMode ? "Daftar Tugas" : "Materi & Pengumuman";
 
         if (this.state.announcements.length === 0) {
-            const empty = document.createElement("h3");
-            empty.style.cssText = "color: #ff6200; padding:20px;";
-            empty.textContent = "Belum ada materi";
-            container.replaceChildren(header, empty);
+            const emptyState = document.createElement("div");
+            if (this.state.isLessonMode) {
+                emptyState.className = "empty-state success";
+                emptyState.innerHTML = `
+                    <i class="fa-solid fa-circle-check"></i>
+                    <p>Semua tugas sudah selesai atau belum ada tugas baru.</p>
+                `;
+            } else {
+                emptyState.className = "empty-state";
+                emptyState.innerHTML = `
+                    <i class="fa-solid fa-folder-open"></i>
+                    <p>Belum ada materi atau pengumuman untuk mata pelajaran ini.</p>
+                `;
+            }
+            container.replaceChildren(header, emptyState);
             return;
         }
 
@@ -1095,8 +1107,13 @@ const SubjectApp = {
         if (!await showPopup("Hapus materi ini?", "confirm")) return;
         const id = card.dataset.id;
         await supabase.from("subject_announcements").delete().eq("id", id);
-        card.remove();
-        this.state.announcements = this.state.announcements.filter(a => a.id !== id);
+        
+        // Update state lokal
+        this.state.announcements = this.state.announcements.filter(a => String(a.id) !== String(id));
+        
+        // Re-render biar empty state muncul kalau materi habis
+        this.renderAnnouncements();
+        
         showPopup("Terhapus!", "success");
     },
 

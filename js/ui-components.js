@@ -139,6 +139,235 @@ const UIComponents = {
 
         body.insertAdjacentHTML('afterbegin', headerHTML);
         body.insertAdjacentHTML('beforeend', modalsHTML);
+
+        // 3. CONTEXT MENU
+        this.contextMenu.init();
+    },
+
+    contextMenu: {
+        init() {
+            if (document.getElementById('customContextMenu')) return;
+
+            const menu = document.createElement('div');
+            menu.id = 'customContextMenu';
+            menu.className = 'context-menu';
+            document.body.appendChild(menu);
+
+            document.addEventListener('contextmenu', (e) => this.handleContextMenu(e));
+            document.addEventListener('click', () => this.hide());
+            window.addEventListener('scroll', () => this.hide());
+            window.addEventListener('resize', () => this.hide());
+
+            // Support for Mobile Long Press
+            this.initTouchEvents();
+        },
+
+        initTouchEvents() {
+            let touchTimer;
+            const longPressDuration = 500; // ms
+
+            document.addEventListener('touchstart', (e) => {
+                // Jangan trigger kalau klik kanan asli (untuk device hybrid)
+                if (e.touches.length > 1) return;
+
+                const touch = e.touches[0];
+                const card = e.target.closest('.course-card');
+                
+                touchTimer = setTimeout(() => {
+                    this.handleLongPress(touch, card);
+                }, longPressDuration);
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                clearTimeout(touchTimer);
+            });
+
+            document.addEventListener('touchmove', () => {
+                clearTimeout(touchTimer);
+            }, { passive: true });
+        },
+
+        handleLongPress(touch, card) {
+            // Hanya aktif di Subject & Tugas page
+            const isSubjectPage = !!document.getElementById('announcements');
+            const isTugasPage = !!document.getElementById('taskList');
+            if (!isSubjectPage && !isTugasPage) return;
+
+            // Vibrate feedback if supported
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
+
+            this.renderMenu(card, isAdmin);
+            this.show(touch.pageX, touch.pageY);
+        },
+
+        handleContextMenu(e) {
+            // Hanya aktif di Subject, Tugas, atau Announcements page
+            const isSubjectPage = !!document.getElementById('announcements');
+            const isTugasPage = !!document.getElementById('taskList');
+            const isDailyCard = e.target.closest('#dailyInfoCard');
+            
+            // Jika bukan di halaman yang didukung, biarkan menu default browser
+            if (!isSubjectPage && !isTugasPage && !isDailyCard) return;
+
+            e.preventDefault();
+
+            const card = e.target.closest('.course-card');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
+
+            this.renderMenu(card || isDailyCard, isAdmin, !!isDailyCard);
+            this.show(e.pageX, e.pageY);
+        },
+
+        renderMenu(card, isAdmin, isDaily = false) {
+            const menu = document.getElementById('customContextMenu');
+            let html = '<ul>';
+
+            if (isDaily) {
+                // Daily Card Context
+                html += `
+                    <li class="has-submenu" onclick="UIComponents.contextMenu.toggleSubmenu(event, this)">
+                        <i class="fa-solid fa-calendar-days"></i> Lihat Jadwal
+                        <div class="context-submenu daily-days-grid">
+                            ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(day => 
+                                `<div class="ctx-day-item" onclick="window.switchDailyDay('${day}')">${day.substring(0,3)}</div>`
+                            ).join('')}
+                        </div>
+                    </li>
+                `;
+                if (isAdmin) {
+                    if (window.isDailyEditing) {
+                        html += `<li onclick="window.saveAllDrafts()"><i class="fa-solid fa-check"></i> Simpan Jadwal</li>`;
+                    } else {
+                        html += `<li onclick="window.toggleDailyEditMode()"><i class="fa-solid fa-pen-to-square"></i> Edit Jadwal</li>`;
+                    }
+                }
+                html += `<div class="divider"></div>`;
+            } else if (card) {
+                // Card Context
+                html += `<li onclick="UIComponents.contextMenu.copyCardText()"><i class="fa-solid fa-copy"></i> Salin Teks</li>`;
+                
+                if (isAdmin) {
+                    html += `
+                        <li onclick="UIComponents.contextMenu.triggerCardAction('edit')"><i class="fa-solid fa-pen-to-square"></i> Edit Materi</li>
+                        <li class="has-submenu" onclick="UIComponents.contextMenu.toggleSubmenu(event, this)">
+                            <i class="fa-solid fa-palette"></i> Ganti Warna
+                            <div class="context-submenu">
+                                ${['default', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'].map(c => 
+                                    `<div class="ctx-color-dot ctx-color-${c}" onclick="UIComponents.contextMenu.changeColor('${c}')" title="${c}"></div>`
+                                ).join('')}
+                            </div>
+                        </li>
+                        <div class="divider"></div>
+                        <li class="danger" onclick="UIComponents.contextMenu.triggerCardAction('delete')"><i class="fa-solid fa-trash"></i> Hapus</li>
+                    `;
+                }
+            }
+
+            // Global Actions (selalu ada di bawah)
+            if (!card && !isDaily && isAdmin) {
+                html += `<li onclick="UIComponents.contextMenu.triggerGlobalAction('add')"><i class="fa-solid fa-plus"></i> Tambah Baru</li>`;
+            }
+            
+            html += `
+                <li onclick="location.reload()"><i class="fa-solid fa-rotate"></i> Refresh Halaman</li>
+                <li onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i class="fa-solid fa-arrow-up"></i> Ke Atas</li>
+            `;
+
+            html += '</ul>';
+            menu.innerHTML = html;
+            this.activeCard = isDaily ? null : card;
+        },
+
+        toggleSubmenu(e, li) {
+            e.stopPropagation();
+            // Toggle class open untuk mobile/click
+            const isOpen = li.classList.contains('open');
+            // Tutup semua submenu lain dulu
+            li.closest('ul').querySelectorAll('.has-submenu').forEach(el => el.classList.remove('open'));
+            if (!isOpen) li.classList.add('open');
+        },
+
+        show(x, y) {
+            const menu = document.getElementById('customContextMenu');
+            menu.style.display = 'block';
+            
+            // Boundary check
+            const menuWidth = menu.offsetWidth;
+            const menuHeight = menu.offsetHeight;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            if (x + menuWidth > screenWidth) x -= menuWidth;
+            if (y + menuHeight > screenHeight) y -= menuHeight;
+
+            menu.style.left = `${x}px`;
+            menu.style.top = `${y}px`;
+
+            setTimeout(() => menu.classList.add('active'), 10);
+        },
+
+        hide() {
+            const menu = document.getElementById('customContextMenu');
+            if (menu) {
+                menu.classList.remove('active');
+                setTimeout(() => menu.style.display = 'none', 150);
+            }
+        },
+
+        copyCardText() {
+            if (!this.activeCard) return;
+            // Hanya ambil isi/deskripsi saja sesuai permintaan user
+            const content = this.activeCard.querySelector('[data-field="content"]')?.innerText || 
+                            this.activeCard.querySelector('p')?.innerText || '';
+            
+            if (!content.trim()) {
+                if (typeof showToast === 'function') showToast('Tidak ada teks untuk disalin', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(content.trim()).then(() => {
+                if (typeof showToast === 'function') showToast('Isi materi berhasil disalin!', 'success');
+            });
+        },
+
+        changeColor(color) {
+            if (!this.activeCard) return;
+            // Panggil fungsi global yang ada di SubjectApp
+            if (typeof SubjectApp !== 'undefined' && SubjectApp.changeCardColor) {
+                SubjectApp.changeCardColor(this.activeCard.dataset.id, color);
+            }
+        },
+
+        triggerCardAction(action) {
+            if (!this.activeCard) return;
+            if (action === 'delete') {
+                const deleteBtn = this.activeCard.querySelector('.delete-btn') || this.activeCard.querySelector('.task-btn-delete');
+                if (deleteBtn) deleteBtn.click();
+            } else if (action === 'edit') {
+                const editBtn = document.getElementById('toggleEditMode');
+                if (editBtn) {
+                    // Jika belum mode edit, nyalakan dulu
+                    if (!document.body.classList.contains('editable-mode') && !editBtn.classList.contains('state-done')) {
+                        editBtn.click();
+                    }
+                    // Scroll ke card tersebut biar enak
+                    this.activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    this.activeCard.style.outline = '2px solid #ff6200';
+                    setTimeout(() => this.activeCard.style.outline = '', 2000);
+                }
+            }
+        },
+
+        triggerGlobalAction(action) {
+            if (action === 'add') {
+                const addBtn = document.getElementById('addAnnouncementBtn');
+                if (addBtn) addBtn.click();
+            }
+        }
     }
 };
 

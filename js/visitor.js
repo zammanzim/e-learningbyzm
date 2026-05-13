@@ -17,9 +17,22 @@ async function logVisitor() {
     if (!user || typeof supabase === 'undefined') return;
 
     const currentPage = (document.title || "Unknown Page")
-        .replace(/\s*[•|·|-]\s*E-Learning Nizam\s*/i, '')
+        .replace(/\s*[•|·|-]\s*(E-Learning Nizam|Web Nizam).*/i, '')
         .trim() || "Unknown Page";
-    if (currentPage.toLowerCase().includes("loading")) return;
+
+    // FILTER: Jangan catat judul sampah atau placeholder saat loading
+    const ignoredTitles = [
+        "loading", 
+        "e-learning nizam", 
+        "web nizam", 
+        "e-learning nizam | web nizam",
+        "unknown page"
+    ];
+    if (ignoredTitles.includes(currentPage.toLowerCase()) || !currentPage) return;
+
+    // Ambil halaman sebelumnya dari sessionStorage
+    const previousPage = sessionStorage.getItem('current_page_name') || 'Luar Web';
+    sessionStorage.setItem('current_page_name', currentPage);
 
     // Debounce: skip kalau halaman & user sama dalam 2 menit terakhir
     const debounceKey = `visitor_log_${user.id}`;
@@ -28,7 +41,7 @@ async function logVisitor() {
     if (last.page === currentPage && (now - (last.ts || 0)) < 2 * 60 * 1000) return;
 
     try {
-        // Upsert: INSERT kalau belum ada, UPDATE kalau sudah ada — 1 query
+        // Upsert ke visitors tetap untuk status Online
         const { error } = await supabase.from("visitors").upsert({
             user_id: user.id,
             class_id: getEffectiveClassId() || user.class_id,
@@ -39,10 +52,58 @@ async function logVisitor() {
 
         if (!error) {
             localStorage.setItem(debounceKey, JSON.stringify({ page: currentPage, ts: now }));
-        } else {
-            console.error("Visitor Log Error:", error);
+            // Log navigasi mendetail: "Dari [Halaman A] ke [Halaman B]"
+            logActivity(`Navigasi: ${previousPage} -> ${currentPage}`, "Navigation", 5, `nav_${currentPage.toLowerCase().replace(/\s+/g, '_')}`);
         }
     } catch (err) { console.error("Log Error:", err); }
+}
+
+// ==========================================
+// 1.5 LOG AKTIVITAS (BUAT LEADERBOARD)
+// ==========================================
+// Irit database: Pake sessionStorage biar 1 aksi cuma dicatat 1x per sesi
+async function logActivity(action, page, points = 1, uniqueId = "") {
+    const user = _getVisitorUser();
+    if (!user || typeof supabase === 'undefined') return;
+
+    const userId = user.id;
+    const actionId = action.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+    const activityKey = `act_${userId}_${actionId}_${uniqueId}`;
+    
+    // 1. ANTI-SPAM: Jika aksi ini sama persis dengan aksi TERAKHIR (misal: refresh halaman)
+    const lastKey = sessionStorage.getItem('last_activity_key');
+    if (activityKey === lastKey) return;
+
+    // 2. LOGIC TOGGLE: 
+    // - Jika Navigation: Boleh berulang (a > b > a) tapi tidak boleh refresh (a > a).
+    // - Jika Materi/Tugas: Tetap 1x per sesi (agar tidak bisa farming poin klik card).
+    if (page !== "Navigation") {
+        if (sessionStorage.getItem(activityKey)) {
+            console.log(`logActivity: Content "${action}" already logged in this session.`);
+            return;
+        }
+    }
+
+    const classId = (typeof getEffectiveClassId === 'function') 
+        ? getEffectiveClassId() 
+        : (user.class_id || "unknown");
+
+    try {
+        const { error } = await supabase.from("activity_logs").insert({
+            user_id: userId,
+            action_text: action,
+            page_name: page,
+            points: points,
+            class_id: classId,
+            reference_id: uniqueId // Simpan ID unik materi/tugas/halaman
+        });
+
+        if (!error) {
+            sessionStorage.setItem(activityKey, "true");
+            sessionStorage.setItem('last_activity_key', activityKey); // Catat sebagai aksi terakhir
+            console.log(`%cActivity Logged: ${action} (+${points} pts)`, "color: #0be881; font-weight: bold;");
+        }
+    } catch (err) { console.error("Activity Log Execution Error:", err); }
 }
 
 // ==========================================
@@ -259,4 +320,30 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
     }
+
+    // --- GLOBAL CLICK CAPTURE FOR ACTIVITY LOGS ---
+    document.addEventListener('click', (e) => {
+        // 1. Klik Kartu Materi (Buka Detail)
+        const card = e.target.closest('.course-card');
+        if (card && card.classList.contains('clickable-card')) {
+            // Jangan catat kalau yang diklik tombol action (delete/bookmark)
+            if (!e.target.closest('button') && !e.target.closest('input')) {
+                const title = card.querySelector('h3')?.innerText || 'Materi';
+                const id = card.dataset.id || "";
+                logActivity(`Membaca Materi: ${title}`, "Subject", 5, id);
+            }
+        }
+
+        // 2. Klik Tombol Selesai Tugas
+        const taskBtn = e.target.closest('.task-btn');
+        if (taskBtn && !taskBtn.hasAttribute('disabled')) {
+            const isDone = taskBtn.classList.contains('done');
+            if (!isDone) { // Hanya catat saat mencentang SELESAI
+                const cardTugas = taskBtn.closest('.course-card');
+                const titleTugas = cardTugas?.querySelector('h3')?.innerText || 'Tugas';
+                const idTugas = cardTugas?.dataset.id || "";
+                logActivity(`Menyelesaikan Tugas: ${titleTugas}`, "Tugas", 10, idTugas);
+            }
+        }
+    });
 });

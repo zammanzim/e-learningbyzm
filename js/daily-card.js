@@ -483,6 +483,17 @@ async function initDailyCard() {
     }
 }
 
+// Fitur ganti hari via Context Menu (Temporary View)
+window.switchDailyDay = function(day) {
+    if (window.isDailyEditing) {
+        if (typeof showToast === 'function') showToast('Selesaikan edit dulu!', 'info');
+        return;
+    }
+    window.editingDay = day; // Kita 'pinjam' editingDay untuk view sementara
+    initDailyCard();
+    if (typeof showToast === 'function') showToast(`Melihat jadwal hari ${day}`, 'info');
+};
+
 // ==========================================
 // TASK BADGE
 // ==========================================
