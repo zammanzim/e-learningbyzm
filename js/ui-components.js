@@ -200,7 +200,7 @@ const UIComponents = {
             const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
 
             this.renderMenu(card, isAdmin);
-            this.show(touch.pageX, touch.pageY);
+            this.show(touch.clientX, touch.clientY);
         },
 
         handleContextMenu(e) {
@@ -219,7 +219,7 @@ const UIComponents = {
             const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
 
             this.renderMenu(card || isDailyCard, isAdmin, !!isDailyCard);
-            this.show(e.pageX, e.pageY);
+            this.show(e.clientX, e.clientY);
         },
 
         renderMenu(card, isAdmin, isDaily = false) {

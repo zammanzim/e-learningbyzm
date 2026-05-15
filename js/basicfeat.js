@@ -8,9 +8,14 @@ window.lockScroll = function () {
     _scrollLockCount++;
     if (_scrollLockCount > 1) return;
     _scrollLockY = window.scrollY;
-    // Kompensasi scrollbar biar konten tidak melebar
+    
     const sbWidth = window.innerWidth - document.documentElement.clientWidth;
     if (sbWidth > 0) document.body.style.paddingRight = sbWidth + 'px';
+    
+    // Trik ampuh buat mobile: position fixed + top negative
+    document.body.style.top = `-${_scrollLockY}px`;
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
     document.body.style.overflow = 'hidden';
 };
 
@@ -18,9 +23,14 @@ window.unlockScroll = function () {
     if (_scrollLockCount <= 0) return;
     _scrollLockCount = Math.max(0, _scrollLockCount - 1);
     if (_scrollLockCount > 0) return;
+
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
-    window.scrollTo({ top: _scrollLockY, behavior: 'instant' });
+    
+    window.scrollTo(0, _scrollLockY);
 };
 
 
