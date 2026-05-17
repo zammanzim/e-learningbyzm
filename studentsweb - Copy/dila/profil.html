@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dila - Profil</title>
+    <script src="../../js/magic-pill.js" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* CSS tambahan untuk gambar profil bulat */
+        .profile-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .profile-image-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
+            z-index: -1;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-user-astronaut"></i> Portfolio
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html#home" class="nav-link">Beranda</a></li>
+                <li class="nav-item"><a href="profil" class="nav-link active">Profil</a></li>
+                <li class="nav-item"><a href="galeri" class="nav-link">Galeri</a></li>
+                <li class="nav-item"><a href="kontak" class="nav-link">Kontak</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="profile-card">
+                <div class="profile-image-container">
+                    <img src="img/imut.jpg" alt="Foto Profil" class="profile-image">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="profile-content">
+                    <h1 class="profile-name">Dila Kirana</h1>
+                    <h2 class="profile-title">Pelajar yang baik hati</h2>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Tugas dpr 1</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-users"></i>
+                            <span>friend</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-star"></i>
+                            <span>5.0 Rating</span>
+                        </div>
+                    </div>
+                    <p class="profile-bio">
+                        Saya adalah seorang pelajar di smk taruna harapn 1 cipatat, dengan jurusan rpl
+                    </p>
+                    <div class="profile-skills">
+                        <h3>Skills</h3>
+                        <div class="skills-grid">
+                            <span class="skill-tag">HTML</span>
+                            <span class="skill-tag">CSS</span>
+                            <span class="skill-tag">JavaScript</span>
+                            <span class="skill-tag">make up</span>
+                            <span class="skill-tag">memasak</span>
+                            <span class="skill-tag">Volly</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

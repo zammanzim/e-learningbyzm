@@ -380,7 +380,10 @@ const SubjectApp = {
         const iconClass = isSaved ? "fa-solid fa-bookmark" : "fa-regular fa-bookmark";
 
         let taskBtnHTML = "";
-        if (this.state.isLessonMode) {
+        // PERUBAHAN: Cek is_lesson per kartu, bukan per halaman
+        const isLessonCard = data.is_lesson === true;
+        
+        if (isLessonCard) {
             const isDone = this.state.completedTasks.includes(String(data.id));
             if (data.is_done === true) {
                 // Diarsipkan — semua siswa selesai, tombol dikunci
@@ -1167,13 +1170,51 @@ const SubjectApp = {
         const btnCancel = document.getElementById('btnCancelAdd');
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('addFiles');
+        const destSelect = document.getElementById('addDestPage');
+        const isLessonToggle = document.getElementById('addIsLesson');
 
         // List warna yang tersedia (sesuai data-color di HTML)
         const availableColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'];
 
         if (!btnAdd) return;
-        btnAdd.onclick = (e) => { e.preventDefault(); modal.classList.remove('hidden'); lockScroll(); this.tempFiles = []; document.getElementById('previewContainer').innerHTML = ''; };
-        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); unlockScroll(); /* Draft sengaja TIDAK dihapus */ };
+        
+        // Initial setup for destination select
+        this.populateDestPages();
+
+        btnAdd.onclick = (e) => {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+            lockScroll();
+            this.tempFiles = [];
+            document.getElementById('previewContainer').innerHTML = '';
+
+            // Coba restore draft dulu
+            const hasDraft = this._restoreDraft();
+
+            if (!hasDraft) {
+                // Default setup
+                const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                this.state.selectedColor = randomColor;
+                const colorOpts = document.querySelectorAll('#addColors .color-opt');
+                colorOpts.forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.color === randomColor);
+                });
+                const el = document.getElementById('addSmall');
+                if (el) el.value = getTodayIndo();
+
+                // Sync UI with current page state
+                if (destSelect) destSelect.value = this.state.subjectId;
+                if (isLessonToggle) isLessonToggle.checked = this.state.isLessonMode;
+                
+                this.updateAddTitleHint();
+            }
+
+            // Catat history untuk tombol back mobile
+            history.pushState({ type: 'overlay', target: 'addModal' }, '');
+        };
+
+        if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); unlockScroll(); };
+        
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => this.handleNewFiles(e.target.files);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
@@ -1189,6 +1230,31 @@ const SubjectApp = {
             };
         });
 
+        if (destSelect) {
+            destSelect.onchange = () => {
+                const isAnnouncements = destSelect.value === 'announcements';
+                const toggleWrap = isLessonToggle.closest('div');
+                
+                if (isAnnouncements) {
+                    if (toggleWrap) toggleWrap.style.display = 'none';
+                    isLessonToggle.checked = false;
+                } else {
+                    if (toggleWrap) toggleWrap.style.display = 'flex';
+                    // Default true kalau di halaman mapel, tapi user bisa matiin
+                    isLessonToggle.checked = true;
+                }
+                
+                this.updateAddTitleHint();
+                this._saveDraft();
+            };
+        }
+
+        if (isLessonToggle) {
+            isLessonToggle.onchange = () => {
+                this.updateAddTitleHint();
+                this._saveDraft();
+            };
+        }
 
         // ── Autosave draft saat user ngetik ──────────────────────
         ['addJudul', 'addSubjudul', 'addIsi', 'addSmall'].forEach(id => {
@@ -1198,6 +1264,8 @@ const SubjectApp = {
         if (btnSave) {
             btnSave.onclick = async () => {
                 const data = {
+                    dest: destSelect.value,
+                    isLesson: isLessonToggle.checked,
                     big: document.getElementById('addJudul').value,
                     tit: document.getElementById('addSubjudul').value,
                     con: document.getElementById('addIsi').innerHTML,
@@ -1217,86 +1285,84 @@ const SubjectApp = {
                 this.clearForm();
             };
         }
-
-        btnAdd.onclick = (e) => {
-            e.preventDefault();
-            modal.classList.remove('hidden');
-            lockScroll();
-            this.tempFiles = [];
-            document.getElementById('previewContainer').innerHTML = '';
-
-            // Coba restore draft dulu
-            const hasDraft = this._restoreDraft();
-
-            if (!hasDraft) {
-                // Tidak ada draft → random warna + tanggal+jam hari ini + judul otomatis
-                const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-                this.state.selectedColor = randomColor;
-                const colorOpts = document.querySelectorAll('#addColors .color-opt');
-                colorOpts.forEach(opt => {
-                    opt.classList.toggle('active', opt.dataset.color === randomColor);
-                });
-                const el = document.getElementById('addSmall');
-                if (el) el.value = getTodayIndo();
-
-                // Auto-isi big title dengan nama pelajaran (hanya di halaman lesson)
-                const judulEl = document.getElementById('addJudul');
-                if (judulEl && !judulEl.value && this.state.isLessonMode) {
-                    const nama = this.state.subjectName
-                        ? this.state.subjectName.replace(/<[^>]*>/g, '').trim()
-                        : '';
-                    if (nama) judulEl.value = `Tugas ${nama}`;
-                }
-            }
-
-            // Catat history untuk tombol back mobile
-            history.pushState({ type: 'overlay', target: 'addModal' }, '');
-        };
     },
 
-    async handleNewFiles(files) {
-        const pc = document.getElementById('previewContainer');
-        for (let file of Array.from(files)) {
-            if (!file.type.startsWith('image/')) continue;
-            try { file = await this.compressImage(file); } catch (e) { }
-            this.tempFiles.push(file);
-            const div = document.createElement('div');
-            div.className = 'preview-item';
-            div.innerHTML = `<img src="${URL.createObjectURL(file)}"><div class="preview-remove"><i class="fa-solid fa-trash"></i></div>`;
-            div.onclick = (e) => { e.stopPropagation(); this.tempFiles = this.tempFiles.filter(f => f !== file); div.remove(); };
-            pc.appendChild(div);
+    async populateDestPages() {
+        const select = document.getElementById('addDestPage');
+        if (!select) return;
+
+        try {
+            const classId = getEffectiveClassId();
+            const { data, error } = await supabase
+                .from('subjects_config')
+                .select('subject_id, subject_name, menu_group')
+                .eq('class_id', classId)
+                .eq('menu_group', 'lessons')
+                .order('display_order', { ascending: true });
+
+            if (error) throw error;
+
+            let html = '<option value="announcements" data-is-lesson="false">Announcements</option>';
+            data.forEach(item => {
+                if (item.subject_id === 'announcements') return;
+                html += `<option value="${item.subject_id}" data-is-lesson="true">${item.subject_name}</option>`;
+            });
+            select.innerHTML = html;
+        } catch (e) { console.error('Populate error:', e); }
+    },
+
+    updateAddTitleHint() {
+        const judulEl = document.getElementById('addJudul');
+        const destSelect = document.getElementById('addDestPage');
+        const isLessonToggle = document.getElementById('addIsLesson');
+        
+        if (!judulEl || !destSelect || !isLessonToggle) return;
+        
+        // Hanya auto-fill kalau kosong
+        if (judulEl.value && !judulEl.value.startsWith('Tugas ')) return;
+
+        if (isLessonToggle.checked) {
+            const opt = destSelect.options[destSelect.selectedIndex];
+            const nama = opt ? opt.text.trim() : '';
+            if (nama) judulEl.value = `Tugas ${nama}`;
+        } else {
+            // Jika dimatikan toggle tugasnya, dan judulnya "Tugas X", hapus
+            if (judulEl.value.startsWith('Tugas ')) judulEl.value = '';
         }
     },
 
-    clearForm() {
-        document.getElementById('addJudul').value = '';
-        document.getElementById('addSubjudul').value = '';
-        document.getElementById('addIsi').innerHTML = ''; // Reset innerHTML
-        document.getElementById('addSmall').value = '';
-        document.getElementById('addFiles').value = '';
-        document.getElementById('previewContainer').innerHTML = '';
-        this.tempFiles = [];
-    },
-
     async uploadAndSave(d) {
-        // Upload semua foto secara parallel (bukan satu-satu)
+        // Upload semua foto secara parallel
         const urls = (await Promise.all(
             d.files.map(async (f) => {
-                const name = `${this.state.subjectId}/new/${Date.now()}_${f.name.replace(/\s/g, '_')}`;
+                const name = `${d.dest}/new/${Date.now()}_${f.name.replace(/\s/g, '_')}`;
                 const { data } = await supabase.storage.from('subject-photos').upload(name, f);
                 if (!data) return null;
                 return supabase.storage.from('subject-photos').getPublicUrl(name).data.publicUrl;
             })
-        )).filter(Boolean); // Buang yang null (gagal upload)
+        )).filter(Boolean);
 
         const { error } = await supabase.from('subject_announcements').insert({
-            subject_id: this.state.subjectId, class_id: getEffectiveClassId() || this.state.user.class_id,
+            subject_id: d.dest, 
+            class_id: getEffectiveClassId() || this.state.user.class_id,
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,
+            is_done: false, // default
+            is_lesson: d.isLesson, // NEW FIELD
             display_order: 0
         });
-        if (!error) location.reload();
+
+        if (!error) {
+            // Kalau post ke halaman yang sama, reload. Kalau beda, kasih tau & tutup modal.
+            if (d.dest === this.state.subjectId) {
+                location.reload();
+            } else {
+                showToast(`Berhasil dikirim ke ${d.dest}!`, 'success');
+            }
+        } else {
+            showPopup('Gagal simpan: ' + error.message, 'error');
+        }
     },
 
 

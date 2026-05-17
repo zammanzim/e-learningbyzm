@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Quicksand', sans-serif;
+  line-height: 1.7;
+  color: #6d435a;
+  background-color: #fff0f5;
+  background-image: 
+    radial-gradient(#ffd6e8 1px, transparent 1px),
+    radial-gradient(#ffd6e8 1px, transparent 1px);
+  background-size: 25px 25px;
+  background-position: 0 0, 12px 12px; /* Polkadot pink */
+}
+
+header {
+  background: linear-gradient(180deg, #ffdeec 0%, #ffb6d9 100%);
+  color: #ff4fa7;
+  padding: 1.4rem 0;
+  text-align: center;
+  border-radius: 0 0 35px 35px;
+  box-shadow: 0 4px 12px rgba(255, 182, 217, 0.5);
+  border-bottom: 3px solid #ff9ec7;
+}
+
+header h1 {
+  font-family: 'Pacifico', cursive;
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  padding: 0 16px;
+  text-shadow: 2px 2px 0px white, 4px 4px 0px #ffc2d4;
+}
+
+nav a {
+  color: #ff5da2;
+  text-decoration: none;
+  margin: 0 7px;
+  font-weight: 700;
+  font-size: 17px;
+  padding: 8px 20px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #ffb6d9;
+  transition: 0.25s;
+  display: inline-block;
+}
+
+nav a:hover, nav a.active {
+  background: #ff5da2;
+  color: white;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 10px rgba(255, 93, 162, 0.4);
+}
+
+section {
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(6px);
+  border-radius: 28px;
+  border: 3px solid #ffcce6;
+  box-shadow: 0 6px 20px rgba(255, 182, 217, 0.35);
+}
+
+section h2 {
+  font-family: 'Pacifico', cursive;
+  font-size: 2.3rem;
+  color: #ff5da2;
+  margin-bottom: 18px;
+  text-align: center;
+  font-weight: 400;
+}
+
+.profil {
+  text-align: center;
+}
+
+.profil img {
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 24px auto;
+  border: 8px solid white;
+  box-shadow: 0 0 0 4px #ffb6d9, 0 6px 15px rgba(255, 93, 162, 0.25);
+  transition: 0.3s;
+}
+
+.profil img:hover {
+  transform: scale(1.05) rotate(8deg);
+}
+
+.profil p {
+  max-width: 440px;
+  margin: 0 auto 14px auto;
+  padding: 14px 18px;
+  background: #fff5f9;
+  border: 2px solid #ffcce6;
+  border-radius: 20px;
+  text-align: left;
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 17px;
+  box-shadow: inset 0 2px 4px rgba(255, 204, 230, 0.3);
+}
+
+.galeri {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.galeri img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 5px solid white;
+  box-shadow: 0 0 0 3px #ffcce6, 0 4px 12px rgba(255, 182, 217, 0.3);
+  transition: 0.3s;
+}
+
+.galeri img:hover {
+  transform: scale(1.04) rotate(-3deg);
+  box-shadow: 0 0 0 3px #ff9ec7, 0 8px 18px rgba(255, 158, 199, 0.4);
+}
+
+/* FORM KONTAK PINK */
+form {
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+form label {
+  font-weight: 700;
+  color: #ff5da2;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+form input, 
+form textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  border: 2px solid #ffcce6;
+  border-radius: 16px;
+  font-family: 'Quicksand', sans-serif;
+  background: #fffafc;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: inset 0 2px 5px rgba(255, 204, 230, 0.25);
+  box-sizing: border-box;
+}
+
+form input:focus,
+form textarea:focus {
+  outline: none;
+}
+
+.galeri-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.galeri-item {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.galeri-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.galeri-item img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+}
+
+.galeri-caption {
+    padding: 1.5rem;
+}
+
+.galeri-caption h3 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}

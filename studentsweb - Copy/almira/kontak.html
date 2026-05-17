@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Almira — Kontak</title>
+  <script src="../../js/magic-pill.js" data-position="top-left" data-offset-x="20" data-offset-y="80"></script><link rel="stylesheet" href="css/style.css"> <style> * { -webkit-tap-highlight-color: transparent; } </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="index" class="nav-logo">✦ Website Sederhana</a>
+    <ul class="nav-links">
+      <li><a href="index">Beranda</a></li>
+      <li><a href="profil">Profil</a></li>
+      <li><a href="galeri">Galeri</a></li>
+      <li><a href="kontak" class="active">Kontak</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="kontak-wrapper">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <p class="eyebrow">✦ Hubungi Saya</p>
+        <h1>Kirim Pesan</h1>
+        <p>Punya pertanyaan atau ingin bekerja sama? Isi formulir di bawah dan saya akan segera membalas.</p>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="form-card">
+
+        <!-- Alert sukses (tampil setelah submit) -->
+        <div class="alert-success" id="alertSukses">
+          ✅ Pesan Anda berhasil dikirim! Saya akan segera membalas.
+        </div>
+
+        <form id="kontakForm" onsubmit="handleSubmit(event)">
+
+          <!-- Nama -->
+          <div class="form-group">
+            <label for="nama">Nama Lengkap</label>
+            <input
+              type="text"
+              id="nama"
+              name="nama"
+              placeholder="Masukkan nama lengkap Anda"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">Alamat Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="contoh@email.com"
+              required
+            />
+          </div>
+
+          <!-- Pesan -->
+          <div class="form-group">
+            <label for="pesan">Pesan</label>
+            <textarea
+              id="pesan"
+              name="pesan"
+              placeholder="Tulis pesan Anda di sini..."
+              required
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            ✉️ &nbsp; Kirim Pesan
+          </button>
+
+        </form>
+      </div>
+
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 <span>WebsiteSederhana</span> — Dibuat dengan ❤️ menggunakan HTML & CSS</p>
+  </footer>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      const alert = document.getElementById('alertSukses');
+      const form = document.getElementById('kontakForm');
+      alert.style.display = 'block';
+      form.reset();
+      // Sembunyikan alert setelah 5 detik
+      setTimeout(() => { alert.style.display = 'none'; }, 5000);
+    }
+  </script>
+
+</body>
+</html>

@@ -173,9 +173,7 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
             supabase.from('subject_announcements')
                 .select('*')
                 .eq('class_id', classId)
-                .neq('subject_id', 'announcements')
-                .neq('subject_id', 'kisi-kisi')
-                .neq('subject_id', 'akuhutajakus')
+                .eq('is_lesson', true) // HANYA YANG DITANDAI SEBAGAI TUGAS
                 .order('created_at', { ascending: false }),
             supabase.from('user_progress')
                 .select('announcement_id')

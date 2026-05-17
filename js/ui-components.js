@@ -71,6 +71,24 @@ const UIComponents = {
         <div id="addModal" class="modal-overlay hidden">
             <div class="glass-modal-box">
                 <h3><i class="fa-solid fa-layer-group"></i> Materi Baru</h3>
+                
+                <!-- NEW: Step 1 - Configuration -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="font-size: 11px; color: #888; margin-bottom: 5px; display: block;">Halaman Tujuan:</label>
+                        <select id="addDestPage" class="glass-input" style="padding: 8px 12px; font-size: 13px;">
+                            <option value="announcements">Announcements</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 13px; color: #fff; cursor: pointer;" for="addIsLesson">Jadikan Tugas?</label>
+                        <label class="switch">
+                            <input type="checkbox" id="addIsLesson">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <input type="text" id="addJudul" class="glass-input" placeholder="Judul Utama" spellcheck="false">
                 <input type="text" id="addSubjudul" class="glass-input" placeholder="Sub-judul" spellcheck="false">
                 <div class="editor-toolbar" style="display:flex; gap:10px; margin-bottom: 8px;">

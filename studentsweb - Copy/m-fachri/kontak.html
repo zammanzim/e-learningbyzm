@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fachri — Kontak</title>
+        <script src="../../js/magic-pill.js" data-position="top-right" data-offset-x="20" data-offset-y="10"></script><link rel="stylesheet" href="css/style.css"> <style> * { -webkit-tap-highlight-color: transparent; } </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-logo"></div>
+        <ul class="nav-links">
+            <li><a href="index">Home</a></li>
+            <li><a href="profil">Profil</a></li>
+            <li><a href="galeri">Galeri</a></li>
+            <li><a href="kontak" class="active">Kontak</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <div class="page-header-eyebrow">✦ Hubungi Saya</div>
+        <h1>Kirim <em>Pesan</em></h1>
+        <p>Saya senang menerima pesan dari kamu</p>
+    </div>
+
+    <div class="contact-wrap">
+        <div class="contact-info">
+            <div class="contact-info-title">Mari <em>Terhubung</em></div>
+            <p class="contact-info-text">Punya pertanyaan atau hanya sekedar ingin menyapa? Jangan ragu untuk mengirim
+                pesan.</p>
+            <div class="contact-item">
+                <div class="contact-icon">📧</div>
+                <div>
+                    <div class="contact-item-label">Email</div>
+                    <div class="contact-item-val">mfachrisyahreza69@gmail.contact-form-card</div>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">📍</div>
+                <div>
+                    <div class="contact-item-label">Lokasi</div>
+                    <div class="contact-item-val">Indonesia</div>
+                </div>
+            </div>
+
+            <div class="contact-item">
+                <div class="contact-icon">📞</div>
+                <div>
+                    <div class="contact-item-label">Whatsapp</div>
+                    <div class="contact-item-val">+62 857-9746-1394</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-form-card">
+            <div class="form-title">Formulir Kontak</div>
+            <div id="contact-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama</label>
+                        <input type="text" id="nama" placeholder="Nama kamu">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="mfachrisyahreza69@gmail.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Pesan</label>
+                    <textarea id="pesan" rows="5" placeholder="Tulis pesanmu..."></textarea>
+                </div>
+                <button class="btn-submit" onclick="kirimPesan()">Kirim Pesan</button>
+            </div>
+            <div class="success-msg" id="success-msg">
+                <div class="success-icon">🎉</div>
+                <h3>Terkirim!</h3>
+                <p>Terima kasih sudah menghubungi saya.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 M.Fachri Syahreza</p>
+        <div class="footer-links">
+            <a href="index2">Home</a>
+            <a href="profil2">Profil</a>
+            <a href="galeri2">Galeri</a>
+            <a href="kontak2">Kontak</a>
+        </div>
+    </footer>
+
+    <script>
+        function kirimPesan() {
+            const nama = document.getElementById('nama').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const pesan = document.getElementById('pesan').value.trim();
+            if (!nama || !email || !pesan) { alert('Isi semua field dulu ya!'); return; }
+            document.getElementById('contact-form').style.display = 'none';
+            document.getElementById('success-msg').classList.add('show');
+        }
+    </script>
+</body>
+
+</html>
