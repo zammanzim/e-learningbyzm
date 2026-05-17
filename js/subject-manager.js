@@ -1205,6 +1205,17 @@ const SubjectApp = {
                 // Sync UI with current page state
                 if (destSelect) destSelect.value = this.state.subjectId;
                 if (isLessonToggle) isLessonToggle.checked = this.state.isLessonMode;
+
+                // FIX: Sembunyikan toggle tugas kalau di halaman announcements pas buka modal
+                if (destSelect && isLessonToggle) {
+                    const toggleWrap = isLessonToggle.closest('div');
+                    if (destSelect.value === 'announcements') {
+                        if (toggleWrap) toggleWrap.style.display = 'none';
+                        isLessonToggle.checked = false;
+                    } else {
+                        if (toggleWrap) toggleWrap.style.display = 'flex';
+                    }
+                }
                 
                 this.updateAddTitleHint();
             }

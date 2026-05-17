@@ -267,13 +267,14 @@ If unsure:
 # Workflow: Updates & Versioning
 
 ## SQL Updates Protocol
-- Every time a feature or fix is completed, ask: **"Mau gue bikinin SQL Updates-nya sekalian?"**
+- **ONLY** generate SQL updates when explicitly instructed by the user (e.g., "bikin sql", "update sql"). Do not offer or create them automatically.
 - Generate a SQL `INSERT` command for the `app_updates` table.
+- **NEW PROTOCOL:** Write the SQL command into `sql_updates.sql` at the root directory. Overwrite the file with the latest update.
+- **SIMPLE UPDATES:** Use a single, direct string for the update description (e.g., "pelajaran di daily card bisa di klik") instead of a complex JSON structure.
 - Table schema: `app_updates (title, version, items, created_at)`.
 - `title` format: `Day, Date Month Year, Time` (e.g., "Rabu, 13 May 2026, 12.39").
-- `items` format: JSONB array of objects `{"type": "new|improvement|fix", "text": "..."}`.
+- `items` format: JSONB array containing the simple string.
 
 ## Versioning Rules
-- **Minor/Fix Update:** Increment the third digit (e.g., v3.2.1 -> v3.2.2) for small fixes or minor additions.
 - **Huge Update:** Increment the second digit (e.g., v3.2.1 -> v3.3) when many features are added or significant changes are made.
-- Current base version as of May 2026: **v3.2.1**.
+- Current base version as of May 2026: **v3.4**.

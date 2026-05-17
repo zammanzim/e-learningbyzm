@@ -60,9 +60,51 @@ window.currentViewDay = null;
         .dc-skel-header-badge { height: 18px; width: 70px; border-radius: 6px; margin-bottom: 8px; }
         .dc-skel-header-day   { height: 26px; width: 120px; border-radius: 8px; margin-bottom: 6px; }
         .dc-skel-header-date  { height: 13px; width: 160px; border-radius: 6px; }
+
+        .tl-subject-final.dc-nav-valid { cursor: pointer; transition: opacity 0.2s; }
+        .tl-subject-final.dc-nav-valid:hover { opacity: 0.7; text-decoration: underline; }
+        .edit-mode-on .tl-subject-final { cursor: text !important; text-decoration: none !important; opacity: 1 !important; }
     `;
     document.head.appendChild(style);
 })();
+
+// Helper navigasi ke halaman subject
+async function _navigateToSubject(name, classId) {
+    if (!name || name === '-' || window.isDailyEditing) return;
+
+    // Fungsi normalize biar "Bahasa Indonesia" cocok sama "bahasaindonesia"
+    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+
+    try {
+        if (!window._dcSubjMap) {
+            const { data } = await supabase.from('subjects_config')
+                .select('subject_id, subject_name')
+                .eq('class_id', classId);
+            window._dcSubjMap = data || [];
+        }
+
+        const search = normalize(name);
+        // Cari yang paling mendekati (exact atau partial setelah di-normalize)
+        const match = window._dcSubjMap.find(s => {
+            const sNameNorm = normalize(s.subject_name);
+            const sIdNorm = normalize(s.subject_id);
+            
+            // Cek Exact Match dulu
+            if (sNameNorm === search || sIdNorm === search) return true;
+
+            // Kalau Partial Match (includes), minimal length 3 biar gak typo (misal: PPK match ke PP)
+            if (search.length > 3 && (sNameNorm.includes(search) || search.includes(sNameNorm))) return true;
+
+            return false;
+        });
+
+        if (match) {
+            window.location.href = `subject?id=${match.subject_id}`;
+        } else {
+            if (typeof showToast === 'function') showToast(`Mapel "${name}" belum terdaftar`, 'info');
+        }
+    } catch (e) { console.error('DC Nav Error:', e); }
+}
 
 function _buildDailyCardSkeleton() {
     const rows = [1, 2, 3, 4, 5].map(() => `
@@ -477,6 +519,39 @@ async function initDailyCard() {
         if (cardEl) cardEl.classList.toggle('edit-mode-on', window.isDailyEditing);
         applyEditMode(window.isDailyEditing);
         updateTaskBadge(user);
+
+        // --- Selective Navigation Logic ---
+        const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+        
+        // Pastikan map mapel sudah ada
+        if (!window._dcSubjMap) {
+            const { data } = await supabase.from('subjects_config')
+                .select('subject_id, subject_name')
+                .eq('class_id', CLASS_ID);
+            window._dcSubjMap = data || [];
+        }
+
+        // Attach Click Listener & Style HANYA ke Subject yang valid
+        contentEl.querySelectorAll('.tl-subject-final').forEach(el => {
+            const name = el.innerText.trim();
+            const search = normalize(name);
+            
+            const isValidSubject = window._dcSubjMap.find(s => {
+                const sNameNorm = normalize(s.subject_name);
+                const sIdNorm = normalize(s.subject_id);
+                if (sNameNorm === search || sIdNorm === search) return true;
+                if (search.length > 3 && (sNameNorm.includes(search) || search.includes(sNameNorm))) return true;
+                return false;
+            });
+
+            if (isValidSubject && !window.isDailyEditing) {
+                el.classList.add('dc-nav-valid');
+                el.onclick = () => _navigateToSubject(name, CLASS_ID);
+            } else {
+                el.classList.remove('dc-nav-valid');
+                el.onclick = null;
+            }
+        });
 
     } catch (e) {
         console.error('Daily card error:', e);
