@@ -107,6 +107,20 @@ async function logout() {
                     localStorage.setItem("logout_tracker", JSON.stringify(tracker));
                 }
 
+                // ── TRACKING LOGOUT ─────────────────────────────────────
+                // Catat ke DB siapa yang logout (biar admin tau wkwk)
+                if (user && typeof supabase !== 'undefined') {
+                    try {
+                        await supabase.from("activity_logs").insert({
+                            user_id: user.id,
+                            action_text: "Melakukan Logout",
+                            page_name: "Auth System",
+                            points: 0,
+                            class_id: classId || "unknown"
+                        });
+                    } catch (err) { console.warn("Gagal catat logout ke DB:", err); }
+                }
+
                 // Hapus data login
                 localStorage.removeItem("user");
 

@@ -127,20 +127,61 @@ async function fetchSidebarData(classId, retries = 0) {
         const [{ data: groups, error: gErr }, { data: items, error: iErr }] = await Promise.all([
             supabase.from('menu_groups')
                 .select('*')
-                .eq('class_id', classId)
+                .or(`class_id.eq.${classId},class_id.eq.2`)
                 .order('display_order', { ascending: true }),
             supabase.from('subjects_config')
                 .select('*')
-                .eq('class_id', classId)
+                .or(`class_id.eq.${classId},class_id.eq.2`)
                 .order('display_order', { ascending: true })
         ]);
         if (iErr) throw iErr;
 
-        // Fallback: kalau menu_groups belum diisi, generate otomatis dari subjects_config
-        let resolvedGroups = (!gErr && groups?.length) ? groups : generateGroupsFromItems(items || [], classId);
+        // Deduplicate & Filter: Cuma 'system' yang dipaksa dari Kelas 2
+        const resolvedGroups = [];
+        const seenG = new Set();
+        (groups || []).forEach(g => {
+            const isSystem = g.group_type === 'system';
+            const isFromMaster = String(g.class_id) === '2';
+            const key = g.group_key;
 
-        return { groups: resolvedGroups, items: items || [] };
-    } catch(err) {
+            if (isSystem) {
+                if (isFromMaster && !seenG.has(key)) {
+                    resolvedGroups.push(g);
+                    seenG.add(key);
+                }
+            } else {
+                if (String(g.class_id) === String(classId) && !seenG.has(key)) {
+                    resolvedGroups.push(g);
+                    seenG.add(key);
+                }
+            }
+        });
+
+        const resolvedItems = [];
+        const seenI = new Set();
+        (items || []).forEach(item => {
+            const isSystem = item.menu_group === 'system'; // Biasa group_key-nya sama dengan group_type
+            const isFromMaster = String(item.class_id) === '2';
+            const key = `${item.subject_id}_${item.menu_group}`;
+
+            if (isSystem) {
+                if (isFromMaster && !seenI.has(key)) {
+                    resolvedItems.push(item);
+                    seenI.add(key);
+                }
+            } else {
+                if (String(item.class_id) === String(classId) && !seenI.has(key)) {
+                    resolvedItems.push(item);
+                    seenI.add(key);
+                }
+            }
+        });
+
+        // Fallback: kalau menu_groups belum diisi, generate otomatis dari subjects_config
+        let finalGroups = resolvedGroups.length ? resolvedGroups : generateGroupsFromItems(resolvedItems, classId);
+
+        return { groups: finalGroups, items: resolvedItems };
+    } catch (err) {
         console.error('[Sidebar] Fetch error:', err);
         if (retries === 0) {
             await new Promise(r => setTimeout(r, 1000));

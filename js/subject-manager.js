@@ -77,7 +77,103 @@ const SubjectApp = {
                     </button>
                 </div>
             `;
+            this.initDraggableFAB();
         }
+    },
+
+    initDraggableFAB() {
+        const fab = document.getElementById("adminFabContainer");
+        if (!fab) return;
+
+        let isDragging = false;
+        let dragTimer = null;
+        let startX, startY, initialRight, initialBottom;
+        let hasMoved = false;
+
+        // Load saved position
+        const savedPos = localStorage.getItem('fab_pos_subject');
+        if (savedPos) {
+            try {
+                const pos = JSON.parse(savedPos);
+                fab.style.setProperty('bottom', pos.bottom, 'important');
+                fab.style.setProperty('right', pos.right, 'important');
+            } catch (e) { }
+        }
+        
+        fab.style.cursor = 'grab';
+
+        fab.addEventListener("pointerdown", (e) => {
+            if (e.button !== 0) return;
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = fab.getBoundingClientRect();
+            initialRight = window.innerWidth - rect.right;
+            initialBottom = window.innerHeight - rect.bottom;
+            
+            hasMoved = false;
+
+            // Timer 500ms tahan baru boleh drag
+            dragTimer = setTimeout(() => {
+                isDragging = true;
+                fab.setPointerCapture(e.pointerId);
+                fab.style.transition = 'none';
+                fab.style.cursor = 'grabbing';
+                if (window.navigator.vibrate) window.navigator.vibrate(50);
+            }, 500);
+        });
+
+        fab.addEventListener("pointermove", (e) => {
+            if (!isDragging) {
+                // Kalo geser kejauhan sebelum 1 detik, batalin niat drag (mungkin lagi scroll)
+                if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
+                    clearTimeout(dragTimer);
+                }
+                return;
+            }
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            hasMoved = true;
+            const newRight = initialRight - dx;
+            const newBottom = initialBottom - dy;
+            
+            fab.style.setProperty('right', `${newRight}px`, 'important');
+            fab.style.setProperty('bottom', `${newBottom}px`, 'important');
+        });
+
+        fab.addEventListener("pointerup", (e) => {
+            clearTimeout(dragTimer);
+            if (!isDragging) return;
+            
+            isDragging = false;
+            fab.releasePointerCapture(e.pointerId);
+            fab.style.transition = '';
+            fab.style.cursor = 'grab';
+
+            if (hasMoved) {
+                localStorage.setItem('fab_pos_subject', JSON.stringify({
+                    right: fab.style.right,
+                    bottom: fab.style.bottom
+                }));
+
+                // Kill next click event biar tombol gak kepencet pas abis drag
+                const killClick = (ev) => {
+                    ev.stopImmediatePropagation();
+                    ev.preventDefault();
+                };
+                window.addEventListener('click', killClick, { capture: true, once: true });
+            }
+        });
+
+        // Anti nyangkut kalo pointer keluar jendela
+        fab.addEventListener("pointercancel", () => {
+            clearTimeout(dragTimer);
+            isDragging = false;
+            fab.style.cursor = 'grab';
+        });
     },
 
     setupEventListeners() {
@@ -1437,6 +1533,62 @@ const SubjectApp = {
             if (e.key === 'Escape' && isAddModalOpen) {
                 document.getElementById('btnCancelAdd')?.click();
             }
+        });
+    },
+
+    async handleNewFiles(files) {
+        const container = document.getElementById('previewContainer');
+        if (!container) return;
+
+        for (const file of Array.from(files)) {
+            if (!file.type.startsWith('image/')) continue;
+
+            try {
+                // Compress image biar irit storage
+                const compressed = await this.compressImage(file);
+                this.tempFiles.push(compressed);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}">
+                        <div class="preview-remove" onclick="SubjectApp.removeTempFile('${file.name.replace(/'/g, "\\\'")}', this)">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(compressed);
+            } catch (e) {
+                console.error("Gagal proses file:", e);
+            }
+        }
+    },
+
+    removeTempFile(name, el) {
+        this.tempFiles = this.tempFiles.filter(f => f.name !== name);
+        el.closest('.preview-item').remove();
+    },
+
+    clearForm() {
+        ['addJudul', 'addSubjudul', 'addSmall'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const isi = document.getElementById('addIsi');
+        if (isi) isi.innerHTML = '';
+
+        const preview = document.getElementById('previewContainer');
+        if (preview) preview.innerHTML = '';
+
+        this.tempFiles = [];
+        this.state.selectedColor = 'default';
+        
+        // Reset warna di UI
+        document.querySelectorAll('#addColors .color-opt').forEach(opt => {
+            opt.classList.remove('active');
         });
     },
 

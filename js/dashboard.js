@@ -18,10 +18,11 @@ const DashboardApp = {
         this.state.user = this.getLocalUser();
         if (!this.state.user) { window.location.href = 'login'; return; }
 
-        this.syncHeader();
-        this.renderUserInfo();
+        // Render Instan dari Cache
+        this.renderCachedUserInfo();
+        this.renderCachedStats();
         
-        // Parallel load data
+        // Parallel load data & update
         await Promise.all([
             this.loadStatsAndPosts(),
             this.loadTaskProgress(),
@@ -43,46 +44,51 @@ const DashboardApp = {
         try { return JSON.parse(localStorage.getItem('user')); } catch { return null; }
     },
 
-    syncHeader() {
-        const me = this.state.user;
-        const el = document.getElementById('headerName');
-        const pp = document.getElementById('headerPP');
-        if (el) el.innerText = `Haii, ${me.short_name || me.full_name?.split(' ')[0] || 'User'}`;
-        if (pp) pp.src = me.avatar_url || '../icons/profpicture.png';
+    renderCachedUserInfo() {
+        const u = this.state.user;
+        const cachedName = sessionStorage.getItem('dash_name');
+        const cachedAvatar = sessionStorage.getItem('dash_avatar');
+        const displayName = cachedName || u.full_name || u.short_name || 'User';
+        const displayAvatar = cachedAvatar || u.avatar_url || '../icons/profpicture.png';
+        
+        // Update Dashboard Elements
+        const nameEl = document.getElementById('dashFullName');
+        const avatarEl = document.getElementById('dashAvatar');
+        const userEl = document.getElementById('dashUsername');
+
+        if (nameEl) nameEl.textContent = displayName;
+        if (avatarEl) avatarEl.src = displayAvatar;
+        if (userEl) userEl.textContent = `@${u.username || u.short_name || 'user'}`;
+        
+        // Update Header Elements
+        const hName = document.getElementById('headerName');
+        const hPP = document.getElementById('headerPP');
+        if (hName) hName.textContent = `Haii, ${displayName.split(' ')[0]}`;
+        if (hPP) hPP.src = displayAvatar;
+        
+        // Update data asli
+        this.renderUserInfo();
     },
 
     renderUserInfo() {
         const u = this.state.user;
-        const avatar = u.avatar_url || '../icons/profpicture.png';
         const name = u.full_name || u.short_name || 'User';
-        const username = u.username || u.short_name || 'user';
-
-        document.getElementById('dashAvatar').src = avatar;
+        const avatar = u.avatar_url || '../icons/profpicture.png';
+        
         document.getElementById('dashFullName').textContent = name;
-        document.getElementById('dashUsername').textContent = `@${username}`;
-
-        // Sync Privacy Toggle
-        const toggle = document.getElementById('dashPrivacyToggle');
-        if (toggle) toggle.checked = !!u.is_private;
+        document.getElementById('dashAvatar').src = avatar;
+        
+        sessionStorage.setItem('dash_name', name);
+        sessionStorage.setItem('dash_avatar', avatar);
     },
 
-    async savePrivacy(isPrivate) {
-        try {
-            const { error } = await supabase.from('users').update({ is_private: isPrivate }).eq('id', this.state.user.id);
-            if (error) throw error;
-
-            // Update local state & localStorage
-            this.state.user.is_private = isPrivate;
-            localStorage.setItem('user', JSON.stringify(this.state.user));
-
-            showToast(isPrivate ? '🔒 Akun Privat Aktif' : '🌐 Akun Publik Aktif');
-        } catch (e) {
-            console.error(e);
-            showToast('Gagal update privasi', 'error');
-            // Revert UI
-            const toggle = document.getElementById('dashPrivacyToggle');
-            if (toggle) toggle.checked = !isPrivate;
-        }
+    renderCachedStats() {
+        const posts = sessionStorage.getItem('dash_posts');
+        const tasks = sessionStorage.getItem('dash_tasks');
+        const pEl = document.getElementById('statPosts');
+        const tEl = document.getElementById('statTasks');
+        if (pEl && posts) pEl.textContent = posts;
+        if (tEl && tasks) tEl.textContent = tasks;
     },
 
     async loadStatsAndPosts() {
@@ -97,6 +103,8 @@ const DashboardApp = {
             this.state.posts = posts || [];
             
             document.getElementById('statPosts').textContent = this.state.posts.length;
+            sessionStorage.setItem('dash_posts', this.state.posts.length);
+            
             this.renderPostsGrid();
         } catch (e) { console.error('Dash stats error:', e); }
     },
@@ -131,7 +139,6 @@ const DashboardApp = {
                     </div>
                 </div>`;
             }
-            // Text-only post
             const preview = (post.caption || '').slice(0, 60);
             return `<div class="post-thumb animate-fade-in post-thumb-text" onclick="DashboardApp.openPostDetail(${i})"
                 style="display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(0,0,0,0.45); aspect-ratio:1/1;">
@@ -151,11 +158,8 @@ const DashboardApp = {
             ]);
 
             const allTasks = tasks || [];
-            // Filter hanya tugas yang AKTIF (is_done: false)
             const activeTasks = allTasks.filter(t => !t.is_done);
             const doneFromProgress = (progress || []).map(p => String(p.announcement_id));
-            
-            // Tugas selesai di antara tugas yang masih aktif
             const finishedActiveTasks = activeTasks.filter(t => doneFromProgress.includes(String(t.id)));
             
             const total = activeTasks.length;
@@ -163,13 +167,13 @@ const DashboardApp = {
             const percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
             document.getElementById('statTasks').textContent = doneCount;
+            sessionStorage.setItem('dash_tasks', doneCount);
+            
             document.getElementById('dashTaskPercent').textContent = `${percent}%`;
             document.getElementById('dashTaskBar').style.width = `${percent}%`;
             
-            // Info text detail sesuai format yang diminta, z (archived) tetep muncul buat info
             const archivedCount = allTasks.filter(t => t.is_done).length;
             const infoText = `kamu udah ngerjain ${doneCount} dari ${total} tugas (${archivedCount} diarsipkan)`;
-            
             document.getElementById('dashTaskText').textContent = total > 0 ? infoText : `Gak ada tugas aktif.`;
 
         } catch (e) { console.error('Dash tasks error:', e); }
@@ -182,7 +186,6 @@ const DashboardApp = {
             let dayName = days[now.getDay()];
             let label = 'Hari Ini';
 
-            // Jika sudah lewat jam 15:00, ambil jadwal buat besok
             if (now.getHours() >= 15) {
                 const tomorrow = new Date(now);
                 tomorrow.setDate(now.getDate() + 1);
@@ -222,77 +225,7 @@ const DashboardApp = {
         } catch (e) { console.error('Dash schedule error:', e); }
     },
 
-    // --- Post Detail ---
-    openPostDetail(index) {
-        const post = this.state.posts[index];
-        if (!post) return;
-        this.state.currentPostIndex = index;
-
-        const u = this.state.user;
-        const username = u.username || u.short_name || 'user';
-
-        document.getElementById('detailUserAvatar').src = u.avatar_url || '../icons/profpicture.png';
-        document.getElementById('detailUserName').textContent = `@${username}`;
-        document.getElementById('detailPostTime').textContent = this.formatDate(post.created_at);
-        document.getElementById('detailCapText').textContent = post.caption || '';
-
-        const imgEl = document.getElementById('detailPostImg');
-        const vidEl = document.getElementById('detailPostVid');
-        const vidWrap = document.getElementById('detailVidWrap');
-
-        const isVid = post.image_url && /\.(mp4|mov|webm|mkv)(\?|$)/i.test(post.image_url);
-
-        if (post.image_url && isVid) {
-            if (vidEl) { vidEl.src = post.image_url; vidEl.load(); vidEl.play().catch(() => { vidEl.muted = true; vidEl.play().catch(() => { }); }); }
-            if (vidWrap) vidWrap.style.display = 'block';
-            if (imgEl) imgEl.style.display = 'none';
-        } else if (post.image_url) {
-            if (imgEl) { imgEl.src = post.image_url; imgEl.style.display = 'block'; }
-            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
-            if (vidWrap) vidWrap.style.display = 'none';
-        } else {
-            if (imgEl) imgEl.style.display = 'none';
-            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
-            if (vidWrap) vidWrap.style.display = 'none';
-        }
-
-        const actionsWrap = document.getElementById('detailActionsWrap');
-        if (actionsWrap) actionsWrap.classList.remove('hidden');
-
-        document.getElementById('postDetailOverlay').classList.add('show');
-        lockScroll();
-    },
-
-    async deleteCurrentPost() {
-        const post = this.state.posts[this.state.currentPostIndex];
-        if (!post) return;
-
-        const confirmed = await showPopup('Hapus postingan ini?', 'confirm');
-        if (!confirmed) return;
-
-        const btn = document.getElementById('btnDeletePost');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-
-        try {
-            if (post.image_url) {
-                const fileName = post.image_url.split('/post-photos/')[1]?.split('?')[0];
-                if (fileName) await supabase.storage.from('post-photos').remove([fileName]);
-            }
-            await supabase.from('user_posts').delete().eq('id', post.id);
-            closePostDetail();
-            showToast('Dihapus!');
-            await this.loadStatsAndPosts();
-        } catch (err) {
-            console.error(err);
-            showToast('Gagal hapus', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post';
-        }
-    },
-
-    // --- Upload ---
+    // --- Post Management ---
     setupUploadListeners() {
         const fileInput = document.getElementById('uploadFileInput');
         if (fileInput) {
@@ -362,7 +295,75 @@ const DashboardApp = {
         }
     },
 
-    // --- Helpers ---
+    openPostDetail(index) {
+        const post = this.state.posts[index];
+        if (!post) return;
+        this.state.currentPostIndex = index;
+
+        const u = this.state.user;
+        const username = u.username || u.short_name || 'user';
+
+        document.getElementById('detailUserAvatar').src = u.avatar_url || '../icons/profpicture.png';
+        document.getElementById('detailUserName').textContent = `@${username}`;
+        document.getElementById('detailPostTime').textContent = this.formatDate(post.created_at);
+        document.getElementById('detailCapText').textContent = post.caption || '';
+
+        const imgEl = document.getElementById('detailPostImg');
+        const vidEl = document.getElementById('detailPostVid');
+        const vidWrap = document.getElementById('detailVidWrap');
+
+        const isVid = post.image_url && /\.(mp4|mov|webm|mkv)(\?|$)/i.test(post.image_url);
+
+        if (post.image_url && isVid) {
+            if (vidEl) { vidEl.src = post.image_url; vidEl.load(); vidEl.play().catch(() => { vidEl.muted = true; vidEl.play().catch(() => { }); }); }
+            if (vidWrap) vidWrap.style.display = 'block';
+            if (imgEl) imgEl.style.display = 'none';
+        } else if (post.image_url) {
+            if (imgEl) { imgEl.src = post.image_url; imgEl.style.display = 'block'; }
+            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
+            if (vidWrap) vidWrap.style.display = 'none';
+        } else {
+            if (imgEl) imgEl.style.display = 'none';
+            if (vidEl) { vidEl.pause?.(); vidEl.src = ''; }
+            if (vidWrap) vidWrap.style.display = 'none';
+        }
+
+        const actionsWrap = document.getElementById('detailActionsWrap');
+        if (actionsWrap) actionsWrap.classList.remove('hidden');
+
+        document.getElementById('postDetailOverlay').classList.add('show');
+        lockScroll();
+    },
+
+    async deleteCurrentPost() {
+        const post = this.state.posts[this.state.currentPostIndex];
+        if (!post) return;
+
+        const confirmed = await showPopup('Hapus postingan ini?', 'confirm');
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btnDeletePost');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+        try {
+            if (post.image_url) {
+                const fileName = post.image_url.split('/post-photos/')[1]?.split('?')[0];
+                if (fileName) await supabase.storage.from('post-photos').remove([fileName]);
+            }
+            await supabase.from('user_posts').delete().eq('id', post.id);
+            closePostDetail();
+            showToast('Dihapus!');
+            await this.loadStatsAndPosts();
+        } catch (err) {
+            console.error(err);
+            showToast('Gagal hapus', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post';
+        }
+    },
+
     formatDate(iso) {
         if (!iso) return '';
         const d = new Date(iso);

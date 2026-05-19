@@ -13,6 +13,16 @@ const SystemNotice = {
     async init() {
         this.injectStyles();
         this.createContainer();
+        
+        // Cache-first: render langsung dari session storage kalau ada
+        const cached = sessionStorage.getItem('_sn_cache');
+        if (cached) {
+            const container = document.getElementById(this.config.containerId);
+            container.innerHTML = cached;
+            // Disable animasi untuk banner yang di-restore dari cache
+            container.querySelectorAll('.system-notice-card').forEach(el => el.classList.add('no-anim'));
+        }
+        
         await this.loadNotices();
     },
 
@@ -46,9 +56,11 @@ const SystemNotice = {
                 align-items: flex-start;
                 gap: 14px;
                 box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-                animation: snSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                 position: relative;
+                animation: snSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             }
+
+            .system-notice-card.no-anim { animation: none !important; }
 
             @keyframes snSlideIn {
                 from { opacity: 0; transform: translateX(40px) scale(0.95); }
@@ -131,14 +143,48 @@ const SystemNotice = {
 
     async loadNotices() {
         try {
-            // Fetch dari table system_notifications
-            const { data, error } = await supabase
+            // Get user data for class filtering
+            let userClassId = null;
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) userClassId = user.class_id;
+            } catch(e) {}
+
+            let query = supabase
                 .from('system_notifications')
                 .select('*')
                 .eq('is_active', true);
+            
+            // Filter by class: NULL (global) OR user's class
+            if (userClassId) {
+                query = query.or(`class_id.is.null,class_id.eq.${userClassId}`);
+            } else {
+                query = query.is('class_id', null);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
+            const activeIds = (data || []).map(item => String(item.id));
+
+            // ── CLEANUP SYNC ──────────────────────────────────────────
+            // Hapus notif yang ada di DOM tapi udah gak ada di DB (inactive/deleted)
+            const displayedCards = document.querySelectorAll('.system-notice-card');
+            displayedCards.forEach(card => {
+                const cardId = card.id.replace('sn-card-', '');
+                if (!activeIds.includes(cardId)) {
+                    card.classList.add('hide');
+                    setTimeout(() => {
+                        card.remove();
+                        // Update cache
+                        const container = document.getElementById(this.config.containerId);
+                        if (container) sessionStorage.setItem('_sn_cache', container.innerHTML);
+                    }, 400);
+                }
+            });
+
+            // Tampilkan notif yang baru
             (data || []).forEach(item => {
                 if (!localStorage.getItem(this.config.storageKeyPrefix + item.id)) {
                     this.show(item);
@@ -150,6 +196,8 @@ const SystemNotice = {
     },
 
     show({ id, type, icon, message, text_color }) {
+        if (document.getElementById(`sn-card-${id}`)) return;
+
         const container = document.getElementById(this.config.containerId);
         if (!container) return;
 
@@ -164,15 +212,21 @@ const SystemNotice = {
         `;
 
         container.appendChild(card);
+        
+        // Update cache setelah render
+        sessionStorage.setItem('_sn_cache', container.innerHTML);
     },
 
     dismiss(id) {
         const el = document.getElementById(`sn-card-${id}`);
         if (el) {
             el.classList.add('hide');
-            // Simpan ke localStorage biar gak muncul lagi (opsional, tergantung kebutuhan)
             localStorage.setItem(this.config.storageKeyPrefix + id, '1');
-            setTimeout(() => el.remove(), 400);
+            setTimeout(() => {
+                el.remove();
+                const container = document.getElementById(this.config.containerId);
+                if (container) sessionStorage.setItem('_sn_cache', container.innerHTML);
+            }, 400);
         }
     }
 };

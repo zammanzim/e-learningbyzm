@@ -161,32 +161,6 @@
         .tl-action { font-size: 12px; color: #ddd; font-weight: 600; }
         .tl-page { font-size: 11px; color: var(--accent); opacity: 0.8; margin-top: 2px; display: block; }
 
-        /* ── MODAL (Mobile) ── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-            z-index: 5000;
-            display: none;
-            align-items: flex-end;
-        }
-
-        .modal-overlay.show { display: flex; }
-
-        .modal-content {
-            width: 100%;
-            max-height: 85vh;
-            background: #0f1015;
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
-            overflow-y: auto;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
         .btn-filter {
             padding: 8px 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1); color: #888; font-size: 11px;
@@ -196,6 +170,63 @@
 
         .empty-state { text-align: center; padding: 4rem 1rem; color: #444; }
         .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+
+        /* ── EXCLUDE LIST STYLING ── */
+        .exclude-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .exclude-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .exclude-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .exclude-item input[type="checkbox"]:checked {
+            background: var(--accent, #00eaff);
+            border-color: var(--accent, #00eaff);
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+        }
+
+        .exclude-item input[type="checkbox"]:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 11px;
+            color: #000;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .exclude-item span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ddd;
+        }
     </style>
 </head>
 
@@ -209,8 +240,8 @@
             <div class="glow">
                 <h1><i class="fa-solid fa-trophy" style="font-size:24px; color:#ffd700;"></i> Keaktifan</h1>
                 
-                <!-- CLASS SWITCHER (Super Admin Only) -->
-                <div id="classSwitcherWrap" style="display:none; gap:8px; margin: 10px 0 5px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none;">
+                <!-- CLASS SWITCHER & EXCLUDED (Super Admin Only) -->
+                <div id="classSwitcherWrap" style="display:none; gap:8px; margin: 10px 0 5px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none; align-items:center;">
                     <!-- Diisi via JS -->
                 </div>
 
@@ -241,10 +272,16 @@
     </div>
 
     <!-- MODAL (Mobile) -->
-    <div class="modal-overlay" id="activityModal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div style="width:40px; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin: 0 auto 20px;"></div>
+    <div class="modal-overlay hidden" id="activityModal" onclick="closeModal(event)">
+        <div class="glass-modal-box" onclick="event.stopPropagation()">
             <div id="modalTrackerContent"></div>
+        </div>
+    </div>
+
+    <!-- EXCLUDE MODAL -->
+    <div class="modal-overlay hidden" id="excludeModal" onclick="this.classList.add('hidden')">
+        <div class="glass-modal-box" onclick="event.stopPropagation()">
+            <div id="excludeModalContent"></div>
         </div>
     </div>
 
@@ -275,13 +312,80 @@
 
             const currentClass = getEffectiveClassId();
 
-            wrap.innerHTML = classes.map(c => `
+            let html = classes.map(c => `
                 <button class="btn-filter ${String(c.id) === String(currentClass) ? 'active' : ''}" 
                         onclick="changeClass('${c.id}', '${c.name}')" 
                         style="border-radius:10px; padding:6px 12px; font-size:10px;">
                     ${c.name}
                 </button>
             `).join('');
+
+            // Tombol Edit Excluded
+            html += `
+                <button class="btn-filter" onclick="openExcludeModal()" 
+                        style="border-radius:10px; padding:6px 12px; font-size:10px; border-color:#ff4757; color:#ff4757;">
+                    <i class="fa-solid fa-user-slash"></i> Excluded
+                </button>
+            `;
+
+            wrap.innerHTML = html;
+        }
+
+        async function openExcludeModal() {
+            const container = document.getElementById('excludeModalContent');
+            const classId = getEffectiveClassId();
+            
+            document.getElementById('excludeModal').classList.remove('hidden');
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat daftar...</div>`;
+
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('id, full_name, is_excluded')
+                .eq('class_id', classId)
+                .order('full_name');
+
+            if (error) {
+                container.innerHTML = 'Gagal memuat daftar.';
+                return;
+            }
+
+            let html = `
+                <div class="track-header">
+                    <div class="track-user-info">
+                        <h3>Exclude People</h3>
+                        <p>Klik checkbox untuk langsung menyimpan perubahan.</p>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+            `;
+
+            html += users.map(u => `
+                <label class="exclude-item">
+                    <input type="checkbox" class="exclude-chk" onchange="toggleExclusion(${u.id}, this.checked)" ${u.is_excluded ? 'checked' : ''}>
+                    <span>${u.full_name}</span>
+                </label>
+            `).join('');
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        async function toggleExclusion(id, status) {
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ is_excluded: status })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast(status ? 'Siswa dikesampingkan' : 'Siswa dimasukkan ranking');
+                // Refresh leaderboard di background
+                await loadLeaderboard(currentTimeFilter);
+            } catch (e) {
+                console.error(e);
+                showToast('Gagal sinkronisasi data', 'error');
+            }
         }
 
         async function changeClass(id, name) {
@@ -311,36 +415,26 @@
 
             try {
                 const classId = getEffectiveClassId();
-                const { data: users, error: userErr } = await supabase
-                    .from('users')
-                    .select('id, full_name, short_name, avatar_url, role, username')
-                    .eq('class_id', classId);
+                let startDate = null;
 
-                if (userErr) throw userErr;
-
-                // Filter out Developer (Miz / Super Admin)
-                const filteredUsers = users.filter(u => {
-                    const isDev = u.role === 'super_admin' || u.username === 'miz' || u.full_name?.toLowerCase().includes('nizam');
-                    return !isDev;
-                });
-
-                let query = supabase.from('activity_logs').select('user_id, points').eq('class_id', classId);
                 if (timeFilter === 'month') {
                     const d = new Date(); d.setDate(1); d.setHours(0,0,0,0);
-                    query = query.gte('created_at', d.toISOString());
+                    startDate = d.toISOString();
                 } else if (timeFilter === 'week') {
                     const d = new Date(); const day = d.getDay() || 7;
                     if (day !== 1) d.setHours(-24 * (day - 1)); d.setHours(0,0,0,0);
-                    query = query.gte('created_at', d.toISOString());
+                    startDate = d.toISOString();
                 }
 
-                const { data: logs, error: logErr } = await query;
-                if (logErr) throw logErr;
+                // Panggil RPC (Fungsi Database) biar server yang ngitungin poin
+                const { data, error } = await supabase.rpc('get_leaderboard', {
+                    p_class_id: String(classId), // Kirim sebagai string biar anti-error type mismatch
+                    p_start_date: startDate
+                });
+                
+                if (error) throw error;
 
-                const pointMap = {};
-                logs.forEach(l => pointMap[l.user_id] = (pointMap[l.user_id] || 0) + (l.points || 0));
-
-                currentUsers = filteredUsers.map(u => ({ ...u, points: pointMap[u.id] || 0 })).sort((a, b) => b.points - a.points);
+                currentUsers = data || [];
                 renderLeaderboard(currentUsers);
 
             } catch (e) {
@@ -393,7 +487,7 @@
             const container = document.getElementById(containerId);
 
             if (isMobile) {
-                document.getElementById('activityModal').classList.add('show');
+                document.getElementById('activityModal').classList.remove('hidden');
                 if (typeof lockScroll === 'function') lockScroll();
             }
 
@@ -445,7 +539,7 @@
         }
 
         function closeModal(e) {
-            document.getElementById('activityModal').classList.remove('show');
+            document.getElementById('activityModal').classList.add('hidden');
             if (typeof unlockScroll === 'function') unlockScroll();
         }
     </script>

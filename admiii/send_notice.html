@@ -252,6 +252,13 @@
                 </style>
 
                 <div class="form-group">
+                    <label>Target Kelas</label>
+                    <select id="noticeClassId" class="glass-select">
+                        <option value="">Semua Kelas (Global)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label>Pesan Notifikasi</label>
                     <textarea id="noticeMsg" class="glass-input" rows="3"
                         placeholder="Tulis pesan di sini..."></textarea>
@@ -284,6 +291,7 @@
     <script>
         let selectedType = 'yellow';
         let allNotices = [];
+        let classesMap = {};
 
         document.addEventListener("DOMContentLoaded", async () => {
             const user = JSON.parse(localStorage.getItem("user"));
@@ -312,8 +320,51 @@
                 };
             });
 
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+                
+                // Refresh Data (R)
+                if (!isTyping && e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    loadNotices();
+                    showToast('Data diperbarui');
+                }
+
+                // Select Target Kelas (0-9)
+                if (!isTyping && /^[0-9]$/.test(e.key)) {
+                    const select = document.getElementById('noticeClassId');
+                    const idx = parseInt(e.key);
+                    if (select.options[idx]) {
+                        select.value = select.options[idx].value;
+                        showToast(`Target: ${select.options[idx].textContent}`);
+                    }
+                }
+
+                // Submit (Ctrl+Enter)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    submitNotice();
+                }
+            });
+
+            await loadClasses();
             await loadNotices();
         });
+
+        async function loadClasses() {
+            const { data, error } = await supabase.from('classes').select('id, name').order('id');
+            if (!error && data) {
+                const select = document.getElementById('noticeClassId');
+                data.forEach(c => {
+                    classesMap[c.id] = c.name;
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
 
         function selectColor(el, hex) {
             document.querySelectorAll('.color-opt').forEach(opt => opt.classList.remove('active'));
@@ -340,12 +391,17 @@
                 return;
             }
 
-            container.innerHTML = allNotices.map(n => `
+            container.innerHTML = allNotices.map(n => {
+                const className = n.class_id ? (classesMap[n.class_id] || `Kelas ${n.class_id}`) : 'Global';
+                return `
                 <div class="notice-item">
                     <div class="sn-icon type-${n.type}"><i class="fa-solid ${n.icon}"></i></div>
                     <div class="ni-info">
                         <div class="ni-msg" style="color:${n.text_color || '#fff'}">${n.message}</div>
-                        <div class="ni-meta">${new Date(n.created_at).toLocaleString('id-ID')}</div>
+                        <div class="ni-meta">
+                            <span style="color:var(--accent,#00eaff); font-weight:700;">[${className}]</span> • 
+                            ${new Date(n.created_at).toLocaleString('id-ID')}
+                        </div>
                     </div>
                     <div class="ni-actions">
                         <button class="btn-toggle" onclick="editNotice(${n.id})" title="Edit Notice">
@@ -359,7 +415,7 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         function editNotice(id) {
@@ -370,6 +426,7 @@
             document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Notice`;
             document.getElementById('noticeMsg').value = n.message;
             document.getElementById('noticeIcon').value = n.icon;
+            document.getElementById('noticeClassId').value = n.class_id || '';
             
             // Set Type
             selectedType = n.type;
@@ -394,6 +451,7 @@
             document.getElementById('editId').value = '';
             document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Buat Notice Baru`;
             document.getElementById('noticeMsg').value = '';
+            document.getElementById('noticeClassId').value = '';
             document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Notice`;
             document.getElementById('btnReset').style.display = 'none';
             
@@ -408,6 +466,8 @@
             const msg = document.getElementById('noticeMsg').value.trim();
             const icon = document.getElementById('noticeIcon').value.trim();
             const color = document.getElementById('noticeTextColor').value;
+            const classId = document.getElementById('noticeClassId').value;
+
             if (!msg) return showToast('Pesan wajib diisi!', 'info');
 
             const payload = {
@@ -415,7 +475,8 @@
                 icon: icon || 'fa-circle-info',
                 message: msg,
                 text_color: color,
-                is_active: true
+                is_active: true,
+                class_id: classId || null
             };
 
             const { error } = id 

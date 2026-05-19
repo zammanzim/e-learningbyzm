@@ -1,28 +1,27 @@
--- LAST UPDATE: Minggu, 17 May 2026, 17.00
--- VERSION: v3.5
-
--- 1. Table for Global System Notice (Full Schema)
-CREATE TABLE IF NOT EXISTS system_notifications (
-    id SERIAL PRIMARY KEY,
-    type TEXT DEFAULT 'blue', -- yellow, blue, red, green
-    icon TEXT DEFAULT 'fa-circle-info',
-    message TEXT NOT NULL,
-    text_color TEXT DEFAULT '#ffffff',
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+-- LAST UPDATE: Senin, 18 May 2026, 15.00
+-- VERSION: v3.7
+a
+-- 1. Cleanup redundant system/admin menus (Only keep Class 2 as master)
+DELETE FROM subjects_config 
+WHERE class_id != 2 
+AND menu_group IN (
+    SELECT group_key FROM menu_groups 
+    WHERE group_type IN ('system', 'admin')
 );
 
--- 2. Log Update (v3.5 - Massive Productivity Update)
+DELETE FROM menu_groups 
+WHERE class_id != 2 
+AND group_type IN ('system', 'admin');
+
+-- 2. Log Update (v3.7 - Admin Experience Update)
 INSERT INTO app_updates (title, version, items, created_at)
 VALUES (
-    'Minggu, 17 May 2026, 17.00',
-    'v3.5',
+    'Senin, 18 May 2026, 15.00',
+    'v3.7',
     '[
-        "Navigasi Mapel: Klik pelajaran di Daily Card langsung ke halaman subject (smart matching).",
-        "User Dashboard: Rombak total profil jadi Command Center (Bento Grid, Progress Tugas, Jadwal Harian).",
-        "Dashboard Feature: Toggle Akun Privat langsung dari Aksi Cepat.",
-        "System Notice: Banner info global di bawah header dengan support HTML/Link & Custom Color.",
-        "Admin Management: Halaman khusus kirim & edit notice global (send_notice.html)."
+        "Admin Sidebar: Menu System & Admin sekarang terpusat di Kelas 2 (Consistent Admin Menu).",
+        "Database Cleanup: Menghapus data menu admin duplikat di kelas lain biar lebih rapi.",
+        "System: Optimalisasi fetch sidebar data (Master Class Logic)."
     ]'::jsonb,
     NOW()
 );
