@@ -63,6 +63,16 @@ async function initTugas() {
     // Set flag admin untuk renderTasks
     _isAdminUser = (user.role === 'class_admin' || user.role === 'super_admin');
 
+    // Init SubjectApp in 'tugas' mode
+    SubjectApp.state.subjectId = 'tugas';
+    SubjectApp.state.subjectName = 'Daftar Tugas';
+    SubjectApp.state.isLessonMode = true;
+    SubjectApp.state.user = user;
+    SubjectApp.setupAdminControls();
+    SubjectApp.initAdd();
+    SubjectApp.setupEventListeners();
+    SubjectApp.setupShortcuts();
+
     // Set Profil di Card
     document.getElementById('userTaskName').innerText = user.nickname;
     document.getElementById('userTaskPP').src = user.avatar_url || '../icons/profpicture.png';
@@ -126,11 +136,13 @@ async function initTugas() {
         if (cachedTasks !== null && cachedDone !== null) {
             // Tampilkan cache LANGSUNG biar kelihatan cepat
             allTasks = cachedTasks;
+            SubjectApp.state.announcements = allTasks; // Sync with SubjectApp
             const validIds = allTasks.map(t => String(t.id));
             // Task is_done=true → otomatis selesai meski progress row sudah dihapus
             const cachedArchived = allTasks.filter(t => t.is_done).map(t => String(t.id));
             const cachedProgress = cachedDone.filter(id => validIds.includes(id));
             doneIds = [...new Set([...cachedArchived, ...cachedProgress])];
+            SubjectApp.state.completedTasks = doneIds; // Sync with SubjectApp
 
             // Coba pakai rank dari cache juga
             const cachedRank = _tugasCacheGet(rankCacheKey, TUGAS_CACHE_TTL_RANK);
@@ -299,8 +311,6 @@ function renderTasks(data) {
         const isDeadline = !isDone && deadlineSubjects.some(s => {
             const normSubject = normalize(item.subject_id);
             const normTitle = normalize(item.big_title);
-            // Exact match selalu aman. Includes boleh tapi KEDUANYA harus >= 3 huruf
-            // biar "pp" (2 huruf) ga nyangkut ke "ppk" (atau sebaliknya)
             const subOk = normSubject === s ||
                 (normSubject.length >= 3 && s.includes(normSubject)) ||
                 (s.length >= 3 && normSubject.includes(s));
@@ -312,215 +322,38 @@ function renderTasks(data) {
         const autoNumber = total - allTasks.indexOf(item);
         let statusClass = isDone ? 'task-green-done' : (isDeadline ? 'task-red-deadline' : 'task-yellow-pending');
 
-        // Logic Parsing Foto Identik Subject Manager
-        let photos = [];
-        if (item.photo_url) {
-            if (Array.isArray(item.photo_url)) photos = item.photo_url;
-            else if (typeof item.photo_url === 'string') {
-                try {
-                    if (item.photo_url.startsWith('[')) photos = JSON.parse(item.photo_url);
-                    else photos = [item.photo_url];
-                } catch (e) { photos = [item.photo_url]; }
-            }
+        const card = SubjectApp.createCardElement(item, {
+            statusClass: statusClass,
+            autoNumber: autoNumber
+        });
+
+        // RE-APPLY EDIT MODE JIKA SEDANG AKTIF
+        if (SubjectApp.state.editMode) {
+            card.classList.add("editable-mode");
+            card.querySelectorAll(".editable").forEach(f => {
+                f.contentEditable = "true";
+                f.style.pointerEvents = "auto";
+                f.style.cursor = "text";
+            });
+            const deleteBtn = card.querySelector(".delete-btn");
+            const colorTools = card.querySelector(".card-color-tools");
+            const cameraBtn = card.querySelector(".camera-btn");
+            const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
+            
+            if (deleteBtn) deleteBtn.style.display = "inline-block";
+            if (colorTools) colorTools.style.display = "flex";
+            if (cameraBtn) cameraBtn.style.display = "flex";
+            deletePhotoBtns.forEach(b => b.style.display = "flex");
         }
 
-        let photoHTML = '';
-        if (photos.length > 0) {
-            let gridClass = `grid-${Math.min(photos.length, 4)}`;
-            let imgsHTML = photos.slice(0, 4).map((url, i) => {
-                const isLast = i === 3 && photos.length > 4;
-                return `
-                    <div class="photo-item photo-wrapper">
-                        <img src="${url}" loading="lazy">
-                        ${isLast ? `<div class="more-overlay">+${photos.length - 4}</div>` : ''}
-                    </div>`;
-            }).join('');
-            photoHTML = `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
-        }
-
-        const el = document.createElement('div');
-        el.className = `course-card ${statusClass}`;
-        el.dataset.id = item.id;
-
-        // BLOKIR KLIK: openDetail hanya dipasang jika ada foto
-        if (photos.length > 0) {
-            el.classList.add('clickable-card');
-            el.onclick = () => openDetail(item);
-        } else {
-            el.style.cursor = 'default';
-        }
-
-        el.innerHTML = `
-    ${photoHTML}
-    <h3 style="margin:5px 0; font-size: 20px; color:white;">${item.big_title}</h3>
-    <h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">#${autoNumber} - ${item.title}</h4>
-    <p style="font-size:14px; color:#ddd; margin-bottom:15px; line-height:1.5; white-space: pre-wrap;">${item.content}</p>
-    ${item.small ? `<small style="display:block; color:#aaa; font-size:11px; margin-bottom:15px;">${item.small}</small>` : ''}
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        ${_isAdminUser ? `
-        <button class="task-btn-delete" onclick="deleteTugas(event, '${item.id}')" title="Hapus tugas ini">
-            <i class="fa-solid fa-trash"></i>
-        </button>` : '<span></span>'}
-        ${item.is_done
-                ? `<button class="task-btn done" disabled>
-                <i class="fa-solid fa-circle-check"></i> Selesai
-               </button>`
-                : `<button class="task-btn ${isDone ? 'done' : ''}" onclick="toggleStatus(event, '${item.id}', this)">
-                ${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}
-               </button>`
-            }
-    </div>
-`;
-        fragment.appendChild(el);
+        fragment.appendChild(card);
     });
 
     container.replaceChildren(fragment);
 }
 
-async function toggleStatus(e, id, btn) {
-    e.stopPropagation();
-    let user;
-    try {
-        user = JSON.parse(localStorage.getItem("user"));
-    } catch (err) { return; }
-    if (!user) return;
+// REMOVED: toggleStatus, deleteTugas, _checkAndArchiveTask (now in SubjectApp)
 
-    // Block kalau task sudah diarsipkan (is_done=true) — tombol harusnya sudah disabled,
-    // tapi ini guard tambahan biar aman
-    const task = allTasks.find(t => String(t.id) === String(id));
-    if (task?.is_done) return;
-
-    const isDone = btn.classList.contains('done');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-    try {
-        if (isDone) {
-            await supabase.from('user_progress').delete().eq('user_id', user.id).eq('announcement_id', id);
-            doneIds = doneIds.filter(d => String(d) !== String(id));
-        } else {
-            await supabase.from('user_progress').insert({ user_id: user.id, announcement_id: id });
-            doneIds.push(String(id));
-
-            // LOG ACTIVITY: User menandai tugas selesai (+10 poin)
-            const taskTitle = task?.big_title || 'Tugas';
-            if (typeof logActivity === 'function') {
-                logActivity(`Menyelesaikan Tugas: ${taskTitle}`, "Tugas", 10, String(id));
-            }
-        }
-
-        // Invalidate cache done & rank biar next load fresh
-        const classId = getEffectiveClassId();
-        _tugasCacheInvalidate(user.id, null); // tasks cache tetap valid, cukup done+rank
-        sessionStorage.removeItem(`task_badge_${user.id}`);
-
-        // ── AUTO-ARSIP: cek apakah semua siswa sudah selesai ─────────
-        // Hanya dicek saat user baru mencentang selesai (bukan un-mark),
-        // dan hanya kalau bukan super_admin biar ga dobel sama bulkTask admin.
-        if (!isDone && user.role !== 'super_admin') {
-            _checkAndArchiveTask(id, classId).catch(() => { }); // background, jangan block UI
-        }
-        if (typeof updateTaskBadge === 'function') updateTaskBadge(user);
-
-        // Update ranking via RPC
-        const validTaskIds = allTasks.map(t => String(t.id));
-        if (validTaskIds.length > 0) {
-            const { data: rankData } = await supabase.rpc('get_task_rank', {
-                p_user_id: String(user.id),
-                p_task_ids: validTaskIds
-            });
-            window._taskRankPercent = rankData ?? 0;
-        }
-
-        updateProgressUI();
-        applyCurrentFilter();
-    } catch (err) {
-        console.error(err);
-        applyCurrentFilter();
-    }
-}
-
-async function deleteTugas(e, id) {
-    e.stopPropagation();
-
-    const yakin = await showPopup('Yakin mau hapus tugas ini? <br><small style="opacity:0.6">Data akan terhapus permanen.</small>', 'confirm');
-    if (!yakin) return;
-
-    try {
-        // Hapus progress user yang terkait dulu
-        await supabase.from('user_progress').delete().eq('announcement_id', id);
-
-        // Hapus tugas dari subject_announcements
-        const { error } = await supabase.from('subject_announcements').delete().eq('id', id);
-        if (error) throw error;
-
-        // Update state lokal langsung (tanpa reload)
-        allTasks = allTasks.filter(t => String(t.id) !== String(id));
-        doneIds = doneIds.filter(d => d !== String(id));
-
-        // Invalidate cache
-        const classId = getEffectiveClassId();
-        const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } })();
-        _tugasCacheInvalidate(user?.id, classId);
-
-        updateProgressUI();
-        applyCurrentFilter();
-
-        if (typeof showToast === 'function') showToast('Tugas berhasil dihapus', 'success');
-    } catch (err) {
-        console.error('Hapus tugas gagal:', err);
-        showPopup('Gagal menghapus: ' + err.message, 'error');
-    }
-}
-
-// ── AUTO-ARSIP HELPER ────────────────────────────────────────────
-// Dipanggil di background setelah user centang selesai.
-// Kalau ternyata SEMUA siswa di kelas sudah done task ini →
-//   1. Set is_done = true di subject_announcements
-//   2. Hapus semua baris user_progress untuk task itu (biar ga jebol limit)
-//   3. Update state lokal (hapus dari allTasks & doneIds) + refresh UI
-async function _checkAndArchiveTask(taskId, classId) {
-    // Ambil jumlah siswa di kelas (exclude super_admin)
-    const { count: totalSiswa } = await supabase
-        .from('users')
-        .select('id', { count: 'exact', head: true })
-        .eq('class_id', classId)
-        .neq('role', 'super_admin');
-
-    if (!totalSiswa || totalSiswa === 0) return;
-
-    // Ambil jumlah yang sudah done untuk task ini
-    const { count: doneCount } = await supabase
-        .from('user_progress')
-        .select('id', { count: 'exact', head: true })
-        .eq('announcement_id', taskId);
-
-    if ((doneCount || 0) < totalSiswa) return; // belum semua selesai
-
-    // SEMUA SELESAI → arsipkan
-    // 1. Flag is_done = true
-    const { error: updateErr } = await supabase
-        .from('subject_announcements')
-        .update({ is_done: true })
-        .eq('id', taskId);
-    if (updateErr) throw updateErr;
-
-    // 2. Hapus semua progress row untuk task ini
-    await supabase.from('user_progress').delete().eq('announcement_id', taskId);
-
-    // 3. Update state lokal & UI
-    allTasks = allTasks.filter(t => String(t.id) !== String(taskId));
-    doneIds = doneIds.filter(d => d !== String(taskId));
-
-    // Invalidate tasks cache juga (task hilang dari list)
-    const tasksCacheKey = `tugas_tasks_${classId}`;
-    _tugasCacheInvalidate(null, classId);
-    sessionStorage.setItem('task_badge_dirty', '1'); // biar badge re-fetch
-
-    updateProgressUI();
-    applyCurrentFilter();
-
-    if (typeof showToast === 'function') showToast('Tugas diarsipkan — semua siswa sudah selesai! 🎉', 'success');
-}
 
 // ── MAPEL FILTER ─────────────────────────────────────────────────
 function buildMapelFilter() {
@@ -635,44 +468,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ── SHORTCUTS ─────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-    const detailOverlay = document.getElementById('detailOverlay');
-    const isDetailActive = detailOverlay && detailOverlay.classList.contains('active');
-
-    if (isDetailActive) {
-        if (e.key === 'ArrowRight') { e.preventDefault(); if (typeof nextSlide === 'function') nextSlide(); }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); if (typeof prevSlide === 'function') prevSlide(); }
-        if (e.key === 'Escape') { if (typeof closeDetail === 'function') closeDetail(); return; }
-    }
-
-    if (e.ctrlKey && e.key === 'Enter') {
-        const pickerOpen = !document.getElementById('tugasPickerOverlay')?.classList.contains('hidden');
-        const formOpen = !document.getElementById('tugasFormOverlay')?.classList.contains('hidden');
-        const fab = document.getElementById('tugasFabWrap');
-
-        if (!pickerOpen && !formOpen && fab && fab.style.display !== 'none') {
-            e.preventDefault();
-            if (typeof openTugasModal === 'function') openTugasModal();
-        }
-    }
-});
-
-// ── CLICK OUTSIDE TO CLOSE ────────────────────────────────────────
-document.addEventListener('click', e => {
-    const picker = document.getElementById('tugasPickerOverlay');
-    if (picker && !picker.classList.contains('hidden')) {
-        if (e.target === picker) {
-            picker.classList.add('hidden');
-            if (typeof unlockScroll === 'function') unlockScroll();
-        }
-    }
-
-    const form = document.getElementById('tugasFormOverlay');
-    if (form && !form.classList.contains('hidden')) {
-        if (e.target === form) {
-            form.classList.add('hidden');
-            if (typeof unlockScroll === 'function') unlockScroll();
-        }
-    }
-});
+// REMOVED: old shortcut and click-outside logic as SubjectApp handles it

@@ -293,10 +293,32 @@ const SubjectApp = {
                 await supabase.from("user_progress").insert({ user_id: this.state.user.id, announcement_id: id });
                 this.state.completedTasks.push(id);
                 btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+
+                // LOG ACTIVITY: User menandai tugas selesai (+10 poin)
+                if (typeof logActivity === 'function') {
+                    const taskTitle = ann?.big_title || 'Tugas';
+                    logActivity(`Menyelesaikan Tugas: ${taskTitle}`, "Tugas", 10, String(id));
+                }
+
                 // Setelah insert, DB trigger akan auto-arsip kalau semua siswa selesai.
                 // Re-fetch status is_done setelah jeda singkat biar UI sinkron kalau diarsipkan
                 setTimeout(() => this._syncArchivedStatus(id, btn, card), 1500);
             }
+            
+            // Sync dengan tugas.js progress UI jika ada
+            if (typeof updateProgressUI === 'function') {
+                // doneIds di tugas.js perlu di-sync
+                if (typeof doneIds !== 'undefined') {
+                    if (isDone) {
+                        const idx = doneIds.indexOf(String(id));
+                        if (idx > -1) doneIds.splice(idx, 1);
+                    } else {
+                        if (!doneIds.includes(String(id))) doneIds.push(String(id));
+                    }
+                }
+                updateProgressUI();
+            }
+
         } catch (err) {
             console.error("Task toggle error:", err);
             if (isDone) btn.classList.add("done"); else btn.classList.remove("done");
@@ -442,9 +464,11 @@ const SubjectApp = {
         container.replaceChildren(fragment);
     },
 
-    createCardElement(data) {
+    createCardElement(data, options = {}) {
         const card = document.createElement("div");
         card.dataset.id = data.id;
+        card.dataset.subjectId = data.subject_id || this.state.subjectId;
+        card.dataset.photoUrl = this._serializePhotoUrls(this._parsePhotoUrls(data.photo_url)) || "";
         card.style.position = "relative";
         card.draggable = false;
 
@@ -454,7 +478,9 @@ const SubjectApp = {
         const small = data.small || "";
 
         // Tentukan class warna dari DB
-        const colorClass = data.card_color && data.card_color !== 'default' ? `color-${data.card_color}` : "";
+        let colorClass = data.card_color && data.card_color !== 'default' ? `color-${data.card_color}` : "";
+        if (options.statusClass) colorClass = options.statusClass; // Override if statusClass provided
+        
         card.className = `course-card ${colorClass}`;
 
         // DEFINISI isAdmin BIAR GAK ERROR "NOT DEFINED"
@@ -502,6 +528,14 @@ const SubjectApp = {
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'brown')" style="width:14px; height:14px; border-radius:50%; background:#8b4513; cursor:pointer;" title="Coklat"></div>
 </div>`;
 
+        // Logic display title with subject name if on tugas page
+        let displayTitleHTML = `<h4 style="color:rgba(255,255,255,0.7); font-size:13px; font-weight: normal; margin-bottom:12px;">`;
+        if (this.state.subjectId === 'tugas' && data.subject_id && data.subject_id !== 'tugas') {
+            const subjName = (typeof subjectNameMap !== 'undefined' && subjectNameMap[data.subject_id]) || data.subject_id;
+            displayTitleHTML += `${subjName} — `;
+        }
+        displayTitleHTML += `<span contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</span></h4>`;
+
         card.innerHTML = `
         <input type="file" class="photo-input" accept="image/*" multiple style="display:none;">
         <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50;">
@@ -519,11 +553,10 @@ const SubjectApp = {
                 <i class="fa-solid fa-grip-vertical" style="pointer-events:none; font-size:14px;"></i>
             </div>
         </div>
-        <button class="${btnClass}"><i class="${iconClass}"></i></button>
         ${photoHTML}
         <div class="pending-photo-preview" style="display:none; margin-bottom:12px;"></div>
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
-        <h4 contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</h4>
+        ${displayTitleHTML}
         <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${content}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
         
@@ -536,12 +569,27 @@ const SubjectApp = {
                 </button>` : ''}
             </div>
             
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1; position:relative;">
                 ${isAdmin ? colorTools : ''}
 
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;" onclick="SubjectApp.deleteAnnouncement(this.closest('.course-card'))">
                     <i class="fa-solid fa-trash" style="margin-right:0;"></i>
                 </button>
+
+                ${options.autoNumber ? `
+                <div class="card-number" style="
+                    font-size: 11px; 
+                    font-weight: 800; 
+                    color: white; 
+                    background: rgba(255,255,255,0.15);
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    letter-spacing: 0.5px;
+                ">
+                    #${options.autoNumber}
+                </div>` : ''}
             </div>
         </div>
     `;
@@ -697,26 +745,50 @@ const SubjectApp = {
                 }
             }
 
-            // 2. Bangun array updates (sekarang photo_url sudah up-to-date di state)
+            // 2. Bangun array updates (Hanya yang berubah saja yang di-update)
             const updates = Array.from(cards).map((card, index) => {
                 const id = card.dataset.id;
                 const ann = this.state.announcements.find(a => String(a.id) === String(id));
                 const getVal = (f) => card.querySelector(`[data-field="${f}"]`)?.innerText.trim() || "";
                 const getContent = () => card.querySelector(`[data-field="content"]`)?.innerHTML || "";
 
+                // Metadata fallback dari DOM dataset
+                const fallbackSubjectId = card.dataset.subjectId;
+                const fallbackPhotoUrl = card.dataset.photoUrl;
+
+                const photoArray = this._parsePhotoUrls(ann ? ann.photo_url : fallbackPhotoUrl);
+                const serializedPhotos = this._serializePhotoUrls(photoArray);
+                const currentOrder = index + 1;
+
+                // LOGIC DIRTY CHECK: Bandingkan data UI vs data asli di state
+                const isChanged = !ann || 
+                    getVal("big_title") !== (ann.big_title || "") ||
+                    getVal("title") !== (ann.title || "") ||
+                    getContent() !== (ann.content || "") ||
+                    getVal("small") !== (ann.small || "") ||
+                    serializedPhotos !== (this._serializePhotoUrls(this._parsePhotoUrls(ann.photo_url))) ||
+                    (ann.subject_id && ann.subject_id !== (fallbackSubjectId || this.state.subjectId)) ||
+                    (!this.state.isLessonMode && ann.display_order !== currentOrder);
+
+                if (!isChanged) return null; // Skip kalau gak ada perubahan
+
                 return {
                     id,
-                    // Lesson mode tidak pakai display_order — urutan by created_at
-                    ...(this.state.isLessonMode ? {} : { display_order: index + 1 }),
+                    ...(this.state.isLessonMode ? {} : { display_order: currentOrder }),
                     big_title: getVal("big_title"),
                     title: getVal("title"),
                     content: getContent(),
                     small: getVal("small"),
-                    photo_url: this._serializePhotoUrls(this._parsePhotoUrls(ann?.photo_url)),
-                    subject_id: this.state.subjectId,
+                    photo_url: serializedPhotos,
+                    subject_id: ann?.subject_id || fallbackSubjectId || this.state.subjectId,
                     class_id: getEffectiveClassId() || this.state.user.class_id
                 };
-            });
+            }).filter(Boolean); // Buang yang null
+
+            if (updates.length === 0) {
+                showToast("Tidak ada perubahan", "default");
+                return;
+            }
 
             const { error } = await supabase
                 .from("subject_announcements")
@@ -732,7 +804,7 @@ const SubjectApp = {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
             } catch (e) { }
 
-            if (typeof showPopup === 'function') showPopup("Semua perubahan tersimpan!", "success");
+            if (typeof showPopup === 'function') showToast("Semua perubahan tersimpan!", "success");
         } catch (err) {
             console.error("Save failed:", err);
             showPopup("Gagal simpan data!", "error");
@@ -1205,15 +1277,51 @@ const SubjectApp = {
     async deleteAnnouncement(card) {
         if (!await showPopup("Hapus materi ini?", "confirm")) return;
         const id = card.dataset.id;
-        await supabase.from("subject_announcements").delete().eq("id", id);
         
-        // Update state lokal
-        this.state.announcements = this.state.announcements.filter(a => String(a.id) !== String(id));
-        
-        // Re-render biar empty state muncul kalau materi habis
-        this.renderAnnouncements();
-        
-        showPopup("Terhapus!", "success");
+        // Ambil data untuk hapus foto di storage
+        const ann = this.state.announcements.find(a => String(a.id) === String(id));
+        const photoPaths = [];
+        if (ann && ann.photo_url) {
+            const photos = this._parsePhotoUrls(ann.photo_url);
+            photos.forEach(url => {
+                // Ekstrak path dari URL public Supabase
+                const parts = url.split('/subject-photos/');
+                if (parts.length > 1) photoPaths.push(parts[1]);
+            });
+        }
+
+        try {
+            // Hapus di Storage
+            if (photoPaths.length > 0) {
+                await supabase.storage.from('subject-photos').remove(photoPaths);
+            }
+
+            // Hapus di Database
+            const { error } = await supabase.from("subject_announcements").delete().eq("id", id);
+            if (error) throw error;
+
+            // Update state lokal
+            this.state.announcements = this.state.announcements.filter(a => String(a.id) !== String(id));
+            
+            // Hapus kartu dari DOM langsung
+            card.remove();
+
+            // SINKRONISASI TUGAS
+            if (typeof allTasks !== 'undefined') {
+                allTasks = allTasks.filter(t => String(t.id) !== String(id));
+                if (typeof doneIds !== 'undefined') {
+                    doneIds = doneIds.filter(d => String(d) !== String(id));
+                }
+                if (typeof applyCurrentFilter === 'function') applyCurrentFilter();
+                if (typeof updateProgressUI === 'function') updateProgressUI();
+            }
+
+            this.renderAnnouncements();
+            showToast("Berhasil dihapus!", "success");
+        } catch (err) {
+            console.error("Delete failed:", err);
+            showPopup("Gagal menghapus data", "error");
+        }
     },
 
     // ── DRAFT KEY (unik per subject) ─────────────────────────────
@@ -1299,7 +1407,12 @@ const SubjectApp = {
                 if (el) el.value = getTodayIndo();
 
                 // Sync UI with current page state
-                if (destSelect) destSelect.value = this.state.subjectId;
+                if (destSelect) {
+                    // Kalau di halaman tugas, jangan set value ke 'tugas' (gak ada di option)
+                    if (this.state.subjectId !== 'tugas') {
+                        destSelect.value = this.state.subjectId;
+                    }
+                }
                 if (isLessonToggle) isLessonToggle.checked = this.state.isLessonMode;
 
                 // FIX: Sembunyikan toggle tugas kalau di halaman announcements pas buka modal
@@ -1415,6 +1528,19 @@ const SubjectApp = {
                 html += `<option value="${item.subject_id}" data-is-lesson="true">${item.subject_name}</option>`;
             });
             select.innerHTML = html;
+
+            // DEFAULT: Bahasa Indonesia kalau di halaman tugas
+            if (this.state.subjectId === 'tugas') {
+                const indoOpt = Array.from(select.options).find(opt => 
+                    opt.value === 'bahasaindonesia' || 
+                    opt.text.toLowerCase().includes('indonesia')
+                );
+                if (indoOpt) {
+                    select.value = indoOpt.value;
+                } else if (select.options.length > 1) {
+                    select.selectedIndex = 1; // skip announcements
+                }
+            }
         } catch (e) { console.error('Populate error:', e); }
     },
 
@@ -1461,8 +1587,9 @@ const SubjectApp = {
         });
 
         if (!error) {
-            // Kalau post ke halaman yang sama, reload. Kalau beda, kasih tau & tutup modal.
-            if (d.dest === this.state.subjectId) {
+            // Kalau post ke halaman yang sama, reload.
+            // Jika di halaman 'tugas', reload kalau yang dipost adalah task (isLesson)
+            if (d.dest === this.state.subjectId || (this.state.subjectId === 'tugas' && d.isLesson)) {
                 location.reload();
             } else {
                 showToast(`Berhasil dikirim ke ${d.dest}!`, 'success');

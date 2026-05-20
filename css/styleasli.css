@@ -1990,14 +1990,19 @@ li.nav-locked a::after {
     filter: grayscale(0.6);
 }
 
-.task-btn-delete {
-    background: rgba(255, 71, 87, 0.08);
-    border: 1px solid rgba(255, 71, 87, 0.35);
-    color: rgba(255, 71, 87, 0.7);
-    padding: 0.425rem 0.75rem;
-    border-radius: 1.0625rem;
-    cursor: pointer;
-    font-size: 0.7438rem;
+
+/* --- MOBILE STICKY PROGRESS --- */
+.sticky-progress {
+    position: sticky;
+    top: 3.1875rem; /* Sesuaikan dengan tinggi header */
+    z-index: 1000;
+    background: rgba(10, 15, 25, 0.95);
+    padding: 0.8rem 1rem;
+    margin: -1.0625rem -1.0625rem 1rem -1.0625rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
     transition: all 0.25s ease;
     display: flex;
     align-items: center;
