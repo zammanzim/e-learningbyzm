@@ -206,6 +206,9 @@ const SubjectApp = {
     },
 
     setupEventListeners() {
+        if (this._eventsInitialized) return;
+        this._eventsInitialized = true;
+
         const self = this;
 
         // Handle Klik Background (Area Kosong)

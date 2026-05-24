@@ -218,7 +218,9 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
 
         // Update global state
         allTasks = freshTasks;
+        SubjectApp.state.announcements = allTasks; // Sync with SubjectApp
         doneIds = freshDone;
+        SubjectApp.state.completedTasks = freshDone; // Sync with SubjectApp
 
         // Rank
         if (validIds.length > 0) {
