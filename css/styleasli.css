@@ -388,12 +388,15 @@ header {
 }
 
 .course-card {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(15, 20, 30, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0.6375rem;
     padding: 1.0625rem;
     margin: 1.0625rem 0;
     transition: all .3s ease;
     position: relative;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    will-change: transform;
     /* TAMBAHKAN INI */
     max-width: 100%;
     /* Biar gak lebih dari layar */
@@ -1078,8 +1081,7 @@ li.nav-locked a::after {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.9);
     z-index: 5000;
     display: flex;
     justify-content: center;
@@ -1257,8 +1259,7 @@ li.nav-locked a::after {
     display: flex;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(5px);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     font-size: 1.0625rem;
@@ -1325,8 +1326,8 @@ li.nav-locked a::after {
     position: absolute;
     inset: 0;
     /* Full cover container */
-    background: rgba(0, 0, 0, 0.5);
-    /* Hitam transparan 50% */
+    background: rgba(0, 0, 0, 0.7);
+    /* Hitam transparan 70% biar kelihatan blur alami */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1338,8 +1339,6 @@ li.nav-locked a::after {
     font-weight: normal;
     /* WA biasanya ga bold banget */
     letter-spacing: 0.0531rem;
-    backdrop-filter: blur(2px);
-    /* Efek kaca dikit */
 }
 
 .detail-info-section {
@@ -1490,9 +1489,7 @@ li.nav-locked a::after {
         width: 100%;
         height: 85vh;
         /* Tinggi pas full screen */
-        background: rgba(20, 20, 20, 0.95);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
+        background: rgba(15, 15, 15, 0.98);
         border-radius: 1.275rem 1.275rem 0 0;
         z-index: 5001;
         display: flex;
@@ -1643,16 +1640,14 @@ li.nav-locked a::after {
 .uni-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
     z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease, backdrop-filter 0.25s ease;
+    transition: opacity 0.25s ease;
 }
 
 .uni-overlay.active {
@@ -1662,11 +1657,8 @@ li.nav-locked a::after {
 
 .uni-box {
     background: linear-gradient(135deg,
-            rgba(0, 180, 220, 0.28),
-            rgba(10, 20, 35, 0.85));
-
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+            rgba(0, 40, 60, 0.98),
+            rgba(10, 20, 35, 0.98));
 
     border: 1px solid rgba(120, 220, 255, 0.25);
     box-shadow:
@@ -1988,25 +1980,6 @@ li.nav-locked a::after {
     cursor: not-allowed;
     transform: none;
     filter: grayscale(0.6);
-}
-
-
-/* --- MOBILE STICKY PROGRESS --- */
-.sticky-progress {
-    position: sticky;
-    top: 3.1875rem; /* Sesuaikan dengan tinggi header */
-    z-index: 1000;
-    background: rgba(10, 15, 25, 0.95);
-    padding: 0.8rem 1rem;
-    margin: -1.0625rem -1.0625rem 1rem -1.0625rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-    transition: all 0.25s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
 }
 
 .task-btn-delete:hover {
@@ -3121,8 +3094,7 @@ input:checked+.slider:before {
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 0.7969rem;
     padding: 1.0625rem;
     display: flex;
@@ -3134,7 +3106,7 @@ input:checked+.slider:before {
 
 .stat-card:hover {
     transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .stat-icon {
@@ -3540,9 +3512,8 @@ input:checked+.slider:before {
 
 /* --- 2. FILTER SYSTEM (SLIDING INDICATOR) --- */
 .filter-group-wrapper {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0.9562rem;
     display: flex;
     position: relative;
@@ -4027,43 +3998,51 @@ input:checked+.slider:before {
 
 /* Warna Kartu Custom */
 .color-red {
-    background: linear-gradient(145deg, rgba(255, 0, 0, 0.8), rgba(15, 10, 10, 0.3));
-    border: 1px solid #ff4757;
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.25), rgba(15, 10, 10, 0.95)) !important;
+    border: 1.5px solid rgba(255, 71, 87, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(255, 71, 87, 0.1);
 }
 
 .color-orange {
-    background: linear-gradient(145deg, rgba(255, 128, 0, 0.8), rgba(15, 12, 10, 0.3)) !important;
-    border: 1px solid #ff9f43 !important;
+    background: linear-gradient(135deg, rgba(255, 159, 67, 0.25), rgba(15, 12, 10, 0.95)) !important;
+    border: 1.5px solid rgba(255, 159, 67, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.1);
 }
 
 .color-yellow {
-    background: linear-gradient(145deg, rgba(255, 255, 0, 0.8), rgba(15, 15, 10, 0.3));
-    border: 1px solid #ffd32a;
+    background: linear-gradient(135deg, rgba(255, 211, 42, 0.22), rgba(15, 15, 10, 0.95)) !important;
+    border: 1.5px solid rgba(255, 211, 42, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(255, 211, 42, 0.05);
 }
 
 .color-green {
-    background: linear-gradient(145deg, rgba(0, 255, 128, 0.8), rgba(10, 15, 12, 0.3));
-    border: 1px solid #01ff6b;
+    background: linear-gradient(135deg, rgba(46, 213, 115, 0.25), rgba(10, 15, 10, 0.95)) !important;
+    border: 1.5px solid rgba(46, 213, 115, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(46, 213, 115, 0.1);
 }
 
 .color-blue {
-    background: linear-gradient(145deg, rgba(0, 200, 255, 0.8), rgba(10, 15, 20, 0.3));
-    border: 1px solid #00eaff;
+    background: linear-gradient(135deg, rgba(0, 200, 255, 0.25), rgba(10, 15, 20, 0.95)) !important;
+    border: 1.5px solid rgba(0, 200, 255, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(0, 200, 255, 0.1);
 }
 
 .color-purple {
-    background: linear-gradient(145deg, rgba(255, 0, 255, 0.8), rgba(15, 10, 20, 0.3));
-    border: 1px solid #8000ff;
+    background: linear-gradient(135deg, rgba(165, 94, 234, 0.25), rgba(12, 10, 15, 0.95)) !important;
+    border: 1.5px solid rgba(165, 94, 234, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(165, 94, 234, 0.1);
 }
 
 .color-pink {
-    background: linear-gradient(145deg, rgba(255, 0, 128, 0.8), rgba(15, 10, 15, 0.3)) !important;
-    border: 1px solid #ff5be9 !important;
+    background: linear-gradient(135deg, rgba(255, 159, 243, 0.25), rgba(15, 10, 15, 0.95)) !important;
+    border: 1.5px solid rgba(255, 159, 243, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(255, 159, 243, 0.1);
 }
 
 .color-brown {
-    background: linear-gradient(145deg, rgba(139, 69, 19, 0.8), rgba(15, 12, 10, 0.3)) !important;
-    border: 1px solid #8b4513 !important;
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.35), rgba(15, 12, 10, 0.95)) !important;
+    border: 1.5px solid rgba(139, 69, 19, 0.8) !important;
+    box-shadow: inset 0 0 15px rgba(139, 69, 19, 0.1);
 }
 
 .color-opt.active {
@@ -4169,8 +4148,6 @@ input:checked+.slider:before {
     transform: translateY(12px) scale(0.95);
     transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     max-width: min(340px, 90vw);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4212,8 +4189,7 @@ input:checked+.slider:before {
     justify-content: center;
     padding: 3rem 1.5rem;
     text-align: center;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 1.5rem;
     margin-top: 1.5rem;
     border: 2px dashed rgba(255, 255, 255, 0.1);
@@ -4238,17 +4214,16 @@ input:checked+.slider:before {
     position: fixed;
     z-index: 10000;
     width: 180px;
-    background: rgba(10, 10, 15, 0.75);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 15, 20, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 6px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     display: none;
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 0.15s ease, transform 0.15s ease;
+    will-change: transform, opacity;
 }
 
 .context-menu.active {
@@ -4314,9 +4289,8 @@ input:checked+.slider:before {
     left: 100%;
     top: 0;
     margin-left: 8px;
-    background: rgba(10, 10, 15, 0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 15, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 8px;
     display: none;
@@ -4444,10 +4418,8 @@ input:checked+.slider:before {
 }
 
 .dash-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 20, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 20px;
     padding: 1.25rem;
     position: relative;

@@ -27,11 +27,10 @@
         }
 
         .admin-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
             padding: 24px;
-            backdrop-filter: blur(20px);
         }
 
         .form-group {
@@ -302,7 +301,9 @@
 
             // Sync Header
             document.getElementById('headerName').innerText = user.short_name || 'Admin';
-            document.getElementById('headerPP').src = user.avatar_url || '../icons/profpicture.png';
+            const _snPP = document.getElementById('headerPP');
+            const _snSrc = user.avatar_url || '../icons/profpicture.png';
+            if (_snPP && _snPP.getAttribute('src') !== _snSrc) _snPP.src = _snSrc;
 
             // Type Selector
             document.querySelectorAll('.type-opt').forEach(opt => {

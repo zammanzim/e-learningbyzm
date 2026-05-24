@@ -16,6 +16,13 @@ const SubjectApp = {
     init(subjectId, subjectName, title, isLesson = false) {
         if (typeof supabase === 'undefined') return;
 
+        // Reset state biar gak carry-over dari page sebelumnya
+        this.state.editMode = false;
+        this.state.isToggling = false;
+        this.tempFiles = [];
+        this.state.announcements = [];
+        this.state.completedTasks = [];
+
         this.state.subjectId = subjectId;
         this.state.subjectName = subjectName;
         this.state.title = title;
@@ -101,6 +108,7 @@ const SubjectApp = {
         }
         
         fab.style.cursor = 'grab';
+        fab.style.touchAction = 'none'; // FIX: Matiin scroll browser pas lagi drag FAB
 
         fab.addEventListener("pointerdown", (e) => {
             if (e.button !== 0) return;
@@ -114,14 +122,14 @@ const SubjectApp = {
             
             hasMoved = false;
 
-            // Timer 500ms tahan baru boleh drag
+            // Timer dipercepat biar gak capek nunggu pas mau drag
             dragTimer = setTimeout(() => {
                 isDragging = true;
                 fab.setPointerCapture(e.pointerId);
                 fab.style.transition = 'none';
                 fab.style.cursor = 'grabbing';
                 if (window.navigator.vibrate) window.navigator.vibrate(50);
-            }, 500);
+            }, 200);
         });
 
         fab.addEventListener("pointermove", (e) => {
@@ -150,15 +158,34 @@ const SubjectApp = {
             
             isDragging = false;
             fab.releasePointerCapture(e.pointerId);
-            fab.style.transition = '';
+            fab.style.transition = 'all 0.3s ease'; // Tambah transisi pas snap
             fab.style.cursor = 'grab';
 
-            if (hasMoved) {
+            // LOGIC SNAP KE KIRI BAWAH (Default)
+            const rect = fab.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            
+            // Posisi Default (kiri bawah): right kira-kira width layar - padding, bottom kira-kira 0
+            // Kita hitung threshold snap (misal 60px)
+            const snapThreshold = 60;
+            const currentBottom = winH - rect.bottom;
+            const currentRight = winW - rect.right;
+            
+            // Asumsi default kiri bawah: right = winW - 80, bottom = 20 (sesuaikan CSS lo)
+            // Tapi biar general, kita cek apakah dia deket pojok kiri bawah layar
+            if (rect.left < snapThreshold && (winH - rect.bottom) < snapThreshold) {
+                fab.style.setProperty('bottom', '20px', 'important');
+                fab.style.setProperty('right', `${winW - 80}px`, 'important'); // Sesuaikan dengan posisi default di CSS
+                localStorage.removeItem('fab_pos_subject');
+            } else if (hasMoved) {
                 localStorage.setItem('fab_pos_subject', JSON.stringify({
                     right: fab.style.right,
                     bottom: fab.style.bottom
                 }));
+            }
 
+            if (hasMoved) {
                 // Kill next click event biar tombol gak kepencet pas abis drag
                 const killClick = (ev) => {
                     ev.stopImmediatePropagation();
@@ -166,6 +193,8 @@ const SubjectApp = {
                 };
                 window.addEventListener('click', killClick, { capture: true, once: true });
             }
+            
+            setTimeout(() => fab.style.transition = '', 300);
         });
 
         // Anti nyangkut kalo pointer keluar jendela
@@ -388,10 +417,12 @@ const SubjectApp = {
             const cacheKey = `announcements_${this.state.subjectId}`;
             let data, error;
             try {
-                // Lesson mode: sort by newest first. Announcement mode: sort by display_order
+                // Balikin ke logic asal miz: 
+                // Lessons = Newest First, Announcements = Ikut display_order
                 const res = this.state.isLessonMode
                     ? await query.order("created_at", { ascending: false })
-                    : await query.order("display_order", { ascending: true }).order("created_at", { ascending: true });
+                    : await query.order("display_order", { ascending: true }).order("created_at", { ascending: false });
+                
                 data = res.data; error = res.error;
                 if (error) throw error;
                 this.state.announcements = data || [];
@@ -575,22 +606,22 @@ const SubjectApp = {
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;" onclick="SubjectApp.deleteAnnouncement(this.closest('.course-card'))">
                     <i class="fa-solid fa-trash" style="margin-right:0;"></i>
                 </button>
-
-                ${options.autoNumber ? `
+            </div>
+            
+            ${options.autoNumber ? `
                 <div class="card-number" style="
                     font-size: 11px; 
                     font-weight: 800; 
                     color: white; 
-                    background: rgba(255,255,255,0.15);
+                    background: rgba(255,255,255,0.25);
                     padding: 4px 8px;
                     border-radius: 12px;
-                    backdrop-filter: blur(4px);
-                    border: 1px solid rgba(255,255,255,0.1);
+                    border: 1px solid rgba(255,255,255,0.12);
                     letter-spacing: 0.5px;
+                    margin-left: 8px;
                 ">
                     #${options.autoNumber}
                 </div>` : ''}
-            </div>
         </div>
     `;
         return card;
@@ -663,7 +694,7 @@ const SubjectApp = {
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
-                // Reorder handle hanya tampil di announcements, bukan lesson mode
+                // Reorder handle HANYA tampil di Announcements (karena Lessons pake sorting created_at)
                 if (reorderHandle) reorderHandle.style.display = this.state.isLessonMode ? "none" : "flex";
                 if (cameraBtn) cameraBtn.style.display = "flex";
                 deletePhotoBtns.forEach(b => b.style.display = "flex");
@@ -695,12 +726,15 @@ const SubjectApp = {
         toggleBtn.disabled = true;
 
         const cards = document.querySelectorAll(".course-card");
+        const dirtyCardIds = new Set(); // Lacak mana yang beneran berubah
 
         try {
             // 1. Upload semua foto pending per card sebelum upsert
             for (const card of cards) {
                 const pending = card._pendingFiles;
                 if (!pending || pending.length === 0) continue;
+
+                dirtyCardIds.add(card.dataset.id); // Tandai sebagai dirty karena ada upload baru
 
                 const id = card.dataset.id;
                 const ann = this.state.announcements.find(a => String(a.id) === String(id));
@@ -761,7 +795,8 @@ const SubjectApp = {
                 const currentOrder = index + 1;
 
                 // LOGIC DIRTY CHECK: Bandingkan data UI vs data asli di state
-                const isChanged = !ann || 
+                // Jika ID ada di dirtyCardIds (karena upload foto), otomatis true
+                const isChanged = dirtyCardIds.has(id) || !ann || 
                     getVal("big_title") !== (ann.big_title || "") ||
                     getVal("title") !== (ann.title || "") ||
                     getContent() !== (ann.content || "") ||
@@ -1083,12 +1118,10 @@ const SubjectApp = {
     },
 
     updateDisplayOrder() {
-        // Cukup sync urutan ke state lokal — DB diurus saveAllChanges() saat keluar edit mode
-        const cards = document.querySelectorAll(".course-card");
-        Array.from(cards).forEach((card, index) => {
-            const ann = this.state.announcements.find(a => String(a.id) === String(card.dataset.id));
-            if (ann) ann.display_order = index + 1;
-        });
+        // JANGAN sync urutan ke state lokal di sini.
+        // Biar saveAllChanges bisa bandingin posisi kartu di DOM vs data asli di state.
+        // Cukup update UI tombol panah saja jika ada.
+        this.updateArrowButtons();
     },
 
     // Bangun innerHTML photo-grid dari array URL — dipakai di createCardElement & re-render setelah delete
@@ -1211,13 +1244,16 @@ const SubjectApp = {
     async deletePhoto(card, urlToDelete) {
         if (!await showPopup("Hapus foto ini?", "confirm")) return;
         const id = card.dataset.id;
-        const ann = this.state.announcements.find(a => a.id == id);
+        const ann = this.state.announcements.find(a => String(a.id) === String(id));
 
         try {
-            // Hapus dari storage
-            if (urlToDelete?.includes('/subject-photos/')) {
-                const path = decodeURIComponent(urlToDelete.split('/subject-photos/')[1]);
-                await supabase.storage.from('subject-photos').remove([path]);
+            // Hapus dari storage Supabase
+            if (urlToDelete && urlToDelete.includes('/subject-photos/')) {
+                // Ekstrak path setelah bucket
+                const path = urlToDelete.split('/subject-photos/')[1];
+                if (path) {
+                    await supabase.storage.from('subject-photos').remove([decodeURIComponent(path)]);
+                }
             }
 
             // Parse dulu, filter, lalu serialize kembali ke string
@@ -1225,10 +1261,14 @@ const SubjectApp = {
             const newUrls = currentUrls.filter(u => u !== urlToDelete);
             const newVal = this._serializePhotoUrls(newUrls);
 
+            // Update database
             await supabase.from("subject_announcements").update({ photo_url: newVal }).eq("id", id);
 
             // Update state
             if (ann) ann.photo_url = newUrls.length === 0 ? null : newUrls;
+            
+            // Update fallback di dataset card biar pas save gak error
+            card.dataset.photoUrl = newVal || "";
 
             // Re-render grid dari awal biar urutan & overlay selalu bener
             const oldGrid = card.querySelector('.photo-grid');
@@ -1239,7 +1279,6 @@ const SubjectApp = {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = newGridHTML;
                 const newGrid = tempDiv.firstElementChild;
-                // Sisipkan sebelum pending-photo-preview atau h3
                 const anchor = card.querySelector('.pending-photo-preview') || card.querySelector('h3');
                 card.insertBefore(newGrid, anchor);
                 card.classList.add('clickable-card');
@@ -1249,10 +1288,10 @@ const SubjectApp = {
                 card.style.cursor = 'default';
             }
 
-            showPopup("Foto dihapus", "success");
+            showToast("Foto dihapus dari cloud!", "success");
         } catch (err) {
             console.error(err);
-            showPopup("Gagal hapus foto", "error");
+            showPopup("Gagal hapus foto dari cloud", "error");
         }
     },
 

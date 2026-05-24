@@ -147,8 +147,10 @@ async function refreshVisitorCount(user) {
             .eq('is_visible', true);
 
         if (!error) {
+            const finalCount = count || 0;
+            localStorage.setItem('cached_visitor_count', finalCount);
             const badge = document.getElementById("headerVisitorCount");
-            if (badge) badge.innerText = count || 0;
+            if (badge) badge.innerText = finalCount;
         }
     } catch (err) { console.error("Badge Count Error:", err); }
 }
@@ -190,7 +192,10 @@ async function renderVisitorStats() {
         data.forEach(v => { if (!uniqueMap.has(v.user_id)) uniqueMap.set(v.user_id, v); });
 
         const badge = document.getElementById("headerVisitorCount");
-        if (badge) badge.innerText = uniqueMap.size;
+        if (badge) {
+            badge.innerText = uniqueMap.size;
+            localStorage.setItem('cached_visitor_count', uniqueMap.size);
+        }
 
         const popupCount = document.getElementById("popupVisitorCount");
         if (popupCount) popupCount.innerText = uniqueMap.size;

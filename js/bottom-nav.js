@@ -72,10 +72,8 @@
             position: fixed;
             bottom: 0; left: 0; right: 0;
             height: 60px;
-            background: rgba(6, 8, 16, 0.88);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border-top: 1px solid rgba(255,255,255,0.06);
+            background: rgba(6, 8, 16, 0.98);
+            border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: stretch;
             z-index: 4000;

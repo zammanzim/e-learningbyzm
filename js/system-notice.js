@@ -46,16 +46,14 @@ const SystemNotice = {
 
             .system-notice-card {
                 pointer-events: auto;
-                background: rgba(15, 15, 20, 0.82);
-                backdrop-filter: blur(20px) saturate(180%);
-                -webkit-backdrop-filter: blur(20px) saturate(180%);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(15, 15, 20, 0.98);
+                border: 1px solid rgba(255, 255, 255, 0.12);
                 border-radius: 18px;
                 padding: 14px 18px;
                 display: flex;
                 align-items: flex-start;
                 gap: 14px;
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
                 position: relative;
                 animation: snSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             }

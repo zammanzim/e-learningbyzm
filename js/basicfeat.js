@@ -68,11 +68,11 @@ function syncHeaderProfile() {
             headerName.innerText = `Haii, ${user.short_name || user.nickname || 'User'}`;
         }
         if (headerPP) {
-            // Set opacity 0 saat load agar tidak kedip (hidden di CSS headerPP biar rapi)
-            headerPP.style.opacity = '0';
-            headerPP.src = user.avatar_url || "../icons/profpicture.png";
-            headerPP.onload = () => { headerPP.style.opacity = '1'; };
-            headerPP.onerror = () => { headerPP.src = "../icons/profpicture.png"; headerPP.style.opacity = '1'; };
+            const targetSrc = user.avatar_url || "../icons/profpicture.png";
+            if (headerPP.getAttribute('src') !== targetSrc) {
+                headerPP.src = targetSrc;
+            }
+            headerPP.style.opacity = '1';
         }
     } catch (e) { console.error("Sync Profile Error:", e); }
 }

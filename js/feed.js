@@ -29,7 +29,7 @@ const FeedApp = {
         const nameEl = document.getElementById('headerName');
         const ppEl   = document.getElementById('headerPP');
         if (nameEl) nameEl.textContent = 'Haii, ' + (this.state.user.short_name || this.state.user.full_name?.split(' ')[0] || 'User');
-        if (ppEl)   ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
+        if (ppEl && ppEl.getAttribute('src') !== (this.state.user.avatar_url || 'icons/profpicture.png')) ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
 
         this.bindScrollSentinel();
         await this.loadPosts();

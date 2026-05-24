@@ -142,11 +142,10 @@
             display: flex;
             align-items: center;
             gap: 0;
-            background: rgba(10,15,25,0.88);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(10,15,25,0.98);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 50px;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,234,255,0.05);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.6);
             overflow: hidden;
             transition: border-color .2s;
         }
@@ -176,8 +175,7 @@
         /* ── Menu Popup ── */
         #_sw_mpopup_overlay {
             position: fixed; inset: 0; z-index: 9998;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(3px);
+            background: rgba(0,0,0,0.85);
         }
         #_sw_mpopup {
             position: fixed; z-index: 9999;
@@ -264,8 +262,7 @@
         /* Visitor popup — centered overlay */
         #_sw_vpopup {
             position: fixed; inset: 0; z-index: 99999;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.85);
             display: flex; align-items: center; justify-content: center;
             padding: 16px; box-sizing: border-box;
             animation: _swFadeIn .2s ease forwards;

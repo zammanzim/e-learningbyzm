@@ -12,7 +12,7 @@ async function initSearchPage() {
     const headerName = document.getElementById('headerName');
     const headerPP   = document.getElementById('headerPP');
     if (headerName) headerName.innerText = `Haii, ${user.full_name.split(' ')[0]}`;
-    if (headerPP)   headerPP.src = user.avatar_url || 'icons/profpicture.png';
+    if (headerPP && headerPP.getAttribute('src') !== (user.avatar_url || 'icons/profpicture.png')) headerPP.src = user.avatar_url || 'icons/profpicture.png';
 
     await loadClasses();
     showClassList();

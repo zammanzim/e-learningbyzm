@@ -60,8 +60,15 @@ async function initTugas() {
     } catch (e) { user = null; }
     if (!user) { window.location.href = 'index'; return; }
 
-    // Set flag admin untuk renderTasks
+    // Reset flag admin untuk renderTasks
     _isAdminUser = (user.role === 'class_admin' || user.role === 'super_admin');
+
+    // Reset SubjectApp state biar gak carry-over dari page sebelumnya
+    SubjectApp.state.editMode = false;
+    SubjectApp.state.isToggling = false;
+    SubjectApp.tempFiles = [];
+    SubjectApp.state.announcements = [];
+    SubjectApp.state.completedTasks = [];
 
     // Init SubjectApp in 'tugas' mode
     SubjectApp.state.subjectId = 'tugas';

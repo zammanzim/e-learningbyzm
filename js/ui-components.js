@@ -7,6 +7,16 @@ const UIComponents = {
         const body = document.body;
         if (!body) return;
 
+        const cachedCount = localStorage.getItem('cached_visitor_count') || '0';
+
+        // Baca user data synchronously buat populate header tanpa blink
+        let _uData = null;
+        try { _uData = JSON.parse(localStorage.getItem('user')); } catch(e) {}
+        const _isSubDir = /\/(a|admiii)\//.test(window.location.pathname);
+        const _defaultPP = _isSubDir ? '../icons/profpicture.png' : 'icons/profpicture.png';
+        const _avatarSrc = (_uData && _uData.avatar_url) ? _uData.avatar_url : _defaultPP;
+        const _displayName = _uData ? (_uData.short_name || _uData.nickname || 'User') : '...';
+
         // 1. HEADER & VISITOR
         const headerHTML = `
         <header>
@@ -16,7 +26,7 @@ const UIComponents = {
                 </div>
                 <div id="visitorTrigger" class="visitor-trigger">
                     <i class="fa-solid fa-eye"></i>
-                    <span id="headerVisitorCount">0</span>
+                    <span id="headerVisitorCount">${cachedCount}</span>
                 </div>
             </div>
             <div id="classSwitcherWrapper" style="display:none; position:relative; margin-right:8px;">
@@ -37,8 +47,8 @@ const UIComponents = {
                 "></div>
             </div>
             <div class="profile-box" id="profileTrigger">
-                <span id="headerName">Haii, ...</span>
-                <img id="headerPP" class="header-pp">
+                <span id="headerName">Haii, ${_displayName}</span>
+                <img id="headerPP" class="header-pp" src="${_avatarSrc}">
                 <i class="fa-solid fa-caret-down"></i>
             </div>
             <div class="profile-dropdown" id="profileDropdown">
@@ -50,18 +60,18 @@ const UIComponents = {
                 </ul>
             </div>
         </header>
-
+ 
         <div id="visitorOverlay" class="visitor-overlay">
             <div class="visitor-popup">
                 <div class="popup-header">
-                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">0</span></h3>
+                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">${cachedCount}</span></h3>
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
                 <div id="visitorList" class="visitor-list-container" style="text-align:left;"></div>
                 <div class="admin-actions" style="margin-top: 16px;">
                     <button id="resetVisitorBtn" class="btn-reset-text">
                         <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
-                    </button>
+                     </button>
                 </div>
             </div>
         </div>`;
@@ -188,6 +198,13 @@ const UIComponents = {
                 // Jangan trigger kalau klik kanan asli (untuk device hybrid)
                 if (e.touches.length > 1) return;
 
+                // FIX: Abaikan element draggable (FAB & Grip) biar gak bentrok sama drag timer
+                if (e.target.closest('.admin-fab-container') || 
+                    e.target.closest('.daily-fab-container') || 
+                    e.target.closest('.updates-fab') ||
+                    e.target.closest('.drag-grip') ||
+                    [...e.target.classList].some(c => c.includes('fab'))) return;
+
                 const touch = e.touches[0];
                 const card = e.target.closest('.course-card');
                 
@@ -222,6 +239,17 @@ const UIComponents = {
         },
 
         handleContextMenu(e) {
+            // FIX: Kunci total buat FAB & Grip — jangan munculin menu (custom maupun browser)
+            // biar gak ganggu logic drag-and-drop
+            if (e.target.closest('.admin-fab-container') || 
+                e.target.closest('.daily-fab-container') || 
+                e.target.closest('.updates-fab') ||
+                e.target.closest('.drag-grip') ||
+                e.target.closest('.dc-edit-btn-wrap')) {
+                e.preventDefault();
+                return;
+            }
+
             // Hanya aktif di Subject, Tugas, atau Announcements page
             const isSubjectPage = !!document.getElementById('announcements');
             const isTugasPage = !!document.getElementById('taskList');
@@ -311,6 +339,11 @@ const UIComponents = {
 
         show(x, y) {
             const menu = document.getElementById('customContextMenu');
+            
+            // FIX: Reset animasi biar nge-play lagi pas pindah posisi
+            menu.classList.remove('active');
+            void menu.offsetWidth; // Force reflow biar browser sadar class-nya ilang
+
             menu.style.display = 'block';
             
             // Boundary check
@@ -325,7 +358,8 @@ const UIComponents = {
             menu.style.left = `${x}px`;
             menu.style.top = `${y}px`;
 
-            setTimeout(() => menu.classList.add('active'), 10);
+            // Langsung active biar animasinya jalan
+            menu.classList.add('active');
         },
 
         hide() {

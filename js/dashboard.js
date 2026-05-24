@@ -64,7 +64,7 @@ const DashboardApp = {
         const hName = document.getElementById('headerName');
         const hPP = document.getElementById('headerPP');
         if (hName) hName.textContent = `Haii, ${displayName.split(' ')[0]}`;
-        if (hPP) hPP.src = displayAvatar;
+        if (hPP && hPP.getAttribute('src') !== displayAvatar) hPP.src = displayAvatar;
         
         // Update data asli
         this.renderUserInfo();

@@ -41,7 +41,8 @@
             // Update UI
             const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "../icons/profpicture.png";
             if (document.getElementById('previewPP')) document.getElementById('previewPP').src = ppUrl;
-            if (document.getElementById('headerPP')) document.getElementById('headerPP').src = ppUrl;
+            const _hPP = document.getElementById('headerPP');
+            if (_hPP && _hPP.getAttribute('src') !== ppUrl) _hPP.src = ppUrl;
 
             document.getElementById('inputFullName').value = data.full_name || "-";
             document.getElementById('inputRole').value = (data.role || "student").toUpperCase();

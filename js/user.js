@@ -124,7 +124,8 @@ const UserProfile = {
         const el = document.getElementById('headerName');
         const pp = document.getElementById('headerPP');
         if (el) el.innerText = `Haii, ${me.short_name || me.full_name?.split(' ')[0] || 'User'}`;
-        if (pp) pp.src = me.avatar_url || 'icons/profpicture.png';
+        const _ppSrc = me.avatar_url || 'icons/profpicture.png';
+        if (pp && pp.getAttribute('src') !== _ppSrc) pp.src = _ppSrc;
     },
 
     renderProfile() {
