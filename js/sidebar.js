@@ -5,6 +5,33 @@
 // ============================================================
 
 let _sidebarChannel = null;
+let _sidebarState = { groups: [], items: [], user: null, classId: null };
+let _sidebarDrag = null;
+let _sidebarContextItem = null;
+let _sidebarSavingOrder = false;
+
+function sidebarCanManage(user) {
+    return user && (user.role === 'super_admin' || user.role === 'class_admin');
+}
+
+function escapeSidebarHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[ch]));
+}
+
+function toastSidebar(message, type = 'success') {
+    if (typeof showToast === 'function') showToast(message, type);
+}
+
+function popupSidebar(message, type = 'error') {
+    if (typeof showPopup === 'function') showPopup(message, type);
+    else alert(message.replace(/<[^>]+>/g, ''));
+}
 
 // ── HELPERS ──────────────────────────────────────────────────
 function getEffectiveClassId() {
@@ -240,6 +267,7 @@ function setupSidebarRealtime(classId, user) {
 }
 
 async function refreshSidebar(classId, user) {
+    if (_sidebarSavingOrder || _sidebarDrag) return;
     console.log('[Sidebar] Perubahan terdeteksi, memperbarui...');
     const data = await fetchSidebarData(classId);
     if (!data) return;
@@ -288,6 +316,8 @@ function processAndRenderSidebar(groups, items, user) {
     if (!sidebar) return;
 
     const role = user.role;
+    const canManageSidebar = sidebarCanManage(user);
+    const classId = getEffectiveClassId() || String(user.class_id);
     const isInAdmin = window.location.pathname.includes('/admiii/');
     const isInA     = window.location.pathname.includes('/a/');
     const rootPrefix  = isInAdmin ? '../a/' : isInA ? '' : 'a/';
@@ -323,7 +353,7 @@ function processAndRenderSidebar(groups, items, user) {
         const headerColor = COLOR[group.group_type] || '';
         const headerStyle = headerColor ? `style="color:${headerColor};"` : '';
 
-        html += `<h3 ${headerStyle}>${group.group_label}</h3><ul>`;
+        html += `<h3 ${headerStyle}>${escapeSidebarHtml(group.group_label)}</h3><ul data-sidebar-group="${escapeSidebarHtml(group.group_key)}">`;
 
         groupItems.forEach(item => {
             // ── Build URL berdasarkan tipe grup ──
@@ -368,25 +398,26 @@ function processAndRenderSidebar(groups, items, user) {
 
             // ── Badge ──
             const badge = item.badge
-                ? `<span class="sidebar-badge ${item.badge_type || 'badge-new'}">${item.badge}</span>`
+                ? `<span class="sidebar-badge ${escapeSidebarHtml(item.badge_type || 'badge-new')}">${escapeSidebarHtml(item.badge)}</span>`
                 : '';
 
             // ── Locked ──
             if (item.locked) {
                 html += `
-                <li style="opacity:0.35; pointer-events:none; cursor:default;">
+                <li class="sidebar-menu-item sidebar-locked${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                     <a href="#" onclick="event.preventDefault();" style="cursor:default;">
                         <i class="fa-solid fa-lock" style="font-size:11px;"></i>
-                        <span style="text-decoration:line-through;">${item.subject_name}</span>
+                        <span style="text-decoration:line-through;">${escapeSidebarHtml(item.subject_name)}</span>
                     </a>
+                    ${badge}
                 </li>`;
                 return;
             }
 
             html += `
-            <li class="${isActive}">
+            <li class="sidebar-menu-item ${isActive}${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                 <a href="${url}">
-                    <i class="${icon}"></i> <span>${item.subject_name}</span>
+                    <i class="${escapeSidebarHtml(icon)}"></i> <span>${escapeSidebarHtml(item.subject_name)}</span>
                 </a>
                 ${badge}
             </li>`;
@@ -396,6 +427,7 @@ function processAndRenderSidebar(groups, items, user) {
     });
 
     sidebar.innerHTML = html;
+    _sidebarState = { groups, items, user, classId };
 
     // Restore scroll position
     const savedScroll = sessionStorage.getItem('sidebar_scroll');
@@ -404,6 +436,8 @@ function processAndRenderSidebar(groups, items, user) {
     sidebar.addEventListener('scroll', () => {
         sessionStorage.setItem('sidebar_scroll', sidebar.scrollTop);
     }, { passive: true });
+
+    setupInlineSidebarManager(sidebar, user, classId);
 }
 
 // ── AUTO INIT ─────────────────────────────────────────────────
@@ -411,3 +445,258 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSidebar();
     renderClassSwitcher();
 });
+
+function setupInlineSidebarManager(sidebar, user, classId) {
+    if (!sidebarCanManage(user)) return;
+    ensureSidebarContextMenu();
+
+    if (sidebar.dataset.inlineManagerReady === '1') return;
+    sidebar.dataset.inlineManagerReady = '1';
+
+    sidebar.addEventListener('dragstart', handleSidebarDragStart);
+    sidebar.addEventListener('dragover', handleSidebarDragOver);
+    sidebar.addEventListener('drop', handleSidebarDrop);
+    sidebar.addEventListener('dragend', handleSidebarDragEnd);
+
+    document.addEventListener('click', hideSidebarContextMenu);
+    window.addEventListener('resize', hideSidebarContextMenu);
+    window.addEventListener('scroll', hideSidebarContextMenu, true);
+}
+
+function getSidebarItemById(id) {
+    return _sidebarState.items.find(item => String(item.id) === String(id));
+}
+
+function getSidebarElementById(id) {
+    return [...document.querySelectorAll('.sidebar-menu-item[data-menu-id]')]
+        .find(el => String(el.dataset.menuId) === String(id));
+}
+
+function handleSidebarDragStart(e) {
+    const li = e.target.closest('.sidebar-menu-item.sidebar-manageable');
+    if (!li) return;
+
+    _sidebarDrag = { id: li.dataset.menuId, group: li.dataset.menuGroup, moved: false };
+    li.classList.add('sidebar-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', li.dataset.menuId);
+}
+
+function getSidebarListFromPoint(e) {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    let list = under?.closest?.('.sidebar ul[data-sidebar-group]');
+    if (list) return list;
+
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return null;
+    return [...sidebar.querySelectorAll('ul[data-sidebar-group]')].find(ul => {
+        const rect = ul.getBoundingClientRect();
+        return e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom;
+    }) || null;
+}
+
+function getSidebarInsertBefore(list, y) {
+    const items = [...list.querySelectorAll('.sidebar-menu-item.sidebar-manageable:not(.sidebar-dragging)')];
+    return items.find(item => y < item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2) || null;
+}
+
+function handleSidebarDragOver(e) {
+    if (!_sidebarDrag) return;
+
+    const targetList = getSidebarListFromPoint(e);
+    if (!targetList) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const dragged = getSidebarElementById(_sidebarDrag.id);
+    if (!dragged) return;
+
+    _sidebarDrag.moved = true;
+    hideSidebarContextMenu();
+    document.querySelectorAll('.sidebar-drop-zone').forEach(el => {
+        if (el !== targetList) el.classList.remove('sidebar-drop-zone');
+    });
+    targetList.classList.add('sidebar-drop-zone');
+
+    const before = getSidebarInsertBefore(targetList, e.clientY);
+    if (before === dragged) return;
+    targetList.insertBefore(dragged, before);
+    dragged.dataset.menuGroup = targetList.dataset.sidebarGroup;
+}
+
+async function handleSidebarDrop(e) {
+    if (!_sidebarDrag) return;
+    e.preventDefault();
+    document.querySelectorAll('.sidebar-drop-zone').forEach(el => el.classList.remove('sidebar-drop-zone'));
+    if (_sidebarDrag.moved) await saveSidebarInlineOrder();
+}
+
+function handleSidebarDragEnd() {
+    document.querySelectorAll('.sidebar-dragging').forEach(el => el.classList.remove('sidebar-dragging'));
+    document.querySelectorAll('.sidebar-drop-zone').forEach(el => el.classList.remove('sidebar-drop-zone'));
+    _sidebarDrag = null;
+}
+
+async function saveSidebarInlineOrder() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar || !_sidebarState.user) return;
+
+    const updates = [];
+    sidebar.querySelectorAll('ul[data-sidebar-group]').forEach(ul => {
+        const group = ul.dataset.sidebarGroup;
+        [...ul.querySelectorAll('.sidebar-menu-item[data-menu-id]')].forEach((li, index) => {
+            const item = getSidebarItemById(li.dataset.menuId);
+            if (!item) return;
+            const displayOrder = index + 1;
+            if (item.menu_group !== group || Number(item.display_order) !== displayOrder) {
+                updates.push({ id: item.id, menu_group: group, display_order: displayOrder });
+            }
+            li.dataset.menuGroup = group;
+            li.dataset.menuOrder = displayOrder;
+        });
+    });
+
+    if (!updates.length) return;
+
+    let failed = null;
+    _sidebarSavingOrder = true;
+    try {
+        for (const update of updates) {
+            const { error } = await supabase
+                .from('subjects_config')
+                .update({ menu_group: update.menu_group, display_order: update.display_order })
+                .eq('id', update.id);
+            if (error) { failed = error; break; }
+        }
+    } finally {
+        _sidebarSavingOrder = false;
+    }
+
+    if (failed) {
+        popupSidebar('Gagal simpan urutan sidebar: ' + failed.message, 'error');
+        refreshSidebar(_sidebarState.classId, _sidebarState.user);
+        return;
+    }
+
+    updates.forEach(update => {
+        const item = getSidebarItemById(update.id);
+        if (item) {
+            item.menu_group = update.menu_group;
+            item.display_order = update.display_order;
+        }
+    });
+    localStorage.removeItem(getCacheKey(_sidebarState.classId));
+    toastSidebar('Urutan sidebar disimpan', 'success');
+}
+
+function ensureSidebarContextMenu() {
+    if (typeof ContextMenu === 'undefined') return;
+    ContextMenu.init();
+    ContextMenu.registerProvider('sidebar', (e) => provideSidebarContextMenu(e), 50);
+
+    if (window._sidebarContextActionsReady) return;
+    window._sidebarContextActionsReady = true;
+    document.addEventListener('click', async (e) => {
+        const actionEl = e.target.closest('[data-sidebar-action]');
+        if (!actionEl || !_sidebarContextItem) return;
+        const item = _sidebarContextItem;
+        hideSidebarContextMenu();
+
+        if (actionEl.dataset.sidebarAction === 'rename') await renameSidebarItem(item);
+        if (actionEl.dataset.sidebarAction === 'toggle-lock') await toggleSidebarItemLock(item);
+        if (actionEl.dataset.sidebarAction === 'delete') await deleteSidebarItem(item);
+    });
+}
+
+function provideSidebarContextMenu(e) {
+    const li = e.target.closest('.sidebar-menu-item.sidebar-manageable');
+    if (!li || !sidebarCanManage(_sidebarState.user)) return null;
+
+    const item = getSidebarItemById(li.dataset.menuId);
+    if (!item) return null;
+
+    _sidebarContextItem = item;
+
+    const lockIcon = item.locked ? 'fa-lock-open' : 'fa-lock';
+    const lockText = item.locked ? 'Buka kunci' : 'Kunci';
+    return {
+        html: `
+            <ul>
+                <li data-sidebar-action="rename"><i class="fa-solid fa-pen"></i><span>Edit nama</span></li>
+                <li data-sidebar-action="toggle-lock"><i class="fa-solid ${lockIcon}"></i><span>${lockText}</span></li>
+                <div class="divider"></div>
+                <li data-sidebar-action="delete" class="danger"><i class="fa-solid fa-trash"></i><span>Hapus</span></li>
+            </ul>
+        `
+    };
+}
+
+function hideSidebarContextMenu() {
+    if (typeof ContextMenu !== 'undefined') ContextMenu.hide();
+}
+
+async function renameSidebarItem(item) {
+    const nextName = prompt('Nama menu:', item.subject_name || '');
+    if (nextName === null) return;
+    const subjectName = nextName.trim();
+    if (!subjectName) {
+        popupSidebar('Nama menu tidak boleh kosong', 'error');
+        return;
+    }
+
+    const { error } = await supabase
+        .from('subjects_config')
+        .update({ subject_name: subjectName })
+        .eq('id', item.id);
+
+    if (error) {
+        popupSidebar('Gagal edit nama: ' + error.message, 'error');
+        return;
+    }
+
+    item.subject_name = subjectName;
+    localStorage.removeItem(getCacheKey(_sidebarState.classId));
+    refreshSidebar(_sidebarState.classId, _sidebarState.user);
+    toastSidebar('Nama menu diupdate', 'success');
+}
+
+async function toggleSidebarItemLock(item) {
+    const locked = !item.locked;
+    const { error } = await supabase
+        .from('subjects_config')
+        .update({ locked })
+        .eq('id', item.id);
+
+    if (error) {
+        popupSidebar('Gagal update kunci: ' + error.message, 'error');
+        return;
+    }
+
+    item.locked = locked;
+    localStorage.removeItem(getCacheKey(_sidebarState.classId));
+    refreshSidebar(_sidebarState.classId, _sidebarState.user);
+    toastSidebar(locked ? 'Menu dikunci' : 'Kunci menu dibuka', 'success');
+}
+
+async function deleteSidebarItem(item) {
+    const ok = typeof showPopup === 'function'
+        ? await showPopup(`Hapus <b>${escapeSidebarHtml(item.subject_name)}</b>?<br>`, 'confirm')
+        : confirm(`Hapus ${item.subject_name}?`);
+    if (!ok) return;
+
+    const { error } = await supabase
+        .from('subjects_config')
+        .delete()
+        .eq('id', item.id);
+
+    if (error) {
+        popupSidebar('Gagal hapus menu: ' + error.message, 'error');
+        return;
+    }
+
+    localStorage.removeItem(getCacheKey(_sidebarState.classId));
+    refreshSidebar(_sidebarState.classId, _sidebarState.user);
+    toastSidebar('Menu dihapus', 'success');
+}

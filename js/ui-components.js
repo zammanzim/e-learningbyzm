@@ -180,20 +180,49 @@ const UIComponents = {
 
     contextMenu: {
         init() {
-            if (document.getElementById('customContextMenu')) return;
+            if (typeof ContextMenu === 'undefined') return;
+            ContextMenu.init();
+            ContextMenu.registerProvider(
+                'ui-components',
+                (e) => this.provideContextMenu(e),
+                0,
+                (touch, target) => this.provideLongPress(touch, target)
+            );
+        },
 
-            const menu = document.createElement('div');
-            menu.id = 'customContextMenu';
-            menu.className = 'context-menu';
-            document.body.appendChild(menu);
+        provideLongPress(touch, target) {
+            const isSubjectPage = !!document.getElementById('announcements');
+            const isTugasPage = !!document.getElementById('taskList');
+            if (!isSubjectPage && !isTugasPage) return null;
 
-            document.addEventListener('contextmenu', (e) => this.handleContextMenu(e));
-            document.addEventListener('click', () => this.hide());
-            window.addEventListener('scroll', () => this.hide());
-            window.addEventListener('resize', () => this.hide());
+            const card = target.closest('.course-card');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
 
-            // Support for Mobile Long Press
-            this.initTouchEvents();
+            this.renderMenu(card, isAdmin);
+            return { html: document.getElementById('customContextMenu').innerHTML };
+        },
+
+        provideContextMenu(e) {
+            if (e.target.closest('.admin-fab-container') ||
+                e.target.closest('.daily-fab-container') ||
+                e.target.closest('.updates-fab') ||
+                e.target.closest('.drag-grip') ||
+                e.target.closest('.dc-edit-btn-wrap')) {
+                return { html: '', preventDefault: true };
+            }
+
+            const isSubjectPage = !!document.getElementById('announcements');
+            const isTugasPage = !!document.getElementById('taskList');
+            const isDailyCard = e.target.closest('#dailyInfoCard');
+            if (!isSubjectPage && !isTugasPage && !isDailyCard) return null;
+
+            const card = e.target.closest('.course-card');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
+
+            this.renderMenu(card || isDailyCard, isAdmin, !!isDailyCard);
+            return { html: document.getElementById('customContextMenu').innerHTML };
         },
 
         initTouchEvents() {
@@ -335,45 +364,15 @@ const UIComponents = {
         },
 
         toggleSubmenu(e, li) {
-            e.stopPropagation();
-            // Toggle class open untuk mobile/click
-            const isOpen = li.classList.contains('open');
-            // Tutup semua submenu lain dulu
-            li.closest('ul').querySelectorAll('.has-submenu').forEach(el => el.classList.remove('open'));
-            if (!isOpen) li.classList.add('open');
+            if (typeof ContextMenu !== 'undefined') return ContextMenu.toggleSubmenu(e, li);
         },
 
         show(x, y) {
-            const menu = document.getElementById('customContextMenu');
-            
-            // FIX: Reset animasi biar nge-play lagi pas pindah posisi
-            menu.classList.remove('active');
-            void menu.offsetWidth; // Force reflow biar browser sadar class-nya ilang
-
-            menu.style.display = 'block';
-            
-            // Boundary check
-            const menuWidth = menu.offsetWidth;
-            const menuHeight = menu.offsetHeight;
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-
-            if (x + menuWidth > screenWidth) x -= menuWidth;
-            if (y + menuHeight > screenHeight) y -= menuHeight;
-
-            menu.style.left = `${x}px`;
-            menu.style.top = `${y}px`;
-
-            // Langsung active biar animasinya jalan
-            menu.classList.add('active');
+            if (typeof ContextMenu !== 'undefined') ContextMenu.show(x, y);
         },
 
         hide() {
-            const menu = document.getElementById('customContextMenu');
-            if (menu) {
-                menu.classList.remove('active');
-                setTimeout(() => menu.style.display = 'none', 150);
-            }
+            if (typeof ContextMenu !== 'undefined') ContextMenu.hide();
         },
 
         copyCardText() {

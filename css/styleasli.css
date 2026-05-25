@@ -270,6 +270,35 @@ header {
     text-shadow: 0 0 10px rgba(0, 234, 255, 0.8);
 }
 
+.sidebar li.sidebar-manageable {
+    user-select: none;
+}
+
+.sidebar li.sidebar-manageable:active {
+    cursor: grabbing;
+}
+
+.sidebar li.sidebar-dragging {
+    opacity: 0.45;
+    outline: 1px dashed var(--accent, #00eaff);
+    background: rgba(0, 234, 255, 0.08);
+}
+
+.sidebar ul.sidebar-drop-zone {
+    border-radius: 0.6375rem;
+    box-shadow: inset 0 0 0 1px rgba(0, 234, 255, 0.18);
+}
+
+.sidebar li.sidebar-locked {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.sidebar li.sidebar-locked.sidebar-manageable {
+    pointer-events: auto;
+    cursor: grab;
+}
+
 .sidebar-badge {
     position: absolute;
     top: 50%;
