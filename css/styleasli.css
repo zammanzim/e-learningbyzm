@@ -556,17 +556,20 @@ i {
 
 .visitor-popup {
     background-color: #0b1221;
-    width: 90%;
-    max-width: 20.1875rem;
+    width: 92%;
+    max-width: 26rem;
     border-radius: 1.0625rem;
-    padding: 1.3281rem;
+    padding: 1.5rem;
     border: 1px solid #1e293b;
     text-align: center;
     color: white;
-    font-family: sans-serif;
+    font-family: inherit;
     position: relative;
     transform: scale(0.9);
     transition: transform 0.3s ease;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .visitor-overlay.show .visitor-popup {
@@ -577,21 +580,24 @@ i {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.3281rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 0.7969rem;
+    padding-bottom: 0.8rem;
+    width: 100%;
 }
 
 .popup-header h3 {
-    margin-bottom: 0;
-    font-size: 1.0625rem;
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
 }
 
 .close-popup {
-    font-size: 1.7rem;
+    font-size: 1.8rem;
     color: #94a3b8;
     cursor: pointer;
-    line-height: 20px;
+    line-height: 1;
     font-weight: 300;
     transition: color 0.2s;
 }
@@ -602,15 +608,17 @@ i {
 
 .stats-grid {
     display: flex;
-    gap: 0.6375rem;
-    margin-bottom: 1.3281rem;
+    flex-wrap: wrap; /* Biar kalo kepaksa font kegedean dia turun kebawah */
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background-color: #151e32;
     flex: 1;
-    padding: 0.7969rem 0.5312rem;
-    border-radius: 0.6375rem;
+    min-width: 100px; /* Guard biar gak terlalu gepeng */
+    padding: 1rem 0.5rem;
+    border-radius: 0.75rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -4213,12 +4221,12 @@ input:checked+.slider:before {
 .context-menu {
     position: fixed;
     z-index: 10000;
-    width: 180px;
+    width: 12rem;
     background: rgba(15, 15, 20, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 6px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    border-radius: 0.8rem;
+    padding: 0.4rem;
+    box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.7);
     display: none;
     opacity: 0;
     transform: scale(0.95);
@@ -4239,36 +4247,36 @@ input:checked+.slider:before {
 }
 
 .context-menu li {
-    padding: 10px 12px;
-    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.5rem;
     cursor: pointer;
-    font-size: 13.5px;
+    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.85);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.8rem;
     transition: all 0.2s ease;
     position: relative;
 }
 
 .context-menu li i {
-    width: 16px;
-    font-size: 14px;
+    width: 1.1rem;
+    font-size: 0.95rem;
     text-align: center;
 }
 
 .context-menu li:hover {
-    background: rgba(255, 98, 0, 0.15);
-    color: #ff6200;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent, #00eaff);
 }
 
 /* Hover Bridge: Mencegah submenu hilang saat transisi mouse */
 .context-menu li.has-submenu::after {
     content: '';
     position: absolute;
-    right: -10px;
+    right: -0.65rem;
     top: 0;
-    width: 10px;
+    width: 0.65rem;
     height: 100%;
 }
 
@@ -4280,7 +4288,7 @@ input:checked+.slider:before {
 .context-menu .divider {
     height: 1px;
     background: rgba(255, 255, 255, 0.08);
-    margin: 6px 4px;
+    margin: 0.4rem 0.25rem;
 }
 
 /* Submenu Color Dots */
@@ -4288,36 +4296,36 @@ input:checked+.slider:before {
     position: absolute;
     left: 100%;
     top: 0;
-    margin-left: 8px;
+    margin-left: 0.5rem;
     background: rgba(10, 10, 15, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 8px;
+    border-radius: 0.8rem;
+    padding: 0.5rem;
     display: none;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    gap: 0.5rem;
+    box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 768px) {
     .context-menu {
-        width: 200px; /* Sedikit lebih lebar di mobile */
+        width: 13.5rem; /* Sedikit lebih lebar di mobile */
     }
     .context-menu li {
-        padding: 14px 16px; /* Touch target lebih besar */
-        font-size: 15px;
+        padding: 0.9rem 1.1rem; /* Touch target lebih besar */
+        font-size: 1rem;
     }
     .context-submenu {
         left: 0;
         top: 100%;
         margin-left: 0;
-        margin-top: 5px;
+        margin-top: 0.3rem;
         width: 100%;
         grid-template-columns: repeat(5, 1fr); /* Baris lebih panjang di mobile */
     }
     .ctx-color-dot {
-        width: 28px;
-        height: 28px;
+        width: 1.8rem;
+        height: 1.8rem;
     }
 }
 

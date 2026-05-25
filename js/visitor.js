@@ -258,6 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (trigger) {
         trigger.onclick = () => {
             overlay?.classList.add("show");
+            if (typeof lockScroll === 'function') lockScroll(); // Lock background scroll
             renderVisitorStats();
 
             // Realtime di dalam popup (hanya admin)
@@ -278,17 +279,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Tutup popup → matiin realtime popup
     const closeAction = () => {
-        overlay?.classList.remove("show");
-        if (_visitorPopupChannel) {
-            _visitorPopupChannel.unsubscribe();
-            _visitorPopupChannel = null;
+        if (overlay?.classList.contains('show')) {
+            overlay.classList.remove("show");
+            if (typeof unlockScroll === 'function') unlockScroll(); // Unlock background scroll
+            if (_visitorPopupChannel) {
+                _visitorPopupChannel.unsubscribe();
+                _visitorPopupChannel = null;
+            }
         }
     };
 
     if (closeBtn) closeBtn.onclick = closeAction;
     if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeAction(); };
 
-    // Shortcut Ctrl+Q → buka/tutup visitor popup
+    // Shortcut Ctrl+Q → buka/tutup visitor popup, Esc -> Close
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key === 'q') {
             e.preventDefault();
@@ -296,6 +300,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 closeAction();
             } else {
                 trigger?.click();
+            }
+        } else if (e.key === 'Escape') {
+            if (overlay?.classList.contains('show')) {
+                closeAction();
             }
         }
     });

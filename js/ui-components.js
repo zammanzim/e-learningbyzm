@@ -67,8 +67,14 @@ const UIComponents = {
                     <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">${cachedCount}</span></h3>
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
-                <div id="visitorList" class="visitor-list-container" style="text-align:left;"></div>
-                <div class="admin-actions" style="margin-top: 16px;">
+
+                <!-- NEW: Wrapped List Section -->
+                <div class="list-section">
+                    <div class="list-title">PENGUNJUNG TERBARU</div>
+                    <div id="visitorList" class="visitor-list-container"></div>
+                </div>
+
+                <div class="admin-actions">
                     <button id="resetVisitorBtn" class="btn-reset-text">
                         <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
                      </button>

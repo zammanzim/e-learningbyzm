@@ -76,7 +76,7 @@
             border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: stretch;
-            z-index: 4000;
+            z-index: 9999;
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         @media (min-width: 1024px) { #bottomNav { display: none !important; } }
@@ -97,6 +97,7 @@
             position: relative;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            touch-action: manipulation;
         }
         .bn-item i {
             font-size: 19px;
