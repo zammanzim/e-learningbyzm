@@ -10,7 +10,9 @@
     <script src="../js/ctx-menu.js"></script>
     <script src="../js/ui-components.js" defer></script>
     <script src="../js/sidebar.js"></script>
+    <script src="../js/lang.js"></script>
     <script src="../js/basicfeat.js"></script>
+    <script src="../js/show-popup.js"></script>
     <script src="../js/auth.js" defer></script>
     <script src="../js/visitor.js" defer></script>
     <script src="../js/subject-manager.js" defer></script>
@@ -18,6 +20,7 @@
     <script src="../js/toast.js"></script>
     <script src="../js/bottom-nav.js"></script>
     <script src="../js/system-notice.js"></script>
+    <script src="../js/lang.js"></script>
     <link rel="stylesheet" href="../css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/accountsetting.png" type="image/png">
@@ -213,6 +216,26 @@
         cursor: pointer;
     }
 
+    .btn-upload-bg {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        color: #ddd;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-upload-bg:hover {
+        background: rgba(0, 234, 255, 0.1);
+        border-color: #00eaff;
+        color: #00eaff;
+    }
+
     /* FONT SIZE */
     .font-row {
         display: grid;
@@ -377,7 +400,7 @@
         <!-- KIRI -->
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-palette"></i> Personalisasi</h1>
+                <h1 data-i18n="theme_title"><i class="fa-solid fa-palette"></i> Personalisasi</h1>
             </div>
 
             <div class="course-card">
@@ -401,8 +424,23 @@
                 </p>
             </div>
 
+            <!-- BAHASA -->
             <div class="course-card">
-                <h2 class="section-title"><i class="fa-solid fa-text-height"></i> Ukuran Teks</h2>
+                <h2 class="section-title"><i class="fa-solid fa-language"></i> <span data-i18n="lang_select">Pilih Bahasa</span></h2>
+                <div class="font-row">
+                    <div class="font-opt" id="lang-id" onclick="setLanguage('id')">
+                        <span class="size-label">ID</span>
+                        <span class="size-desc">Bahasa Indonesia</span>
+                    </div>
+                    <div class="font-opt" id="lang-en" onclick="setLanguage('en')">
+                        <span class="size-label">EN</span>
+                        <span class="size-desc">English</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-text-height"></i> <span data-i18n="text_size">Ukuran Teks</span></h2>
                 <div class="font-row">
                     <div class="font-opt" data-size="kecil" onclick="pickFont(this)">
                         <span class="size-label">Aa</span>
@@ -424,39 +462,34 @@
         <!-- KANAN -->
         <div class="right-section">
 
-            <div class="course-card" style="margin-top:0;">
-                <h2 class="section-title"><i class="fa-solid fa-image"></i> Background</h2>
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-image"></i> <span data-i18n="bg_title">Background</span></h2>
                 <div class="form-group">
-                    <label class="form-label">Pilih Preset</label>
+                    <label class="form-label" data-i18n="lang_select">Pilih Preset</label>
                     <div class="bg-grid" id="bgGrid"></div>
                 </div>
                 <div class="custom-bg-row">
-                    <label><i class="fa-solid fa-sliders"></i> Warna custom</label>
-                    <div class="color-pair">
-                        <div class="color-swatch" id="swatchTop" title="Warna atas">
-                            <input type="color" id="customBgTop" value="#006b83" oninput="onCustomBg()">
-                        </div>
-                        <i class="fa-solid fa-arrow-right" style="font-size:10px; opacity:0.3;"></i>
-                        <div class="color-swatch" id="swatchBot" title="Warna bawah">
-                            <input type="color" id="customBgBot" value="#019196" oninput="onCustomBg()">
-                        </div>
-                    </div>
+                    <label><i class="fa-solid fa-camera"></i> <span data-i18n="own_photo">Foto sendiri</span></label>
+                    <button class="btn-upload-bg" onclick="document.getElementById('bgUploadInput').click()">
+                        <i class="fa-solid fa-upload"></i> <span data-i18n="upload_photo">Upload Foto</span>
+                    </button>
+                    <input type="file" id="bgUploadInput" hidden accept="image/*" onchange="uploadCustomBg(this)">
                 </div>
             </div>
 
             <div class="course-card">
-                <h2 class="section-title"><i class="fa-solid fa-droplet"></i> Warna Aksen</h2>
+                <h2 class="section-title"><i class="fa-solid fa-droplet"></i> <span data-i18n="accent_title">Warna Aksen</span></h2>
                 <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label">Warna tombol, link, dan highlight</label>
                     <div class="accent-grid" id="accentGrid"></div>
                 </div>
             </div>
 
-            <button class="btn-save" id="btnSave" onclick="saveTheme()">
+            <button class="btn-save" id="btnSave" onclick="saveTheme()" data-i18n="save_apply">
                 <i class="fa-solid fa-floppy-disk"></i> SIMPAN & TERAPKAN
             </button>
             <button class="btn-reset" onclick="resetTheme()">
-                <i class="fa-solid fa-rotate-left" style="margin-right:6px;"></i> Reset ke tampilan default
+                <i class="fa-solid fa-rotate-left" style="margin-right:6px;"></i> <span data-i18n="reset_default">Reset ke tampilan default</span>
             </button>
 
         </div>
@@ -585,8 +618,6 @@
             document.getElementById('btnSave').style.background = `linear-gradient(135deg,${a},#0088ff)`;
 
             if (state.bg) {
-                // Update style tag dari theme.js langsung (bukan hapus)
-                // biar font size & accent override tetap jalan
                 let styleTag = document.getElementById('user-theme-override');
                 if (!styleTag) {
                     styleTag = document.createElement('style');
@@ -602,12 +633,16 @@
                 const ab = parseInt(a.slice(5, 7), 16);
                 const rgba = (op) => `rgba(${ar},${ag},${ab},${op})`;
 
+                const isImage = state.bg.startsWith('http') || state.bg.startsWith('url(');
+                const finalBg = isImage && !state.bg.startsWith('url(') ? `url('${state.bg}')` : state.bg;
+
                 styleTag.textContent = `
                     html { font-size: ${fontSize} !important; }
                     body {
-                        background-image: ${state.bg} !important;
-                        background-repeat: repeat, repeat, no-repeat !important;
-                        background-size: 2.125rem 2.125rem, 2.125rem 2.125rem, cover !important;
+                        background-image: ${finalBg} !important;
+                        background-repeat: ${isImage ? 'no-repeat' : 'repeat, repeat, no-repeat'} !important;
+                        background-size: ${isImage ? 'cover' : '2.125rem 2.125rem, 2.125rem 2.125rem, cover'} !important;
+                        background-position: center !important;
                         background-attachment: fixed !important;
                     }
                     #welcomeText {
@@ -621,7 +656,47 @@
             }
         }
 
+        async function uploadCustomBg(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user.id) return showToast('Login dulu miz!', 'error');
+
+            const btn = document.querySelector('.btn-upload-bg');
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            btn.disabled = true;
+
+            try {
+                const fileName = `bg_${user.id}_${Date.now()}.jpg`;
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                const url = publicUrlData.publicUrl;
+
+                state.bg = url;
+                document.querySelectorAll('.bg-opt').forEach(x => x.classList.remove('selected'));
+                applyPreview();
+                showToast('Foto berhasil diupload!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Gagal upload foto', 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
         applyPreview();
+
+        // Highlight Active Language
+        const currentLang = localStorage.getItem('app_lang') || 'id';
+        document.getElementById(`lang-${currentLang}`)?.classList.add('selected');
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.nickname) document.getElementById('pvName').textContent = `Haii, ${user.nickname}!`;

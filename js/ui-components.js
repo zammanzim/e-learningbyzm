@@ -17,6 +17,41 @@ const UIComponents = {
         const _avatarSrc = (_uData && _uData.avatar_url) ? _uData.avatar_url : _defaultPP;
         const _displayName = _uData ? (_uData.short_name || _uData.nickname || 'User') : '...';
 
+        // Logika Class Switcher tanpa blink (Cache-first)
+        let classSwitcherHTML = '';
+        if (_uData && _uData.role === 'super_admin') {
+            let currentClassName = 'Kelas –';
+            try {
+                const overrideName = sessionStorage.getItem('class_override_name');
+                if (overrideName) {
+                    currentClassName = overrideName;
+                } else if (_uData.class_name) {
+                    currentClassName = _uData.class_name;
+                } else {
+                    currentClassName = `Kelas ${_uData.class_id}`;
+                }
+            } catch(e) {}
+
+            classSwitcherHTML = `
+            <div id="classSwitcherWrapper" style="display:flex; position:relative; margin-right:8px;">
+                <div id="classSwitcherTrigger" onclick="toggleClassSwitcher()" style="
+                    display:flex; align-items:center; gap:6px;
+                    background:rgba(0, 234, 255, 0.08); border:1px solid rgba(0, 234, 255, 0.25);
+                    border-radius:20px; padding:5px 12px; cursor:pointer;
+                    font-size:12px; color:var(--accent, #00eaff); transition:all 0.2s;
+                ">
+                    <i class="fa-solid fa-layer-group" style="font-size:11px;"></i>
+                    <span id="classSwitcherLabel">${currentClassName}</span>
+                    <i class="fa-solid fa-caret-down" style="font-size:10px;"></i>
+                </div>
+                <div id="classSwitcher" style="
+                    display:none; position:absolute; top:calc(100% + 8px); left:0;
+                    background:#111; border:1px solid rgba(0, 234, 255, 0.2);
+                    border-radius:10px; min-width:140px; overflow:hidden; z-index:9999;
+                "></div>
+            </div>`;
+        }
+
         // 1. HEADER & VISITOR
         const headerHTML = `
         <header>
@@ -29,23 +64,7 @@ const UIComponents = {
                     <span id="headerVisitorCount">${cachedCount}</span>
                 </div>
             </div>
-            <div id="classSwitcherWrapper" style="display:none; position:relative; margin-right:8px;">
-                <div id="classSwitcherTrigger" onclick="toggleClassSwitcher()" style="
-                    display:flex; align-items:center; gap:6px;
-                    background:rgba(0, 234, 255, 0.08); border:1px solid rgba(0, 234, 255, 0.25);
-                    border-radius:20px; padding:5px 12px; cursor:pointer;
-                    font-size:12px; color:var(--accent, #00eaff); transition:all 0.2s;
-                ">
-                    <i class="fa-solid fa-layer-group" style="font-size:11px;"></i>
-                    <span id="classSwitcherLabel">Kelas –</span>
-                    <i class="fa-solid fa-caret-down" style="font-size:10px;"></i>
-                </div>
-                <div id="classSwitcher" style="
-                    display:none; position:absolute; top:calc(100% + 8px); left:0;
-                    background:#111; border:1px solid rgba(0, 234, 255, 0.2);
-                    border-radius:10px; min-width:140px; overflow:hidden; z-index:9999;
-                "></div>
-            </div>
+            ${classSwitcherHTML}
             <div class="profile-box" id="profileTrigger">
                 <span id="headerName">Haii, ${_displayName}</span>
                 <img id="headerPP" class="header-pp" src="${_avatarSrc}">

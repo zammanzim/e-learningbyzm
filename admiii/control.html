@@ -8,7 +8,9 @@
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/auth.js"></script>
     <script src="../js/sidebar.js"></script>
+<script src="../js/lang.js"></script>
 <script src="../js/basicfeat.js"></script>
+<script src="../js/show-popup.js"></script>
     <script src="../js/theme.js"></script>
 <script src="../js/toast.js"></script>
 <link rel="stylesheet" href="../css/styleasli.css">
@@ -191,23 +193,27 @@
             renderUsers(filtered);
         }
 
-        async function editUser(id) {
-            const newRole = prompt("Masukkan Role Baru (student/class_admin/super_admin):");
+        async function changeRole(userId) {
+            const newRole = await showPopup('Ubah Role User', 'form', {
+                placeholder: 'student/class_admin/super_admin',
+                title: 'Masukkan Role Baru'
+            });
             if (!newRole) return;
 
             const { error } = await supabase
                 .from('users')
                 .update({ role: newRole })
-                .eq('id', id);
+                .eq('id', userId);
 
             if (!error) {
-                alert("Role diperbarui!");
+                showPopup("Role diperbarui!", "success");
                 loadInitialData();
             }
         }
 
         async function deleteUser(id) {
-            if (!confirm("Hapus user ini secara permanen?")) return;
+            const ok = await showPopup("Hapus user ini secara permanen?", "confirm");
+            if (!ok) return;
             
             const { error } = await supabase
                 .from('users')
@@ -215,7 +221,7 @@
                 .eq('id', id);
 
             if (!error) {
-                alert("User dihapus.");
+                showPopup("User dihapus.", "success");
                 loadInitialData();
             }
         }

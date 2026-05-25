@@ -21,10 +21,14 @@
     css += `html { font-size: ${fontMap[fontSize] || '15px'} !important; }\n`;
 
     // --- 2. BACKGROUND ---
+    const isImage = bg.startsWith('http') || bg.startsWith('url(');
+    const finalBg = isImage && !bg.startsWith('url(') ? `url('${bg}')` : bg;
+
     css += `body {
-    background-image: ${bg} !important;
-    background-repeat: repeat, repeat, no-repeat !important;
-    background-size: 2.125rem 2.125rem, 2.125rem 2.125rem, cover !important;
+    background-image: ${finalBg} !important;
+    background-repeat: ${isImage ? 'no-repeat' : 'repeat, repeat, no-repeat'} !important;
+    background-size: ${isImage ? 'cover' : '2.125rem 2.125rem, 2.125rem 2.125rem, cover'} !important;
+    background-position: center !important;
     background-attachment: fixed !important;
 }\n`;
 

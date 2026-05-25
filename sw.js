@@ -6,6 +6,8 @@ const STATIC_ASSETS = [
   '/js/supabase-clients.js',
   '/js/ui-components.js',
   '/js/basicfeat.js',
+  '/js/show-popup.js',
+  '/js/lang.js',
   '/js/auth.js',
   '/js/theme.js',
   '/js/toast.js',

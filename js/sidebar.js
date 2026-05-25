@@ -92,6 +92,9 @@ async function renderClassSwitcher() {
     const { data: classes } = await supabase.from('classes').select('id, name').order('id');
     if (!classes?.length) return;
 
+    // Cache daftar kelas untuk ui-components
+    localStorage.setItem('cached_classes', JSON.stringify(classes));
+
     const current = getEffectiveClassId();
     const cur = classes.find(c => String(c.id) === current);
     if (label) label.innerText = cur?.name || `Kelas ${current}`;
@@ -600,37 +603,59 @@ function ensureSidebarContextMenu() {
     window._sidebarContextActionsReady = true;
     document.addEventListener('click', async (e) => {
         const actionEl = e.target.closest('[data-sidebar-action]');
-        if (!actionEl || !_sidebarContextItem) return;
+        if (!actionEl) return;
+        
+        const action = actionEl.dataset.sidebarAction;
         const item = _sidebarContextItem;
         hideSidebarContextMenu();
 
-        if (actionEl.dataset.sidebarAction === 'rename') await renameSidebarItem(item);
-        if (actionEl.dataset.sidebarAction === 'toggle-lock') await toggleSidebarItemLock(item);
-        if (actionEl.dataset.sidebarAction === 'delete') await deleteSidebarItem(item);
+        if (action === 'add-new') await addSidebarItem(item);
+        if (item) {
+            if (action === 'rename') await renameSidebarItem(item);
+            if (action === 'toggle-lock') await toggleSidebarItemLock(item);
+            if (action === 'delete') await deleteSidebarItem(item);
+        }
     });
 }
 
 function provideSidebarContextMenu(e) {
+    if (!sidebarCanManage(_sidebarState.user)) return null;
+    
+    const sidebar = e.target.closest('#sidebar');
+    if (!sidebar) return null;
+
     const li = e.target.closest('.sidebar-menu-item.sidebar-manageable');
-    if (!li || !sidebarCanManage(_sidebarState.user)) return null;
+    
+    if (li) {
+        const item = getSidebarItemById(li.dataset.menuId);
+        if (!item) return null;
+        _sidebarContextItem = item;
 
-    const item = getSidebarItemById(li.dataset.menuId);
-    if (!item) return null;
-
-    _sidebarContextItem = item;
-
-    const lockIcon = item.locked ? 'fa-lock-open' : 'fa-lock';
-    const lockText = item.locked ? 'Buka kunci' : 'Kunci';
-    return {
-        html: `
-            <ul>
-                <li data-sidebar-action="rename"><i class="fa-solid fa-pen"></i><span>Edit nama</span></li>
-                <li data-sidebar-action="toggle-lock"><i class="fa-solid ${lockIcon}"></i><span>${lockText}</span></li>
-                <div class="divider"></div>
-                <li data-sidebar-action="delete" class="danger"><i class="fa-solid fa-trash"></i><span>Hapus</span></li>
-            </ul>
-        `
-    };
+        const lockIcon = item.locked ? 'fa-lock-open' : 'fa-lock';
+        const lockText = item.locked ? 'Buka kunci' : 'Kunci';
+        return {
+            html: `
+                <ul>
+                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>Tambah menu baru</span></li>
+                    <div class="divider"></div>
+                    <li data-sidebar-action="rename"><i class="fa-solid fa-pen"></i><span>Edit nama</span></li>
+                    <li data-sidebar-action="toggle-lock"><i class="fa-solid ${lockIcon}"></i><span>${lockText}</span></li>
+                    <div class="divider"></div>
+                    <li data-sidebar-action="delete" class="danger"><i class="fa-solid fa-trash"></i><span>Hapus</span></li>
+                </ul>
+            `
+        };
+    } else {
+        // Klik di area kosong sidebar
+        _sidebarContextItem = null;
+        return {
+            html: `
+                <ul>
+                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>Tambah menu baru</span></li>
+                </ul>
+            `
+        };
+    }
 }
 
 function hideSidebarContextMenu() {
@@ -638,7 +663,10 @@ function hideSidebarContextMenu() {
 }
 
 async function renameSidebarItem(item) {
-    const nextName = prompt('Nama menu:', item.subject_name || '');
+    const nextName = await showPopup('Ganti nama menu', 'form', {
+        value: item.subject_name || '',
+        placeholder: 'Nama menu...'
+    });
     if (nextName === null) return;
     const subjectName = nextName.trim();
     if (!subjectName) {
@@ -699,4 +727,66 @@ async function deleteSidebarItem(item) {
     localStorage.removeItem(getCacheKey(_sidebarState.classId));
     refreshSidebar(_sidebarState.classId, _sidebarState.user);
     toastSidebar('Menu dihapus', 'success');
+}
+
+async function addSidebarItem(relativeToItem) {
+    const classId = _sidebarState.classId;
+    const groups = _sidebarState.groups;
+    if (!groups.length) return;
+
+    // Filter grup yang bisa diisi (kecuali bottomnav yang biasanya otomatis)
+    const validGroups = groups.filter(g => g.group_key !== 'bottomnav');
+    const groupOptions = validGroups.map(g => ({ label: g.group_label, value: g.group_key }));
+    
+    const defaultGroup = relativeToItem ? relativeToItem.menu_group : (validGroups[0]?.group_key || 'main');
+
+    const data = await showPopup('Tambah Menu Baru', 'form', {
+        title: 'Detail Menu Baru',
+        fields: [
+            { name: 'name', label: 'Nama Menu', type: 'text', placeholder: 'Contoh: Matematika' },
+            { name: 'subject_id', label: 'URL / Path', type: 'text', placeholder: 'Contoh: math' },
+            { name: 'icon', label: 'Icon (FontAwesome)', type: 'text', placeholder: 'fa-book', value: 'fa-book' },
+            { name: 'group', label: 'Group Menu', type: 'select', options: groupOptions, value: defaultGroup }
+        ]
+    });
+
+    if (!data) return;
+
+    const { name, subject_id, icon, group } = data;
+    if (!name?.trim() || !subject_id?.trim()) {
+        popupSidebar('Nama dan URL wajib diisi', 'error');
+        return;
+    }
+
+    // Ambil order terakhir di grup tersebut
+    const { data: orderData } = await supabase
+        .from('subjects_config')
+        .select('display_order')
+        .eq('class_id', classId)
+        .eq('menu_group', group)
+        .order('display_order', { ascending: false })
+        .limit(1);
+
+    const displayOrder = (orderData && orderData.length > 0) ? orderData[0].display_order + 1 : 1;
+
+    const payload = {
+        class_id: classId,
+        subject_name: name.trim(),
+        subject_id: subject_id.trim(),
+        icon: icon.trim() || 'fa-book',
+        menu_group: group,
+        display_order: displayOrder,
+        locked: false
+    };
+
+    const { error } = await supabase.from('subjects_config').insert([payload]);
+
+    if (error) {
+        popupSidebar('Gagal tambah menu: ' + error.message, 'error');
+        return;
+    }
+
+    localStorage.removeItem(getCacheKey(classId));
+    refreshSidebar(classId, _sidebarState.user);
+    toastSidebar('Menu baru ditambahkan', 'success');
 }

@@ -416,6 +416,15 @@ header {
     margin-top: 3.1875rem;
 }
 
+/* --- i18n ANTI-BLINK --- */
+[data-i18n] {
+    visibility: hidden;
+}
+.lang-ready [data-i18n] {
+    visibility: visible;
+}
+
+
 .course-card {
     background: rgba(15, 20, 30, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1973,6 +1982,53 @@ li.nav-locked a::after {
 .uni-btn-confirm:hover {
     transform: scale(1.05);
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+}
+
+/* --- UNIVERSAL FORM SYSTEM --- */
+.uni-form-container {
+    text-align: left;
+    width: 100%;
+    margin-bottom: 0.8rem;
+}
+
+.uni-title {
+    color: #00eaff;
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 700;
+}
+
+.uni-form-group {
+    margin-bottom: 1rem;
+}
+
+.uni-form-group label {
+    display: block;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+    margin-left: 0.2rem;
+    font-weight: 500;
+}
+
+.uni-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(120, 220, 255, 0.2);
+    border-radius: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+
+.uni-input:focus {
+    border-color: #00eaff;
+    background: rgba(0, 234, 255, 0.08);
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.15);
 }
 
 .task-btn {

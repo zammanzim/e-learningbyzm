@@ -68,7 +68,10 @@ function syncHeaderProfile() {
             headerName.innerText = `Haii, ${user.short_name || user.nickname || 'User'}`;
         }
         if (headerPP) {
-            const targetSrc = user.avatar_url || "../icons/profpicture.png";
+            const isSubDir = /\/(a|admiii)\//.test(window.location.pathname);
+            const defaultPP = isSubDir ? "../icons/profpicture.png" : "icons/profpicture.png";
+            const targetSrc = user.avatar_url || defaultPP;
+            
             if (headerPP.getAttribute('src') !== targetSrc) {
                 headerPP.src = targetSrc;
             }
@@ -123,115 +126,8 @@ function goAnnouncements() { window.location.href = "announcements"; }
 function goProfile() { window.location.href = "settingacc"; }
 
 // ==========================================
-// 5. UNIVERSAL POPUP SYSTEM
+// 5. UNIVERSAL POPUP SYSTEM (Moved to js/show-popup.js)
 // ==========================================
-window.showPopup = function (msg, type = 'info') {
-    return new Promise((resolve) => {
-        // 1. Bersihkan popup lama jika ada
-        const existing = document.getElementById('uniOverlay');
-        if (existing) existing.remove();
-
-        // 2. Buat elemen baru
-        const overlay = document.createElement('div');
-        overlay.id = 'uniOverlay';
-        overlay.className = 'uni-overlay';
-
-        // 3. Tentukan Icon & Tombol berdasarkan Tipe
-        let iconHtml = '';
-        let btnsHtml = '';
-        let iconClass = 'uni-icon';
-
-        if (type === 'success') {
-            // TIPE: BERHASIL (Hijau/Cyan - Ceklis)
-            iconClass += ' success';
-            iconHtml = '<i class="fa-solid fa-check"></i>';
-            btnsHtml = `<button class="uni-btn" id="uniBtnOk">OK</button>`;
-
-        } else if (type === 'error') {
-            // TIPE: GAGAL (Merah - Silang)
-            iconClass += ' error';
-            iconHtml = '<i class="fa-solid fa-xmark"></i>';
-            btnsHtml = `<button class="uni-btn" style="background:#ff4757; color:white;" id="uniBtnOk">OK</button>`;
-
-        } else if (type === 'confirm') {
-            // TIPE: CONFIRM (Kuning - Tanda Seru)
-            iconClass += ' warning';
-            iconHtml = '<i class="fa-solid fa-exclamation"></i>';
-            btnsHtml = `
-                <div class="uni-actions">
-                    <button class="uni-btn-cancel" id="uniBtnNo">Tidak</button>
-                    <button class="uni-btn-confirm" id="uniBtnYes">Iya</button>
-                </div>
-            `;
-        } else {
-            // Default Info
-            iconClass += ' info';
-            iconHtml = '<i class="fa-solid fa-info"></i>';
-            btnsHtml = `<button class="uni-btn" id="uniBtnOk">OK</button>`;
-        }
-
-        // 4. Masukkan HTML
-        overlay.innerHTML = `
-            <div class="uni-box">
-                <div class="${iconClass}">${iconHtml}</div>
-                <p class="uni-msg">${msg}</p>
-                ${btnsHtml}
-            </div>`;
-
-        document.body.appendChild(overlay);
-        lockScroll();
-
-        // Animasi Masuk
-        setTimeout(() => overlay.classList.add('active'), 10);
-
-        // --- LOGIC PENUTUPAN ---
-        const close = (result) => {
-            overlay.classList.remove('active');
-            unlockScroll();
-            document.removeEventListener('keydown', handleKey);
-
-            setTimeout(() => {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            }, 300);
-
-            resolve(result); // Kembalikan hasil (true/false) ke pemanggil
-        };
-
-        // --- EVENT HANDLERS ---
-
-        // 1. Keyboard Shortcuts (Enter / Esc)
-        const handleKey = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                close(true); // Enter = IYA / OK
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                // Kalau confirm: Esc = Batal (false). Kalau info: Esc = Tutup (true/ok)
-                if (type === 'confirm') close(false);
-                else close(true);
-            }
-        };
-        document.addEventListener('keydown', handleKey);
-
-        // 2. Click Handlers
-        if (type === 'confirm') {
-            document.getElementById('uniBtnYes').onclick = () => close(true);
-            document.getElementById('uniBtnNo').onclick = () => close(false);
-            // Klik background = Batal
-            overlay.onclick = (e) => { if (e.target === overlay) close(false); };
-        } else {
-            document.getElementById('uniBtnOk').onclick = () => close(true);
-            // Klik background = OK
-            overlay.onclick = (e) => { if (e.target === overlay) close(true); };
-        }
-    });
-};
-
-// Fungsi helper buat nutup paksa (jarang dipake krn skrg pake promise)
-window.closePopup = function () {
-    const overlay = document.getElementById('uniOverlay');
-    if (overlay) overlay.click();
-};
 
 // --- NAVIGATION CONTROLLER (Back & Esc) ---
 window.addEventListener('popstate', () => {
