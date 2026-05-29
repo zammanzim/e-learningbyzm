@@ -4,15 +4,16 @@
 // but overrides renderAnnouncements with day-grouped logic.
 // ============================================================
 
-const PSTS_DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis'];
+let PSTS_DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']; // Default
 let kisiScheduleMap = {};  // { Senin: ['bindonesia', 'mtk', ...], ... }
 let kisiFilter = 'all';    // currently selected subject filter
 
-// Kata-kata yang bukan nama pelajaran, di-skip dari schedule
+// Kata-kata yang bukan nama pelajaran, di-skip dari schedule (mapping kisi-kisi)
 const KISI_BLACKLIST = [
-    'sudahadadisekolah', 'istirahat', 'upacara', 'senampagi', 'senam',
-    'pulang', 'sholat', 'shalat', 'jumatan', 'makan', 'ishoma', 'ekskul',
-    'ekstrakurikuler', 'pembiasaan', 'literasi', 'bersih', 'piket'
+    'istirahat', 'upacara', 'senampagi', 'senam', 'pulang', 'sholat', 
+    'shalat', 'jumatan', 'makan', 'ishoma', 'ekskul', 'pembiasaan', 
+    'literasi', 'bersih', 'piket', 'dhuha', 'dzuhur', 'duhur', 'ashar',
+    'masuk', 'apel', 'persiapkan', 'cektugas',
 ];
 
 function _kisiNorm(str) {
@@ -62,6 +63,30 @@ function _getDayForItem(item) {
     }
     return null;
 }
+
+// ── Refresh Logic ──────────────────────────────────────────────
+
+window.refreshKisiData = function() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+        const cacheKey = `announcements_kisi-kisi`;
+        localStorage.removeItem(cacheKey);
+        
+        // Hapus juga cache schedule biar dapet yang paling fresh
+        const MASTER_CLASS_ID = 2;
+        const USER_CLASS_ID = getEffectiveClassId() || user.class_id;
+        
+        const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        days.forEach(d => {
+            localStorage.removeItem(`dc_sched_${USER_CLASS_ID}_${d}_exam`);
+            localStorage.removeItem(`dc_sched_${MASTER_CLASS_ID}_${d}_exam`);
+        });
+        localStorage.removeItem(`dc_config_${USER_CLASS_ID}`);
+        localStorage.removeItem(`dc_config_${MASTER_CLASS_ID}`);
+    }
+    showToast("Membersihkan cache...", "info");
+    setTimeout(() => location.reload(), 500);
+};
 
 // ── Main Render ───────────────────────────────────────────────
 
@@ -304,22 +329,40 @@ document.addEventListener('DOMContentLoaded', async function () {
             const deletePhotoBtn = card.querySelector(".delete-photo-btn");
             if (deleteBtn) deleteBtn.style.display = "inline-block";
             if (colorTools) colorTools.style.display = "flex";
-            if (reorderHandle) reorderHandle.style.display = "flex";
             if (placeholder) placeholder.style.display = "block";
             if (deletePhotoBtn) deletePhotoBtn.style.display = "block";
         });
     }
 
-    // 3. Fetch PSTS schedule (Senin-Kamis) for day mapping.
+    // 3. Fetch Exam schedule for day mapping.
     let user = null;
     try { user = JSON.parse(localStorage.getItem("user")); } catch (e) { }
 
     if (user && user.class_id) {
         try {
+            const MASTER_CLASS_ID = 2;
+            const USER_CLASS_ID = getEffectiveClassId() || user.class_id;
+            
+            // Cek apakah Global Exam sedang aktif di Master Class
+            const { data: masterConfig } = await supabase.from('daily_config').select('mode, kisi_days').eq('class_id', MASTER_CLASS_ID).single();
+            const isGlobalExam = (masterConfig && masterConfig.mode === 'exam');
+            
+            const TARGET_CLASS_ID = isGlobalExam ? MASTER_CLASS_ID : USER_CLASS_ID;
+            const TARGET_TYPE = 'exam'; 
+
+            // AMBIL PSTS_DAYS DARI CONFIG (Dinamis)
+            if (isGlobalExam && masterConfig.kisi_days) {
+                PSTS_DAYS = masterConfig.kisi_days;
+            } else {
+                const { data: localConfig } = await supabase.from('daily_config').select('kisi_days').eq('class_id', USER_CLASS_ID).single();
+                if (localConfig && localConfig.kisi_days) PSTS_DAYS = localConfig.kisi_days;
+            }
+
             const { data: schedules } = await supabase
                 .from('daily_schedules')
                 .select('day_name, lessons')
-                .eq('class_id', getEffectiveClassId())
+                .eq('class_id', TARGET_CLASS_ID)
+                .eq('type', TARGET_TYPE)
                 .in('day_name', PSTS_DAYS);
 
             kisiScheduleMap = {};

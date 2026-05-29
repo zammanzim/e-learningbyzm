@@ -187,7 +187,12 @@ function _dcCacheSet(key, data) {
 function _dcCacheInvalidate(classId) {
     try {
         const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu', 'CUSTOM'];
-        days.forEach(d => localStorage.removeItem(`dc_sched_${classId}_${d}`));
+        const types = ['regular', 'exam', 'custom'];
+        days.forEach(d => {
+            types.forEach(t => {
+                localStorage.removeItem(`dc_sched_${classId}_${d}_${t}`);
+            });
+        });
         localStorage.removeItem(`dc_config_${classId}`);
     } catch (e) { }
 }
@@ -198,15 +203,66 @@ async function initDailyCard() {
 
     const user = _getDailyUser();
     if (!user || !user.class_id) return;
-    const CLASS_ID = getEffectiveClassId() || user.class_id;
+    
+    const MASTER_CLASS_ID = 2; // Class ID pusat untuk Global Exam
+    const USER_CLASS_ID = getEffectiveClassId() || user.class_id;
 
-    // --- 1. RENDER KERANGKA ---
+    // --- 1. LOGIC CONFIG & GLOBAL EXAM ---
+    let config = window.currentConfig;
+    let isGlobalExam = false;
+
+    // Hanya fetch data kalau belum ada di memori ATAU lagi nggak ngedit
+    if (!config || !window.isDailyEditing) {
+        try {
+            // A. Cek Master Config dulu buat tau apakah Global Exam lagi aktif
+            const masterCacheKey = `dc_config_${MASTER_CLASS_ID}`;
+            let masterConfig = _dcCacheGet(masterCacheKey);
+
+            if (!masterConfig) {
+                const { data } = await supabase.from('daily_config').select('*').eq('class_id', MASTER_CLASS_ID).single();
+                masterConfig = data;
+                if (data) _dcCacheSet(masterCacheKey, data);
+            }
+
+            if (masterConfig && masterConfig.mode === 'exam' && USER_CLASS_ID != MASTER_CLASS_ID) {
+                // Hanya anggap 'Global' bagi orang yang BUKAN admin Class 2
+                // Biar admin Class 2 tetep bisa ngontrol master config-nya sendiri
+                isGlobalExam = true;
+                config = masterConfig;
+            } else {
+                // B. Pake config kelas masing-masing
+                const configCacheKey = `dc_config_${USER_CLASS_ID}`;
+                const cachedConfig = _dcCacheGet(configCacheKey);
+                if (cachedConfig) {
+                    config = cachedConfig;
+                } else {
+                    const { data } = await supabase.from('daily_config').select('*').eq('class_id', USER_CLASS_ID).single();
+                    config = data;
+                    if (data) _dcCacheSet(configCacheKey, data);
+                }
+            }
+        } catch (e) { console.warn("DC Config Load Error:", e); }
+    }
+
+    if (!config) {
+        config = { class_id: USER_CLASS_ID, is_auto: true, mode: 'regular', forced_day: 'Senin' };
+    }
+    // Migration: Pastikan mode exist
+    if (!config.mode) config.mode = config.is_custom ? 'custom' : 'regular';
+    
+    window.currentConfig = config;
+    const CLASS_ID = config.class_id; 
+
+    // --- 2. RENDER KERANGKA ---
     const cardId = 'dailyInfoCard';
     let cardEl = document.getElementById(cardId);
-    const isAdmin = user.role === 'class_admin' || user.role === 'super_admin';
+    
+    // canEdit: Hanya admin Class 2 yang bisa edit kalo lagi Global Exam aktif (bagi siswa lain)
+    const isAdmin = (user.role === 'class_admin' || user.role === 'super_admin');
+    const canEditThisConfig = isGlobalExam ? false : isAdmin;
 
     let editActionHTML = '';
-    if (isAdmin) {
+    if (canEditThisConfig) {
         if (window.isDailyEditing) {
             editActionHTML = `
                 <div class="card-edit-actions">
@@ -225,52 +281,75 @@ async function initDailyCard() {
         const cardHTML = `
             <div id="${cardId}" class="daily-card-final glass-card-effect">
                 <div class="final-header animate-pop-in" id="dcHeader"></div>
-
                 <div id="dcContentFinal" class="final-content">
                     ${_buildDailyCardSkeleton()}
                 </div>
-
-                <div id="dailyConfigPanel" class="config-panel">
-                    <h4 style="margin-bottom:10px; font-size:12px; color:#aaa; text-transform:uppercase;">Admin: ${CLASS_ID}</h4>
-
-                    <div class="dc-toggle-area" style="margin-bottom:10px; border-color:#ff4757;">
-                        <span style="font-size:13px; color:#ff6b81; font-weight:bold;"><i class="fa-solid fa-star"></i> Custom Event Mode</span>
-                        <label class="switch">
-                            <input type="checkbox" id="editCustomToggle">
-                            <span class="slider round" style="background-color:#555;"></span>
-                        </label>
-                    </div>
-
-                    <div id="normalConfigArea">
-                        <div style="margin-bottom:15px;">
-                            <label style="font-size:12px; display:block; margin-bottom:5px;">Edit Hari Apa?</label>
-                            <select id="editDaySelector" class="glass-input">
-                                <option value="Senin">Senin</option>
-                                <option value="Selasa">Selasa</option>
-                                <option value="Rabu">Rabu</option>
-                                <option value="Kamis">Kamis</option>
-                                <option value="Jumat">Jumat</option>
-                                <option value="Sabtu">Sabtu</option>
-                                <option value="Minggu">Minggu</option>
-                            </select>
-                        </div>
-
-                        <div class="dc-toggle-area" style="margin-top:0;">
-                            <span style="font-size:13px;">Auto Update (Jam 15:00)</span>
-                            <label class="switch">
-                                <input type="checkbox" id="editAutoToggle">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="final-watermark">v10 self update schedule</div>
+                <div id="dailyConfigPanel" class="config-panel"></div>
+                <div class="final-watermark">v14 dynamic-range-system</div>
             </div>
         `;
         const welcome = document.getElementById('welcomeText');
         if (welcome) welcome.insertAdjacentHTML('afterend', cardHTML);
         else container.innerHTML += cardHTML;
         cardEl = document.getElementById(cardId);
+    }
+
+    // --- 2. UPDATE CONFIG PANEL (Always ensure latest UI structure) ---
+    const configPanel = document.getElementById('dailyConfigPanel');
+    if (configPanel && (!configPanel.innerHTML || !document.getElementById('kisiRangeArea'))) {
+        configPanel.innerHTML = `
+            <h4 style="margin-bottom:10px; font-size:12px; color:#aaa; text-transform:uppercase;">Admin: <span id="lblAdminId">...</span></h4>
+
+            <!-- PENGINGAT EDIT MODE -->
+            <div id="editWarningLabel" style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                <small style="color: #ff6b81; font-weight: bold; display: block; font-size: 10px; text-transform: uppercase;">Sedang Mengedit:</small>
+                <span id="currentEditingTypeLabel" style="color: white; font-weight: 900; font-size: 14px;">...</span>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; display:block; margin-bottom:5px; color:#ff6b81; font-weight:bold;">Aktifkan Mode Apa?</label>
+                <select id="editModeSelector" class="glass-input" style="border-color:#ff4757; color:#ff6b81; font-weight:bold;">
+                    <option value="regular">Jadwal Utama</option>
+                    <option value="exam">Mode Ulangan (7 Hari)</option>
+                    <option value="custom">Custom Event (1 Hari)</option>
+                </select>
+            </div>
+
+            <!-- KISI-KISI RANGE SELECTOR -->
+            <div id="kisiRangeArea" style="margin-bottom:15px; display:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                <label style="font-size:12px; display:block; margin-bottom:8px; color:#00eaff; font-weight:bold;">Tampilkan Hari Apa di Kisi-Kisi?</label>
+                <div id="kisiDayCheckboxes" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;">
+                    ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(d => `
+                        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+                            <input type="checkbox" value="${d}" class="kisi-day-opt" style="accent-color:#00eaff;"> ${d}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div id="normalConfigArea">
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:12px; display:block; margin-bottom:5px;">Edit Hari Apa?</label>
+                    <select id="editDaySelector" class="glass-input">
+                        <option value="Senin">Senin</option>
+                        <option value="Selasa">Selasa</option>
+                        <option value="Rabu">Rabu</option>
+                        <option value="Kamis">Kamis</option>
+                        <option value="Jumat">Jumat</option>
+                        <option value="Sabtu">Sabtu</option>
+                        <option value="Minggu">Minggu</option>
+                    </select>
+                </div>
+
+                <div class="dc-toggle-area" style="margin-top:0;">
+                    <span style="font-size:13px;">Auto Update (Jam 15:00)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="editAutoToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        `;
     }
 
     const headerEl = document.getElementById('dcHeader');
@@ -282,34 +361,8 @@ async function initDailyCard() {
         contentEl2.innerHTML = _buildDailyCardSkeleton();
     }
 
-    // --- 2. LOGIC DATA ---
+    // --- 3. LOGIC DISPLAY ---
     try {
-        if (!window.currentConfig) {
-            const configCacheKey = `dc_config_${CLASS_ID}`;
-            const cachedConfig = _dcCacheGet(configCacheKey);
-
-            if (cachedConfig) {
-                // Pakai cache dulu, fetch di background buat update
-                window.currentConfig = cachedConfig;
-                supabase.from('daily_config').select('*').eq('class_id', CLASS_ID).single()
-                    .then(({ data }) => {
-                        if (data) {
-                            _dcCacheSet(configCacheKey, data);
-                            window.currentConfig = data;
-                        }
-                    }).catch(() => { });
-            } else {
-                let { data: config } = await supabase.from('daily_config').select('*').eq('class_id', CLASS_ID).single();
-                if (!config) {
-                    config = { class_id: CLASS_ID, is_auto: true, is_custom: false, forced_day: 'Senin' };
-                    await supabase.from('daily_config').insert(config);
-                }
-                _dcCacheSet(configCacheKey, config);
-                window.currentConfig = config;
-            }
-        }
-
-        const config = window.currentConfig;
         const now = new Date();
         const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         let autoDay = days[now.getDay()];
@@ -321,15 +374,26 @@ async function initDailyCard() {
 
         let displayDay = 'Senin';
         let labelWaktu = 'HARI INI';
+        let currentType = config.mode || 'regular';
         let fullDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
         if (window.editingDay) {
             displayDay = window.editingDay;
             labelWaktu = (displayDay === 'CUSTOM') ? 'EDIT CUSTOM' : 'DRAFT MODE';
-        } else if (config.is_custom) {
+        } else if (config.mode === 'custom') {
             displayDay = 'CUSTOM';
             labelWaktu = 'SPECIAL EVENT';
             fullDate = 'Jadwal Khusus';
+        } else if (config.mode === 'exam') {
+            if (config.is_auto) {
+                displayDay = autoDay;
+                if (now.getHours() >= 15) labelWaktu = 'BESOK (EXAM)';
+                else labelWaktu = 'HARI INI (EXAM)';
+            } else {
+                displayDay = config.forced_day;
+                labelWaktu = 'EXAM MODE';
+            }
+            if (isGlobalExam) labelWaktu = `GLOBAL ${labelWaktu}`;
         } else if (config.is_auto) {
             displayDay = autoDay;
             if (now.getHours() >= 15) labelWaktu = 'BESOK';
@@ -340,11 +404,18 @@ async function initDailyCard() {
         }
 
         window.currentViewDay = displayDay;
+        const activeType = (window.isDailyEditing) ? currentType : (config.mode || 'regular');
 
         // Set data-day buat warna per hari via CSS var
         if (cardEl) cardEl.dataset.day = displayDay;
 
         // Render header real (ganti skeleton)
+        const isExamMode = config.mode === 'exam';
+        const shortcutLink = isExamMode ? 'kisi-kisi' : 'tugas';
+        const shortcutIcon = isExamMode ? 'fa-solid fa-file-signature' : 'fa-solid fa-clipboard-list';
+        const shortcutLabel = isExamMode ? 'KISI-KISI' : 'TUGAS';
+        const badgeDisplay = isExamMode ? 'none' : 'block';
+
         headerEl.innerHTML = `
         <div>
             <span class="final-badge" id="lblBadge">LOADING</span>
@@ -352,10 +423,10 @@ async function initDailyCard() {
             <small class="final-date" id="lblTanggal">...</small>
         </div>
         <div class="header-right-group">
-            <div class="task-shortcut-box" onclick="window.location.href='tugas'">
-                <div id="taskBadge" class="task-badge">0</div>
-                <i class="fa-solid fa-clipboard-list"></i>
-                <span>TUGAS</span>
+            <div class="task-shortcut-box" onclick="window.location.href='${shortcutLink}'">
+                <div id="taskBadge" class="task-badge" style="display: ${badgeDisplay}">0</div>
+                <i class="${shortcutIcon}"></i>
+                <span>${shortcutLabel}</span>
             </div>
         </div>`;
 
@@ -371,59 +442,91 @@ async function initDailyCard() {
 
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;
-        badgeEl.className = `final-badge ${displayDay === 'CUSTOM' ? 'bg-custom' : (labelWaktu === 'BESOK' ? 'bg-orange' : 'bg-cyan')}`;
+        
+        let badgeClass = 'bg-cyan';
+        if (displayDay === 'CUSTOM') badgeClass = 'bg-custom';
+        else if (config.mode === 'exam') badgeClass = 'bg-orange';
+        else if (labelWaktu === 'BESOK') badgeClass = 'bg-orange';
+        
+        badgeEl.className = `final-badge ${badgeClass}`;
 
         document.getElementById('lblHari').innerText = (displayDay === 'CUSTOM') ? (config.custom_title || 'EVENT KHUSUS') : displayDay;
         document.getElementById('lblTanggal').innerText = fullDate;
 
         const daySel = document.getElementById('editDaySelector');
+        const modeSel = document.getElementById('editModeSelector');
         const autoTog = document.getElementById('editAutoToggle');
-        const customTog = document.getElementById('editCustomToggle');
         const normalArea = document.getElementById('normalConfigArea');
+        const kisiArea = document.getElementById('kisiRangeArea');
 
-        if (daySel) {
+        if (modeSel) {
+            const activeMode = config.mode || 'regular';
+            modeSel.value = activeMode;
             autoTog.checked = config.is_auto;
-            customTog.checked = config.is_custom;
-            normalArea.style.display = (config.is_custom || window.editingDay === 'CUSTOM') ? 'none' : 'block';
-            if (displayDay !== 'CUSTOM') daySel.value = displayDay;
+            
+            // --- LOGIC VISIBILITAS ---
+            if (normalArea) normalArea.style.display = (activeMode === 'custom' || window.editingDay === 'CUSTOM') ? 'none' : 'block';
+            if (kisiArea) kisiArea.style.display = (activeMode === 'exam') ? 'block' : 'none';
+            
+            if (displayDay !== 'CUSTOM' && daySel) daySel.value = displayDay;
 
-            customTog.onchange = async (e) => {
-                window.currentConfig.is_custom = e.target.checked;
-                if (window.isDailyEditing) saveToDraft(window.editingDay);
-                window.editingDay = e.target.checked ? 'CUSTOM' : (config.is_auto ? autoDay : config.forced_day);
+            // Set Checkboxes Kisi-kisi
+            const savedKisiDays = config.kisi_days || ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+            document.querySelectorAll('.kisi-day-opt').forEach(opt => {
+                opt.checked = savedKisiDays.includes(opt.value);
+            });
+
+            // Update label pengingat
+            const labelMap = { 'regular': 'JADWAL UTAMA', 'exam': 'JADWAL ULANGAN', 'custom': 'CUSTOM EVENT' };
+            const warnLabel = document.getElementById('currentEditingTypeLabel');
+            if (warnLabel) warnLabel.innerText = labelMap[activeMode] || 'JADWAL';
+
+            modeSel.onchange = async (e) => {
+                const newMode = e.target.value;
+                if (window.isDailyEditing) saveToDraft(window.editingDay, window.currentConfig.mode);
+                window.currentConfig.mode = newMode;
+                window.currentConfig.is_custom = (newMode === 'custom');
+                window.editingDay = (newMode === 'custom') ? 'CUSTOM' : (config.is_auto ? autoDay : config.forced_day);
+                
+                // Update visibilitas instan
+                if (kisiArea) kisiArea.style.display = (newMode === 'exam') ? 'block' : 'none';
+                if (normalArea) normalArea.style.display = (newMode === 'custom') ? 'none' : 'block';
+                if (warnLabel) warnLabel.innerText = labelMap[newMode] || 'JADWAL';
+
                 initDailyCard();
             };
             autoTog.onchange = (e) => { window.currentConfig.is_auto = e.target.checked; };
             daySel.onchange = (e) => {
-                if (window.isDailyEditing) saveToDraft(window.editingDay);
+                if (window.isDailyEditing) saveToDraft(window.editingDay, window.currentConfig.mode);
                 window.editingDay = e.target.value;
                 initDailyCard();
             };
         }
 
         let scheduleData = null;
-        if (window.dailyDrafts[displayDay]) {
-            scheduleData = window.dailyDrafts[displayDay];
+        const draftKey = `${displayDay}_${activeType}`;
+        if (window.dailyDrafts[draftKey]) {
+            scheduleData = window.dailyDrafts[draftKey];
         } else {
-            const schedCacheKey = `dc_sched_${CLASS_ID}_${displayDay}`;
+            const schedCacheKey = `dc_sched_${CLASS_ID}_${displayDay}_${activeType}`;
             const cachedSched = _dcCacheGet(schedCacheKey);
 
             if (cachedSched) {
                 // Tampilkan cache langsung, fetch fresh di background
                 scheduleData = cachedSched;
-                supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).single()
+                supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).eq('type', activeType).single()
                     .then(({ data }) => {
                         if (data) _dcCacheSet(schedCacheKey, data);
                     }).catch(() => { });
             } else {
                 try {
-                    const { data } = await supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).single();
+                    const { data } = await supabase.from('daily_schedules').select('*').eq('class_id', CLASS_ID).eq('day_name', displayDay).eq('type', activeType).single();
                     scheduleData = data;
                     if (data) _dcCacheSet(schedCacheKey, data);
                 } catch (err) {
                     // Fallback ke cache expired kalau network error
                     try {
-                        const raw = localStorage.getItem(`dc_sched_${CLASS_ID}_${displayDay}`);
+                        const raw = localStorage.getItem(schedCacheKey);
                         if (raw) scheduleData = JSON.parse(raw).data;
                     } catch (e) { }
                 }
@@ -452,9 +555,10 @@ async function initDailyCard() {
 
         let timelineHTML = '';
         if (scheduleData.lessons) {
-            // Split HANYA pakai ; — newline dari data lama juga ditangani
-            scheduleData.lessons.split(';').map(i => i.trim()).filter(i => i.length > 1).forEach((item, idx) => {
-                const dashIdx = item.lastIndexOf('-'); // Gunakan lastIndexOf agar memotong di '-' yang paling akhir
+            const lessonList = scheduleData.lessons.split(';').map(i => i.trim()).filter(i => i.length > 1);
+
+            lessonList.forEach((item, idx) => {
+                const dashIdx = item.lastIndexOf('-'); 
                 const time = dashIdx !== -1 ? item.substring(0, dashIdx).trim() : '';
                 const subject = dashIdx !== -1 ? item.substring(dashIdx + 1).trim() : item.trim();
                 timelineHTML += `
@@ -618,10 +722,12 @@ function renderBadgeUI(pending) {
 // DRAFT SYSTEM
 // ==========================================
 window.autoSaveDraft = function () {
-    if (window.isDailyEditing && window.editingDay) saveToDraft(window.editingDay);
+    if (window.isDailyEditing && window.editingDay) {
+        saveToDraft(window.editingDay, window.currentConfig.mode);
+    }
 };
 
-window.saveToDraft = function (day) {
+window.saveToDraft = function (day, type = 'regular') {
     if (!day) return;
     const user = _getDailyUser();
     if (!user) return;
@@ -631,9 +737,16 @@ window.saveToDraft = function (day) {
 
     let lessonArr = [];
     document.querySelectorAll('.tl-item-final').forEach(row => {
-        const time = cleanText(row.querySelector('[data-type="time"]'));
-        const subj = cleanText(row.querySelector('[data-type="subject"]'));
-        if (time || subj) lessonArr.push(`${time} - ${subj}`);
+        const timeEl = row.querySelector('[data-type="time"]');
+        const subjEl = row.querySelector('[data-type="subject"]');
+        
+        const time = (timeEl?.innerText || '').replace(/\n+/g, ' ').trim();
+        const subj = (subjEl?.innerText || '').replace(/\n+/g, ' ').trim();
+        
+        if (time || subj) {
+            // Gabungin pake format yang konsisten: "Waktu - Mapel"
+            lessonArr.push(`${time || '??.??'} - ${subj || '-'}`);
+        }
     });
 
     let picketArr = [];
@@ -642,8 +755,10 @@ window.saveToDraft = function (day) {
         if (name) picketArr.push(name);
     });
 
-    window.dailyDrafts[day] = {
+    const draftKey = `${day}_${type}`;
+    window.dailyDrafts[draftKey] = {
         day_name: day,
+        type: type,
         class_id: getEffectiveClassId(),
         uniform: cleanText(document.querySelector('[data-type="uniform"]')) || '-',
         activity: cleanText(document.querySelector('[data-type="activity"]')) || '-',
@@ -720,60 +835,87 @@ function _blockEnterKey(e) {
 // ==========================================
 // SAVE TO DATABASE
 // ==========================================
-window.saveAllDrafts = async function () {
+async function saveAllDrafts() {
     const btn = document.querySelector('.action-btn.save');
     if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
     const user = _getDailyUser();
     if (!user) return;
-    const CLASS_ID = getEffectiveClassId() || user.class_id;
+    
+    // Pastikan CLASS_ID jadi angka biar gak ribet di DB
+    const CLASS_ID = parseInt(getEffectiveClassId() || user.class_id);
 
+    const modeSel = document.getElementById('editModeSelector');
+    const activeMode = modeSel ? modeSel.value : (window.currentConfig.mode || 'regular');
     const newTitle = document.getElementById('lblHari').innerText.trim();
 
-    saveToDraft(window.editingDay);
-    const draftsArray = Object.values(window.dailyDrafts);
+    // Simpan draft terakhir sebelum push ke DB
+    saveToDraft(window.editingDay, activeMode);
+    
+    const draftsArray = Object.values(window.dailyDrafts).map(d => ({
+        ...d,
+        class_id: CLASS_ID,
+        type: activeMode // Paksa type sesuai mode yang lagi dipilih di UI
+    }));
 
-    const isCustom = document.getElementById('editCustomToggle').checked;
     const isAuto = document.getElementById('editAutoToggle').checked;
     const currentForced = window.currentConfig.forced_day;
-    const newForced = isCustom ? currentForced : (window.editingDay || currentForced);
+    const newForced = (activeMode === 'custom') ? currentForced : (window.editingDay || currentForced);
+
+    // Ambil pilihan hari kisi-kisi
+    const selectedKisiDays = Array.from(document.querySelectorAll('.kisi-day-opt:checked')).map(el => el.value);
 
     try {
-        await supabase.from('daily_config').upsert({
+        // 1. Update Config (is_custom tetep diupdate buat fallback/compat)
+        const { error: cfgError } = await supabase.from('daily_config').upsert({
             class_id: CLASS_ID,
             is_auto: isAuto,
-            is_custom: isCustom,
+            is_custom: (activeMode === 'custom'),
+            mode: activeMode,
             forced_day: newForced,
-            custom_title: isCustom ? newTitle : window.currentConfig.custom_title
+            custom_title: (activeMode === 'custom') ? newTitle : (window.currentConfig.custom_title || ''),
+            kisi_days: (selectedKisiDays.length > 0) ? selectedKisiDays : ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]
         });
+        if (cfgError) throw cfgError;
 
-        window.currentConfig.custom_title = isCustom ? newTitle : window.currentConfig.custom_title;
-        window.currentConfig.is_custom = isCustom;
-        window.currentConfig.is_auto = isAuto;
-
+        // 2. Upsert Schedules dengan onConflict yang baru (wajib ada type)
         if (draftsArray.length > 0) {
             const { error: upsertError } = await supabase
                 .from('daily_schedules')
-                .upsert(draftsArray, { onConflict: 'class_id, day_name' });
-            if (upsertError) throw upsertError;
+                .upsert(draftsArray, { onConflict: 'class_id, day_name, type' });
+            
+            if (upsertError) {
+                // Kalo error di sini, kemungkinan besar constraint DB belum diupdate
+                if (upsertError.code === '42P10') {
+                    throw new Error("SQL_CONSTRAINT_MISSING");
+                }
+                throw upsertError;
+            }
         }
 
+        // 3. Clear Cache & State
+        _dcCacheInvalidate(CLASS_ID);
+        if (CLASS_ID === 2) _dcCacheInvalidate(2);
+        
         window.dailyDrafts = {};
         window.isDailyEditing = false;
         window.editingDay = null;
+        window.currentConfig = null; 
 
-        // Invalidate cache biar data baru langsung ke-fetch pas reload
-        _dcCacheInvalidate(CLASS_ID);
-        window.currentConfig = null; // force re-fetch config juga
+        if (typeof showToast === 'function') showToast('Mantap! Data Tersimpan.', 'success');
+        
+        setTimeout(() => { initDailyCard(); }, 300);
 
-        if (typeof showToast === 'function') showToast('Data Tersimpan!', 'success');
-        initDailyCard();
     } catch (err) {
         console.error('Save error:', err);
-        if (typeof showPopup === 'function') showPopup('Gagal menyimpan!', 'error');
+        let msg = 'Gagal menyimpan!';
+        if (err.message === "SQL_CONSTRAINT_MISSING") {
+            msg = 'ERROR DATABASE! Lu harus jalanin SQL di sql_updates.sql dulu biar gak bentrok.';
+        }
+        if (typeof showPopup === 'function') showPopup(msg, 'error');
         if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i>';
     }
-};
+}
 
 // ==========================================
 // ADD / DELETE ROW

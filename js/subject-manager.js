@@ -13,6 +13,38 @@ const SubjectApp = {
         selectedColor: 'default',
     },
 
+    // Helper internal untuk nentuin data ini harus ditarik/disimpan ke kelas mana
+    async _getTargetClassId() {
+        let currentClassId = getEffectiveClassId() || (SubjectApp.state.user ? SubjectApp.state.user.class_id : null);
+        
+        // --- LOGIC GLOBAL KISI-KISI ---
+        if (SubjectApp.state.subjectId === 'kisi-kisi') {
+            const MASTER_ID = 2;
+            if (currentClassId != MASTER_ID) {
+                // Cek Master Config (pake cache biar hemat bandwidth)
+                const masterCacheKey = `dc_config_${MASTER_ID}`;
+                let masterConfig = null;
+                try {
+                    const raw = localStorage.getItem(masterCacheKey);
+                    if (raw) masterConfig = JSON.parse(raw).data;
+                } catch(e) {}
+
+                if (!masterConfig) {
+                    try {
+                        const { data } = await supabase.from('daily_config').select('mode').eq('class_id', MASTER_ID).single();
+                        masterConfig = data;
+                    } catch(e) {}
+                }
+
+                // Kalo Master lagi Mode Exam, paksa pake data punya Master (Class 2)
+                if (masterConfig && masterConfig.mode === 'exam') {
+                    return MASTER_ID;
+                }
+            }
+        }
+        return currentClassId;
+    },
+
     init(subjectId, subjectName, title, isLesson = false) {
         if (typeof supabase === 'undefined') return;
 
@@ -411,11 +443,36 @@ const SubjectApp = {
     async loadAnnouncements() {
         const container = document.getElementById("announcements");
         if (!container) return;
-        container.innerHTML = "<h3 style='margin-top: 30px; margin-bottom: 20px;'>Materi & Pengumuman</h3><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div>";
+        container.innerHTML = "<h3 style='margin-top: 30px; margin-bottom: 20px;'>Materi & Pengumuman</h3><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div>";
 
         try {
+            let targetClassId = getEffectiveClassId() || this.state.user.class_id;
+            
+            // --- GLOBAL EXAM LOGIC FOR KISI-KISI ---
+            if (this.state.subjectId === 'kisi-kisi') {
+                const MASTER_ID = 2;
+                if (targetClassId != MASTER_ID) {
+                    // Cek cache config master dulu biar gak fetch terus
+                    const masterCacheKey = `dc_config_${MASTER_ID}`;
+                    let masterConfig = null;
+                    try {
+                        const raw = localStorage.getItem(masterCacheKey);
+                        if (raw) masterConfig = JSON.parse(raw).data;
+                    } catch(e) {}
+
+                    if (!masterConfig) {
+                        const { data } = await supabase.from('daily_config').select('mode').eq('class_id', MASTER_ID).single();
+                        masterConfig = data;
+                    }
+
+                    if (masterConfig && masterConfig.mode === 'exam') {
+                        targetClassId = MASTER_ID;
+                    }
+                }
+            }
+
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
-            query = query.eq("class_id", getEffectiveClassId() || this.state.user.class_id);
+            query = query.eq("class_id", targetClassId);
 
             const cacheKey = `announcements_${this.state.subjectId}`;
             let data, error;
@@ -697,8 +754,12 @@ const SubjectApp = {
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
-                // Reorder handle HANYA tampil di Announcements (karena Lessons pake sorting created_at)
-                if (reorderHandle) reorderHandle.style.display = this.state.isLessonMode ? "none" : "flex";
+                if (reorderHandle) {
+                    // Reorder handle HANYA tampil di Announcements
+                    // (Lessons pake sorting created_at, Kisi-kisi dipetakan ke hari)
+                    const isStaticPage = this.state.isLessonMode || this.state.subjectId === 'kisi-kisi';
+                    reorderHandle.style.display = isStaticPage ? "none" : "flex";
+                }
                 if (cameraBtn) cameraBtn.style.display = "flex";
                 deletePhotoBtns.forEach(b => b.style.display = "flex");
             } else {
@@ -783,7 +844,7 @@ const SubjectApp = {
             }
 
             // 2. Bangun array updates (Hanya yang berubah saja yang di-update)
-            const updates = Array.from(cards).map((card, index) => {
+            const updatesPromises = Array.from(cards).map(async (card, index) => {
                 const id = card.dataset.id;
                 const ann = this.state.announcements.find(a => String(a.id) === String(id));
                 const getVal = (f) => card.querySelector(`[data-field="${f}"]`)?.innerText.trim() || "";
@@ -819,9 +880,11 @@ const SubjectApp = {
                     small: getVal("small"),
                     photo_url: serializedPhotos,
                     subject_id: ann?.subject_id || fallbackSubjectId || this.state.subjectId,
-                    class_id: getEffectiveClassId() || this.state.user.class_id
+                    class_id: await this._getTargetClassId()
                 };
-            }).filter(Boolean); // Buang yang null
+            });
+
+            const updates = (await Promise.all(updatesPromises)).filter(Boolean); // Buang yang null
 
             if (updates.length === 0) {
                 showToast("Tidak ada perubahan", "default");
@@ -857,6 +920,9 @@ const SubjectApp = {
     // ═══════════════════════════════════════════════════════════════
 
     _initDragDrop() {
+        // DISABLE DRAG UNTUK KISI-KISI & TUGAS
+        if (this.state.subjectId === 'kisi-kisi' || this.state.isLessonMode) return;
+
         const container = document.getElementById('announcements');
         if (!container || container._dragInitialized) return;
         container._dragInitialized = true;
@@ -1427,12 +1493,25 @@ const SubjectApp = {
         // Initial setup for destination select
         this.populateDestPages();
 
-        btnAdd.onclick = (e) => {
+        btnAdd.onclick = async (e) => {
             e.preventDefault();
             modal.classList.remove('hidden');
             lockScroll();
             this.tempFiles = [];
             document.getElementById('previewContainer').innerHTML = '';
+
+            // Update title modal kalo lagi Global
+            const modalTitle = modal.querySelector('h2');
+            const targetId = await this._getTargetClassId();
+            const userClassId = getEffectiveClassId() || this.state.user.class_id;
+            
+            if (targetId != userClassId && modalTitle) {
+                modalTitle.innerHTML = '<i class="fa-solid fa-globe"></i> Post Global Kisi-Kisi';
+                modalTitle.style.color = 'var(--accent, #00eaff)';
+            } else if (modalTitle) {
+                modalTitle.innerHTML = 'Tambah Materi';
+                modalTitle.style.color = '';
+            }
 
             // Coba restore draft dulu
             const hasDraft = this._restoreDraft();
@@ -1564,9 +1643,12 @@ const SubjectApp = {
 
             if (error) throw error;
 
-            let html = '<option value="announcements" data-is-lesson="false">Announcements</option>';
+            let html = `
+                <option value="announcements" data-is-lesson="false">Announcements</option>
+                <option value="kisi-kisi" data-is-lesson="false">Kisi-kisi PSTS</option>
+            `;
             data.forEach(item => {
-                if (item.subject_id === 'announcements') return;
+                if (item.subject_id === 'announcements' || item.subject_id === 'kisi-kisi') return;
                 html += `<option value="${item.subject_id}" data-is-lesson="true">${item.subject_name}</option>`;
             });
             select.innerHTML = html;
@@ -1619,7 +1701,7 @@ const SubjectApp = {
 
         const { error } = await supabase.from('subject_announcements').insert({
             subject_id: d.dest, 
-            class_id: getEffectiveClassId() || this.state.user.class_id,
+            class_id: await SubjectApp._getTargetClassId(),
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,
@@ -1640,8 +1722,6 @@ const SubjectApp = {
             showPopup('Gagal simpan: ' + error.message, 'error');
         }
     },
-
-
 
     setupShortcuts() {
         // Guard: pastikan listener hanya dipasang sekali

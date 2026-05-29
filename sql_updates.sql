@@ -1,27 +1,28 @@
--- LAST UPDATE: Senin, 18 May 2026, 15.00
--- VERSION: v3.7
-a
--- 1. Cleanup redundant system/admin menus (Only keep Class 2 as master)
-DELETE FROM subjects_config 
-WHERE class_id != 2 
-AND menu_group IN (
-    SELECT group_key FROM menu_groups 
-    WHERE group_type IN ('system', 'admin')
-);
+-- COPY & RUN THIS IN SUPABASE SQL EDITOR --
 
-DELETE FROM menu_groups 
-WHERE class_id != 2 
-AND group_type IN ('system', 'admin');
+-- 1. Tambah kolom mode di daily_config
+ALTER TABLE daily_config ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'regular';
+UPDATE daily_config SET mode = 'custom' WHERE is_custom = true;
 
--- 2. Log Update (v3.7 - Admin Experience Update)
+-- 2. Tambah kolom type di daily_schedules
+ALTER TABLE daily_schedules ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'regular';
+UPDATE daily_schedules SET type = 'custom' WHERE day_name = 'CUSTOM';
+
+-- 3. Update Unique Constraint
+-- Hapus constraint lama (nama default biasanya daily_schedules_class_id_day_name_key)
+ALTER TABLE daily_schedules DROP CONSTRAINT IF EXISTS daily_schedules_class_id_day_name_key;
+
+-- Tambah constraint baru yang support multi-mode
+ALTER TABLE daily_schedules ADD CONSTRAINT daily_schedules_class_id_day_name_type_key UNIQUE (class_id, day_name, type);
+
+-- 3. Support Custom Kisi-kisi Range
+ALTER TABLE daily_config ADD COLUMN IF NOT EXISTS kisi_days JSONB DEFAULT '["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]'::jsonb;
+
+-- 4. Log Update (v3.9 - Custom Kisi-kisi Range)
 INSERT INTO app_updates (title, version, items, created_at)
 VALUES (
-    'Senin, 18 May 2026, 15.00',
-    'v3.7',
-    '[
-        "Admin Sidebar: Menu System & Admin sekarang terpusat di Kelas 2 (Consistent Admin Menu).",
-        "Database Cleanup: Menghapus data menu admin duplikat di kelas lain biar lebih rapi.",
-        "System: Optimalisasi fetch sidebar data (Master Class Logic)."
-    ]'::jsonb,
+    'Jumat, 29 May 2026, 12.00',
+    'v3.9',
+    '["Daily Card: Admin sekarang bisa memilih rentang hari khusus untuk halaman Kisi-kisi (misal: Senin-Kamis doang)."]'::jsonb,
     NOW()
 );
