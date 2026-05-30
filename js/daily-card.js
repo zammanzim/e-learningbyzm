@@ -677,44 +677,83 @@ window.switchDailyDay = function(day) {
 // TASK BADGE
 // ==========================================
 async function updateTaskBadge(user) {
-    const cacheKey = `task_badge_${user.id}`;
+    const isExamMode = window.currentConfig && window.currentConfig.mode === 'exam';
+    const MASTER_CLASS_ID = 2;
+    const USER_CLASS_ID = getEffectiveClassId() || user.class_id;
+    
+    // Nentuin target class ID buat badge
+    let targetClassId = USER_CLASS_ID;
+    if (isExamMode) {
+        // Cek apakah Master Class juga lagi Mode Exam (Global)
+        const masterCache = _dcCacheGet(`dc_config_${MASTER_CLASS_ID}`);
+        if (masterCache && masterCache.mode === 'exam' && USER_CLASS_ID != MASTER_CLASS_ID) {
+            targetClassId = MASTER_CLASS_ID;
+        }
+    }
+
+    const cacheKey = isExamMode ? `kisi_badge_${targetClassId}` : `task_badge_${user.id}`;
     let cached = null;
     try { cached = JSON.parse(sessionStorage.getItem(cacheKey)); } catch (e) { }
 
     // Kalau ada flag dirty (admin baru arsipkan task), paksa re-fetch
     const isDirty = sessionStorage.getItem('task_badge_dirty') === '1';
     if (!isDirty && cached && (Date.now() - cached.time < 5 * 60 * 1000)) {
-        renderBadgeUI(cached.count);
+        renderBadgeUI(cached.count, isExamMode);
         return;
     }
     sessionStorage.removeItem('task_badge_dirty');
 
     try {
-        const [{ count: total }, { count: done }] = await Promise.all([
-            supabase.from('subject_announcements')
+        if (isExamMode) {
+            // COUNT MATERI KISI-KISI
+            const { count } = await supabase.from('subject_announcements')
                 .select('*', { count: 'exact', head: true })
-                .eq('class_id', getEffectiveClassId())
-                .neq('subject_id', 'announcements')
-                .neq('subject_id', 'kisi-kisi')
-                .neq('subject_id', 'akuhutajakus')
-                .neq('is_done', true),          // ← skip task yang sudah diarsipkan
-            supabase.from('user_progress')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-        ]);
-        const pending = Math.max(0, (total || 0) - (done || 0));
-        sessionStorage.setItem(cacheKey, JSON.stringify({ count: pending, time: Date.now() }));
-        renderBadgeUI(pending);
+                .eq('class_id', targetClassId)
+                .eq('subject_id', 'kisi-kisi');
+            
+            const totalKisi = count || 0;
+            sessionStorage.setItem(cacheKey, JSON.stringify({ count: totalKisi, time: Date.now() }));
+            renderBadgeUI(totalKisi, true);
+        } else {
+            // COUNT TUGAS PENDING
+            const [{ count: total }, { count: done }] = await Promise.all([
+                supabase.from('subject_announcements')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('class_id', USER_CLASS_ID)
+                    .neq('subject_id', 'announcements')
+                    .neq('subject_id', 'kisi-kisi')
+                    .neq('subject_id', 'akuhutajakus')
+                    .neq('is_done', true),
+                supabase.from('user_progress')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id)
+            ]);
+            const pending = Math.max(0, (total || 0) - (done || 0));
+            sessionStorage.setItem(cacheKey, JSON.stringify({ count: pending, time: Date.now() }));
+            renderBadgeUI(pending, false);
+        }
     } catch (e) {
         // Badge gagal tidak perlu crash halaman
     }
 }
 
-function renderBadgeUI(pending) {
+function renderBadgeUI(count, isExam = false) {
     const el = document.getElementById('taskBadge');
     if (el) {
-        el.innerText = pending > 99 ? '99+' : pending;
-        el.style.display = pending > 0 ? 'flex' : 'none';
+        el.innerText = count > 99 ? '99+' : count;
+        // Kalo mode EXAM, tampilkan badge meskipun 0 biar icon gak sepi
+        el.style.display = (isExam || count > 0) ? 'flex' : 'none';
+        
+        // Ganti warna badge kalo lagi EXAM biar beda sama TUGAS
+        if (isExam) {
+            el.style.background = '#00eaff';
+            el.style.color = '#000';
+            el.style.fontWeight = '900';
+        } else {
+            el.style.background = ''; // Balik ke CSS default
+            el.style.color = '';
+            el.style.fontWeight = '';
+        }
     }
 }
 

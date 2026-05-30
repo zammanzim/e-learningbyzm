@@ -37,10 +37,15 @@
                 <h1><i class="fa-solid fa-clipboard-list" style="font-size: 26px;"></i> Kisi-Kisi PSTS</h1>
             </div>
 
-            <div class="daily-card-final" style="margin-bottom: 25px; padding: 20px;">
+            <div id="kisiDailyCard" class="daily-card-final glass-card-effect" style="margin-bottom: 25px; padding: 20px;">
+                <div id="kisiHeader" class="final-header animate-pop-in" style="margin-bottom: 20px;">
+                    <!-- Will be injected by JS -->
+                </div>
                 
-                <div id="kisiInfoList">
-                    <p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">Memuat...</p>
+                <div id="kisiInfoList" class="final-content">
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
                 </div>
             </div>
         </div>

@@ -248,9 +248,43 @@ window.renderKisiList = function () {
 
 function _renderKisiInfoList(items) {
     const infoBox = document.getElementById('kisiInfoList');
-    if (!infoBox) return;
+    const headerEl = document.getElementById('kisiHeader');
+    if (!infoBox || !headerEl) return;
 
-    // Set subject yang PUNYA kisi-kisi
+    // --- 1. LOGIC WAKTU (Ikut Daily Card) ---
+    const now = new Date();
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    let todayName = dayNames[now.getDay()];
+    let targetDay = todayName;
+    let labelWaktu = 'HARI INI';
+
+    if (now.getHours() >= 15) {
+        const tom = new Date(now);
+        tom.setDate(now.getDate() + 1);
+        targetDay = dayNames[tom.getDay()];
+        labelWaktu = 'BESOK';
+    }
+
+    // --- 2. RENDER HEADER (Style Daily Card) ---
+    headerEl.innerHTML = `
+        <div>
+            <span class="final-badge bg-cyan" id="lblKisiBadge">${labelWaktu}</span>
+            <h2 class="final-day">${targetDay}</h2>
+            <small class="final-date">${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</small>
+        </div>
+        <div class="header-right-group">
+            <div class="task-shortcut-box" onclick="window.location.href='announcements'">
+                <i class="fa-solid fa-house"></i>
+                <span>HOME</span>
+            </div>
+        </div>
+    `;
+
+    // Update Card Data-Day for automatic colors
+    const cardEl = document.getElementById('kisiDailyCard');
+    if (cardEl) cardEl.dataset.day = targetDay;
+
+    // --- 3. RENDER DAY LIST ---
     const hasKisiSet = new Set(
         (items || []).map(k => _kisiNorm(_extractSubject(k.big_title || ''))).filter(Boolean)
     );
@@ -262,10 +296,19 @@ function _renderKisiInfoList(items) {
         const schedSubjects = kisiScheduleMap[day] || [];
         if (schedSubjects.length === 0) return;
 
-        const isFirst = html === '';
-        html += '<div style="margin-top:' + (isFirst ? '0' : '12px') + ';">';
-        html += '<div style="font-size:10px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">' + day + '</div>';
-        html += '<div style="display:flex; flex-direction:column; gap:5px;">';
+        const isTarget = (day === targetDay);
+        
+        html += `<div style="margin-bottom: 20px; ${!isTarget ? 'opacity: 0.7;' : ''}">`;
+        html += `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <div style="font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:${isTarget ? 'var(--accent, #00eaff)' : 'rgba(255,255,255,0.5)'};">
+                    ${day} ${isTarget ? ' <i class="fa-solid fa-star" style="font-size:9px;"></i>' : ''}
+                </div>
+                <div style="flex:1; height:1px; background:rgba(255,255,255,${isTarget ? '0.2' : '0.1'});"></div>
+            </div>
+        `;
+        
+        html += '<div style="display:flex; flex-direction:column; gap:6px;">';
 
         schedSubjects.forEach(function (entry) {
             const hasKisi = hasKisiSet.has(entry.norm);
@@ -274,18 +317,20 @@ function _renderKisiInfoList(items) {
 
             if (hasKisi) {
                 const normSubject = entry.norm;
-                html += '<div onclick="kisiFilter=\'' + normSubject + '\'; renderKisiList(); document.querySelector(\'.right-section\').scrollIntoView({behavior:\'smooth\'});"'
-                    + ' style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.06); border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.08);"'
-                    + ' onmouseover="this.style.background=\'rgba(0, 234, 255, 0.1)\'; this.style.borderColor=\'rgba(0, 234, 255, 0.3)\'"'
-                    + ' onmouseout="this.style.background=\'rgba(255,255,255,0.06)\'; this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
-                    + '<i class="fa-solid fa-file-lines" style="color:var(--accent, #00eaff); font-size:11px; flex-shrink:0;"></i>'
-                    + '<span style="font-size:12px; color:#e0e0e0; font-weight:500;">' + displayName + '</span>'
-                    + '</div>';
+                const activeStyle = kisiFilter === normSubject ? 'background:rgba(0, 234, 255, 0.15); border-color:rgba(0, 234, 255, 0.4);' : '';
+                
+                html += `<div onclick="kisiFilter='${normSubject}'; renderKisiList(); document.querySelector('.right-section').scrollIntoView({behavior:'smooth'});"
+                    style="display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.06); border-radius:12px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition:all 0.2s; ${activeStyle}"
+                    onmouseover="this.style.background='rgba(0, 234, 255, 0.1)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'"
+                    onmouseout="this.style.background='${kisiFilter === normSubject ? 'rgba(0, 234, 255, 0.15)' : 'rgba(255,255,255,0.06)'}'; this.style.borderColor='${kisiFilter === normSubject ? 'rgba(0, 234, 255, 0.4)' : 'rgba(255,255,255,0.08)'}'">
+                    <i class="fa-solid fa-file-circle-check" style="color:var(--accent, #00eaff); font-size:12px;"></i>
+                    <span style="font-size:13px; color:#fff; font-weight:600;">${displayName}</span>
+                </div>`;
             } else {
-                html += '<div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.02); border-radius:10px; cursor:not-allowed; border:1px solid rgba(255,255,255,0.04);">'
-                    + '<i class="fa-regular fa-file-lines" style="color:rgba(255,255,255,0.2); font-size:11px; flex-shrink:0;"></i>'
-                    + '<span style="font-size:12px; color:rgba(255,255,255,0.25); font-weight:400;">' + displayName + '</span>'
-                    + '</div>';
+                html += `<div style="display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.02); border-radius:12px; cursor:not-allowed; border:1px solid rgba(255,255,255,0.04);">
+                    <i class="fa-regular fa-file" style="color:rgba(255,255,255,0.2); font-size:12px;"></i>
+                    <span style="font-size:13px; color:rgba(255,255,255,0.2); font-weight:400;">${displayName}</span>
+                </div>`;
             }
         });
 
