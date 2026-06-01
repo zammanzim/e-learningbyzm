@@ -160,7 +160,7 @@ const i18n = {
             "footer": "Kaki (Footer)",
             "card_color": "Warna Kartu",
             "uploadphotos": "<b>Klik untuk upload</b> atau tarik file ke sini",
-            "open_file": "Buka file",
+            "download_file": "Download file",
             "attachments": "Lampiran",
 
             // detailOverlay
@@ -332,7 +332,7 @@ const i18n = {
             "footer": "Footer",
             "card_color": "Card color",
             "uploadphotos": "<b>Click to upload</b> or drag files here",
-            "open_file": "Open file",
+            "download_file": "Download file",
 
             //detailOverlay
             "see_desc": "See Description",

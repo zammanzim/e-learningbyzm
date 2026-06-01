@@ -1986,8 +1986,6 @@ function updateSliderUI() {
     if (!filePreview) {
         filePreview = document.createElement('a');
         filePreview.className = 'detail-file-preview';
-        filePreview.target = '_blank';
-        filePreview.rel = 'noopener';
         wrapper.appendChild(filePreview);
     }
 
@@ -2008,10 +2006,11 @@ function updateSliderUI() {
         const fileName = SubjectApp._getFileNameFromUrl(currentUrl);
         wrapper.classList.remove('loading');
         filePreview.href = currentUrl;
+        filePreview.download = fileName;
         filePreview.innerHTML = `
             <i class="${SubjectApp._getFileIcon(fileName)}"></i>
             <span>${SubjectApp._escapeHTML(fileName)}</span>
-            <small>${t('open_file')}</small>
+            <small>${t('download_file')}</small>
         `;
     } else {
         wrapper.classList.add('loading');
