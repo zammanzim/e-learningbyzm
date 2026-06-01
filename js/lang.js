@@ -159,7 +159,8 @@ const i18n = {
             "small": "Kecil",
             "footer": "Kaki (Footer)",
             "card_color": "Warna Kartu",
-            "uploadphotos": "<b>Klik untuk upload</b> atau tarik foto ke sini",
+            "uploadphotos": "<b>Klik untuk upload</b> atau tarik file ke sini",
+            "open_file": "Buka file",
             "attachments": "Lampiran",
 
             // detailOverlay
@@ -174,6 +175,11 @@ const i18n = {
             "complete_status": "Status Penyelesaian",
             "small_text": "Pencet tombol 'Selesai?' agar tugas tertanda selesai dan tersortir rapi",
             youvedone: "Kamu sudah ngerjain {done} dari {total} tugas",
+            "not_finish": "Yang Belum Selesai",
+            "all_tasks": "Semua Tugas",
+            "markasdone": "Tandai Selesai",
+            "done": "Selesai",
+            "archived":"Diarsipkan",
         },
         en: {
             "app_name": "E-Learning Nizam",
@@ -325,7 +331,8 @@ const i18n = {
             "small": "Small",
             "footer": "Footer",
             "card_color": "Card color",
-            "uploadphotos": "<b>Click to upload</b> or drag photos here",
+            "uploadphotos": "<b>Click to upload</b> or drag files here",
+            "open_file": "Open file",
 
             //detailOverlay
             "see_desc": "See Description",
