@@ -76,7 +76,7 @@
             border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: stretch;
-            z-index: 9999;
+            z-index: 999;
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         @media (min-width: 1024px) { #bottomNav { display: none !important; } }

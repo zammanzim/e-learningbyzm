@@ -356,7 +356,12 @@ function processAndRenderSidebar(groups, items, user) {
         const headerColor = COLOR[group.group_type] || '';
         const headerStyle = headerColor ? `style="color:${headerColor};"` : '';
 
-        html += `<h3 ${headerStyle}>${escapeSidebarHtml(group.group_label)}</h3><ul data-sidebar-group="${escapeSidebarHtml(group.group_key)}">`;
+        // Gunakan translasi buat label grup (fallback ke label asli DB)
+        const translatedGroupLabel = t(`sidebar_${group.group_key}`) !== `sidebar_${group.group_key}` 
+            ? t(`sidebar_${group.group_key}`) 
+            : group.group_label;
+
+        html += `<h3 ${headerStyle}>${escapeSidebarHtml(translatedGroupLabel)}</h3><ul data-sidebar-group="${escapeSidebarHtml(group.group_key)}">`;
 
         groupItems.forEach(item => {
             // ── Build URL berdasarkan tipe grup ──
@@ -379,7 +384,6 @@ function processAndRenderSidebar(groups, items, user) {
                     } else if (item.subject_id?.startsWith('/')) {
                         url = item.subject_id;
                     } else {
-                        // Absolute dari root biar ga kena prefix /a/
                         url = '/' + item.subject_id;
                     }
             }
@@ -394,6 +398,11 @@ function processAndRenderSidebar(groups, items, user) {
                 const pathSeg = currentPath.split('/').pop();
                 if (pathSeg === itemSeg) isActive = 'active';
             }
+            
+            // TRANSLASI NAMA MENU (Berdasarkan subject_id)
+            const translatedName = t(item.subject_id) !== item.subject_id 
+                ? t(item.subject_id) 
+                : item.subject_name;
 
             // ── Icon ──
             let icon = item.icon || 'fa-book';
@@ -410,7 +419,7 @@ function processAndRenderSidebar(groups, items, user) {
                 <li class="sidebar-menu-item sidebar-locked${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                     <a href="#" onclick="event.preventDefault();" style="cursor:default;">
                         <i class="fa-solid fa-lock" style="font-size:11px;"></i>
-                        <span style="text-decoration:line-through;">${escapeSidebarHtml(item.subject_name)}</span>
+                        <span style="text-decoration:line-through;">${escapeSidebarHtml(translatedName)}</span>
                     </a>
                     ${badge}
                 </li>`;
@@ -420,7 +429,7 @@ function processAndRenderSidebar(groups, items, user) {
             html += `
             <li class="sidebar-menu-item ${isActive}${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                 <a href="${url}">
-                    <i class="${escapeSidebarHtml(icon)}"></i> <span>${escapeSidebarHtml(item.subject_name)}</span>
+                    <i class="${escapeSidebarHtml(icon)}"></i> <span>${escapeSidebarHtml(translatedName)}</span>
                 </a>
                 ${badge}
             </li>`;

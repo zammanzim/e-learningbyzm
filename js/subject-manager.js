@@ -16,7 +16,7 @@ const SubjectApp = {
     // Helper internal untuk nentuin data ini harus ditarik/disimpan ke kelas mana
     async _getTargetClassId() {
         let currentClassId = getEffectiveClassId() || (SubjectApp.state.user ? SubjectApp.state.user.class_id : null);
-        
+
         // --- LOGIC GLOBAL KISI-KISI ---
         if (SubjectApp.state.subjectId === 'kisi-kisi') {
             const MASTER_ID = 2;
@@ -27,13 +27,13 @@ const SubjectApp = {
                 try {
                     const raw = localStorage.getItem(masterCacheKey);
                     if (raw) masterConfig = JSON.parse(raw).data;
-                } catch(e) {}
+                } catch (e) { }
 
                 if (!masterConfig) {
                     try {
                         const { data } = await supabase.from('daily_config').select('mode').eq('class_id', MASTER_ID).single();
                         masterConfig = data;
-                    } catch(e) {}
+                    } catch (e) { }
                 }
 
                 // Kalo Master lagi Mode Exam, paksa pake data punya Master (Class 2)
@@ -138,20 +138,20 @@ const SubjectApp = {
                 fab.style.setProperty('right', pos.right, 'important');
             } catch (e) { }
         }
-        
+
         fab.style.cursor = 'grab';
         fab.style.touchAction = 'none'; // FIX: Matiin scroll browser pas lagi drag FAB
 
         fab.addEventListener("pointerdown", (e) => {
             if (e.button !== 0) return;
-            
+
             startX = e.clientX;
             startY = e.clientY;
-            
+
             const rect = fab.getBoundingClientRect();
             initialRight = window.innerWidth - rect.right;
             initialBottom = window.innerHeight - rect.bottom;
-            
+
             hasMoved = false;
 
             // Timer dipercepat biar gak capek nunggu pas mau drag
@@ -172,14 +172,14 @@ const SubjectApp = {
                 }
                 return;
             }
-            
+
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            
+
             hasMoved = true;
             const newRight = initialRight - dx;
             const newBottom = initialBottom - dy;
-            
+
             fab.style.setProperty('right', `${newRight}px`, 'important');
             fab.style.setProperty('bottom', `${newBottom}px`, 'important');
         });
@@ -187,7 +187,7 @@ const SubjectApp = {
         fab.addEventListener("pointerup", (e) => {
             clearTimeout(dragTimer);
             if (!isDragging) return;
-            
+
             isDragging = false;
             fab.releasePointerCapture(e.pointerId);
             fab.style.transition = 'all 0.3s ease'; // Tambah transisi pas snap
@@ -197,13 +197,13 @@ const SubjectApp = {
             const rect = fab.getBoundingClientRect();
             const winW = window.innerWidth;
             const winH = window.innerHeight;
-            
+
             // Posisi Default (kiri bawah): right kira-kira width layar - padding, bottom kira-kira 0
             // Kita hitung threshold snap (misal 60px)
             const snapThreshold = 60;
             const currentBottom = winH - rect.bottom;
             const currentRight = winW - rect.right;
-            
+
             // Asumsi default kiri bawah: right = winW - 80, bottom = 20 (sesuaikan CSS lo)
             // Tapi biar general, kita cek apakah dia deket pojok kiri bawah layar
             if (rect.left < snapThreshold && (winH - rect.bottom) < snapThreshold) {
@@ -225,7 +225,7 @@ const SubjectApp = {
                 };
                 window.addEventListener('click', killClick, { capture: true, once: true });
             }
-            
+
             setTimeout(() => fab.style.transition = '', 300);
         });
 
@@ -352,11 +352,11 @@ const SubjectApp = {
             if (isDone) {
                 await supabase.from("user_progress").delete().eq("user_id", this.state.user.id).eq("announcement_id", id);
                 this.state.completedTasks = this.state.completedTasks.filter(tid => tid !== id);
-                btn.innerHTML = '<i class="fa-regular fa-circle"></i> Selesai?';
+                btn.innerHTML = `<i class="fa-regular fa-circle"></i> ${t('markasdone')}`;
             } else {
                 await supabase.from("user_progress").insert({ user_id: this.state.user.id, announcement_id: id });
                 this.state.completedTasks.push(id);
-                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${t('done')}`;
 
                 // LOG ACTIVITY: User menandai tugas selesai (+10 poin)
                 if (typeof logActivity === 'function') {
@@ -368,7 +368,7 @@ const SubjectApp = {
                 // Re-fetch status is_done setelah jeda singkat biar UI sinkron kalau diarsipkan
                 setTimeout(() => this._syncArchivedStatus(id, btn, card), 1500);
             }
-            
+
             // Sync dengan tugas.js progress UI jika ada
             if (typeof updateProgressUI === 'function') {
                 // doneIds di tugas.js perlu di-sync
@@ -386,7 +386,7 @@ const SubjectApp = {
         } catch (err) {
             console.error("Task toggle error:", err);
             if (isDone) btn.classList.add("done"); else btn.classList.remove("done");
-            btn.innerHTML = isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?';
+            btn.innerHTML = isDone ? `<i class="fa-solid fa-circle-check"></i> ${t('done')}` : `<i class="fa-regular fa-circle"></i> ${t('markasdone')}`;
             showPopup("Gagal update status tugas", "error");
         }
     },
@@ -443,11 +443,11 @@ const SubjectApp = {
     async loadAnnouncements() {
         const container = document.getElementById("announcements");
         if (!container) return;
-        container.innerHTML = "<h3 style='margin-top: 30px; margin-bottom: 20px;'>Materi & Pengumuman</h3><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div>";
+        container.innerHTML = `<h3 style='margin-top: 30px; margin-bottom: 20px;'>${t('materi_title')}</h3><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div><div class='sk-card'><div style='display: flex; gap: 12px; align-items: center; margin-bottom: 15px;'><div class='skeleton' style='width: 40px; height: 40px; border-radius: 50%;'></div><div class='skeleton' style='width: 100px; height: 12px;'></div></div><div class='skeleton sk-title'></div><div class='skeleton sk-text'></div></div>`;
 
         try {
             let targetClassId = getEffectiveClassId() || this.state.user.class_id;
-            
+
             // --- GLOBAL EXAM LOGIC FOR KISI-KISI ---
             if (this.state.subjectId === 'kisi-kisi') {
                 const MASTER_ID = 2;
@@ -458,7 +458,7 @@ const SubjectApp = {
                     try {
                         const raw = localStorage.getItem(masterCacheKey);
                         if (raw) masterConfig = JSON.parse(raw).data;
-                    } catch(e) {}
+                    } catch (e) { }
 
                     if (!masterConfig) {
                         const { data } = await supabase.from('daily_config').select('mode').eq('class_id', MASTER_ID).single();
@@ -482,7 +482,7 @@ const SubjectApp = {
                 const res = this.state.isLessonMode
                     ? await query.order("created_at", { ascending: false })
                     : await query.order("display_order", { ascending: true }).order("created_at", { ascending: false });
-                
+
                 data = res.data; error = res.error;
                 if (error) throw error;
                 this.state.announcements = data || [];
@@ -526,7 +526,7 @@ const SubjectApp = {
 
         const header = document.createElement("h3");
         header.style.marginTop = "30px";
-        header.textContent = this.state.isLessonMode ? "Daftar Tugas" : "Materi & Pengumuman";
+        header.textContent = this.state.isLessonMode ? t('tasks_list') : t('materi_title');
 
         if (this.state.announcements.length === 0) {
             const emptyState = document.createElement("div");
@@ -571,7 +571,7 @@ const SubjectApp = {
         // Tentukan class warna dari DB
         let colorClass = data.card_color && data.card_color !== 'default' ? `color-${data.card_color}` : "";
         if (options.statusClass) colorClass = options.statusClass; // Override if statusClass provided
-        
+
         card.className = `course-card ${colorClass}`;
 
         // DEFINISI isAdmin BIAR GAK ERROR "NOT DEFINED"
@@ -595,14 +595,20 @@ const SubjectApp = {
         let taskBtnHTML = "";
         // PERUBAHAN: Cek is_lesson per kartu, bukan per halaman
         const isLessonCard = data.is_lesson === true;
-        
+
         if (isLessonCard) {
             const isDone = this.state.completedTasks.includes(String(data.id));
             if (data.is_done === true) {
                 // Diarsipkan — semua siswa selesai, tombol dikunci
-                taskBtnHTML = `<button class="task-btn done" disabled><i class="fa-solid fa-circle-check"></i> Selesai</button>`;
+                taskBtnHTML = `<button class="task-btn done" disabled><i class="fa-solid fa-circle-check"></i> ${t('done')}</button>`;
             } else {
-                taskBtnHTML = `<button class="${isDone ? 'task-btn done' : 'task-btn'}">${isDone ? '<i class="fa-solid fa-circle-check"></i> Selesai' : '<i class="fa-regular fa-circle"></i> Selesai?'}</button>`;
+                taskBtnHTML = `
+<button class="${isDone ? 'task-btn done' : 'task-btn'}">
+  ${isDone
+                        ? `<i class="fa-solid fa-circle-check"></i> ${t('done')}`
+                        : `<i class="fa-regular fa-circle"></i> ${t('markasdone')}`
+                    }
+</button>`;
             }
         }
 
@@ -860,7 +866,7 @@ const SubjectApp = {
 
                 // LOGIC DIRTY CHECK: Bandingkan data UI vs data asli di state
                 // Jika ID ada di dirtyCardIds (karena upload foto), otomatis true
-                const isChanged = dirtyCardIds.has(id) || !ann || 
+                const isChanged = dirtyCardIds.has(id) || !ann ||
                     getVal("big_title") !== (ann.big_title || "") ||
                     getVal("title") !== (ann.title || "") ||
                     getContent() !== (ann.content || "") ||
@@ -1335,7 +1341,7 @@ const SubjectApp = {
 
             // Update state
             if (ann) ann.photo_url = newUrls.length === 0 ? null : newUrls;
-            
+
             // Update fallback di dataset card biar pas save gak error
             card.dataset.photoUrl = newVal || "";
 
@@ -1385,7 +1391,7 @@ const SubjectApp = {
     async deleteAnnouncement(card) {
         if (!await showPopup("Hapus materi ini?", "confirm")) return;
         const id = card.dataset.id;
-        
+
         // Ambil data untuk hapus foto di storage
         const ann = this.state.announcements.find(a => String(a.id) === String(id));
         const photoPaths = [];
@@ -1410,7 +1416,7 @@ const SubjectApp = {
 
             // Update state lokal
             this.state.announcements = this.state.announcements.filter(a => String(a.id) !== String(id));
-            
+
             // Hapus kartu dari DOM langsung
             card.remove();
 
@@ -1489,7 +1495,7 @@ const SubjectApp = {
         const availableColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'];
 
         if (!btnAdd) return;
-        
+
         // Initial setup for destination select
         this.populateDestPages();
 
@@ -1504,7 +1510,7 @@ const SubjectApp = {
             const modalTitle = modal.querySelector('h2');
             const targetId = await this._getTargetClassId();
             const userClassId = getEffectiveClassId() || this.state.user.class_id;
-            
+
             if (targetId != userClassId && modalTitle) {
                 modalTitle.innerHTML = '<i class="fa-solid fa-globe"></i> Post Global Kisi-Kisi';
                 modalTitle.style.color = 'var(--accent, #00eaff)';
@@ -1546,7 +1552,7 @@ const SubjectApp = {
                         if (toggleWrap) toggleWrap.style.display = 'flex';
                     }
                 }
-                
+
                 this.updateAddTitleHint();
             }
 
@@ -1555,7 +1561,7 @@ const SubjectApp = {
         };
 
         if (btnCancel) btnCancel.onclick = () => { modal.classList.add('hidden'); unlockScroll(); };
-        
+
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => this.handleNewFiles(e.target.files);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
@@ -1575,7 +1581,7 @@ const SubjectApp = {
             destSelect.onchange = () => {
                 const isAnnouncements = destSelect.value === 'announcements';
                 const toggleWrap = isLessonToggle.closest('div');
-                
+
                 if (isAnnouncements) {
                     if (toggleWrap) toggleWrap.style.display = 'none';
                     isLessonToggle.checked = false;
@@ -1584,7 +1590,7 @@ const SubjectApp = {
                     // Default true kalau di halaman mapel, tapi user bisa matiin
                     isLessonToggle.checked = true;
                 }
-                
+
                 this.updateAddTitleHint();
                 this._saveDraft();
             };
@@ -1655,8 +1661,8 @@ const SubjectApp = {
 
             // DEFAULT: Bahasa Indonesia kalau di halaman tugas
             if (this.state.subjectId === 'tugas') {
-                const indoOpt = Array.from(select.options).find(opt => 
-                    opt.value === 'bahasaindonesia' || 
+                const indoOpt = Array.from(select.options).find(opt =>
+                    opt.value === 'bahasaindonesia' ||
                     opt.text.toLowerCase().includes('indonesia')
                 );
                 if (indoOpt) {
@@ -1672,9 +1678,9 @@ const SubjectApp = {
         const judulEl = document.getElementById('addJudul');
         const destSelect = document.getElementById('addDestPage');
         const isLessonToggle = document.getElementById('addIsLesson');
-        
+
         if (!judulEl || !destSelect || !isLessonToggle) return;
-        
+
         // Hanya auto-fill kalau kosong
         if (judulEl.value && !judulEl.value.startsWith('Tugas ')) return;
 
@@ -1700,7 +1706,7 @@ const SubjectApp = {
         )).filter(Boolean);
 
         const { error } = await supabase.from('subject_announcements').insert({
-            subject_id: d.dest, 
+            subject_id: d.dest,
             class_id: await SubjectApp._getTargetClassId(),
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
@@ -1834,7 +1840,7 @@ const SubjectApp = {
 
         this.tempFiles = [];
         this.state.selectedColor = 'default';
-        
+
         // Reset warna di UI
         document.querySelectorAll('#addColors .color-opt').forEach(opt => {
             opt.classList.remove('active');

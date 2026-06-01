@@ -10,13 +10,14 @@
     <script src="../js/ctx-menu.js"></script>
     <script src="../js/ui-components.js" defer></script>
     <script src="../js/sidebar.js"></script>
-<script src="../js/lang.js"></script>
-<script src="../js/basicfeat.js"></script>
-<script src="../js/show-popup.js"></script>
+    <script src="../js/lang.js"></script>
+    <script src="../js/basicfeat.js"></script>
+    <script src="../js/show-popup.js"></script>
     <script src="../js/auth.js" defer></script>
     <script src="../js/visitor.js" defer></script>
     <script src="../js/theme.js"></script>
-<script src="../js/toast.js"></script><script src="../js/bottom-nav.js"></script>
+    <script src="../js/toast.js"></script>
+    <script src="../js/bottom-nav.js"></script>
     <script src="../js/system-notice.js"></script>
     <link rel="stylesheet" href="../css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -438,9 +439,9 @@
             </div>
 
             <div class="compose-box">
-                <h3><i class="fa-solid fa-pen-to-square"></i> Posting Diskusi</h3>
+                <h3 data-i18n="post_discussion"><i class="fa-solid fa-pen-to-square"></i></h3>
                 <input id="topicTitle" class="compose-input" type="text" placeholder="Judul...">
-                <textarea id="topicContent" class="compose-input" placeholder="Apa yang mau kamu tanyain atau bahas?"
+                <textarea id="topicContent" class="compose-input" data-i18n="what_discussion"
                     rows="4"></textarea>
                 <button onclick="postNewTopic()" class="btn-glass-save" style="width:100%; margin-top:4px;">
                     <i class="fa-solid fa-paper-plane"></i> Posting

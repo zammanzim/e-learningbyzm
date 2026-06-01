@@ -2511,6 +2511,7 @@ li.nav-locked a::after {
     color: rgba(255, 255, 255, 1);
     letter-spacing: 1px;
     text-transform: uppercase;
+    text-align: center;
 }
 
 .task-shortcut-box:hover {

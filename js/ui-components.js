@@ -20,7 +20,7 @@ const UIComponents = {
         // Logika Class Switcher tanpa blink (Cache-first)
         let classSwitcherHTML = '';
         if (_uData && _uData.role === 'super_admin') {
-            let currentClassName = 'Kelas –';
+            let currentClassName = `${t('class')}`;
             try {
                 const overrideName = sessionStorage.getItem('class_override_name');
                 if (overrideName) {
@@ -28,7 +28,7 @@ const UIComponents = {
                 } else if (_uData.class_name) {
                     currentClassName = _uData.class_name;
                 } else {
-                    currentClassName = `Kelas ${_uData.class_id}`;
+                    currentClassName = `${t('class')} ${_uData.class_id}`;
                 }
             } catch(e) {}
 
@@ -72,9 +72,9 @@ const UIComponents = {
             </div>
             <div class="profile-dropdown" id="profileDropdown">
                 <ul>
-                    <li onclick="goAnnouncements()"><i class="fa-solid fa-table-columns"></i> Announcements</li>
-                    <li onclick="goProfile()"><i class="fa-solid fa-user"></i> Edit Profile</li>
-                    <li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'../':'')+'theme'"><i class="fa-solid fa-palette"></i> Personalisasi</li>
+                    <li onclick="goAnnouncements()"><i class="fa-solid fa-table-columns"></i>${t('announcements2')}</li>
+                    <li onclick="goProfile()"><i class="fa-solid fa-user"></i>${t('edit_prof')}</li>
+                    <li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'../':'')+'theme'"><i class="fa-solid fa-palette"></i>${t('theme2')}</li>
                     <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
                 </ul>
             </div>
@@ -83,19 +83,18 @@ const UIComponents = {
         <div id="visitorOverlay" class="visitor-overlay">
             <div class="visitor-popup">
                 <div class="popup-header">
-                    <h3>Visitor <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">${cachedCount}</span></h3>
+                    <h3>${t('visitor')} <i class="fa-solid fa-eye" style="font-size:15px; margin-left: 10px;"></i> <span id="popupVisitorCount" style="font-size:16px; font-weight:bold; color:var(--accent, #00eaff);">${cachedCount}</span></h3>
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
 
                 <!-- NEW: Wrapped List Section -->
                 <div class="list-section">
-                    <div class="list-title">PENGUNJUNG TERBARU</div>
                     <div id="visitorList" class="visitor-list-container"></div>
                 </div>
 
                 <div class="admin-actions">
                     <button id="resetVisitorBtn" class="btn-reset-text">
-                        <i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)
+                        <i class="fa-solid fa-rotate-right"></i> ${t('resetvist')}
                      </button>
                 </div>
             </div>
@@ -105,18 +104,18 @@ const UIComponents = {
         const modalsHTML = `
         <div id="addModal" class="modal-overlay hidden">
             <div class="glass-modal-box">
-                <h3><i class="fa-solid fa-layer-group"></i> Materi Baru</h3>
+                <h3><i class="fa-solid fa-layer-group"></i> ${t('new_material')}</h3>
                 
                 <!-- NEW: Step 1 - Configuration -->
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <label style="font-size: 11px; color: #888; margin-bottom: 5px; display: block;">Halaman Tujuan:</label>
+                        <label style="font-size: 11px; color: #888; margin-bottom: 5px; display: block;">${t('send2page')}:</label>
                         <select id="addDestPage" class="glass-input" style="padding: 8px 12px; font-size: 13px;">
                             <option value="announcements">Announcements</option>
                         </select>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <label style="font-size: 13px; color: #fff; cursor: pointer;" for="addIsLesson">Jadikan Tugas?</label>
+                        <label style="font-size: 13px; color: #fff; cursor: pointer;" for="addIsLesson">${t('markasassign')}</label>
                         <label class="switch">
                             <input type="checkbox" id="addIsLesson">
                             <span class="slider round"></span>
@@ -124,17 +123,17 @@ const UIComponents = {
                     </div>
                 </div>
 
-                <input type="text" id="addJudul" class="glass-input" placeholder="Judul Utama" spellcheck="false">
-                <input type="text" id="addSubjudul" class="glass-input" placeholder="Sub-judul" spellcheck="false">
+                <input type="text" id="addJudul" class="glass-input" placeholder="${t('title')}" spellcheck="false">
+                <input type="text" id="addSubjudul" class="glass-input" placeholder="${t('subtitle')}" spellcheck="false">
                 <div class="editor-toolbar" style="display:flex; gap:10px; margin-bottom: 8px;">
-                    <button type="button" onclick="formatText('5')" class="btn-tool">Besar</button>
-                    <button type="button" onclick="formatText('3')" class="btn-tool">Sedang</button>
-                    <button type="button" onclick="formatText('2')" class="btn-tool">Kecil</button>
+                    <button type="button" onclick="formatText('5')" class="btn-tool">${t('large')}</button>
+                    <button type="button" onclick="formatText('3')" class="btn-tool">${t('medium')}</button>
+                    <button type="button" onclick="formatText('2')" class="btn-tool">${t('small')}</button>
                 </div>
-                <div id="addIsi" contenteditable="true" class="glass-input" style="min-height: 150px; overflow-y: auto;"></div>
-                <input type="text" id="addSmall" class="glass-input" placeholder="Footer text" style="font-size: 12px; opacity:0.8;">
+                <div id="addIsi" contenteditable="true" class="glass-input" style="min-height: 150px; overflow-y: auto; plac"></div>
+                <input type="text" id="addSmall" class="glass-input" placeholder="${t('footer')}" style="font-size: 12px; opacity:0.8;">
 <div class="color-picker-container" style="margin-top: 15px;">
-    <label style="font-size: 12px; color: #aaa; margin-bottom: 8px; display: block;">Warna Kartu:</label>
+    <label style="font-size: 12px; color: #aaa; margin-bottom: 8px; display: block;">${t('card_color')}:</label>
     <div id="addColors" class="color-options" style="display: flex; gap: 8px; flex-wrap: wrap;">
     <div class="color-opt active" data-color="default" style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid white; cursor: pointer; background: rgba(0,0,0,0.3);"></div>
     <div class="color-opt" data-color="red" style="width: 22px; height: 22px; border-radius: 50%; background: #ff4757; cursor: pointer;"></div>
@@ -149,7 +148,7 @@ const UIComponents = {
 </div>
                 <div id="dropZone" class="drop-area">
                     <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                    <div class="drop-text"><b>Click to upload</b> or drag photos here</div>
+                    <div class="drop-text">${t('uploadphotos')}</div>
                     <input type="file" id="addFiles" multiple accept="image/*" style="display: none;">
                 </div>
                 <div id="previewContainer" class="preview-container"></div>
@@ -170,7 +169,7 @@ const UIComponents = {
                             <button class="glass-nav-btn prev-btn" onclick="prevSlide(event)"><i class="fa-solid fa-chevron-left"></i></button>
                             <button class="glass-nav-btn next-btn" onclick="nextSlide(event)"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
-                        <div id="toggleInfoBtn" class="mobile-toggle-btn" onclick="showMobileInfo(event)"><i class="fa-solid fa-circle-info"></i> Lihat Deskripsi</div>
+                        <div id="toggleInfoBtn" class="mobile-toggle-btn" onclick="showMobileInfo(event)"><i class="fa-solid fa-circle-info"></i> ${t('see_desc')}</div>
                         <div id="photoCounterTag" class="photo-counter-tag">1 / 1</div>
                     </div>
                 </div>

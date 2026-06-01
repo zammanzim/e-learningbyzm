@@ -18,6 +18,9 @@
     }
 
     window.showToast = function (msg, type = 'success') {
+        // CONTOH i18n di JS: Kalo msg kosong, ambil dari kamus
+        const finalMsg = msg || t('save_apply'); 
+        
         const container = _getContainer();
 
         const toast = document.createElement('div');
@@ -29,7 +32,7 @@
             ? '<i class="fa-solid fa-circle-exclamation"></i>'
             : '<i class="fa-solid fa-circle-info"></i>';
 
-        toast.innerHTML = `${icon}<span>${msg}</span>`;
+        toast.innerHTML = `${icon}<span>${finalMsg}</span>`;
         container.appendChild(toast);
 
         // Trigger enter animation

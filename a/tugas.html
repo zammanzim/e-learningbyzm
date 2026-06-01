@@ -10,9 +10,9 @@
     <script src="../js/ctx-menu.js"></script>
     <script src="../js/ui-components.js" defer></script>
     <script src="../js/sidebar.js"></script>
-<script src="../js/lang.js"></script>
-<script src="../js/basicfeat.js"></script>
-<script src="../js/show-popup.js"></script>
+    <script src="../js/lang.js"></script>
+    <script src="../js/basicfeat.js"></script>
+    <script src="../js/show-popup.js"></script>
     <script src="../js/auth.js" defer></script>
     <script src="../js/visitor.js" defer></script>
     <script src="../js/subject-manager.js" defer></script>
@@ -33,7 +33,10 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-list-check" style="font-size: 26px;"></i> Daftar Tugas</h1>
+                <h1>
+                    <i class="fa-solid fa-list-check" style="font-size: 26px;"></i>
+                    <span data-i18n="task_list"></span>
+                </h1>
             </div>
 
             <div id="userTaskProfile" class="daily-card-final" style="margin-bottom: 25px; padding: 20px;">
@@ -42,10 +45,10 @@
                         style="width: 65px; height: 65px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
                     <div style="flex: 1;">
                         <h3 id="userTaskName" style="margin: 0; font-size: 18px; color: #fff;">...</h3>
-                        <div style="margin-top: 10px;">
+                        <div>
                             <div
-                                style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
-                                <span style="color: #aaa;">Status Penyelesaian</span>
+                                style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px">
+                                <span style="color: #aaa;" data-i18n="complete_status"></span>
                                 <span id="userTaskCount" style="color: #00eaff; font-weight: bold;">0/0</span>
                             </div>
                             <div
@@ -60,8 +63,7 @@
                         </div>
                     </div>
                 </div>
-                <small style="font-size: 10px;">*Pencet tombol "Selesai?" biar tugas yang sudah dan belum tersortir
-                    rapi, dan untuk menghargai dev.</small>
+                <small style="font-size: 14px;" data-i18n="small_text"></small>
             </div>
         </div>
 
@@ -70,11 +72,11 @@
                 <div id="filterSlider" class="filter-slider-bg"></div>
 
                 <button class="filter-btn-new active" onclick="filterTasks('pending', this)">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Yang Belum Selesai
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="not_finish"></span>
                 </button>
 
                 <button class="filter-btn-new" onclick="filterTasks('all', this)">
-                    <i class="fa-solid fa-layer-group"></i> Semua Tugas
+                    <i class="fa-solid fa-layer-group"></i> <span data-i18n="all_tasks"></span>
                 </button>
             </div>
 

@@ -100,8 +100,6 @@ async function _navigateToSubject(name, classId) {
 
         if (match) {
             window.location.href = `subject?id=${match.subject_id}`;
-        } else {
-            if (typeof showToast === 'function') showToast(`Mapel "${name}" belum terdaftar`, 'info');
         }
     } catch (e) { console.error('DC Nav Error:', e); }
 }
@@ -148,7 +146,7 @@ function _buildHeaderSkeleton() {
             <div class="task-shortcut-box" style="opacity:0.4; pointer-events:none;">
                 <div class="task-badge" style="display:none;">0</div>
                 <i class="fa-solid fa-clipboard-list"></i>
-                <span>TUGAS</span>
+                <span>...</span>
             </div>
         </div>`;
 }
@@ -266,12 +264,12 @@ async function initDailyCard() {
         if (window.isDailyEditing) {
             editActionHTML = `
                 <div class="card-edit-actions">
-                    <button class="action-btn save" onclick="saveAllDrafts()" title="Simpan"><i class="fa-solid fa-check"></i></button>
-                    <button class="action-btn cancel" onclick="toggleDailyEditMode()" title="Batal"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="action-btn save" onclick="saveAllDrafts()" title="${t('save')}"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn cancel" onclick="toggleDailyEditMode()" title="${t('cancel')}"><i class="fa-solid fa-xmark"></i></button>
                 </div>`;
         } else {
             editActionHTML = `
-                <button class="action-btn edit" onclick="toggleDailyEditMode()" title="Edit Jadwal">
+                <button class="action-btn edit" onclick="toggleDailyEditMode()" title="${t('edit_schedule')}">
                     <i class="fa-solid fa-pen-to-square"></i>
                 </button>`;
         }
@@ -298,30 +296,22 @@ async function initDailyCard() {
     const configPanel = document.getElementById('dailyConfigPanel');
     if (configPanel && (!configPanel.innerHTML || !document.getElementById('kisiRangeArea'))) {
         configPanel.innerHTML = `
-            <h4 style="margin-bottom:10px; font-size:12px; color:#aaa; text-transform:uppercase;">Admin: <span id="lblAdminId">...</span></h4>
-
-            <!-- PENGINGAT EDIT MODE -->
-            <div id="editWarningLabel" style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-                <small style="color: #ff6b81; font-weight: bold; display: block; font-size: 10px; text-transform: uppercase;">Sedang Mengedit:</small>
-                <span id="currentEditingTypeLabel" style="color: white; font-weight: 900; font-size: 14px;">...</span>
-            </div>
-
             <div style="margin-bottom:15px;">
-                <label style="font-size:12px; display:block; margin-bottom:5px; color:#ff6b81; font-weight:bold;">Aktifkan Mode Apa?</label>
-                <select id="editModeSelector" class="glass-input" style="border-color:#ff4757; color:#ff6b81; font-weight:bold;">
-                    <option value="regular">Jadwal Utama</option>
-                    <option value="exam">Mode Ulangan (7 Hari)</option>
-                    <option value="custom">Custom Event (1 Hari)</option>
+                <label style="font-size:12px; display:block; margin-bottom:5px; color:#00eaff; font-weight:bold;">${t('activate_mode')}</label>
+                <select id="editModeSelector" class="glass-input" style="border-color:#ff4757; color:#00eaff; font-weight:bold;">
+                    <option value="regular">${t('main_sch')}</option>
+                    <option value="exam">${t('exam_sch')}</option>
+                    <option value="custom">${t('custom_sch')}</option>
                 </select>
             </div>
 
             <!-- KISI-KISI RANGE SELECTOR -->
             <div id="kisiRangeArea" style="margin-bottom:15px; display:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                <label style="font-size:12px; display:block; margin-bottom:8px; color:#00eaff; font-weight:bold;">Tampilkan Hari Apa di Kisi-Kisi?</label>
+                <label style="font-size:12px; display:block; margin-bottom:8px; color:#00eaff; font-weight:bold;">${t('sch_kisi')}</label>
                 <div id="kisiDayCheckboxes" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;">
                     ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(d => `
                         <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
-                            <input type="checkbox" value="${d}" class="kisi-day-opt" style="accent-color:#00eaff;"> ${d}
+                            <input type="checkbox" value="${d}" class="kisi-day-opt" style="accent-color:#00eaff;"> ${t(d.toLowerCase())}
                         </label>
                     `).join('')}
                 </div>
@@ -329,20 +319,20 @@ async function initDailyCard() {
 
             <div id="normalConfigArea">
                 <div style="margin-bottom:15px;">
-                    <label style="font-size:12px; display:block; margin-bottom:5px;">Edit Hari Apa?</label>
+                    <label style="font-size:12px; display:block; margin-bottom:5px; color:#00eaff; font-weight:bold;">${t('edit_day')}</label>
                     <select id="editDaySelector" class="glass-input">
-                        <option value="Senin">Senin</option>
-                        <option value="Selasa">Selasa</option>
-                        <option value="Rabu">Rabu</option>
-                        <option value="Kamis">Kamis</option>
-                        <option value="Jumat">Jumat</option>
-                        <option value="Sabtu">Sabtu</option>
-                        <option value="Minggu">Minggu</option>
+                        <option value="Senin">${t('senin')}</option>
+                        <option value="Selasa">${t('selasa')}</option>
+                        <option value="Rabu">${t('rabu')}</option>
+                        <option value="Kamis">${t('kamis')}</option>
+                        <option value="Jumat">${t('jumat')}</option>
+                        <option value="Sabtu">${t('sabtu')}</option>
+                        <option value="Minggu">${t('minggu')}</option>
                     </select>
                 </div>
 
                 <div class="dc-toggle-area" style="margin-top:0;">
-                    <span style="font-size:13px;">Auto Update (Jam 15:00)</span>
+                    <span style="font-size:13px;">${t('auto_upd')}</span>
                     <label class="switch">
                         <input type="checkbox" id="editAutoToggle">
                         <span class="slider round"></span>
@@ -364,31 +354,41 @@ async function initDailyCard() {
     // --- 3. LOGIC DISPLAY ---
     try {
         const now = new Date();
-        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        let autoDay = days[now.getDay()];
+        const daysInternal = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        
+        let autoDay = daysInternal[now.getDay()];
         if (now.getHours() >= 15) {
             const besok = new Date(now);
             besok.setDate(now.getDate() + 1);
-            autoDay = days[besok.getDay()];
+            autoDay = daysInternal[besok.getDay()];
         }
 
-        let displayDay = 'Senin';
+        let displayDay = 'Senin'; // Ini dipake buat query DB
         let labelWaktu = 'HARI INI';
         let currentType = config.mode || 'regular';
-        let fullDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        
+        // --- LOGIC TANGGAL DINAMIS (Support i18n Bulan) ---
+        const monthKeyMap = [
+            'january', 'february', 'march', 'april', 'may', 'june',
+            'july', 'august', 'september', 'october', 'november', 'december'
+        ];
+        const dayNum = now.getDate();
+        const monthName = t(monthKeyMap[now.getMonth()]);
+        const yearNum = now.getFullYear();
+        let fullDate = `${dayNum} ${monthName} ${yearNum}`;
 
         if (window.editingDay) {
             displayDay = window.editingDay;
             labelWaktu = (displayDay === 'CUSTOM') ? 'EDIT CUSTOM' : 'DRAFT MODE';
         } else if (config.mode === 'custom') {
             displayDay = 'CUSTOM';
-            labelWaktu = 'SPECIAL EVENT';
+            labelWaktu = `${t('special_event')}`;
             fullDate = 'Jadwal Khusus';
         } else if (config.mode === 'exam') {
             if (config.is_auto) {
                 displayDay = autoDay;
-                if (now.getHours() >= 15) labelWaktu = 'BESOK (EXAM)';
-                else labelWaktu = 'HARI INI (EXAM)';
+                if (now.getHours() >= 15) labelWaktu = `${t('tomorrow')} (${t('exam')})`;
+                else labelWaktu = `${t('today')} (${t('exam')})`;
             } else {
                 displayDay = config.forced_day;
                 labelWaktu = 'EXAM MODE';
@@ -396,7 +396,7 @@ async function initDailyCard() {
             if (isGlobalExam) labelWaktu = `GLOBAL ${labelWaktu}`;
         } else if (config.is_auto) {
             displayDay = autoDay;
-            if (now.getHours() >= 15) labelWaktu = 'BESOK';
+            if (now.getHours() >= 15) labelWaktu = `${t('today')}`;
         } else {
             displayDay = config.forced_day;
             labelWaktu = 'MANUAL';
@@ -406,23 +406,24 @@ async function initDailyCard() {
         window.currentViewDay = displayDay;
         const activeType = (window.isDailyEditing) ? currentType : (config.mode || 'regular');
 
-        // Set data-day buat warna per hari via CSS var
+        // Set data-day buat warna per hari via CSS var (tetep pake internal name biar CSS-nya gak ikutan pecah)
         if (cardEl) cardEl.dataset.day = displayDay;
 
         // Render header real (ganti skeleton)
         const isExamMode = config.mode === 'exam';
         const shortcutLink = isExamMode ? 'kisi-kisi' : 'tugas';
         const shortcutIcon = isExamMode ? 'fa-solid fa-file-signature' : 'fa-solid fa-clipboard-list';
-        const shortcutLabel = isExamMode ? 'KISI-KISI' : 'TUGAS';
+        const shortcutLabel = isExamMode ? `${t('exam_topics')}` : `${t('task')}`;
         const badgeDisplay = isExamMode ? 'none' : 'block';
 
         headerEl.innerHTML = `
         <div>
-            <span class="final-badge" id="lblBadge">LOADING</span>
+            <span class="final-badge" id="lblBadge">${t('loading')}</span>
             <h2 class="final-day editable-text" id="lblHari" oninput="autoSaveDraft()">...</h2>
             <small class="final-date" id="lblTanggal">...</small>
         </div>
         <div class="header-right-group">
+            ${editActionHTML}
             <div class="task-shortcut-box" onclick="window.location.href='${shortcutLink}'">
                 <div id="taskBadge" class="task-badge" style="display: ${badgeDisplay}">0</div>
                 <i class="${shortcutIcon}"></i>
@@ -430,27 +431,26 @@ async function initDailyCard() {
             </div>
         </div>`;
 
-        // Inject tombol edit di pojok kanan bawah card (bukan di header)
-        let editBtnEl = document.getElementById('dcEditBtn');
-        if (!editBtnEl) {
-            editBtnEl = document.createElement('div');
-            editBtnEl.id = 'dcEditBtn';
-            editBtnEl.className = 'dc-edit-btn-wrap';
-            cardEl.appendChild(editBtnEl);
-        }
-        editBtnEl.innerHTML = editActionHTML;
+        // Hapus logic lama dcEditBtn di pojok bawah
+        const oldEditWrap = document.getElementById('dcEditBtn');
+        if (oldEditWrap) oldEditWrap.remove();
 
         const badgeEl = document.getElementById('lblBadge');
         badgeEl.innerText = labelWaktu;
         
         let badgeClass = 'bg-cyan';
         if (displayDay === 'CUSTOM') badgeClass = 'bg-custom';
-        else if (config.mode === 'exam') badgeClass = 'bg-orange';
-        else if (labelWaktu === 'BESOK') badgeClass = 'bg-orange';
+        else if (config.mode === `${t('exam')}`) badgeClass = 'bg-orange';
+        else if (labelWaktu === `${t('tomorrow')}`) badgeClass = 'bg-orange';
         
         badgeEl.className = `final-badge ${badgeClass}`;
 
-        document.getElementById('lblHari').innerText = (displayDay === 'CUSTOM') ? (config.custom_title || 'EVENT KHUSUS') : displayDay;
+        const dayTranslationKey = displayDay.toLowerCase();
+        const dayDisplayText = (displayDay === 'CUSTOM') 
+            ? (config.custom_title || 'EVENT KHUSUS') 
+            : t(dayTranslationKey);
+
+        document.getElementById('lblHari').innerText = dayDisplayText;
         document.getElementById('lblTanggal').innerText = fullDate;
 
         const daySel = document.getElementById('editDaySelector');
@@ -476,22 +476,30 @@ async function initDailyCard() {
                 opt.checked = savedKisiDays.includes(opt.value);
             });
 
-            // Update label pengingat
-            const labelMap = { 'regular': 'JADWAL UTAMA', 'exam': 'JADWAL ULANGAN', 'custom': 'CUSTOM EVENT' };
-            const warnLabel = document.getElementById('currentEditingTypeLabel');
-            if (warnLabel) warnLabel.innerText = labelMap[activeMode] || 'JADWAL';
-
             modeSel.onchange = async (e) => {
                 const newMode = e.target.value;
                 if (window.isDailyEditing) saveToDraft(window.editingDay, window.currentConfig.mode);
+                
+                // Update config
                 window.currentConfig.mode = newMode;
                 window.currentConfig.is_custom = (newMode === 'custom');
-                window.editingDay = (newMode === 'custom') ? 'CUSTOM' : (config.is_auto ? autoDay : config.forced_day);
+
+                // Recalculate autoDay for fallback
+                const _now = new Date();
+                const _days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                let _autoDay = _days[_now.getDay()];
+                if (_now.getHours() >= 15) {
+                    const _besok = new Date(_now);
+                    _besok.setDate(_now.getDate() + 1);
+                    _autoDay = _days[_besok.getDay()];
+                }
+
+                // Force editingDay sync
+                window.editingDay = (newMode === 'custom') ? 'CUSTOM' : (window.currentConfig.is_auto ? _autoDay : window.currentConfig.forced_day);
                 
                 // Update visibilitas instan
                 if (kisiArea) kisiArea.style.display = (newMode === 'exam') ? 'block' : 'none';
                 if (normalArea) normalArea.style.display = (newMode === 'custom') ? 'none' : 'block';
-                if (warnLabel) warnLabel.innerText = labelMap[newMode] || 'JADWAL';
 
                 initDailyCard();
             };
@@ -582,42 +590,46 @@ async function initDailyCard() {
             });
         }
 
+        const isRegularMode = (config.mode === 'regular' || !config.mode);
+        const picketSectionHTML = isRegularMode ? `
+            <div class="final-spacer"></div>
+            <div class="final-section">
+                <h4 class="final-title"><i class="fa-solid fa-broom"></i>${t('cleaning_duty')}</h4>
+                <div class="picket-grid-big" id="picketList">${picketHTML}</div>
+                <button class="btn-add-inline" id="btnAddPicket" style="display:none;" onclick="addPicketRow()">+ ${t('add_people')}</button>
+            </div>` : '';
+
         contentEl.innerHTML = `
             <div class="top-cards-grid">
                 <div class="info-card-dynamic animate-pop-up" style="background:${themeColor}; color:${textColor}">
                     <div class="card-icon"><i class="fa-solid fa-shirt"></i></div>
                     <div class="card-meta">
-                        <span class="card-label" style="color:${textColor}">Seragam</span>
+                        <span class="card-label" style="color:${textColor}">${t('uniform')}</span>
                         <span class="card-val editable-text" data-type="uniform" oninput="autoSaveDraft()">${scheduleData.uniform || '-'}</span>
                     </div>
                 </div>
                 <div class="info-card-dynamic animate-pop-up" style="background:${themeColor}; color:${textColor}; animation-delay:0.1s">
                     <div class="card-icon"><i class="fa-solid fa-person-running"></i></div>
                     <div class="card-meta">
-                        <span class="card-label" style="color:${textColor}">Kegiatan</span>
+                        <span class="card-label" style="color:${textColor}">${t('activity')}</span>
                         <span class="card-val editable-text" data-type="activity" oninput="autoSaveDraft()">${scheduleData.activity || 'KBM Normal'}</span>
                     </div>
                 </div>
                 <div class="info-card-dynamic animate-pop-up" style="background:${themeColor}; color:${textColor}; animation-delay:0.2s">
                     <div class="card-icon"><i class="fa-solid fa-note-sticky"></i></div>
                     <div class="card-meta">
-                        <span class="card-label" style="color:${textColor}">Catatan</span>
+                        <span class="card-label" style="color:${textColor}">${t('notes')}</span>
                         <span class="card-val small editable-text" data-type="notes" oninput="autoSaveDraft()">${scheduleData.notes || '-'}</span>
                     </div>
                 </div>
             </div>
             <div class="final-spacer"></div>
             <div class="final-section">
-                <h4 class="final-title"><i class="fa-regular fa-clock"></i> Jadwal Pelajaran</h4>
+                <h4 class="final-title"><i class="fa-regular fa-clock"></i>${t('lesson_sch')}</h4>
                 <div class="final-timeline" id="timelineList">${timelineHTML}</div>
-                <button class="btn-add-inline" id="btnAddLesson" style="display:none;" onclick="addLessonRow()">+ Tambah Baris</button>
+                <button class="btn-add-inline" id="btnAddLesson" style="display:none;" onclick="addLessonRow()">+ ${t('add_row')}</button>
             </div>
-            <div class="final-spacer"></div>
-            <div class="final-section">
-                <h4 class="final-title"><i class="fa-solid fa-broom"></i> Petugas Piket</h4>
-                <div class="picket-grid-big" id="picketList">${picketHTML}</div>
-                <button class="btn-add-inline" id="btnAddPicket" style="display:none;" onclick="addPicketRow()">+ Tambah Orang</button>
-            </div>
+            ${picketSectionHTML}
         `;
 
         if (cardEl) cardEl.classList.toggle('edit-mode-on', window.isDailyEditing);
@@ -662,15 +674,26 @@ async function initDailyCard() {
     }
 }
 
-// Fitur ganti hari via Context Menu (Temporary View)
+// Fitur ganti hari via Context Menu (Temporary View / Switch Edit Day)
 window.switchDailyDay = function(day) {
     if (window.isDailyEditing) {
-        if (typeof showToast === 'function') showToast('Selesaikan edit dulu!', 'info');
-        return;
+        // Simpan progress hari yang lagi di-edit sekarang sebelum pindah
+        saveToDraft(window.editingDay, window.currentConfig.mode);
+
+        // Jika user lagi di mode CUSTOM tapi milih hari Senin-Minggu lewat menu,
+        // kita paksa modenya balik ke Regular biar gak bingung.
+        if (window.currentConfig.mode === 'custom' && day !== 'CUSTOM') {
+            window.currentConfig.mode = 'regular';
+            window.currentConfig.is_custom = false;
+        }
     }
-    window.editingDay = day; // Kita 'pinjam' editingDay untuk view sementara
+
+    window.editingDay = day; 
     initDailyCard();
-    if (typeof showToast === 'function') showToast(`Melihat jadwal hari ${day}`, 'info');
+    
+    if (typeof showToast === 'function') {
+        showToast(t('view_day', { day: t(day.toLowerCase()) }), 'info');
+    }
 };
 
 // ==========================================
@@ -891,10 +914,12 @@ async function saveAllDrafts() {
     // Simpan draft terakhir sebelum push ke DB
     saveToDraft(window.editingDay, activeMode);
     
+    // Ambil semua draft yang ada di memori
     const draftsArray = Object.values(window.dailyDrafts).map(d => ({
         ...d,
-        class_id: CLASS_ID,
-        type: activeMode // Paksa type sesuai mode yang lagi dipilih di UI
+        class_id: CLASS_ID
+        // JANGAN PAKSA 'type: activeMode' di sini biar gak bentrok kalo user
+        // sempet pindah-pindah mode pas lagi edit.
     }));
 
     const isAuto = document.getElementById('editAutoToggle').checked;
@@ -941,15 +966,15 @@ async function saveAllDrafts() {
         window.editingDay = null;
         window.currentConfig = null; 
 
-        if (typeof showToast === 'function') showToast('Mantap! Data Tersimpan.', 'success');
+        if (typeof showToast === 'function') showToast(`${t('data_saved')}`, 'success');
         
         setTimeout(() => { initDailyCard(); }, 300);
 
     } catch (err) {
         console.error('Save error:', err);
-        let msg = 'Gagal menyimpan!';
+        let msg = `${t('failed_save')}`;
         if (err.message === "SQL_CONSTRAINT_MISSING") {
-            msg = 'ERROR DATABASE! Lu harus jalanin SQL di sql_updates.sql dulu biar gak bentrok.';
+            msg =  err;
         }
         if (typeof showPopup === 'function') showPopup(msg, 'error');
         if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i>';
@@ -977,7 +1002,7 @@ window.addLessonRow = function () {
         <div class="tl-marker-final"></div>
         <div class="tl-subject-final editable-text editable-active"
              contenteditable="true" data-type="subject"
-             data-placeholder="Mata Pelajaran" oninput="autoSaveDraft()"></div>`;
+             data-placeholder="Subject" oninput="autoSaveDraft()"></div>`;
 
     div.querySelector('.btn-del-inline').onclick = function () { div.remove(); autoSaveDraft(); };
     div.querySelectorAll('.editable-text').forEach(el => el.addEventListener('keydown', _blockEnterKey));
@@ -995,7 +1020,7 @@ window.addPicketRow = function () {
         </div>
         <span class="editable-text editable-active"
               contenteditable="true" data-type="picket"
-              data-placeholder="Nama" oninput="autoSaveDraft()"></span>`;
+              data-placeholder="Name" oninput="autoSaveDraft()"></span>`;
 
     div.querySelector('.btn-del-inline').onclick = function () { div.remove(); autoSaveDraft(); };
     div.querySelector('span').addEventListener('keydown', _blockEnterKey);

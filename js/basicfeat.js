@@ -65,7 +65,7 @@ function syncHeaderProfile() {
         const headerPP = document.getElementById("headerPP");
 
         if (headerName) {
-            headerName.innerText = `Haii, ${user.short_name || user.nickname || 'User'}`;
+            headerName.innerText = `${t('hi')}, ${user.short_name || user.nickname || 'User'}`;
         }
         if (headerPP) {
             const isSubDir = /\/(a|admiii)\//.test(window.location.pathname);

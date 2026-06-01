@@ -248,9 +248,9 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
 
 function updateProgressUI() {
     const archivedTasks = allTasks.filter(t => t.is_done);
-    const activeTasks   = allTasks.filter(t => !t.is_done);
+    const activeTasks = allTasks.filter(t => !t.is_done);
     const archivedCount = archivedTasks.length;
-    const activeTotal   = activeTasks.length;
+    const activeTotal = activeTasks.length;
 
     // Hanya hitung done dari task yang belum diarsipkan
     const activeDone = doneIds.filter(id =>
@@ -259,10 +259,10 @@ function updateProgressUI() {
 
     const percent = activeTotal > 0 ? Math.round((activeDone / activeTotal) * 100) : 0;
 
-    const countEl  = document.getElementById('userTaskCount');
-    const barEl    = document.getElementById('userTaskBar');
+    const countEl = document.getElementById('userTaskCount');
+    const barEl = document.getElementById('userTaskBar');
     const centerEl = document.getElementById('taskProgressCenter');
-    const motivEl  = document.getElementById('taskMotivation');
+    const motivEl = document.getElementById('taskMotivation');
 
     let grad = '', themeColor = '';
     if (percent === 100) { grad = 'linear-gradient(90deg, var(--accent, #00eaff), #007bff)'; themeColor = 'var(--accent, #00eaff)'; }
@@ -272,7 +272,7 @@ function updateProgressUI() {
 
     if (countEl) {
         let txt = `${activeDone}/${activeTotal} (${percent}%)`;
-        if (archivedCount > 0) txt += ` · ${archivedCount} diarsipkan`;
+        if (archivedCount > 0) txt += ` · ${archivedCount} ${t('archived')}`;
         countEl.innerText = txt;
         countEl.style.color = themeColor;
     }
@@ -281,8 +281,11 @@ function updateProgressUI() {
         barEl.style.background = grad;
     }
     if (centerEl) {
-        let txt = `kamu sudah ngejain ${activeDone} dari ${activeTotal} tugas`;
-        if (archivedCount > 0) txt += ` · ${archivedCount} diarsipkan`;
+        let txt = t('youvedone', {
+            done: activeDone,
+            total: activeTotal
+        });
+        if (archivedCount > 0) txt += ` · ${archivedCount} ${t('archived')}`;
         centerEl.innerText = txt;
     }
 }
@@ -295,7 +298,7 @@ function renderTasks(data) {
         const isEmptyPending = currentFilter === 'pending';
         const emptyState = document.createElement("div");
         emptyState.className = isEmptyPending ? "empty-state success" : "empty-state";
-        
+
         if (isEmptyPending) {
             emptyState.innerHTML = `
                 <i class="fa-solid fa-circle-check"></i>
@@ -307,7 +310,7 @@ function renderTasks(data) {
                 <p>Belum ada tugas yang tercatat.</p>
             `;
         }
-        
+
         container.replaceChildren(emptyState);
         return;
     }
@@ -348,7 +351,7 @@ function renderTasks(data) {
             const colorTools = card.querySelector(".card-color-tools");
             const cameraBtn = card.querySelector(".camera-btn");
             const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
-            
+
             if (deleteBtn) deleteBtn.style.display = "inline-block";
             if (colorTools) colorTools.style.display = "flex";
             if (cameraBtn) cameraBtn.style.display = "flex";
@@ -381,10 +384,11 @@ function buildMapelFilter() {
 
     chips.innerHTML = `
         <div class="mapel-chip-tugas active" data-mapel="all" onclick="filterMapel('all', this)">
-            <i class="fa-solid fa-layer-group" style="font-size:10px;"></i> Semua
+            <i class="fa-solid fa-layer-group" style="font-size:10px;"></i> ${t('all')}
         </div>
         ${mapels.map(id => {
-        const nama = subjectNameMap[id] || id;
+        const translatedName = t(id);
+        const nama = translatedName !== id ? translatedName : (subjectNameMap[id] || id);
         const safeId = id.replace(/'/g, "\\'"); // escape single quote dalam id
         return `<div class="mapel-chip-tugas" data-mapel="${id}" onclick="filterMapel('${safeId}', this)">${nama}</div>`;
     }).join('')}

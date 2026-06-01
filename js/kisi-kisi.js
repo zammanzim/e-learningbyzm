@@ -56,8 +56,9 @@ function _getDayForItem(item) {
     const subject = _kisiNorm(_extractSubject(item.big_title || ''));
     if (subject.length < 2) return null;
     for (const day of PSTS_DAYS) {
-        const daySubjects = kisiScheduleMap[day] || [];
-        if (daySubjects.some(s => s.norm.length > 1 && (subject.includes(s.norm) || s.norm.includes(subject)))) {
+        const dayData = kisiScheduleMap[day];
+        const dayLessons = (dayData && dayData.lessons) || [];
+        if (dayLessons.some(s => s.norm.length > 1 && (subject.includes(s.norm) || s.norm.includes(subject)))) {
             return day;
         }
     }
@@ -102,11 +103,14 @@ window.renderKisiList = function () {
         items.map(k => _kisiNorm(_extractSubject(k.big_title || ''))).filter(Boolean)
     );
 
-    // Semua pelajaran dari jadwal (Senin-Kamis), dikumpulkan unik
+    // Semua pelajaran dari jadwal, dikumpulkan unik
     const allScheduledSubjects = [];
     const seenNorm = new Set();
     PSTS_DAYS.forEach(day => {
-        (kisiScheduleMap[day] || []).forEach(entry => {
+        const dayData = kisiScheduleMap[day];
+        const dayLessons = (dayData && dayData.lessons) || [];
+        
+        dayLessons.forEach(entry => {
             if (!seenNorm.has(entry.norm) && entry.norm.length > 1) {
                 seenNorm.add(entry.norm);
                 const matchedItem = items.find(k => _kisiNorm(_extractSubject(k.big_title || '')) === entry.norm);
@@ -116,7 +120,7 @@ window.renderKisiList = function () {
         });
     });
 
-    // Tambahkan pelajaran yang punya kisi-kisi tapi tidak ada di jadwal (edge case)
+    // Tambahkan pelajaran yang punya kisi-kisi tapi tidak ada di jadwal
     items.forEach(k => {
         const norm = _kisiNorm(_extractSubject(k.big_title || ''));
         if (norm && !seenNorm.has(norm)) {
@@ -126,26 +130,33 @@ window.renderKisiList = function () {
     });
 
     const optionsHTML = allScheduledSubjects.map(s => {
+        // TRANSLASI MAPEL DI DROPDOWN
+        const translatedDisplay = t(s.norm) !== s.norm ? t(s.norm) : s.display;
         if (s.hasKisi) {
-            return `<option value="${s.norm}">${s.display}</option>`;
+            return `<option value="${s.norm}">${translatedDisplay}</option>`;
         } else {
-            return `<option value="${s.norm}" disabled style="color:rgba(255,255,255,0.3);">${s.display} (belum ada)</option>`;
+            return `<option value="${s.norm}" disabled style="color:rgba(255,255,255,0.3);">${translatedDisplay} (belum ada)</option>`;
         }
     }).join('');
 
     const filterBar = document.createElement('div');
-    filterBar.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:22px;';
+    filterBar.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:22px; flex-wrap:wrap;';
     filterBar.innerHTML = `
-        <i class="fa-solid fa-filter" style="color:var(--accent, #00eaff); font-size:14px;"></i> Pilih Pelajaran
-        <select id="kisiSubjectFilter"
-            onchange="kisiFilter = this.value; renderKisiList();"
-            style="flex:1; background:rgba(255,255,255,0.08); color:white;
-                   border:1px solid rgba(0, 234, 255, 0.3); padding:9px 15px;
-                   border-radius:20px; font-size:13px; outline:none; cursor:pointer;
-                   appearance:none; -webkit-appearance:none;">
-            <option value="all">Semua Pelajaran</option>
-            ${optionsHTML}
-        </select>
+        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:200px;">
+            <i class="fa-solid fa-filter" style="color:var(--accent, #00eaff); font-size:14px;"></i> ${t('choose_lesson')}
+            <select id="kisiSubjectFilter"
+                onchange="kisiFilter = this.value; renderKisiList();"
+                style="flex:1; background:rgba(255,255,255,0.08); color:white;
+                    border:1px solid rgba(0, 234, 255, 0.3); padding:9px 15px;
+                    border-radius:20px; font-size:13px; outline:none; cursor:pointer;
+                    appearance:none; -webkit-appearance:none;">
+                <option value="all">${t('all_lessons')}</option>
+                ${optionsHTML}
+            </select>
+        </div>
+        <button onclick="window.refreshKisiData()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-sync"></i> ${t('refresh')}
+        </button>
     `;
     container.appendChild(filterBar);
 
@@ -168,14 +179,12 @@ window.renderKisiList = function () {
     });
 
     const dayOrder = _getDayOrder();
-    const todayInOrder = dayOrder[0]; // hari pertama di urutan = "hari ini"
+    const todayInOrder = dayOrder[0];
 
     // ── Render each day section ──────────────────────────────
     let renderedCount = 0;
     dayOrder.forEach(function (day) {
         const dayItems = grouped[day] || [];
-
-        // Kalau filter aktif dan hari ini kosong -> skip seluruh section
         if (kisiFilter !== 'all' && dayItems.length === 0) return;
 
         const isToday = day === todayInOrder;
@@ -185,7 +194,7 @@ window.renderKisiList = function () {
         divEl.style.cssText = 'margin:' + (isFirst ? '4px' : '36px') + ' 0 16px;';
 
         const todayBadge = isToday
-            ? '<span style="font-size:11px; background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.5); border-radius:12px; padding:2px 10px; margin-left:10px; vertical-align:middle; font-weight:700; letter-spacing:1px;">HARI INI</span>'
+            ? `<span style="font-size:11px; background:rgba(0, 234, 255, 0.15); border:1px solid rgba(0, 234, 255, 0.5); border-radius:12px; padding:2px 10px; margin-left:10px; vertical-align:middle; font-weight:700; letter-spacing:1px;">${t('today')}</span>`
             : '';
 
         const lineColor = isToday
@@ -199,7 +208,7 @@ window.renderKisiList = function () {
         divEl.innerHTML =
             '<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">' +
             '<span style="font-size:' + fontSize + '; font-weight:900; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; color:' + textColor + '; ' + textShadow + '">'
-            + day + todayBadge +
+            + t(day.toLowerCase()) + todayBadge +
             '</span>' +
             '<div style="flex:1; height:2px; border-radius:2px; background:' + lineColor + ';"></div>' +
             '</div>';
@@ -207,42 +216,57 @@ window.renderKisiList = function () {
         container.appendChild(divEl);
 
         if (dayItems.length === 0) {
-            // Hanya muncul kalau filter = 'all'
             const emptyEl = document.createElement('p');
-            emptyEl.style.cssText = 'color:rgba(255,255,255,0.3); font-size:12px; margin:4px 0 0; padding-left:2px; font-style:italic;';
-            emptyEl.textContent = 'Belum ada kisi-kisi untuk hari ini';
+            emptyEl.style.cssText = 'color:rgba(255, 255, 255, 0.5); font-size:1rem; margin:4px 0 0; padding-left:2px; font-style:italic;';
+            emptyEl.textContent = `${t('no_kisi')}`;
             container.appendChild(emptyEl);
         } else {
             dayItems.forEach(function (item) {
-                const card = SubjectApp.createCardElement(item);
+                // CLONE ITEM untuk display translasinya
+                const displayItem = { ...item };
+                const rawSubject = _extractSubject(item.big_title);
+                const normSubject = _kisiNorm(rawSubject);
+                
+                // TRANSLASI MAPEL DI CARD
+                const translatedSubject = t(normSubject) !== normSubject ? t(normSubject) : rawSubject;
+                
+                // Gunakan format template kisi_format
+                displayItem.big_title = t('kisi_format', { subject: translatedSubject });
+
+                const card = SubjectApp.createCardElement(displayItem);
                 card.querySelectorAll('.task-btn').forEach(function (btn) { btn.remove(); });
                 container.appendChild(card);
             });
         }
-
         renderedCount++;
     });
 
-    // ── Unassigned items (subject not matched to any day) ────
+    // ── Unassigned items ────
     if (unassigned.length > 0) {
         const uDivEl = document.createElement('div');
         uDivEl.style.cssText = 'display:flex; align-items:center; gap:12px; margin:' + (renderedCount > 0 ? '28px' : '0') + ' 0 14px;';
         uDivEl.innerHTML =
-            '<span style="font-size:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; color:#ffd700;">Lainnya</span>' +
+            `<span style="font-size:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; color:#ffd700;">${t('other')}</span>` +
             '<div style="flex:1; height:1px; background:linear-gradient(to right, rgba(255,215,0,0.4), transparent);"></div>';
         container.appendChild(uDivEl);
         unassigned.forEach(function (item) {
-            const card = SubjectApp.createCardElement(item);
+            // CLONE ITEM untuk display translasinya
+            const displayItem = { ...item };
+            const rawSubject = _extractSubject(item.big_title);
+            const normSubject = _kisiNorm(rawSubject);
+            
+            // TRANSLASI MAPEL DI CARD (UNASSIGNED)
+            const translatedSubject = t(normSubject) !== normSubject ? t(normSubject) : rawSubject;
+            displayItem.big_title = t('kisi_format', { subject: translatedSubject });
+
+            const card = SubjectApp.createCardElement(displayItem);
             card.querySelectorAll('.task-btn').forEach(function (btn) { btn.remove(); });
             container.appendChild(card);
         });
     }
 
-    // Restore selected filter value (since we rebuild the whole DOM)
     const sel = document.getElementById('kisiSubjectFilter');
     if (sel) sel.value = kisiFilter;
-
-    // ── Update info box dengan daftar kisi-kisi yang tersedia ──
     _renderKisiInfoList(SubjectApp.state.announcements);
 };
 
@@ -253,24 +277,34 @@ function _renderKisiInfoList(items) {
 
     // --- 1. LOGIC WAKTU (Ikut Daily Card) ---
     const now = new Date();
-    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    let todayName = dayNames[now.getDay()];
+    const dayNamesInternal = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    let todayName = dayNamesInternal[now.getDay()];
     let targetDay = todayName;
-    let labelWaktu = 'HARI INI';
+    let labelWaktu = t('today');
 
     if (now.getHours() >= 15) {
         const tom = new Date(now);
         tom.setDate(now.getDate() + 1);
-        targetDay = dayNames[tom.getDay()];
-        labelWaktu = 'BESOK';
+        targetDay = dayNamesInternal[tom.getDay()];
+        labelWaktu = t('tomorrow');
     }
 
-    // --- 2. RENDER HEADER (Style Daily Card) ---
+    // --- 2. LOGIC TANGGAL DINAMIS (Support i18n Bulan) ---
+    const monthKeyMap = [
+        'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const dayNum = now.getDate();
+    const monthName = t(monthKeyMap[now.getMonth()]);
+    const yearNum = now.getFullYear();
+    const fullDate = `${dayNum} ${monthName} ${yearNum}`;
+
+    // --- 3. RENDER HEADER ---
     headerEl.innerHTML = `
         <div>
             <span class="final-badge bg-cyan" id="lblKisiBadge">${labelWaktu}</span>
-            <h2 class="final-day">${targetDay}</h2>
-            <small class="final-date">${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</small>
+            <h2 class="final-day">${t(targetDay.toLowerCase())}</h2>
+            <small class="final-date" style="font-size: 0.75rem; opacity: 0.7;">${fullDate}</small>
         </div>
         <div class="header-right-group">
             <div class="task-shortcut-box" onclick="window.location.href='announcements'">
@@ -284,60 +318,63 @@ function _renderKisiInfoList(items) {
     const cardEl = document.getElementById('kisiDailyCard');
     if (cardEl) cardEl.dataset.day = targetDay;
 
-    // --- 3. RENDER DAY LIST ---
+    // --- 4. RENDER DAY LIST ---
     const hasKisiSet = new Set(
         (items || []).map(k => _kisiNorm(_extractSubject(k.big_title || ''))).filter(Boolean)
     );
 
     const dayOrder = _getDayOrder();
-    let html = '';
+    let listHTML = '';
 
     dayOrder.forEach(function (day) {
-        const schedSubjects = kisiScheduleMap[day] || [];
-        if (schedSubjects.length === 0) return;
+        const sched = kisiScheduleMap[day];
+        if (!sched || !sched.lessons || sched.lessons.length === 0) return;
 
         const isTarget = (day === targetDay);
         
-        html += `<div style="margin-bottom: 20px; ${!isTarget ? 'opacity: 0.7;' : ''}">`;
-        html += `
+        listHTML += `<div style="margin-bottom: 20px; ${!isTarget ? 'opacity: 0.7;' : ''}">`;
+        listHTML += `
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
                 <div style="font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:${isTarget ? 'var(--accent, #00eaff)' : 'rgba(255,255,255,0.5)'};">
-                    ${day} ${isTarget ? ' <i class="fa-solid fa-star" style="font-size:9px;"></i>' : ''}
+                    ${t(day.toLowerCase())} ${isTarget ? ' <i class="fa-solid fa-star" style="font-size:9px;"></i>' : ''}
                 </div>
                 <div style="flex:1; height:1px; background:rgba(255,255,255,${isTarget ? '0.2' : '0.1'});"></div>
             </div>
         `;
         
-        html += '<div style="display:flex; flex-direction:column; gap:6px;">';
+        listHTML += '<div style="display:flex; flex-direction:column; gap:6px;">';
 
-        schedSubjects.forEach(function (entry) {
+        sched.lessons.forEach(function (entry) {
             const hasKisi = hasKisiSet.has(entry.norm);
             const matchedItem = (items || []).find(k => _kisiNorm(_extractSubject(k.big_title || '')) === entry.norm);
-            const displayName = matchedItem ? _extractSubject(matchedItem.big_title) : entry.display;
+            const subjectName = matchedItem ? _extractSubject(matchedItem.big_title) : entry.display;
+            
+            // TRANSLASI PELAJARAN DI SIDEBAR
+            const translatedSubject = t(entry.norm) !== entry.norm ? t(entry.norm) : subjectName;
 
             if (hasKisi) {
                 const normSubject = entry.norm;
                 const activeStyle = kisiFilter === normSubject ? 'background:rgba(0, 234, 255, 0.15); border-color:rgba(0, 234, 255, 0.4);' : '';
                 
-                html += `<div onclick="kisiFilter='${normSubject}'; renderKisiList(); document.querySelector('.right-section').scrollIntoView({behavior:'smooth'});"
+                listHTML += `<div onclick="kisiFilter='${normSubject}'; renderKisiList(); document.querySelector('.right-section').scrollIntoView({behavior:'smooth'});"
                     style="display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.06); border-radius:12px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition:all 0.2s; ${activeStyle}"
                     onmouseover="this.style.background='rgba(0, 234, 255, 0.1)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'"
                     onmouseout="this.style.background='${kisiFilter === normSubject ? 'rgba(0, 234, 255, 0.15)' : 'rgba(255,255,255,0.06)'}'; this.style.borderColor='${kisiFilter === normSubject ? 'rgba(0, 234, 255, 0.4)' : 'rgba(255,255,255,0.08)'}'">
                     <i class="fa-solid fa-file-circle-check" style="color:var(--accent, #00eaff); font-size:12px;"></i>
-                    <span style="font-size:13px; color:#fff; font-weight:600;">${displayName}</span>
+                    <span style="font-size:13px; color:#fff; font-weight:600;">${translatedSubject}</span>
                 </div>`;
             } else {
-                html += `<div style="display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.02); border-radius:12px; cursor:not-allowed; border:1px solid rgba(255,255,255,0.04);">
+                listHTML += `<div style="display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.02); border-radius:12px; cursor:not-allowed; border:1px solid rgba(255,255,255,0.04);">
                     <i class="fa-regular fa-file" style="color:rgba(255,255,255,0.2); font-size:12px;"></i>
-                    <span style="font-size:13px; color:rgba(255,255,255,0.2); font-weight:400;">${displayName}</span>
+                    <span style="font-size:13px; color:rgba(255,255,255,0.2); font-weight:400;">${translatedSubject}</span>
                 </div>`;
             }
         });
 
-        html += '</div></div>';
+        listHTML += '</div></div>';
     });
 
-    infoBox.innerHTML = html || '<p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">Belum ada kisi-kisi.</p>';
+    infoBox.innerHTML = listHTML || '<p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">Belum ada kisi-kisi.</p>';
 }
 
 // ── Init ─────────────────────────────────────────────────────
@@ -405,23 +442,28 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const { data: schedules } = await supabase
                 .from('daily_schedules')
-                .select('day_name, lessons')
+                .select('day_name, lessons, uniform, activity, notes')
                 .eq('class_id', TARGET_CLASS_ID)
                 .eq('type', TARGET_TYPE)
                 .in('day_name', PSTS_DAYS);
 
             kisiScheduleMap = {};
             (schedules || []).forEach(function (s) {
-                // Format: "07.30 - 08.30 - PABP; 10.00 - 11.00 - Bahasa Indonesia"
-                kisiScheduleMap[s.day_name] = (s.lessons || '')
-                    .split(';')
-                    .map(function (raw) {
-                        raw = raw.trim();
-                        const dashIdx = raw.lastIndexOf('-');
-                        const name = dashIdx !== -1 ? raw.substring(dashIdx + 1).trim() : raw;
-                        return { norm: _kisiNorm(name), display: name };
-                    })
-                    .filter(function (n) { return n.norm.length > 1 && !KISI_BLACKLIST.some(b => n.norm.includes(b)); });
+                // Simpan meta info juga buat di-render di sidebar
+                kisiScheduleMap[s.day_name] = {
+                    uniform: s.uniform || '-',
+                    activity: s.activity || '-',
+                    notes: s.notes || '-',
+                    lessons: (s.lessons || '')
+                        .split(';')
+                        .map(function (raw) {
+                            raw = raw.trim();
+                            const dashIdx = raw.lastIndexOf('-');
+                            const name = dashIdx !== -1 ? raw.substring(dashIdx + 1).trim() : raw;
+                            return { norm: _kisiNorm(name), display: name };
+                        })
+                        .filter(function (n) { return n.norm.length > 1 && !KISI_BLACKLIST.some(b => n.norm.includes(b)); })
+                };
             });
         } catch (e) {
             console.error('Gagal ambil jadwal kisi-kisi:', e);
