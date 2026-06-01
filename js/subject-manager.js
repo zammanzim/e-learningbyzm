@@ -634,7 +634,7 @@ const SubjectApp = {
         displayTitleHTML += `<span contenteditable="false" spellcheck="false" class="editable" data-field="title">${title}</span></h4>`;
 
         card.innerHTML = `
-        <input type="file" class="photo-input" accept="image/*" multiple style="display:none;">
+        <input type="file" class="photo-input" multiple style="display:none;">
         <div class="reorder-handle" style="display:none; position:absolute; top:10px; right:10px; z-index:50;">
             <div class="drag-grip" title="Tahan & geser untuk pindah urutan" style="
                 background:rgba(0,234,255,0.15);
@@ -1199,6 +1199,62 @@ const SubjectApp = {
         this.updateArrowButtons();
     },
 
+    _escapeHTML(str = '') {
+        return String(str).replace(/[&<>"']/g, (m) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m]));
+    },
+
+    _escapeAttr(str = '') {
+        return this._escapeHTML(str);
+    },
+
+    _getFileNameFromUrl(url = '') {
+        try {
+            const clean = decodeURIComponent(String(url).split('?')[0]);
+            return clean.split('/').pop() || 'file';
+        } catch (e) {
+            return 'file';
+        }
+    },
+
+    _getFileExt(name = '') {
+        const clean = String(name).split('?')[0];
+        const parts = clean.split('.');
+        return parts.length > 1 ? parts.pop().toLowerCase() : '';
+    },
+
+    _isImageFile(file) {
+        return file?.type?.startsWith('image/');
+    },
+
+    _isImageUrl(url = '') {
+        return /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(String(url).split('?')[0]);
+    },
+
+    _getFileIcon(name = '') {
+        const ext = this._getFileExt(name);
+        if (ext === 'pdf') return 'fa-solid fa-file-pdf';
+        if (['zip', 'rar', '7z'].includes(ext)) return 'fa-solid fa-file-zipper';
+        if (['doc', 'docx'].includes(ext)) return 'fa-solid fa-file-word';
+        if (['xls', 'xlsx', 'csv'].includes(ext)) return 'fa-solid fa-file-excel';
+        if (['ppt', 'pptx'].includes(ext)) return 'fa-solid fa-file-powerpoint';
+        return 'fa-solid fa-file-lines';
+    },
+
+    _buildFilePreviewHTML(url) {
+        const name = this._getFileNameFromUrl(url);
+        return `
+            <div class="file-tile-preview">
+                <i class="${this._getFileIcon(name)}"></i>
+                <span>${this._escapeHTML(name)}</span>
+            </div>`;
+    },
+
     // Bangun innerHTML photo-grid dari array URL — dipakai di createCardElement & re-render setelah delete
     _buildPhotoGridHTML(photos, editMode = false) {
         if (!photos || photos.length === 0) return '';
@@ -1206,10 +1262,11 @@ const SubjectApp = {
             ? 'display:flex; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;'
             : 'display:none; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;';
 
-        const makeSlot = (url) => `
+        const makeSlot = (url, extraHTML = '') => `
             <div class="photo-item photo-wrapper" style="position:relative;">
-                <img src="${url}" loading="lazy">
-                <button class="delete-photo-btn" data-url="${url}" style="${deleteBtnStyle}">
+                ${this._isImageUrl(url) ? `<img src="${this._escapeAttr(url)}" loading="lazy">` : this._buildFilePreviewHTML(url)}
+                ${extraHTML}
+                <button class="delete-photo-btn" data-url="${this._escapeAttr(url)}" style="${deleteBtnStyle}">
                     <i class="fa-solid fa-trash" style="pointer-events:none;"></i>
                 </button>
             </div>`;
@@ -1224,16 +1281,9 @@ const SubjectApp = {
             // Slot 1-3: foto biasa + tombol hapus
             // Slot 4: foto ke-4 tampil, sisanya jadi overlay "+N"
             gridClass = 'grid-4';
-            imgsHTML = photos.slice(0, 3).map(makeSlot).join('');
+            imgsHTML = photos.slice(0, 3).map(url => makeSlot(url)).join('');
             // Slot 4 tetap bisa dihapus, overlay cuma teks
-            imgsHTML += `
-            <div class="photo-item photo-wrapper" style="position:relative;">
-                <img src="${photos[3]}" loading="lazy">
-                <div class="more-overlay" style="pointer-events:none;">+${photos.length - 4}</div>
-                <button class="delete-photo-btn" data-url="${photos[3]}" style="${deleteBtnStyle}">
-                    <i class="fa-solid fa-trash" style="pointer-events:none;"></i>
-                </button>
-            </div>`;
+            imgsHTML += makeSlot(photos[3], `<div class="more-overlay" style="pointer-events:none;">+${photos.length - 4}</div>`);
         }
 
         return `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
@@ -1272,9 +1322,10 @@ const SubjectApp = {
             if (!card._pendingFiles) card._pendingFiles = [];
 
             for (let file of files) {
-                if (!file.type.startsWith('image/')) continue;
-                try { file = await this.compressImage(file); } catch (err) { }
-                if (file.size > 5 * 1024 * 1024) { showPopup("Max 5MB per foto", "error"); continue; }
+                if (this._isImageFile(file)) {
+                    try { file = await this.compressImage(file); } catch (err) { }
+                    if (file.size > 5 * 1024 * 1024) { showPopup("Max 5MB per foto", "error"); continue; }
+                }
                 const objUrl = URL.createObjectURL(file);
                 card._pendingFiles.push({ file, objUrl });
             }
@@ -1293,7 +1344,7 @@ const SubjectApp = {
         container.style.cssText += 'flex-wrap:wrap; gap:6px; margin-bottom:12px;';
         container.innerHTML = pending.map((p, i) => `
             <div style="position:relative; width:72px; height:72px; border-radius:8px; overflow:hidden; border:2px solid rgba(0,234,255,0.5);">
-                <img src="${p.objUrl}" style="width:100%; height:100%; object-fit:cover;">
+                ${this._isImageFile(p.file) ? `<img src="${p.objUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<div class="pending-file-preview"><i class="${this._getFileIcon(p.file.name)}"></i><span>${this._escapeHTML(this._getFileExt(p.file.name) || 'file')}</span></div>`}
                 <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;">
                     <i class="fa-solid fa-clock" style="color:#00eaff; font-size:10px;"></i>
                     <span style="font-size:8px; color:#00eaff; font-weight:700;">PENDING</span>
@@ -1796,26 +1847,26 @@ const SubjectApp = {
         if (!container) return;
 
         for (const file of Array.from(files)) {
-            if (!file.type.startsWith('image/')) continue;
-
             try {
-                // Compress image biar irit storage
-                const compressed = await this.compressImage(file);
-                this.tempFiles.push(compressed);
+                let uploadFile = file;
+                if (this._isImageFile(file)) {
+                    // Compress image biar irit storage
+                    uploadFile = await this.compressImage(file);
+                }
+                this.tempFiles.push(uploadFile);
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.innerHTML = `
-                        <img src="${e.target.result}">
-                        <div class="preview-remove" onclick="SubjectApp.removeTempFile('${file.name.replace(/'/g, "\\\'")}', this)">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                };
-                reader.readAsDataURL(compressed);
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    ${this._isImageFile(uploadFile)
+                        ? `<img src="${URL.createObjectURL(uploadFile)}">`
+                        : `<div class="preview-file"><i class="${this._getFileIcon(uploadFile.name)}"></i><span>${this._escapeHTML(this._getFileExt(uploadFile.name) || 'file')}</span></div>`}
+                    <div class="preview-remove">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                `;
+                div.querySelector('.preview-remove').onclick = () => this.removeTempFile(uploadFile.name, div.querySelector('.preview-remove'));
+                container.appendChild(div);
             } catch (e) {
                 console.error("Gagal proses file:", e);
             }
@@ -1931,25 +1982,51 @@ function updateSliderUI() {
 
     if (!nav || !imgEl || !wrapper) return;
 
+    let filePreview = wrapper.querySelector('.detail-file-preview');
+    if (!filePreview) {
+        filePreview = document.createElement('a');
+        filePreview.className = 'detail-file-preview';
+        filePreview.target = '_blank';
+        filePreview.rel = 'noopener';
+        wrapper.appendChild(filePreview);
+    }
+
     if (currentViewerPhotos.length === 0) {
         imgEl.style.display = 'none';
+        filePreview.style.display = 'none';
         nav.style.display = 'none';
         return;
     }
 
-    wrapper.classList.add('loading');
+    const currentUrl = currentViewerPhotos[currentViewerIndex];
+    const isImage = SubjectApp._isImageUrl(currentUrl);
 
-    imgEl.style.display = 'block';
-    imgEl.src = currentViewerPhotos[currentViewerIndex];
+    filePreview.style.display = isImage ? 'none' : 'flex';
+    imgEl.style.display = isImage ? 'block' : 'none';
 
-    imgEl.onload = () => {
+    if (!isImage) {
+        const fileName = SubjectApp._getFileNameFromUrl(currentUrl);
         wrapper.classList.remove('loading');
-    };
+        filePreview.href = currentUrl;
+        filePreview.innerHTML = `
+            <i class="${SubjectApp._getFileIcon(fileName)}"></i>
+            <span>${SubjectApp._escapeHTML(fileName)}</span>
+            <small>${t('open_file')}</small>
+        `;
+    } else {
+        wrapper.classList.add('loading');
 
-    imgEl.onerror = () => {
-        wrapper.classList.remove('loading');
-        imgEl.src = 'icons/error-img.png';
-    };
+        imgEl.src = currentUrl;
+
+        imgEl.onload = () => {
+            wrapper.classList.remove('loading');
+        };
+
+        imgEl.onerror = () => {
+            wrapper.classList.remove('loading');
+            imgEl.src = 'icons/error-img.png';
+        };
+    }
 
     const tag = document.getElementById('photoCounterTag');
     if (tag) tag.innerText = `${currentViewerIndex + 1} / ${currentViewerPhotos.length}`;

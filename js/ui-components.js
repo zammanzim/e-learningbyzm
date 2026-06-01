@@ -149,7 +149,7 @@ const UIComponents = {
                 <div id="dropZone" class="drop-area">
                     <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
                     <div class="drop-text">${t('uploadphotos')}</div>
-                    <input type="file" id="addFiles" multiple accept="image/*" style="display: none;">
+                    <input type="file" id="addFiles" multiple style="display: none;">
                 </div>
                 <div id="previewContainer" class="preview-container"></div>
                 <div class="action-buttons">
