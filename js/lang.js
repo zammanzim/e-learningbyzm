@@ -49,7 +49,7 @@ const i18n = {
             // Sidebar Items (by subject_id)
             "announcements": "Pengumuman",
             "tugas": "Daftar Tugas",
-            "kisi-kisi": "Kisi-kisi",
+            "kisi-kisi": "Kisi-Kisi",
             "search": "Cari Akun",
             "theme": "Tema",
             "settingacc": "Pengaturan Akun",
@@ -107,7 +107,7 @@ const i18n = {
             "home": "Beranda",
 
             // Kisi-kisi
-            "exam_topics": "Kisi-kisi PSTS",
+            "exam_topics": "Kisi-Kisi",
             "choose_lesson": "Pilih Pelajaran",
             "all_lessons": "Semua Pelajaran",
             "no_kisi": "Belum ada kisi-kisi untuk hari ini",

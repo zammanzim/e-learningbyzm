@@ -1,5 +1,5 @@
 // ============================================================
-// kisi-kisi.js — Kisi-Kisi PSTS
+// kisi-kisi.js — Kisi-Kisi
 // Hooks into SubjectApp (subject-manager.js) for admin/modal,
 // but overrides renderAnnouncements with day-grouped logic.
 // ============================================================
@@ -473,8 +473,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 4. Init SubjectApp
     SubjectApp.init(
         'kisi-kisi',
-        '<h3><i class="fa-solid fa-clipboard-list"></i> Kisi-Kisi PSTS</h3>',
-        'Kisi-Kisi PSTS',
+        '<h3><i class="fa-solid fa-clipboard-list"></i> Kisi-Kisi PSAT</h3>',
+        'Kisi-Kisi PSAT',
         false  // isLessonMode = false -> no task/selesai button
     );
 
