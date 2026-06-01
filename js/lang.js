@@ -49,7 +49,7 @@ const i18n = {
             // Sidebar Items (by subject_id)
             "announcements": "Pengumuman",
             "tugas": "Daftar Tugas",
-            "kisi-kisi": "Kisi-kisi PSTS",
+            "kisi-kisi": "Kisi-kisi",
             "search": "Cari Akun",
             "theme": "Tema",
             "settingacc": "Pengaturan Akun",
@@ -160,6 +160,7 @@ const i18n = {
             "footer": "Kaki (Footer)",
             "card_color": "Warna Kartu",
             "uploadphotos": "<b>Klik untuk upload</b> atau tarik foto ke sini",
+            "attachments": "Lampiran",
 
             // detailOverlay
             "see_desc": "Lihat Deskripsi",
