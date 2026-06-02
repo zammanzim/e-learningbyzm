@@ -573,9 +573,34 @@ const SkeletonUI = {
             tugas: () => this.tugas(count),
             subject: () => this.subject(count),
             userProfile: () => this.userProfile(),
+            quizHub: () => this.quizHub(),
         };
         el.innerHTML = (map[type] || map.subject)();
     },
+
+    // Quiz Hub skeleton
+    quizHub() {
+        this.injectCSS();
+        const card = () => `
+            <div class="sk-card" style="height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:15px;">
+                <div class="sk sk-circle" style="width:40px; height:40px;"></div>
+                <div class="sk sk-line" style="width:60%; height:14px;"></div>
+                <div class="sk sk-line" style="width:40%; height:10px;"></div>
+            </div>`;
+        
+        const section = (titleWidth) => `
+            <div style="margin-bottom:30px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                    <div class="sk sk-line" style="width:${titleWidth}px; height:14px;"></div>
+                    <div class="sk sk-line" style="flex:1; height:1px;"></div>
+                </div>
+                <div class="quiz-menu-grid">
+                    ${card()} ${card()} ${card()}
+                </div>
+            </div>`;
+
+        return section(80) + section(60);
+    }
 };
 
 if (document.readyState === 'loading') {

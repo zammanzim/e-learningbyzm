@@ -42,8 +42,17 @@
             text-align: center;
         }
 
-        .stat-card h3 { font-size: 0.9rem; opacity: 0.6; margin-bottom: 10px; }
-        .stat-card p { font-size: 2rem; font-weight: 800; color: var(--accent); }
+        .stat-card h3 {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
 
         .monitor-card {
             background: rgba(255, 255, 255, 0.03);
@@ -83,9 +92,23 @@
             font-weight: bold;
         }
 
-        .status-completed { background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid rgba(46, 213, 115, 0.3); }
-        .status-ongoing { background: rgba(255, 159, 67, 0.1); color: #ff9f43; border: 1px solid rgba(255, 159, 67, 0.3); }
-        .status-stopped { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); }
+        .status-completed {
+            background: rgba(46, 213, 115, 0.1);
+            color: #2ed573;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+
+        .status-ongoing {
+            background: rgba(255, 159, 67, 0.1);
+            color: #ff9f43;
+            border: 1px solid rgba(255, 159, 67, 0.3);
+        }
+
+        .status-stopped {
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
 
         .progress-pill {
             background: rgba(255, 255, 255, 0.05);
@@ -127,15 +150,15 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Total Partisipan</h3>
+                    <h3>Total Participant</h3>
                     <p id="statTotalUsers">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3>Selesai</h3>
+                    <h3>Done</h3>
                     <p id="statCompleted">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3>Sedang Berjalan</h3>
+                    <h3>Ongoing</h3>
                     <p id="statOngoing">0</p>
                 </div>
             </div>
@@ -144,13 +167,16 @@
                 <div class="filter-bar">
                     <select id="filterClass" class="form-control">
                         <option value="all">Semua Kelas</option>
-                        <option value="1">Kelas 10 (SIJA/RPL)</option>
-                        <option value="2">Master Class</option>
+                        <option value="1">Kelas 1</option>
+                        <option value="2">Kelas 2</option>
+                        <option value="3">Kelas 3</option>
+                        <option value="4">Kelas 4</option>
                     </select>
                     <select id="filterSubject" class="form-control">
                         <option value="all">Semua Mapel</option>
                     </select>
-                    <button onclick="MonitorSim.loadData()" class="form-control" style="cursor:pointer; background:var(--accent); color:black; font-weight:bold; border:none;">
+                    <button onclick="MonitorSim.loadData()" class="form-control"
+                        style="cursor:pointer; background:var(--accent); color:black; font-weight:bold; border:none;">
                         <i class="fa-solid fa-sync"></i> Refresh
                     </button>
                 </div>
@@ -167,9 +193,10 @@
                         </tr>
                     </thead>
                     <tbody id="monitorBody">
-                        <!-- Data will be injected here -->
                     </tbody>
                 </table>
+
+                
             </div>
         </div>
     </div>
