@@ -64,6 +64,22 @@ window.currentViewDay = null;
         .tl-subject-final.dc-nav-valid { cursor: pointer; transition: opacity 0.2s; }
         .tl-subject-final.dc-nav-valid:hover { opacity: 0.7; text-decoration: underline; }
         .edit-mode-on .tl-subject-final { cursor: text !important; text-decoration: none !important; opacity: 1 !important; }
+
+        .sim-shortcut-glow {
+            background: linear-gradient(45deg, #00eaff, #0084ff) !important;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.4) !important;
+            animation: sim-pulse 2s infinite;
+        }
+        .sim-shortcut-glow i, .sim-shortcut-glow span {
+            color: #000 !important;
+            font-weight: 900 !important;
+        }
+        @keyframes sim-pulse {
+            0% { box-shadow: 0 0 15px rgba(0, 234, 255, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(0, 234, 255, 0.7); }
+            100% { box-shadow: 0 0 15px rgba(0, 234, 255, 0.4); }
+        }
     `;
     document.head.appendChild(style);
 })();
@@ -416,6 +432,12 @@ async function initDailyCard() {
         const shortcutLabel = isExamMode ? `${t('exam_topics')}` : `${t('task')}`;
         const badgeDisplay = isExamMode ? 'none' : 'block';
 
+        const simShortcutHTML = isExamMode ? `
+            <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz.html'" style="margin-right:8px;">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>SIMULASI UJIAN</span>
+            </div>` : '';
+
         headerEl.innerHTML = `
         <div>
             <span class="final-badge" id="lblBadge">${t('loading')}</span>
@@ -424,6 +446,7 @@ async function initDailyCard() {
         </div>
         <div class="header-right-group">
             ${editActionHTML}
+            ${simShortcutHTML}
             <div class="task-shortcut-box" onclick="window.location.href='${shortcutLink}'">
                 <div id="taskBadge" class="task-badge" style="display: ${badgeDisplay}">0</div>
                 <i class="${shortcutIcon}"></i>

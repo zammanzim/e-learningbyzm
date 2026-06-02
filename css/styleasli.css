@@ -4822,3 +4822,21 @@ input:checked+.slider:before {
     text-overflow: ellipsis;
 }
 
+/* SIMULASI SHORTCUT GLOW */
+.sim-shortcut-glow {
+    background: linear-gradient(45deg, #00eaff, #0084ff) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.4) !important;
+    animation: sim-pulse 2s infinite;
+    cursor: pointer;
+}
+.sim-shortcut-glow i, .sim-shortcut-glow span {
+    color: #000 !important;
+    font-weight: 900 !important;
+}
+@keyframes sim-pulse {
+    0% { box-shadow: 0 0 10px rgba(0, 234, 255, 0.4); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(0, 234, 255, 0.7); transform: scale(1.05); }
+    100% { box-shadow: 0 0 10px rgba(0, 234, 255, 0.4); transform: scale(1); }
+}
+

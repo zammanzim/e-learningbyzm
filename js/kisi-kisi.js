@@ -297,6 +297,12 @@ function _renderKisiInfoList(items) {
     const fullDate = `${dayNum} ${monthName} ${yearNum}`;
 
     // --- 3. RENDER HEADER ---
+    const simShortcutHTML = `
+        <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz.html'" style="margin-right:8px;">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>SIMULASI UJIAN</span>
+        </div>`;
+
     headerEl.innerHTML = `
         <div>
             <span class="final-badge bg-cyan" id="lblKisiBadge">${labelWaktu}</span>
@@ -304,6 +310,7 @@ function _renderKisiInfoList(items) {
             <small class="final-date" style="font-size: 0.75rem; opacity: 0.7;">${fullDate}</small>
         </div>
         <div class="header-right-group">
+            ${simShortcutHTML}
             <div class="task-shortcut-box" onclick="window.location.href='announcements'">
                 <i class="fa-solid fa-house"></i>
                 <span>HOME</span>
