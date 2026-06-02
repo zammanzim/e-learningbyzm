@@ -4,6 +4,9 @@ ADD CONSTRAINT fk_sim_progress_user
 FOREIGN KEY (user_id) REFERENCES users(id)
 ON DELETE CASCADE;
 
+-- 5. Enable Realtime for Monitoring
+ALTER PUBLICATION supabase_realtime ADD TABLE simulation_progress;
+
 -- Full table schema (if you haven't created it yet)
 /*
 CREATE TABLE IF NOT EXISTS simulation_questions (

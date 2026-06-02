@@ -56,12 +56,19 @@ function getEffectiveClassName() {
 }
 
 async function switchClass(classId, className) {
-    if (classId === getEffectiveClassId()) return;
+    const current = getEffectiveClassId();
+    if (classId === current) return;
+    
     sessionStorage.setItem('class_override', classId);
     sessionStorage.setItem('class_override_name', className);
-    localStorage.removeItem(`sidebar_cache_${getEffectiveClassId()}`);
+    
+    // Invalidate cache buat kelas lama DAN baru biar aman
+    localStorage.removeItem(`sidebar_cache_${current}`);
+    localStorage.removeItem(`sidebar_cache_${classId}`);
+    
     window.location.reload();
 }
+window.switchClass = switchClass;
 
 function toggleClassSwitcher() {
     const menu = document.getElementById('classSwitcher');
@@ -70,51 +77,64 @@ function toggleClassSwitcher() {
     menu.style.display = isOpen ? 'none' : 'block';
     if (!isOpen) {
         setTimeout(() => {
-            document.addEventListener('click', function handler(e) {
+            const handler = (e) => {
                 if (!document.getElementById('classSwitcherWrapper')?.contains(e.target)) {
                     menu.style.display = 'none';
                     document.removeEventListener('click', handler);
                 }
-            });
+            };
+            document.addEventListener('click', handler);
         }, 10);
     }
 }
+window.toggleClassSwitcher = toggleClassSwitcher;
 
-async function renderClassSwitcher() {
+async function renderClassSwitcher(retries = 0) {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user || user.role !== 'super_admin') return;
 
     const switcher = document.getElementById('classSwitcher');
     const wrapper  = document.getElementById('classSwitcherWrapper');
     const label    = document.getElementById('classSwitcherLabel');
-    if (!switcher || !wrapper) return;
+    
+    // Race condition fix: Tunggu ui-components inject HTML nya dulu
+    if (!switcher || !wrapper) {
+        if (retries < 10) {
+            setTimeout(() => renderClassSwitcher(retries + 1), 100);
+        }
+        return;
+    }
 
-    const { data: classes } = await supabase.from('classes').select('id, name').order('id');
-    if (!classes?.length) return;
+    try {
+        const { data: classes } = await supabase.from('classes').select('id, name').order('id');
+        if (!classes?.length) return;
 
-    // Cache daftar kelas untuk ui-components
-    localStorage.setItem('cached_classes', JSON.stringify(classes));
+        localStorage.setItem('cached_classes', JSON.stringify(classes));
 
-    const current = getEffectiveClassId();
-    const cur = classes.find(c => String(c.id) === current);
-    if (label) label.innerText = cur?.name || `Kelas ${current}`;
+        const current = getEffectiveClassId();
+        const cur = classes.find(c => String(c.id) === current);
+        if (label) label.innerText = cur?.name || `Kelas ${current}`;
 
-    switcher.innerHTML = classes.map(c => `
-        <div onclick="switchClass('${c.id}','${c.name}')" style="
-            padding:10px 14px; font-size:13px; cursor:pointer;
-            color:${String(c.id)===current?'var(--accent,#00eaff)':'#ddd'};
-            background:${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'};
-            display:flex; align-items:center; gap:8px; transition:background 0.15s;"
-            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'}'">
-            ${String(c.id)===current
-                ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
-                : '<span style="width:12px;"></span>'}
-            ${c.name}
-        </div>`).join('');
+        switcher.innerHTML = classes.map(c => `
+            <div onclick="switchClass('${c.id}','${c.name}')" style="
+                padding:10px 14px; font-size:13px; cursor:pointer;
+                color:${String(c.id)===current?'var(--accent,#00eaff)':'#ddd'};
+                background:${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'};
+                display:flex; align-items:center; gap:8px; transition:background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                onmouseout="this.style.background='${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'}'">
+                ${String(c.id)===current
+                    ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
+                    : '<span style="width:12px;"></span>'}
+                ${c.name}
+            </div>`).join('');
 
-    wrapper.style.display = 'flex';
+        wrapper.style.display = 'flex';
+    } catch (err) {
+        console.warn('Render class switcher failed:', err);
+    }
 }
+window.renderClassSwitcher = renderClassSwitcher;
 
 // ── CACHE ─────────────────────────────────────────────────────
 function getCacheKey(classId) { return `sidebar_cache_${classId}`; }

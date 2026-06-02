@@ -6,7 +6,8 @@
 const MonitorSim = {
     state: {
         progressData: [],
-        subjects: []
+        subjects: [],
+        subscription: null
     },
 
     async init() {
@@ -16,9 +17,44 @@ const MonitorSim = {
             return;
         }
 
+        // 1. Pasang listener duluan biar responsif
+        this.setupEventListeners();
+
+        // 2. Sinkronin sama Effective Class (kalo ada)
+        if (typeof getEffectiveClassId === 'function') {
+            const effClass = getEffectiveClassId();
+            if (effClass) {
+                document.getElementById('filterClass').value = effClass;
+            }
+        }
+
         await this.loadSubjects();
         await this.loadData();
-        this.setupEventListeners();
+        this.setupRealtime();
+
+        // Auto refresh UI status tiap menit (buat deteksi STOPPED)
+        setInterval(() => {
+            this.renderTable();
+        }, 60000);
+    },
+
+    setupRealtime() {
+        if (this.state.subscription) {
+            supabase.removeChannel(this.state.subscription);
+        }
+
+        const channel = supabase
+            .channel('realtime-simulasi')
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'simulation_progress' 
+            }, () => {
+                this.loadData();
+            })
+            .subscribe();
+            
+        this.state.subscription = channel;
     },
 
     async loadSubjects() {
@@ -43,11 +79,17 @@ const MonitorSim = {
     },
 
     async loadData() {
+        const tbody = document.getElementById('monitorBody');
+        // Tampilkan loading kalo data lagi kosong
+        if (tbody && this.state.progressData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+        }
+
         try {
             const classFilter = document.getElementById('filterClass').value;
             const subjectFilter = document.getElementById('filterSubject').value;
 
-            // Fetch progress joined with user details (pake full_name karena itu kolom aslinya)
+            // Fetch progress joined with user details
             let query = supabase
                 .from('simulation_progress')
                 .select(`
@@ -79,8 +121,16 @@ const MonitorSim = {
 
     updateStats() {
         const total = this.state.progressData.length;
+        const now = new Date();
+        
         const completed = this.state.progressData.filter(p => p.is_completed).length;
-        const ongoing = total - completed;
+        
+        // Ongoing = Yang belum beres DAN aktif (update < 5 menit)
+        const ongoing = this.state.progressData.filter(p => {
+            if (p.is_completed) return false;
+            const diff = (now - new Date(p.updated_at)) / 1000 / 60;
+            return diff < 5;
+        }).length;
 
         document.getElementById('statTotalUsers').innerText = total;
         document.getElementById('statCompleted').innerText = completed;
@@ -89,7 +139,10 @@ const MonitorSim = {
 
     renderTable() {
         const tbody = document.getElementById('monitorBody');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
+        const now = new Date();
 
         if (this.state.progressData.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;">Belum ada aktivitas simulasi.</td></tr>';
@@ -100,17 +153,36 @@ const MonitorSim = {
             const subject = this.state.subjects.find(s => s.subject_id === p.subject_id);
             const subjectName = subject ? subject.subject_name : p.subject_id;
             
+            // Hitung Status
+            let statusText = 'ONGOING';
+            let statusClass = 'status-ongoing';
+
+            if (p.is_completed) {
+                statusText = 'SELESAI';
+                statusClass = 'status-completed';
+            } else {
+                const diffMinutes = (now - new Date(p.updated_at)) / 1000 / 60;
+                if (diffMinutes >= 5) {
+                    statusText = 'STOPPED';
+                    statusClass = 'status-stopped';
+                }
+            }
+
+            const displayProgress = p.is_completed 
+                ? `${p.total_questions} / ${p.total_questions}`
+                : `${Math.min(p.last_index + 1, p.total_questions)} / ${p.total_questions}`;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="font-weight:700;">${p.users?.full_name || 'Unknown'}</td>
-                <td><span class="badge-subject" style="background:rgba(255,255,255,0.05); color:white; border-color:rgba(255,255,255,0.1);">Kelas ${p.users?.class_id == 2 ? 'Master' : '10'}</span></td>
+                <td><span class="badge-subject" style="background:rgba(255,255,255,0.05); color:white; border-color:rgba(255,255,255,0.1);">Kelas ${p.users?.class_id || '?'}</span></td>
                 <td>${subjectName}</td>
                 <td>
-                    <span class="progress-pill">${p.last_index + 1} / ${p.total_questions}</span>
+                    <span class="progress-pill">${displayProgress}</span>
                 </td>
                 <td>
-                    <span class="status-badge ${p.is_completed ? 'status-completed' : 'status-ongoing'}">
-                        ${p.is_completed ? 'SELESAI' : 'ONGOING'}
+                    <span class="status-badge ${statusClass}">
+                        ${statusText}
                     </span>
                 </td>
                 <td style="font-size:0.8rem; opacity:0.6;">${this.formatRelativeTime(p.updated_at)}</td>
@@ -131,8 +203,11 @@ const MonitorSim = {
     },
 
     setupEventListeners() {
-        document.getElementById('filterClass').onchange = () => this.loadData();
-        document.getElementById('filterSubject').onchange = () => this.loadData();
+        const filterClass = document.getElementById('filterClass');
+        const filterSubject = document.getElementById('filterSubject');
+        
+        if (filterClass) filterClass.onchange = () => this.loadData();
+        if (filterSubject) filterSubject.onchange = () => this.loadData();
     }
 };
 
