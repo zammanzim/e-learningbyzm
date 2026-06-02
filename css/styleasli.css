@@ -957,16 +957,26 @@ textarea.glass-input {
     align-items: center;
     justify-content: center;
     gap: 0.15rem;
-    background: rgba(0, 234, 255, 0.08);
-    color: #00eaff;
+    background: #eef7fb;
+    color: #0f7e96;
     font-size: 0.55rem;
     font-weight: 700;
     text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
 }
 
 .preview-file i,
 .pending-file-preview i {
     font-size: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.preview-file span,
+.pending-file-preview span {
+    position: relative;
+    z-index: 2;
 }
 
 .preview-remove {
@@ -1064,6 +1074,12 @@ li.nav-locked a::after {
     overflow: hidden;
     margin-bottom: 0.7969rem;
     background: #000;
+}
+
+.photo-grid.has-file-items {
+    background: transparent;
+    justify-items: center;
+    align-items: center;
 }
 
 .photo-item {
@@ -1276,6 +1292,12 @@ li.nav-locked a::after {
     justify-content: center;
 }
 
+.slider-wrapper.file-mode {
+    background:
+        radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.65), transparent 28%),
+        linear-gradient(135deg, rgba(238, 247, 251, 0.95), rgba(211, 235, 242, 0.8));
+}
+
 .slider-wrapper img {
     max-width: 97%;
     max-height: 97%;
@@ -1376,6 +1398,18 @@ li.nav-locked a::after {
     cursor: pointer;
 }
 
+.photo-wrapper.file-wrapper {
+    width: min(12rem, 82%);
+    height: auto;
+    min-height: 6.5rem;
+    max-height: 8rem;
+    aspect-ratio: 4 / 3;
+    align-self: center;
+    justify-self: center;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.45rem 1.2rem rgba(0, 0, 0, 0.18);
+}
+
 .photo-wrapper img {
     width: 100%;
     height: 100%;
@@ -1399,14 +1433,18 @@ li.nav-locked a::after {
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    background: rgba(0, 234, 255, 0.08);
+    background: #eef7fb;
     color: rgba(255, 255, 255, 0.9);
     text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .file-tile-preview i {
-    color: #00eaff;
+    color: #0f7e96;
     font-size: 1.8rem;
+    position: relative;
+    z-index: 2;
 }
 
 .file-tile-preview span {
@@ -1415,28 +1453,35 @@ li.nav-locked a::after {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #15323a;
+    position: relative;
+    z-index: 2;
 }
 
 .detail-file-preview {
-    width: min(18rem, 80%);
-    min-height: 12rem;
-    padding: 1.5rem;
+    width: min(15rem, 72%);
+    min-height: 10rem;
+    padding: 1.25rem;
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
     border-radius: 0.85rem;
-    border: 1px solid rgba(0, 234, 255, 0.25);
-    background: rgba(0, 234, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: #eef7fb;
     color: white;
     text-decoration: none;
     text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .detail-file-preview i {
-    color: #00eaff;
+    color: #0f7e96;
     font-size: 3rem;
+    position: relative;
+    z-index: 2;
 }
 
 .detail-file-preview span {
@@ -1444,11 +1489,82 @@ li.nav-locked a::after {
     overflow-wrap: anywhere;
     font-size: 0.9rem;
     font-weight: 700;
+    color: #15323a;
+    position: relative;
+    z-index: 2;
 }
 
 .detail-file-preview small {
-    color: #00eaff;
+    color: #0f7e96;
     font-size: 0.75rem;
+    position: relative;
+    z-index: 2;
+}
+
+.preview-file::before,
+.pending-file-preview::before,
+.file-tile-preview::before,
+.detail-file-preview::before {
+    content: "";
+    position: absolute;
+    inset: 8%;
+    border-radius: 0.45rem;
+    background:
+        linear-gradient(90deg, var(--file-line, rgba(15, 126, 150, 0.55)) 0 28%, transparent 28% 100%) 0 22% / 100% 10% no-repeat,
+        linear-gradient(90deg, var(--file-line, rgba(15, 126, 150, 0.55)) 0 72%, transparent 72% 100%) 0 42% / 100% 8% no-repeat,
+        linear-gradient(90deg, var(--file-line, rgba(15, 126, 150, 0.55)) 0 56%, transparent 56% 100%) 0 58% / 100% 8% no-repeat,
+        linear-gradient(90deg, var(--file-line, rgba(15, 126, 150, 0.55)) 0 80%, transparent 80% 100%) 0 74% / 100% 8% no-repeat,
+        rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0.45rem 1.4rem rgba(0, 0, 0, 0.15);
+    filter: blur(2px);
+    opacity: 0.72;
+    transform: rotate(-5deg) scale(1.08);
+}
+
+.preview-file::after,
+.pending-file-preview::after,
+.file-tile-preview::after,
+.detail-file-preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.72));
+    z-index: 1;
+}
+
+.file-type-pdf {
+    --file-line: rgba(255, 71, 87, 0.62);
+    background: #fff1f2;
+}
+
+.file-type-pdf i,
+.file-type-pdf small {
+    color: #ff4757;
+}
+
+.file-type-word {
+    --file-line: rgba(0, 122, 255, 0.62);
+    background: #eef5ff;
+}
+
+.file-type-word i,
+.file-type-word small {
+    color: #007aff;
+}
+
+.file-type-excel {
+    --file-line: rgba(46, 213, 115, 0.68);
+    background: #effcf4;
+}
+
+.file-type-excel i,
+.file-type-excel small {
+    color: #16a35a;
+}
+
+.file-type-document {
+    --file-line: rgba(15, 126, 150, 0.58);
 }
 
 .more-overlay {

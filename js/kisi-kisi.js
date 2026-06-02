@@ -139,6 +139,12 @@ window.renderKisiList = function () {
         }
     }).join('');
 
+    const simulasiBtn = kisiFilter !== 'all' 
+        ? `<button onclick="window.location.href='quiz.html?id=${kisiFilter}'" style="background:linear-gradient(45deg, #00eaff, #0084ff); border:none; color:black; padding:8px 18px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; box-shadow:0 0 15px rgba(0,234,255,0.3);">
+            <i class="fa-solid fa-graduation-cap"></i> Simulasi
+           </button>`
+        : '';
+
     const filterBar = document.createElement('div');
     filterBar.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:22px; flex-wrap:wrap;';
     filterBar.innerHTML = `
@@ -154,6 +160,7 @@ window.renderKisiList = function () {
                 ${optionsHTML}
             </select>
         </div>
+        ${simulasiBtn}
         <button onclick="window.refreshKisiData()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; padding:8px 15px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
             <i class="fa-solid fa-sync"></i> ${t('refresh')}
         </button>
@@ -222,18 +229,8 @@ window.renderKisiList = function () {
             container.appendChild(emptyEl);
         } else {
             dayItems.forEach(function (item) {
-                // CLONE ITEM untuk display translasinya
-                const displayItem = { ...item };
-                const rawSubject = _extractSubject(item.big_title);
-                const normSubject = _kisiNorm(rawSubject);
-                
-                // TRANSLASI MAPEL DI CARD
-                const translatedSubject = t(normSubject) !== normSubject ? t(normSubject) : rawSubject;
-                
-                // Gunakan format template kisi_format
-                displayItem.big_title = t('kisi_format', { subject: translatedSubject });
-
-                const card = SubjectApp.createCardElement(displayItem);
+                // JANGAN translasi judul di sini biar pas di-save gak ngerusak data asli
+                const card = SubjectApp.createCardElement(item);
                 card.querySelectorAll('.task-btn').forEach(function (btn) { btn.remove(); });
                 container.appendChild(card);
             });

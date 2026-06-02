@@ -1246,10 +1246,18 @@ const SubjectApp = {
         return 'fa-solid fa-file-lines';
     },
 
+    _getFileTypeClass(name = '') {
+        const ext = this._getFileExt(name);
+        if (ext === 'pdf') return 'file-type-pdf';
+        if (['doc', 'docx'].includes(ext)) return 'file-type-word';
+        if (['xls', 'xlsx', 'csv'].includes(ext)) return 'file-type-excel';
+        return 'file-type-document';
+    },
+
     _buildFilePreviewHTML(url) {
         const name = this._getFileNameFromUrl(url);
         return `
-            <div class="file-tile-preview">
+            <div class="file-tile-preview ${this._getFileTypeClass(name)}">
                 <i class="${this._getFileIcon(name)}"></i>
                 <span>${this._escapeHTML(name)}</span>
             </div>`;
@@ -1263,7 +1271,7 @@ const SubjectApp = {
             : 'display:none; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;';
 
         const makeSlot = (url, extraHTML = '') => `
-            <div class="photo-item photo-wrapper" style="position:relative;">
+            <div class="photo-item photo-wrapper ${this._isImageUrl(url) ? '' : 'file-wrapper'}" style="position:relative;">
                 ${this._isImageUrl(url) ? `<img src="${this._escapeAttr(url)}" loading="lazy">` : this._buildFilePreviewHTML(url)}
                 ${extraHTML}
                 <button class="delete-photo-btn" data-url="${this._escapeAttr(url)}" style="${deleteBtnStyle}">
@@ -1286,7 +1294,7 @@ const SubjectApp = {
             imgsHTML += makeSlot(photos[3], `<div class="more-overlay" style="pointer-events:none;">+${photos.length - 4}</div>`);
         }
 
-        return `<div class="photo-grid ${gridClass}">${imgsHTML}</div>`;
+        return `<div class="photo-grid ${gridClass}${photos.some(url => !this._isImageUrl(url)) ? ' has-file-items' : ''}">${imgsHTML}</div>`;
     },
 
 
@@ -1344,7 +1352,7 @@ const SubjectApp = {
         container.style.cssText += 'flex-wrap:wrap; gap:6px; margin-bottom:12px;';
         container.innerHTML = pending.map((p, i) => `
             <div style="position:relative; width:72px; height:72px; border-radius:8px; overflow:hidden; border:2px solid rgba(0,234,255,0.5);">
-                ${this._isImageFile(p.file) ? `<img src="${p.objUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<div class="pending-file-preview"><i class="${this._getFileIcon(p.file.name)}"></i><span>${this._escapeHTML(this._getFileExt(p.file.name) || 'file')}</span></div>`}
+                ${this._isImageFile(p.file) ? `<img src="${p.objUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<div class="pending-file-preview ${this._getFileTypeClass(p.file.name)}"><i class="${this._getFileIcon(p.file.name)}"></i><span>${this._escapeHTML(this._getFileExt(p.file.name) || 'file')}</span></div>`}
                 <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;">
                     <i class="fa-solid fa-clock" style="color:#00eaff; font-size:10px;"></i>
                     <span style="font-size:8px; color:#00eaff; font-weight:700;">PENDING</span>
@@ -1860,7 +1868,7 @@ const SubjectApp = {
                 div.innerHTML = `
                     ${this._isImageFile(uploadFile)
                         ? `<img src="${URL.createObjectURL(uploadFile)}">`
-                        : `<div class="preview-file"><i class="${this._getFileIcon(uploadFile.name)}"></i><span>${this._escapeHTML(this._getFileExt(uploadFile.name) || 'file')}</span></div>`}
+                        : `<div class="preview-file ${this._getFileTypeClass(uploadFile.name)}"><i class="${this._getFileIcon(uploadFile.name)}"></i><span>${this._escapeHTML(this._getFileExt(uploadFile.name) || 'file')}</span></div>`}
                     <div class="preview-remove">
                         <i class="fa-solid fa-trash-can"></i>
                     </div>
@@ -1998,6 +2006,7 @@ function updateSliderUI() {
 
     const currentUrl = currentViewerPhotos[currentViewerIndex];
     const isImage = SubjectApp._isImageUrl(currentUrl);
+    wrapper.classList.toggle('file-mode', !isImage);
 
     filePreview.style.display = isImage ? 'none' : 'flex';
     imgEl.style.display = isImage ? 'block' : 'none';
@@ -2007,6 +2016,7 @@ function updateSliderUI() {
         wrapper.classList.remove('loading');
         filePreview.href = currentUrl;
         filePreview.download = fileName;
+        filePreview.className = `detail-file-preview ${SubjectApp._getFileTypeClass(fileName)}`;
         filePreview.innerHTML = `
             <i class="${SubjectApp._getFileIcon(fileName)}"></i>
             <span>${SubjectApp._escapeHTML(fileName)}</span>

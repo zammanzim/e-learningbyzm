@@ -266,12 +266,12 @@ If unsure:
 
 # Workflow: Updates & Versioning
 
-## SQL Updates Protocol
-- **ONLY** generate SQL updates when explicitly instructed by the user (e.g., "bikin sql", "update sql"). Do not offer or create them automatically.
-- Generate a SQL `INSERT` command for the `app_updates` table.
-- **NEW PROTOCOL:** Write the SQL command into `sql_updates.sql` at the root directory. Overwrite the file with the latest update.
+## SQL & Code Generation Protocol
+- **DO NOT** paste SQL commands or large code blocks directly in the chat if they are meant to be executed/saved.
+- **ALWAYS** save generated SQL commands into `code.sql` at the root directory. Overwrite the file with the latest generation.
+- For `app_updates` specifically (SQL Updates Protocol): Write the `INSERT` command into `code.sql` as well.
 - **SIMPLE UPDATES:** Use a single, direct string for the update description (e.g., "pelajaran di daily card bisa di klik") instead of a complex JSON structure.
-- Table schema: `app_updates (title, version, items, created_at)`.
+- Table schema for updates: `app_updates (title, version, items, created_at)`.
 - `title` format: `Day, Date Month Year, Time` (e.g., "Rabu, 13 May 2026, 12.39").
 - `items` format: JSONB array containing the simple string.
 
