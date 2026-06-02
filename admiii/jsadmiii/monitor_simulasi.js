@@ -13,7 +13,7 @@ const MonitorSim = {
     async init() {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || (user.role !== 'class_admin' && user.role !== 'super_admin')) {
-            window.location.href = '../login.html';
+            window.location.href = '../login';
             return;
         }
 

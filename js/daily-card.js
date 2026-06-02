@@ -433,7 +433,7 @@ async function initDailyCard() {
         const badgeDisplay = isExamMode ? 'none' : 'block';
 
         const simShortcutHTML = isExamMode ? `
-            <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz.html'" style="margin-right:8px;">
+            <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz'" style="margin-right:8px;">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>SIMULASI UJIAN</span>
             </div>` : '';

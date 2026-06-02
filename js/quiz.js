@@ -40,7 +40,7 @@ const QuizApp = {
         this.state.user = JSON.parse(localStorage.getItem('user'));
 
         if (!this.state.user) {
-            window.location.href = '../login.html';
+            window.location.href = '../login';
             return;
         }
 
@@ -217,7 +217,7 @@ const QuizApp = {
         }
 
         return `
-            <div class="quiz-menu-card" onclick="window.location.href='quiz.html?id=${s.id}'">
+            <div class="quiz-menu-card" onclick="window.location.href='quiz?id=${s.id}'">
                 <span class="quiz-card-badge ${badgeClass}">${badgeText}</span>
                 <i class="fa-solid ${s.icon}"></i>
                 <h4>${s.name}</h4>
@@ -241,7 +241,7 @@ const QuizApp = {
     },
 
     handleBack() {
-        window.location.href = 'quiz.html';
+        window.location.href = 'quiz';
     },
 
     async loadQuestions() {
@@ -301,7 +301,7 @@ const QuizApp = {
                     <i class="fa-solid fa-face-surprise" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
                     <h3>Belum ada soal simulasi.</h3>
                     <p style="opacity:0.7;">Admin belum masukin soal buat ${this.state.subjectId ? 'mapel ini' : 'kelas lo'}. Tungguin aja ya! wkwk</p>
-                    <button onclick="window.location.href='kisi-kisi.html'" class="btn-back" style="margin:20px auto;">Balik ke Kisi-Kisi</button>
+                    <button onclick="window.location.href='kisi-kisi'" class="btn-back" style="margin:20px auto;">Balik ke Kisi-Kisi</button>
                 </div>
             `;
         }

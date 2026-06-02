@@ -1,6 +1,6 @@
 // ============================================================
 // FEED APP — js/feed.js
-// Nampilin user_posts dari halaman user.html
+// Nampilin user_posts dari halaman user
 // Schema: user_posts { id, user_id, image_url, caption, created_at }
 // Users:  { id, full_name, short_name, username, avatar_url, class_id }
 // Like:   post_likes { id, post_id, user_id }

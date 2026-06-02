@@ -140,7 +140,7 @@ window.renderKisiList = function () {
     }).join('');
 
     const simulasiBtn = kisiFilter !== 'all' 
-        ? `<button onclick="window.location.href='quiz.html?id=${kisiFilter}'" style="background:linear-gradient(45deg, #00eaff, #0084ff); border:none; color:black; padding:8px 18px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; box-shadow:0 0 15px rgba(0,234,255,0.3);">
+        ? `<button onclick="window.location.href='quiz?id=${kisiFilter}'" style="background:linear-gradient(45deg, #00eaff, #0084ff); border:none; color:black; padding:8px 18px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; box-shadow:0 0 15px rgba(0,234,255,0.3);">
             <i class="fa-solid fa-graduation-cap"></i> Simulasi
            </button>`
         : '';
@@ -298,7 +298,7 @@ function _renderKisiInfoList(items) {
 
     // --- 3. RENDER HEADER ---
     const simShortcutHTML = `
-        <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz.html'" style="margin-right:8px;">
+        <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz'" style="margin-right:8px;">
             <i class="fa-solid fa-graduation-cap"></i>
             <span>SIMULASI UJIAN</span>
         </div>`;

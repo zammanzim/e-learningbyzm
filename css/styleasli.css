@@ -3856,7 +3856,7 @@ input:checked+.slider:before {
     color: #000000;
 }
 
-/* --- MAPEL FILTER CHIPS (tugas.html) --- */
+/* --- MAPEL FILTER CHIPS (tugas) --- */
 .mapel-chip-tugas {
     display: inline-flex;
     align-items: center;
