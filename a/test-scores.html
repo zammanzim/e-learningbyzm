@@ -24,120 +24,303 @@
     <link rel="icon" id="pageIcon" href="../icons/app-icon.png" type="image/png">
 
     <style>
-        /* -- Profile Card -- */
+        :root {
+            --accent: #00eaff;
+            --glass: rgba(15, 20, 30, 0.85);
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        /* -- Glass Card -- */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* -- Personal Hero -- */
+        .hero-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
         #pp {
-            width: 85px;
-            height: 85px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--accent, #00eaff);
-            box-shadow: 0 0 10px var(--accent, #00eaff);
-            float: left;
-            margin-right: 20px;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+            background: #111;
         }
 
-        .userInfo {
-            height: 90px;
-            display: flex;
+        .hero-info h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #fff, #00eaff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-info p {
+            font-size: 16px;
+            opacity: 0.7;
+            margin: 0;
+        }
+
+        .stat-badge {
+            display: inline-flex;
             flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 100px;
         }
 
-        #rataNum {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 6px;
+        .stat-badge .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+
+        .stat-badge .value {
             font-size: 24px;
-            font-weight: bold;
-            color: white;
-            background: rgba(255, 255, 255, 0.2);
-            margin-top: 10px;
+            font-weight: 800;
         }
 
-        /* -- Tabel -- */
-        .personal-table {
+        /* -- Table Styling -- */
+        .modern-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            border-collapse: separate;
+            border-spacing: 0 8px;
         }
 
-        .personal-table th,
-        .personal-table td {
-            padding: 8px;
-            border: none;
-            text-align: center;
+        .modern-table th {
+            text-align: left;
+            padding: 10px 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            opacity: 0.5;
+            font-weight: 600;
         }
 
-        .personal-table th {
+        .modern-table tr:not(thead tr) {
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .modern-table tr:not(thead tr):hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: scale(1.01);
+        }
+
+        .modern-table td {
+            padding: 12px 15px;
+        }
+
+        .modern-table td:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .modern-table td:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .score-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
             background: rgba(0, 234, 255, 0.1);
-            color: var(--accent, #00eaff);
+            border: 1px solid rgba(0, 234, 255, 0.2);
         }
 
-        /* -- Podium -- */
-        .podium-container {
+        /* -- Podium Redesign -- */
+        .podium-section {
             display: flex;
             justify-content: center;
             align-items: flex-end;
             gap: 15px;
-            margin-top: 50px;
-            flex-wrap: wrap;
+            padding: 40px 0 20px;
+            margin-top: 20px;
         }
 
-        .podium {
-            width: 120px;
-            border: 2px solid #b6ffda;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+        .podium-box {
+            flex: 1;
             text-align: center;
             position: relative;
-            padding-top: 40px;
-            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 45px 10px 15px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .podium.p1 {
+        .podium-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .p-rank {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            padding: 3px;
+            background: #111;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .p-rank img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+
+        .p1 {
             height: 200px;
-            background: rgba(255, 215, 0, 0.2);
             border-color: gold;
+            background: rgba(255, 215, 0, 0.05);
         }
 
-        .podium.p2 {
-            height: 170px;
-            background: rgba(255, 215, 210, 0.2);
+        .p1 .p-rank {
+            border: 2px solid gold;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
         }
 
-        .podium.p3 {
-            height: 150px;
+        .p1 .p-rank::after {
+            content: '👑';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
         }
 
-        .podium.pd {
+        .p2 {
+            height: 160px;
+        }
+
+        .p3 {
             height: 140px;
         }
 
-        .pp-top {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 50%;
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 2px solid white;
+        .p-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* -- Mapel Selector -- */
+        .p-score {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .p-num {
+            font-size: 24px;
+            font-weight: 900;
+            opacity: 0.1;
+            position: absolute;
+            bottom: 5px;
+            right: 45%;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+            }
+
+            50% {
+                transform: translate(-50%, -10px);
+            }
+        }
+
+        /* -- Rest of Leaderboard -- */
+        .leaderboard-list {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .leader-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .leader-item img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* -- Select Wrapper -- */
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
         .mapel-select {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            background: rgba(0, 0, 0, 0.5);
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
             color: white;
-            border: 1px solid var(--accent, #00eaff);
-            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            appearance: none;
+            cursor: pointer;
+            font-size: 15px;
         }
 
-        #peringkat {
-            font-size: 22px;
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
         }
     </style>
 </head>
@@ -150,71 +333,97 @@
     <!-- ══ MAIN CONTENT ══ -->
     <div class="main-content">
 
-        <!-- LEFT: Nilai Personal + Podium -->
+        <!-- Header -->
         <div class="left-section">
-            <div class="glow">
-                <h1 id="headerTitle"><i class="fa-solid fa-clipboard-check"></i> Nilai Ujian</h1>
-            </div>
+            <h1 id="headerTitle" class="glow">
+                <i class="fa-solid fa-clipboard-check"></i> Nilai Ujian
+            </h1>
+            <p id="leaderboardDesc" style="opacity: 0.6; margin-top: 5px; margin-bottom: 20px;">Ranking Berdasarkan
+                Rata-Rata Nilai</p>
 
-            <!-- Card Nilai Personal -->
-            <div class="course-card">
-                <img id="pp" src="">
-                <div class="userInfo">
-                    <p id="uname" style="margin:0; font-weight:bold;">@username</p>
-                    <h3 id="name" style="margin:0; opacity:0.8;">Loading...</h3>
+            <!-- Personal Hero Card -->
+            <div class="glass-card">
+                <div class="hero-section">
+                    <img id="pp" src="">
+                    <div class="hero-info">
+                        <p id="uname" style="color:var(--accent); font-weight:600; font-size:14px;">@username</p>
+                        <h1 id="name">Loading...</h1>
+                        <p id="ucapanText"></p>
+                    </div>
                 </div>
 
-                <h3>Daftar Nilai Kamu:</h3>
-                <table class="personal-table">
+                <div style="display: flex; gap: 15px; margin-top: 10px; justify-content: center ;">
+                    <div class="stat-badge">
+                        <span class="label">Rata-Rata</span>
+                        <span class="value" id="rataNum">-</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="label">Peringkat</span>
+                        <span class="value" id="peringkatNum">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Scores Table -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-list-ol"></i> Rincian Nilai Pribadi</h3>
+                <table class="modern-table">
                     <thead>
                         <tr>
-                            <th>No</th>
                             <th>Mapel</th>
-                            <th>Nilai</th>
-                            <th>KKM?</th>
+                            <th style="text-align: center;">Nilai</th>
+                            <th style="text-align: center;">KKM</th>
                         </tr>
                     </thead>
                     <tbody id="personalTableBody"></tbody>
                 </table>
+            </div>
 
-                <div style="text-align:center; margin-top:20px;">
-                    <h3 style="margin-bottom:5px;">Rata-Rata Kamu:</h3>
-                    <h2 id="rataNum">-</h2>
-                    <p id="ucapanText" style="margin-top:10px; font-style:italic;"></p>
-                    <p id="peringkat" style="margin-top:10px; font-weight:bold; color:var(--accent, #00eaff);"></p>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-section">
+
+            <!-- Leaderboard / Podium -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 10px; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15
+                    Leaderboard</h3>
+                    <p style="font-size: 14px; opacity: 0.8;">Ini ranking berdasarkan <strong>NILAI</strong>, bukan keseluruhan. Keseluruhan mah beda lagi, biar guru yang menilai</p>
+                <div class="podium-section" id="podiumTop3"></div>
+                <div class="leaderboard-list" id="podiumRest"></div>
+            </div>
+
+            <!-- Class Scores -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> Nilai Kelas</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="select-wrapper">
+                        <select id="classSelector" class="mapel-select" onchange="loadData()">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+                    <div class="select-wrapper">
+                        <select id="mapelSelector" class="mapel-select" onchange="renderClassTable()">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
                 </div>
+
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th>Nama Siswa</th>
+                            <th style="text-align: right;">Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classTableBody"></tbody>
+                </table>
             </div>
 
-            <!-- Card Leaderboard -->
-            <div class="course-card">
-                <h1 style="color:var(--accent, #00eaff);" id="leaderboardTitle">Top 15 Leaderboard</h1>
-                <p style="opacity:0.8; margin-bottom:20px;" id="leaderboardDesc">Ranking Berdasarkan Rata-Rata Nilai</p>
-                <div class="podium-container" id="podiumTop3"></div>
-                <hr style="margin:30px 0; border-color:rgba(0,191,255,0.4);">
-                <div class="podium-container" id="podiumRest"></div>
-            </div>
         </div>
 
-        <!-- RIGHT: Daftar Nilai Kelas -->
-        <div class="right-section course-card">
-            <h2 style="color:var(--accent, #00eaff);">Daftar Nilai Kelas</h2>
-            <p style="opacity:0.7; margin-bottom:15px;">Pilih Mapel untuk melihat nilai semua siswa.</p>
-
-            <select id="mapelSelector" class="mapel-select" onchange="renderClassTable()">
-                <!-- Dynamic Options -->
-            </select>
-
-            <table class="personal-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nama</th>
-                        <th>Nilai</th>
-                    </tr>
-                </thead>
-                <tbody id="classTableBody"></tbody>
-            </table>
-        </div>
+    </div>
 
     </div>
 
@@ -230,6 +439,11 @@
             'psasi': {
                 title: 'Nilai PSASI',
                 table: 'nilai_psasi',
+                icon: 'fa-file-invoice'
+            },
+            'psat': {
+                title: 'Nilai PSAT',
+                table: 'nilai_psat',
                 icon: 'fa-file-invoice'
             }
         };
@@ -259,11 +473,12 @@
         let currentTestId = 'psts'; // Default
 
         const localUser = JSON.parse(localStorage.getItem("user"));
-        const myIdentifier = localUser ? (localUser.nickname || localUser.username) : null;
+        // Prioritas full_name, fallback ke nickname
+        const myIdentifier = localUser ? (localUser.full_name || localUser.nickname) : null;
+        const myNickname   = localUser ? localUser.nickname : null;
 
         // -- Init --
         document.addEventListener("DOMContentLoaded", async () => {
-            // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const testId = urlParams.get('id');
             if (testId && TEST_CONFIG[testId]) {
@@ -275,7 +490,32 @@
             document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
             document.getElementById('leaderboardDesc').innerText = `Ranking Berdasarkan Rata-Rata ${config.title}`;
 
-            // Populate Mapel Selector
+            // Cache-first for Classes
+            const classSel = document.getElementById('classSelector');
+            const cachedClasses = localStorage.getItem('scores_classes_list');
+            if (cachedClasses) {
+                renderClasses(JSON.parse(cachedClasses));
+            }
+
+            // Fetch Fresh Classes
+            supabase.from('classes').select('id, name').order('id').then(({ data: classesData }) => {
+                if (classesData) {
+                    const classesStr = JSON.stringify(classesData);
+                    if (classesStr !== cachedClasses) {
+                        localStorage.setItem('scores_classes_list', classesStr);
+                        renderClasses(classesData);
+                    }
+                }
+            });
+
+            function renderClasses(data) {
+                let classHTML = '';
+                data.forEach(c => {
+                    classHTML += `<option value="${c.id}" ${c.id == getEffectiveClassId() ? 'selected' : ''}>${c.name}</option>`;
+                });
+                classSel.innerHTML = classHTML;
+            }
+
             const mapelSel = document.getElementById('mapelSelector');
             let mapelHTML = '';
             for (let key in MAPEL_CONFIG) {
@@ -298,42 +538,59 @@
         function getDynamicColor(nilai) {
             const n = parseFloat(nilai);
             if (isNaN(n)) return "#888";
-            if (n >= 90) return "#00eaff";
+            if (n >= 90) return "#00eafe";
             if (n >= 80) return "#00cec9";
-            if (n >= 70) return "#1abc9c";
-            if (n >= 60) return "#2ecc71";
-            if (n >= 50) return "#badc58";
-            if (n >= 40) return "#f1c40f";
-            if (n >= 30) return "#e67e22";
-            if (n >= 20) return "#e74c3c";
-            return "#c0392b";
+            if (n >= 75) return "#1abc9c";
+            if (n >= 70) return "#e67e22";
+            return "#ff4757";
+        }
+
+        function renderAll() {
+            renderPersonal();
+            renderPodium();
+            renderClassTable();
         }
 
         async function loadData() {
             if (!localUser) return;
             const myClassId = localUser.class_id;
-            const effectiveClassId = getEffectiveClassId();
+            const classSel = document.getElementById('classSelector');
+            const effectiveClassId = classSel ? classSel.value : getEffectiveClassId();
             const tableName = TEST_CONFIG[currentTestId].table;
+            const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
 
+            // 1. Try Cache First
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    globalData = parsed.globalData || [];
+                    myGlobalData = parsed.myGlobalData || [];
+                    avatarMap = parsed.avatarMap || {};
+                    renderAll();
+                } catch(e) {}
+            }
+
+            // 2. Fetch Fresh Data
             try {
                 const [{ data: nilaiData, error }, { data: usersData }, { data: myNilaiData }] = await Promise.all([
                     supabase.from(tableName).select('*').eq('class_id', effectiveClassId),
-                    supabase.from('users').select('id, nickname').eq('class_id', effectiveClassId),
+                    supabase.from('users').select('id, full_name, nickname').eq('class_id', effectiveClassId),
                     supabase.from(tableName).select('*').eq('class_id', myClassId)
                 ]);
 
-                if (error || !nilaiData) {
-                    console.error('Data loading error:', error);
-                    return;
-                }
+                if (error || !nilaiData) return;
 
+                const newAvatarMap = {};
                 if (usersData) {
                     usersData.forEach(u => {
-                        if (u.nickname) avatarMap[u.nickname.toLowerCase()] = u.id;
+                        // Map dua-duanya biar aman
+                        if (u.full_name) newAvatarMap[u.full_name.toLowerCase()] = u.id;
+                        if (u.nickname) newAvatarMap[u.nickname.toLowerCase()] = u.id;
                     });
                 }
 
-                myGlobalData = (myNilaiData || []).map(siswa => {
+                const newMyGlobalData = (myNilaiData || []).map(siswa => {
                     let total = 0, count = 0;
                     for (let key in MAPEL_CONFIG) {
                         const val = parseFloat(siswa[key]);
@@ -341,9 +598,9 @@
                     }
                     return { ...siswa, average: count > 0 ? parseFloat((total / count).toFixed(2)) : 0 };
                 });
-                myGlobalData.sort((a, b) => b.average - a.average);
+                newMyGlobalData.sort((a, b) => b.average - a.average);
 
-                globalData = nilaiData.map(siswa => {
+                const newGlobalData = nilaiData.map(siswa => {
                     let total = 0, count = 0;
                     for (let key in MAPEL_CONFIG) {
                         const val = parseFloat(siswa[key]);
@@ -351,11 +608,19 @@
                     }
                     return { ...siswa, average: count > 0 ? parseFloat((total / count).toFixed(2)) : 0 };
                 });
-                globalData.sort((a, b) => b.average - a.average);
+                newGlobalData.sort((a, b) => b.average - a.average);
 
-                renderPersonal();
-                renderPodium();
-                renderClassTable();
+                // 3. Compare & Update
+                const newData = { globalData: newGlobalData, myGlobalData: newMyGlobalData, avatarMap: newAvatarMap };
+                const newDataStr = JSON.stringify(newData);
+                
+                if (newDataStr !== cached) {
+                    globalData = newGlobalData;
+                    myGlobalData = newMyGlobalData;
+                    avatarMap = newAvatarMap;
+                    localStorage.setItem(cacheKey, newDataStr);
+                    renderAll();
+                }
             } catch (err) {
                 console.error('Fetch error:', err);
             }
@@ -363,51 +628,49 @@
 
         function renderPersonal() {
             if (!myIdentifier) return;
+            let myIndex = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase());
+            
+            // Fallback ke nickname jika full_name gak ketemu
+            if (myIndex === -1 && myNickname) {
+                myIndex = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
+            }
 
-            const myIndex = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase());
             const myData = myGlobalData[myIndex];
 
-            if (!myData) {
-                document.getElementById('rataNum').innerText = "-";
-                return;
-            }
+            if (!myData) return;
 
             const color = getDynamicColor(myData.average);
             const rataEl = document.getElementById('rataNum');
             rataEl.innerText = myData.average.toFixed(2);
             rataEl.style.color = color;
-            rataEl.style.textShadow = `0 0 15px ${color}`;
+
+            const rankEl = document.getElementById('peringkatNum');
+            rankEl.innerText = `#${myIndex + 1}`;
+            rankEl.style.color = color;
 
             const ucapanEl = document.getElementById('ucapanText');
             ucapanEl.style.color = color;
 
-            if (myData.average >= 80) ucapanEl.innerText = "dinginn ah di puncak🥶";
-            else if (myData.average >= 75) ucapanEl.innerText = "pass KKM eyyy, hore";
-            else if (myData.average >= 70) ucapanEl.innerText = "yah tipis";
-            else if (myData.average >= 60) ucapanEl.innerText = "lumayann lahh sakie ma";
-            else if (myData.average >= 50) ucapanEl.innerText = "gaoaoa, trs semangat";
-            else ucapanEl.innerText = "gapapa dibawah 50, yang penting jujur.";
-
-            document.getElementById('peringkat').innerHTML =
-                `Peringkat <span style="color:${color}; font-size:1.3em; font-weight:bold;">#${myIndex + 1}</span>`;
+            if (myData.average >= 85) ucapanEl.innerText = "dinginn ah di puncak🥶";
+            else if (myData.average >= 75) ucapanEl.innerText = "pass KKM aman laa";
+            else if (myData.average >= 70) ucapanEl.innerText = "yah dikit lagi KKM";
+            else ucapanEl.innerText = "gapapa, semangat trus";
 
             const tbody = document.getElementById('personalTableBody');
             tbody.innerHTML = "";
-            let no = 1;
             for (let key in MAPEL_CONFIG) {
                 const val = parseFloat(myData[key]);
                 const isAda = !isNaN(val);
-                const displayVal = isAda ? val.toFixed(2) : "-";
-                const textColor = isAda ? getDynamicColor(val) : "#fff";
-
+                const colorVal = isAda ? getDynamicColor(val) : "#fff";
                 tbody.innerHTML += `
                     <tr>
-                        <td>${no++}</td>
-                        <td style="text-align:left;">${MAPEL_CONFIG[key]}</td>
-                        <td style="font-weight:bold; font-size:16px; color:${textColor}; text-shadow:0 0 8px ${textColor};">
-                            ${displayVal}
+                        <td style="font-weight:600;">${MAPEL_CONFIG[key]}</td>
+                        <td style="text-align:center;">
+                            <span class="score-pill" style="color:${colorVal}; border-color:${colorVal}33; background:${colorVal}11">
+                                ${isAda ? val.toFixed(2) : '-'}
+                            </span>
                         </td>
-                        <td>${isAda ? (val >= KKM ? '✅' : '❌') : '-'}</td>
+                        <td style="text-align:center;">${isAda ? (val >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td>
                     </tr>`;
             }
         }
@@ -419,20 +682,19 @@
             rest.innerHTML = "";
 
             const makePodium = (siswa, rank, cls) => {
-                const color = getDynamicColor(siswa.average);
                 const userId = avatarMap[siswa.nama_siswa.toLowerCase()];
                 const imgUrl = userId
                     ? supabase.storage.from('avatars').getPublicUrl(String(userId) + '.jpg').data.publicUrl
                     : '../icons/profpicture.png';
+
                 return `
-                    <div class="podium ${cls}">
-                        <img src="${imgUrl}" class="pp-top"
-                             onerror="this.src='../icons/profpicture.png'">
-                        <div style="font-weight:bold; margin-top:5px; font-size:13px;">${siswa.nama_siswa}</div>
-                        <div style="font-size:14px; margin-top:2px; color:${color}; font-weight:bold; text-shadow:0 0 5px ${color};">
-                            ${siswa.average.toFixed(2)}
+                    <div class="podium-box ${cls}">
+                        <div class="p-rank">
+                            <img src="${imgUrl}" onerror="this.src='../icons/profpicture.png'">
                         </div>
-                        <div style="font-size:20px; font-weight:900; opacity:0.3; position:absolute; bottom:5px; left:50%; transform:translateX(-50%);">${rank}</div>
+                        <div class="p-name">${siswa.nama_siswa}</div>
+                        <div class="p-score">${siswa.average.toFixed(2)}</div>
+                        <div class="p-num">${rank}</div>
                     </div>`;
             };
 
@@ -441,7 +703,22 @@
             if (globalData[2]) top3.innerHTML += makePodium(globalData[2], 3, 'p3');
 
             for (let i = 3; i < 15; i++) {
-                if (globalData[i]) rest.innerHTML += makePodium(globalData[i], i + 1, 'pd');
+                if (globalData[i]) {
+                    const userId = avatarMap[globalData[i].nama_siswa.toLowerCase()];
+                    const imgUrl = userId
+                        ? supabase.storage.from('avatars').getPublicUrl(String(userId) + '.jpg').data.publicUrl
+                        : '../icons/profpicture.png';
+
+                    rest.innerHTML += `
+                        <div class="leader-item">
+                            <span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span>
+                            <img src="${imgUrl}" onerror="this.src='../icons/profpicture.png'">
+                            <div style="flex:1; overflow:hidden;">
+                                <div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${globalData[i].nama_siswa}</div>
+                                <div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div>
+                            </div>
+                        </div>`;
+                }
             }
         }
 
@@ -459,12 +736,17 @@
 
                 const tr = document.createElement('tr');
                 if (myIdentifier && siswa.nama_siswa.toLowerCase() === myIdentifier.toLowerCase()) {
-                    tr.style.cssText = "background:rgba(0,234,255,0.15); font-weight:bold; border-left:3px solid #00eaff;";
+                    tr.style.background = "rgba(0, 234, 255, 0.15)";
+                    tr.style.boxShadow = "inset 4px 0 0 var(--accent)";
                 }
                 tr.innerHTML = `
-                    <td>${i + 1}</td>
-                    <td>${siswa.nama_siswa}</td>
-                    <td style="font-weight:bold; color:${color}; text-shadow:0 0 5px ${color};">${displayVal}</td>`;
+                    <td style="font-weight:bold; opacity:0.5;">${i + 1}</td>
+                    <td style="font-weight:600;">${siswa.nama_siswa}</td>
+                    <td style="text-align:right;">
+                        <span class="score-pill" style="color:${color}; border-color:${color}33; background:${color}11">
+                            ${displayVal}
+                        </span>
+                    </td>`;
                 tbody.appendChild(tr);
             });
         }
