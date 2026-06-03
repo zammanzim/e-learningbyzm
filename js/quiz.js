@@ -411,11 +411,9 @@ const QuizApp = {
             }
             const nextBtn = document.getElementById('nextBtn');
             if (nextBtn) nextBtn.classList.add('active');
-            if (typeof showToast === 'function') showToast('Bener banget! wkwk', 'success');
         } else {
             btn.classList.add('wrong');
             btn.style.pointerEvents = 'none';
-            if (typeof showToast === 'function') showToast('Yah salah, coba lagi!', 'error');
         }
     },
 
