@@ -591,7 +591,7 @@
                 </div>
 
                 <!-- Privacy Toggle -->
-                <div class="privacy-box">
+                <!-- <div class="privacy-box">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <i class="fa-solid fa-eye-slash" style="opacity: 0.7;"></i>
                         <div>
@@ -603,7 +603,7 @@
                         <input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
-                </div>
+                </div> -->
             </div>
 
             <!-- Personal Scores Table -->
@@ -651,7 +651,7 @@
                     </div>
                 </div>
                 <!-- Sort Selector -->
-                <div class="select-wrapper" style="margin-top: 10px;">
+                <div class="select-wrapper">
                     <select id="sortSelector" class="mapel-select" onchange="renderClassTable()">
                         <option value="nilai">Urutkan: Nilai Tertinggi</option>
                         <option value="nama">Urutkan: Nama (A-Z)</option>
@@ -826,7 +826,7 @@
             const data = myGlobalData[idx];
             if (!data) return;
 
-            document.getElementById('privacyToggle').checked = !!data.is_private;
+         // document.getElementById('privacyToggle').checked = !!data.is_private;
             const color = getDynamicColor(data.average);
             document.getElementById('rataNum').innerText = data.average.toFixed(2);
             document.getElementById('rataNum').style.color = color;
