@@ -1,4 +1,19 @@
+-- Create nilai_config table for granular score settings
+CREATE TABLE IF NOT EXISTS nilai_config (
+    test_id TEXT NOT NULL,          -- psts, psasi, psat, etc
+    class_id BIGINT NOT NULL,       -- link ke classes.id
+    hidden_subjects JSONB DEFAULT '[]', -- array key mapel yang mau di-hide
+    PRIMARY KEY (test_id, class_id),
+    CONSTRAINT fk_nilai_config_class FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+);
+
+-- Add is_private column to score tables
+ALTER TABLE nilai_psts ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
+ALTER TABLE nilai_psasi ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
+ALTER TABLE nilai_psat ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
+
 -- FIX: Add missing foreign key relationship for Joins
+/*
 ALTER TABLE simulation_progress
 ADD CONSTRAINT fk_sim_progress_user
 FOREIGN KEY (user_id) REFERENCES users(id)
@@ -6,28 +21,5 @@ ON DELETE CASCADE;
 
 -- 5. Enable Realtime for Monitoring
 ALTER PUBLICATION supabase_realtime ADD TABLE simulation_progress;
-
--- Full table schema (if you haven't created it yet)
-/*
-CREATE TABLE IF NOT EXISTS simulation_questions (
-    id SERIAL PRIMARY KEY,
-    subject_id TEXT NOT NULL,
-    class_id INT NOT NULL,
-    question TEXT NOT NULL,
-    options JSONB NOT NULL,
-    answer INT NOT NULL,
-    explanation TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS simulation_progress (
-    user_id INT NOT NULL,
-    subject_id TEXT NOT NULL,
-    last_index INT DEFAULT 0,
-    total_questions INT DEFAULT 0,
-    is_completed BOOLEAN DEFAULT FALSE,
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (user_id, subject_id),
-    CONSTRAINT fk_sim_progress_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+ALTER PUBLICATION supabase_realtime ADD TABLE daily_progress;
 */
