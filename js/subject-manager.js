@@ -74,6 +74,7 @@ const SubjectApp = {
         this.loadAnnouncements();
         this.setupShortcuts();
         this.initAdd();
+        this.setupAutoList();
     },
 
     getUserData() {
@@ -306,7 +307,8 @@ const SubjectApp = {
                     e.target.closest("button") ||
                     e.target.closest("input") ||
                     e.target.closest(".delete-photo-btn") ||
-                    e.target.closest(".reorder-handle");
+                    e.target.closest(".reorder-handle") ||
+                    e.target.closest("a");
 
                 if (!isInteractive) {
                     const id = card.dataset.id;
@@ -485,13 +487,22 @@ const SubjectApp = {
 
                 data = res.data; error = res.error;
                 if (error) throw error;
-                this.state.announcements = data || [];
+                this.state.announcements = (data || []).map(item => ({
+                    ...item,
+                    content: item.content ? processCardLinks(item.content) : item.content
+                }));
                 try { localStorage.setItem(cacheKey, JSON.stringify(this.state.announcements)); } catch (e) { /* ignore storage errors */ }
             } catch (err) {
                 console.error("Load announcements failed, using cache if available:", err);
                 const cached = localStorage.getItem(cacheKey);
                 if (cached) {
-                    try { this.state.announcements = JSON.parse(cached); } catch (e) { this.state.announcements = []; }
+                    try {
+                        const parsed = JSON.parse(cached);
+                        this.state.announcements = (Array.isArray(parsed) ? parsed : []).map(item => ({
+                            ...item,
+                            content: item.content ? processCardLinks(item.content) : item.content
+                        }));
+                    } catch (e) { this.state.announcements = []; }
                 } else {
                     throw err; // biarkan catch luar tangani UI error
                 }
@@ -553,6 +564,32 @@ const SubjectApp = {
             fragment.appendChild(this.createCardElement(item));
         });
         container.replaceChildren(fragment);
+
+        // Re-apply edit mode kalau sebelumnya aktif (misal habis delete)
+        if (this.state.editMode) {
+            document.querySelectorAll(".course-card").forEach(card => {
+                card.classList.add("editable-mode");
+                card.querySelectorAll(".editable").forEach(f => {
+                    f.contentEditable = "true";
+                    f.style.pointerEvents = "auto";
+                    f.style.cursor = "text";
+                });
+                const deleteBtn = card.querySelector(".delete-btn");
+                if (deleteBtn) deleteBtn.style.display = "inline-block";
+                const colorTools = card.querySelector(".card-color-tools");
+                if (colorTools) colorTools.style.display = "flex";
+                const formatTools = card.querySelector(".card-format-tools");
+                if (formatTools) formatTools.style.display = "flex";
+                const reorderHandle = card.querySelector(".reorder-handle");
+                if (reorderHandle) {
+                    const isStaticPage = this.state.isLessonMode || this.state.subjectId === 'kisi-kisi';
+                    reorderHandle.style.display = isStaticPage ? "none" : "flex";
+                }
+                const cameraBtn = card.querySelector(".camera-btn");
+                if (cameraBtn) cameraBtn.style.display = "flex";
+                card.querySelectorAll(".delete-photo-btn").forEach(b => b.style.display = "flex");
+            });
+        }
     },
 
     createCardElement(data, options = {}) {
@@ -612,6 +649,19 @@ const SubjectApp = {
             }
         }
 
+        const formatTools = `
+<div class="card-format-tools" style="display:none; gap:4px; align-items:center; background:rgba(0,0,0,0.3); padding:4px 6px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
+    <button onclick="cardFormatBold(event)" class="fmt-btn" style="font-weight:700;">B</button>
+    <button onclick="cardFormatItalic(event)" class="fmt-btn" style="font-style:italic;">I</button>
+    <button onclick="cardFormatUnderline(event)" class="fmt-btn" style="text-decoration:underline;">U</button>
+    <span style="width:1px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
+    <button onclick="cardFormatText(event,'5')" class="fmt-btn" style="font-size:10px;">Besar</button>
+    <button onclick="cardFormatText(event,'3')" class="fmt-btn" style="font-size:10px;">Sedang</button>
+    <button onclick="cardFormatText(event,'2')" class="fmt-btn" style="font-size:10px;">Kecil</button>
+    <span style="width:1px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
+    <button onclick="cardFormatLink(event)" class="fmt-btn" title="Tambah tautan"><i class="fa-solid fa-link" style="font-size:11px;"></i></button>
+</div>`;
+
         const colorTools = `
 <div class="card-color-tools" style="display:none; gap:5px; align-items:center; background:rgba(0,0,0,0.3); padding:5px 8px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'default')" style="width:14px; height:14px; border-radius:50%; background:#333; border:1px solid white; cursor:pointer;" title="Default"></div>
@@ -654,7 +704,7 @@ const SubjectApp = {
         <div class="pending-photo-preview" style="display:none; margin-bottom:12px;"></div>
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
         ${displayTitleHTML}
-        <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${content}</div>
+        <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${processCardLinks(content)}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
         
         <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
@@ -667,6 +717,7 @@ const SubjectApp = {
             </div>
             
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1; position:relative;">
+                ${isAdmin ? formatTools : ''}
                 ${isAdmin ? colorTools : ''}
 
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;" onclick="SubjectApp.deleteAnnouncement(this.closest('.course-card'))">
@@ -746,6 +797,7 @@ const SubjectApp = {
             const fields = card.querySelectorAll(".editable");
             const deleteBtn = card.querySelector(".delete-btn");
             const colorTools = card.querySelector(".card-color-tools");
+            const formatTools = card.querySelector(".card-format-tools");
             const reorderHandle = card.querySelector(".reorder-handle");
             const cameraBtn = card.querySelector(".camera-btn");
             const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
@@ -760,6 +812,7 @@ const SubjectApp = {
                 });
                 if (deleteBtn) deleteBtn.style.display = "inline-block";
                 if (colorTools) colorTools.style.display = "flex";
+                if (formatTools) formatTools.style.display = "flex";
                 if (reorderHandle) {
                     // Reorder handle HANYA tampil di Announcements
                     // (Lessons pake sorting created_at, Kisi-kisi dipetakan ke hari)
@@ -773,6 +826,7 @@ const SubjectApp = {
                 fields.forEach(f => { f.contentEditable = "false"; f.style.cursor = ""; });
                 if (deleteBtn) deleteBtn.style.display = "none";
                 if (colorTools) colorTools.style.display = "none";
+                if (formatTools) formatTools.style.display = "none";
                 if (reorderHandle) reorderHandle.style.display = "none";
                 if (cameraBtn) cameraBtn.style.display = "none";
                 deletePhotoBtns.forEach(b => b.style.display = "none");
@@ -780,7 +834,16 @@ const SubjectApp = {
             }
         });
 
-        // 3. SIMPAN DATA (Hanya saat keluar dari mode edit)
+        // 3. KONVERSI LINK: revert <a> ke tujuan= pas edit, balikin pas simpan
+        cards.forEach(card => {
+            const contentEl = card.querySelector('[data-field="content"]');
+            if (!contentEl) return;
+            contentEl.innerHTML = this.state.editMode
+                ? revertCardLinks(contentEl.innerHTML)
+                : processCardLinks(contentEl.innerHTML);
+        });
+
+        // 4. SIMPAN DATA (Hanya saat keluar dari mode edit)
         if (!this.state.editMode) {
             await this.saveAllChanges();
         } else {
@@ -1850,6 +1913,21 @@ const SubjectApp = {
         });
     },
 
+    setupAutoList() {
+        document.addEventListener('keydown', (e) => {
+            const el = document.activeElement;
+            if (!el) return;
+            const isInEditor = (el.isContentEditable && el.classList.contains('editable')) || el.id === 'addIsi';
+            if (!isInEditor) return;
+
+            if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+                handleBulletAuto(e);
+            } else if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+                handleNumberedAuto(e);
+            }
+        });
+    },
+
     async handleNewFiles(files) {
         const container = document.getElementById('previewContainer');
         if (!container) return;
@@ -1951,7 +2029,7 @@ function openDetail(data) {
 
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
-    document.getElementById('detailContentTxt').innerHTML = data.content || '';
+    document.getElementById('detailContentTxt').innerHTML = processCardLinks(data.content || '');
     document.getElementById('detailSmallTxt').innerText = data.small || '';
 
     let photos = [];
@@ -2130,5 +2208,212 @@ function toggleMobileInfo(e) {
 }
 
 function formatText(size) {
-    document.execCommand('fontSize', false, size);
+    const editor = document.getElementById('addIsi');
+    if (!editor) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    let node = sel.getRangeAt(0).startContainer;
+    if (node === editor) return;
+
+    while (node.parentNode && node.parentNode !== editor) {
+        node = node.parentNode;
+    }
+    if (!node.parentNode) return;
+
+    if (node.nodeType === 3) {
+        const div = document.createElement('div');
+        node.parentNode.insertBefore(div, node);
+        div.appendChild(node);
+        node = div;
+    }
+
+    node.classList.remove('format-large', 'format-medium', 'format-small');
+    const map = { '5': 'format-large', '3': 'format-medium', '2': 'format-small' };
+    if (map[size]) node.classList.add(map[size]);
+
+    editor.focus();
+}
+
+function formatBold() {
+    const editor = document.getElementById('addIsi');
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('bold', false, null), 10); }
+}
+
+function formatItalic() {
+    const editor = document.getElementById('addIsi');
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('italic', false, null), 10); }
+}
+
+function formatUnderline() {
+    const editor = document.getElementById('addIsi');
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('underline', false, null), 10); }
+}
+
+function getActiveEditor() {
+    const el = document.activeElement;
+    if (el && el.isContentEditable && el.classList.contains('editable')) return el;
+    if (el && el.id === 'addIsi') return el;
+    if (window._lastEditor && window._lastEditor.isConnected) return window._lastEditor;
+    return null;
+}
+
+document.addEventListener('focusin', () => {
+    const el = document.activeElement;
+    if (el && el.isContentEditable && (el.id === 'addIsi' || el.classList.contains('editable'))) {
+        window._lastEditor = el;
+    }
+});
+
+function cardFormatText(e, size) {
+    if (e) e.stopPropagation();
+    const editor = getActiveEditor();
+    if (!editor) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    let node = sel.getRangeAt(0).startContainer;
+    if (node === editor) return;
+
+    while (node.parentNode && node.parentNode !== editor) {
+        node = node.parentNode;
+    }
+    if (!node.parentNode || node.nodeType !== 1) return;
+
+    if (node.nodeType === 3) {
+        const div = document.createElement('div');
+        node.parentNode.insertBefore(div, node);
+        div.appendChild(node);
+        node = div;
+    }
+
+    node.classList.remove('format-large', 'format-medium', 'format-small');
+    const map = { '5': 'format-large', '3': 'format-medium', '2': 'format-small' };
+    if (map[size]) node.classList.add(map[size]);
+
+    editor.focus();
+}
+
+function cardFormatBold(e) {
+    if (e) e.stopPropagation();
+    const editor = getActiveEditor();
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('bold', false, null), 10); }
+}
+
+function cardFormatItalic(e) {
+    if (e) e.stopPropagation();
+    const editor = getActiveEditor();
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('italic', false, null), 10); }
+}
+
+function cardFormatUnderline(e) {
+    if (e) e.stopPropagation();
+    const editor = getActiveEditor();
+    if (editor) { editor.focus(); setTimeout(() => document.execCommand('underline', false, null), 10); }
+}
+
+function cardFormatLink(e) {
+    if (e) e.stopPropagation();
+    const editor = getActiveEditor();
+    if (!editor) return;
+    editor.focus();
+    document.execCommand('insertHTML', false, '<span class="tujuan-marker">tujuan=</span> , ');
+}
+
+function processCardLinks(html) {
+    if (!html) return html;
+    html = html.replace(/<span class="tujuan-marker">tujuan=<\/span>/g, 'tujuan=');
+    return html.replace(/tujuan=([^,]+?)\s*,\s*(.+?)(?=<|$)/g, (m, url, label) => {
+        const cleanUrl = url.trim();
+        const cleanLabel = label.trim();
+        if (!cleanUrl || !cleanLabel) return m;
+        return `<a href="${cleanUrl.replace(/"/g, '&quot;')}" class="inline-link">${cleanLabel}</a>`;
+    });
+}
+
+function revertCardLinks(html) {
+    if (!html) return html;
+    return html.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, (m, url, label) => {
+        return `<span class="tujuan-marker">tujuan=</span>${url}, ${label}`;
+    });
+}
+
+function handleBulletAuto(e) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== 3) return;
+
+    const textBefore = node.textContent.slice(0, range.startOffset);
+    if (textBefore.trim() !== '-') return;
+
+    e.preventDefault();
+
+    const beforeDash = textBefore.slice(0, -1);
+    const after = node.textContent.slice(range.startOffset);
+    node.textContent = beforeDash + '• ' + after;
+
+    const newOffset = beforeDash.length + 2;
+    const newRange = document.createRange();
+    newRange.setStart(node, newOffset);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+}
+
+function handleNumberedAuto(e) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    let node = sel.getRangeAt(0).startContainer;
+    const editor = getActiveEditor();
+    if (!editor || node === editor) return;
+
+    while (node.parentNode && node.parentNode !== editor) {
+        node = node.parentNode;
+    }
+    if (node.nodeType !== 1 || !node.parentNode) return;
+
+    const text = node.textContent || '';
+
+    // Bullet continuation
+    const bulletMatch = text.match(/^•\s*/);
+    if (bulletMatch) {
+        const afterBullet = text.slice(bulletMatch[0].length);
+        if (!afterBullet.trim()) return;
+        e.preventDefault();
+        const newDiv = document.createElement('div');
+        newDiv.textContent = '• ';
+        node.parentNode.insertBefore(newDiv, node.nextSibling);
+        const textNode = newDiv.firstChild;
+        const newRange = document.createRange();
+        newRange.setStart(textNode, 2);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        return;
+    }
+
+    // Numbered list continuation
+    const match = text.match(/^(\d+)\.\s+/);
+    if (!match) return;
+
+    const num = parseInt(match[1]);
+    const afterPrefix = text.slice(match[0].length);
+
+    if (!afterPrefix.trim()) return;
+
+    e.preventDefault();
+
+    const newDiv = document.createElement('div');
+    newDiv.textContent = `${num + 1}. `;
+    node.parentNode.insertBefore(newDiv, node.nextSibling);
+
+    const textNode = newDiv.firstChild;
+    const newRange = document.createRange();
+    newRange.setStart(textNode, textNode.textContent.length);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
 }

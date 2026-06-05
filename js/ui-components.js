@@ -17,9 +17,21 @@ const UIComponents = {
         const _avatarSrc = (_uData && _uData.avatar_url) ? _uData.avatar_url : _defaultPP;
         const _displayName = _uData ? (_uData.short_name || _uData.nickname || 'User') : '...';
 
-        // Logika Class Switcher tanpa blink (Cache-first)
+        // Logika Class Switcher & POV Student (Super Admin only)
         let classSwitcherHTML = '';
-        if (_uData && _uData.role === 'super_admin') {
+        let povToggleHTML = '';
+        if (_uData && (_uData.role === 'super_admin' || _uData.original_role === 'super_admin')) {
+            // POV Toggle Logic
+            const isPOV = _uData.role === 'student';
+            povToggleHTML = `
+            <div id="povToggleWrapper" style="display:flex; align-items:center; gap:8px; margin-right:12px; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
+                <span style="font-size:10px; color:#aaa; font-weight:600; letter-spacing:0.5px;">POV STUDENT</span>
+                <label class="switch">
+                    <input type="checkbox" id="povStudentToggle" ${isPOV ? 'checked' : ''} onchange="UIComponents.toggleStudentPOV(this.checked)">
+                    <span class="slider round" style="before: {width:14px; height:14px; left:2px; bottom:2px;}"></span>
+                </label>
+            </div>`;
+
             let currentClassName = `${t('class')}`;
             try {
                 const overrideName = sessionStorage.getItem('class_override_name');
@@ -64,7 +76,10 @@ const UIComponents = {
                     <span id="headerVisitorCount">${cachedCount}</span>
                 </div>
             </div>
-            ${classSwitcherHTML}
+            <div style="display:flex; align-items:center; flex:1; justify-content:flex-end;">
+                ${povToggleHTML}
+                ${classSwitcherHTML}
+            </div>
             <div class="profile-box" id="profileTrigger">
                 <span id="headerName">Haii, ${_displayName}</span>
                 <img id="headerPP" class="header-pp" src="${_avatarSrc}">
@@ -75,6 +90,7 @@ const UIComponents = {
                     <li onclick="goAnnouncements()"><i class="fa-solid fa-table-columns"></i>${t('announcements2')}</li>
                     <li onclick="goProfile()"><i class="fa-solid fa-user"></i>${t('edit_prof')}</li>
                     <li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'../':'')+'theme'"><i class="fa-solid fa-palette"></i>${t('theme2')}</li>
+                    ${_uData && (_uData.role === 'super_admin' || _uData.role === 'class_admin') ? `<li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'':'admiii/')+'visitor'"><i class="fa-solid fa-tower-broadcast"></i> Monitor Visitor</li>` : ''}
                     <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
                 </ul>
             </div>
@@ -125,7 +141,11 @@ const UIComponents = {
 
                 <input type="text" id="addJudul" class="glass-input" placeholder="${t('title')}" spellcheck="false">
                 <input type="text" id="addSubjudul" class="glass-input" placeholder="${t('subtitle')}" spellcheck="false">
-                <div class="editor-toolbar" style="display:flex; gap:10px; margin-bottom: 8px;">
+                <div class="editor-toolbar" style="display:flex; gap:6px; margin-bottom: 8px; align-items:center;">
+                    <button type="button" onclick="formatBold()" class="btn-tool" title="Tebal (Ctrl+B)" style="font-weight:700;">B</button>
+                    <button type="button" onclick="formatItalic()" class="btn-tool" title="Miring (Ctrl+I)" style="font-style:italic;">I</button>
+                    <button type="button" onclick="formatUnderline()" class="btn-tool" title="Garis bawah (Ctrl+U)" style="text-decoration:underline;">U</button>
+                    <span style="width:1px;height:18px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
                     <button type="button" onclick="formatText('5')" class="btn-tool">${t('large')}</button>
                     <button type="button" onclick="formatText('3')" class="btn-tool">${t('medium')}</button>
                     <button type="button" onclick="formatText('2')" class="btn-tool">${t('small')}</button>
@@ -194,6 +214,32 @@ const UIComponents = {
 
         // 3. CONTEXT MENU
         this.contextMenu.init();
+    },
+
+    toggleStudentPOV(active) {
+        let user;
+        try { user = JSON.parse(localStorage.getItem('user')); } catch(e) { return; }
+        if (!user) return;
+
+        if (active) {
+            // Aktifkan POV Student
+            user.original_role = user.role;
+            user.role = 'student';
+        } else {
+            // Balikkan ke Super Admin
+            user.role = user.original_role || 'super_admin';
+            delete user.original_role;
+        }
+
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Kasih loading bentar biar transisinya enak
+        const loader = document.createElement('div');
+        loader.style = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif;';
+        loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="font-size:30px; margin-bottom:15px; color:#00eaff;"></i><span>Beralih Perspektif...</span>';
+        document.body.appendChild(loader);
+
+        setTimeout(() => window.location.reload(), 800);
     },
 
     contextMenu: {

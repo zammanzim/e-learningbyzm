@@ -12,9 +12,36 @@ const _getVisitorUser = () => {
 // ==========================================
 // 1. LOG KUNJUNGAN — 1 query, debounce 2 menit
 // ==========================================
+let _globalPresenceChannel = null;
+
 async function logVisitor() {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
+
+    // --- REALTIME PRESENCE (Siapa yang Online) ---
+    if (!_globalPresenceChannel) {
+        _globalPresenceChannel = supabase.channel('online-users', {
+            config: { presence: { key: user.id } }
+        });
+
+        // Cek apakah ada script monitor (admin) yang mau nambahin callback
+        if (typeof window._initPresenceHandlers === 'function') {
+            window._initPresenceHandlers(_globalPresenceChannel);
+        }
+
+        _globalPresenceChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await _globalPresenceChannel.track({
+                    id: user.id,
+                    nickname: user.nickname || user.full_name,
+                    role: user.role,
+                    class_id: user.class_id,
+                    avatar_url: user.avatar_url,
+                    online_at: new Date().toISOString()
+                });
+            }
+        });
+    }
 
     const currentPage = (document.title || "Unknown Page")
         .replace(/\s*[•|·|-]\s*(E-Learning Nizam|Web Nizam).*/i, '')
