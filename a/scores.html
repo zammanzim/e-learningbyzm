@@ -649,10 +649,10 @@
                             id="peringkatNum">-</span></div>
                 </div>
 
-                <!-- <div class="privacy-box">
+                <div class="privacy-box">
                     <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-eye-slash" style="opacity: 0.7;"></i><div><div style="font-size: 13px; font-weight: 700;">Privasi Nilai</div><div style="font-size: 11px; opacity: 0.6;">Sembunyikan rincian nilai dari orang lain</div></div></div>
                     <label class="toggle-switch"><input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)"><span class="toggle-slider"></span></label>
-                </div> -->
+                </div>
             </div>
 
             <div class="glass-card">
@@ -848,7 +848,7 @@
             if (idx === -1 && myNickname) idx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
             const data = myGlobalData[idx]; if (!data) return;
             document.getElementById('name').innerText = getDisplayName(data.nama_siswa);
-            // document.getElementById('privacyToggle').checked = !!data.is_private;
+            document.getElementById('privacyToggle').checked = !!data.is_private;
             const color = getDynamicColor(data.average);
             document.getElementById('rataNum').innerText = data.average.toFixed(2); document.getElementById('rataNum').style.color = color;
             document.getElementById('peringkatNum').innerText = `#${idx + 1}`; document.getElementById('peringkatNum').style.color = color;
@@ -985,9 +985,13 @@
             ).join('');
             document.getElementById('classTableBody').innerHTML = ct;
 
-            // Personal table skeleton (as many rows as mapel subjects)
+            // Personal table skeleton — skip hidden biar ga bocor
+            const _skCacheKey = `scores_cache_${currentTestId}_${document.getElementById('classSelector').value || getEffectiveClassId()}`;
+            const _skCached = _scoresCacheGet(_skCacheKey);
+            const _skHidden = (_skCached && _skCached.currentHiddenSubjects) || [];
             let pt = '';
             for (let k in MAPEL_CONFIG) {
+                if (!isAdminViewAll && _skHidden.includes(k)) continue;
                 pt += `<tr><td><div class="sk" style="height:14px;width:50%;"></div></td>` +
                     `<td style="text-align:center;"><div class="sk" style="height:24px;width:70px;border-radius:20px;margin:0 auto;"></div></td>` +
                     `<td style="text-align:center;"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin:0 auto;"></div></td></tr>`;
