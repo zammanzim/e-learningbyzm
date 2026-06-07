@@ -681,8 +681,8 @@
             <div class="glass-card">
                 <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> Nilai Kelas</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="select-wrapper"><select id="classSelector" class="mapel-select"
-                            onchange="loadData()"></select></div>
+                    <!-- <div class="select-wrapper"><select id="classSelector" class="mapel-select"
+                            onchange="loadData()"></select></div> -->
                     <div class="select-wrapper"><select id="mapelSelector" class="mapel-select"
                             onchange="renderClassTable()"></select></div>
                 </div>
@@ -751,7 +751,7 @@
 
             supabase.from('classes').select('id, name').order('id').then(({ data }) => {
                 if (data) {
-                    const sel = document.getElementById('classSelector');
+                    // const sel = document.getElementById('classSelector');
                     let html = '';
                     data.forEach(c => html += `<option value="${c.id}" ${c.id == getEffectiveClassId() ? 'selected' : ''}>${c.name}</option>`);
                     sel.innerHTML = html;
@@ -782,7 +782,7 @@
 
         async function loadData() {
             if (!localUser) return;
-            const effectiveClassId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const effectiveClassId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const tableName = TEST_CONFIG[currentTestId].table;
             const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
 
@@ -944,7 +944,7 @@
 
         async function saveAdminConfig() {
             const hidden = Array.from(document.querySelectorAll('.admin-subject-toggle:checked')).map(cb => cb.value);
-            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             showToast('Menyimpan...', 'info');
             const { error } = await supabase.from('nilai_config').upsert({ test_id: currentTestId, class_id: classId, hidden_subjects: hidden }, { onConflict: 'test_id, class_id' });
             if (error) showToast('Gagal: ' + error.message, 'error'); else { showToast('Berhasil!', 'success'); closeAdminModal(); loadData(); }
@@ -986,7 +986,7 @@
             document.getElementById('classTableBody').innerHTML = ct;
 
             // Personal table skeleton — skip hidden biar ga bocor
-            const _skCacheKey = `scores_cache_${currentTestId}_${document.getElementById('classSelector').value || getEffectiveClassId()}`;
+            const _skCacheKey = `scores_cache_${currentTestId}_${/*document.getElementById('classSelector').value ||*/ getEffectiveClassId()}`;
             const _skCached = _scoresCacheGet(_skCacheKey);
             const _skHidden = (_skCached && _skCached.currentHiddenSubjects) || [];
             let pt = '';
@@ -1005,7 +1005,7 @@
 
         // ── File Nilai Asli ──
         async function loadAndRenderFiles() {
-            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const { data, error } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
                 .order('created_at', { ascending: false });
@@ -1031,7 +1031,7 @@
             const label = document.getElementById('fileLabelInput').value.trim();
             if (!input.files.length) return showToast('Pilih file dulu', 'error');
             const file = input.files[0];
-            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const storagePath = `${currentTestId}/${classId}/${Date.now()}_${file.name}`;
             showToast('Mengupload...', 'info');
             const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, file);
@@ -1056,7 +1056,7 @@
         async function renderAdminFiles() {
             const list = document.getElementById('adminFilesList');
             if (!list) return;
-            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const { data } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
                 .order('created_at', { ascending: false });
