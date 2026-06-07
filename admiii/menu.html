@@ -943,7 +943,7 @@
 
         // ── SETUP CLASS DROPDOWN ──────────────────────────
         async function setupClassDropdown() {
-            const { data } = await supabase.from('classes').select('id, name').order('id');
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
             if (!data) return;
             data.forEach(cls => {
                 classNameMap[String(cls.id)] = cls.name;

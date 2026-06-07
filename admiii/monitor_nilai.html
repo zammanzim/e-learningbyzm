@@ -376,7 +376,7 @@
 
         // ── LOAD CLASSES (dropdown) ───────────────────
         async function loadClasses() {
-            const { data } = await supabase.from('classes').select('id, name').order('id');
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
             if (!data) return;
             classMap = {};
             const sel = document.getElementById('classSelect');

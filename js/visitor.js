@@ -186,6 +186,36 @@ async function refreshVisitorCount(user) {
 // 3. POPUP — fetch HANYA saat dibuka
 // ==========================================
 let _visitorPopupChannel = null;
+let _activeVisitorClass = null;
+
+// ── Tab classes ──
+async function renderVisitorTabs() {
+    const container = document.getElementById('visitorTabs');
+    if (!container) return;
+    const user = _getVisitorUser();
+    if (!user) return;
+
+    const { data: classes } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+    if (!classes || !classes.length) { container.innerHTML = ''; return; }
+
+    // Default ke kelas user kalo blom dipilih
+    if (!_activeVisitorClass) {
+        _activeVisitorClass = getEffectiveClassId() || user.class_id;
+    }
+
+    container.innerHTML = classes.map(c => `
+        <div class="visitor-tab${c.id == _activeVisitorClass ? ' active' : ''}"
+             data-class="${c.id}"
+             onclick="switchVisitorTab(${c.id})">${c.name}</div>
+    `).join('');
+}
+
+window.switchVisitorTab = function(classId) {
+    _activeVisitorClass = classId;
+    const tabs = document.querySelectorAll('.visitor-tab');
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.class == classId));
+    renderVisitorStats();
+};
 
 async function renderVisitorStats() {
     const user = _getVisitorUser();
@@ -205,10 +235,11 @@ async function renderVisitorStats() {
     }
 
     try {
+        const targetClass = _activeVisitorClass || getEffectiveClassId() || user.class_id;
         const { data, error } = await supabase
             .from('visitors')
             .select('user_id, visited_at, last_page, user:users(full_name, avatar_url, nickname)')
-            .eq('class_id', getEffectiveClassId() || user.class_id)
+            .eq('class_id', targetClass)
             .eq('is_visible', true)
             .order('visited_at', { ascending: false });
 
@@ -217,12 +248,6 @@ async function renderVisitorStats() {
         // Dedup di DB harusnya sudah unique per user_id, tapi jaga-jaga
         const uniqueMap = new Map();
         data.forEach(v => { if (!uniqueMap.has(v.user_id)) uniqueMap.set(v.user_id, v); });
-
-        const badge = document.getElementById("headerVisitorCount");
-        if (badge) {
-            badge.innerText = uniqueMap.size;
-            localStorage.setItem('cached_visitor_count', uniqueMap.size);
-        }
 
         const popupCount = document.getElementById("popupVisitorCount");
         if (popupCount) popupCount.innerText = uniqueMap.size;
@@ -286,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
         trigger.onclick = () => {
             overlay?.classList.add("show");
             if (typeof lockScroll === 'function') lockScroll(); // Lock background scroll
-            renderVisitorStats();
+            renderVisitorTabs().then(() => renderVisitorStats());
 
             // Realtime di dalam popup (hanya admin)
             const isAdmin = user.role === 'super_admin' || user.role === 'class_admin';
@@ -297,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         event: '*',
                         schema: 'public',
                         table: 'visitors',
-                        filter: `class_id=eq.${getEffectiveClassId() || user.class_id}`
+                        filter: `class_id=eq.${_activeVisitorClass || getEffectiveClassId() || user.class_id}`
                     }, () => renderVisitorStats())
                     .subscribe();
             }
@@ -345,10 +370,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             resetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
             try {
+                const resetClass = _activeVisitorClass || getEffectiveClassId() || user.class_id;
                 const { error } = await supabase
                     .from('visitors')
                     .update({ is_visible: false })
-                    .eq('class_id', getEffectiveClassId() || user.class_id);
+                    .eq('class_id', resetClass);
 
                 if (error) throw error;
                 showToast("List pengunjung telah di-reset!", "success");

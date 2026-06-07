@@ -447,7 +447,7 @@
 
             const [{ data, error }, { data: clsData }] = await Promise.all([
                 supabase.from('file_transfers').select('*').order('uploaded_at', { ascending: false }),
-                supabase.from('classes').select('id, name')
+                supabase.from('classes').select('id, name').eq('is_active', true)
             ]);
             const classMap = Object.fromEntries((clsData || []).map(c => [String(c.id), c.name]));
 

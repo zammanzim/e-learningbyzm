@@ -133,7 +133,7 @@ async function renderClassSwitcher(retries = 0) {
         }
 
         // Fetch fresh di background
-        const { data: classes } = await supabase.from('classes').select('id, name').order('id');
+        const { data: classes } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
         if (!classes?.length) return;
 
         localStorage.setItem('cached_classes', JSON.stringify(classes));

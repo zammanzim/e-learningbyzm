@@ -357,7 +357,7 @@
         });
 
         async function loadClasses() {
-            const { data, error } = await supabase.from('classes').select('id, name').order('id');
+            const { data, error } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
             if (!error && data) {
                 const select = document.getElementById('noticeClassId');
                 data.forEach(c => {

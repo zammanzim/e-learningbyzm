@@ -103,6 +103,9 @@ const UIComponents = {
                     <span id="closeVisitorPopup" class="close-popup">&times;</span>
                 </div>
 
+                <!-- Tab kelas -->
+                <div id="visitorTabs" class="visitor-tabs"></div>
+
                 <!-- NEW: Wrapped List Section -->
                 <div class="list-section">
                     <div id="visitorList" class="visitor-list-container"></div>

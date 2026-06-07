@@ -624,7 +624,7 @@
 
         async function loadClasses() {
             const sel = document.getElementById('selClass');
-            const { data } = await supabase.from('classes').select('id, name').order('id');
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
             if (!data) return;
             data.forEach(c => {
                 const opt = document.createElement('option');

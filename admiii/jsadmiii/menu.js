@@ -31,7 +31,7 @@ async function setupClassDropdown() {
     const filterSelect = document.getElementById('targetClassId');
     const formSelect = document.getElementById('mClassId');
 
-    const { data } = await supabase.from('classes').select('id, name').order('id');
+    const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
     if (data) {
         data.forEach(cls => {
             // Dropdown Filter
