@@ -313,7 +313,11 @@ const SubjectApp = {
                 if (!isInteractive) {
                     const id = card.dataset.id;
                     const data = self.state.announcements.find(a => a.id == id);
-                    if (data) openDetail(data);
+                    if (data) {
+                        const photoWrapper = e.target.closest('.photo-wrapper');
+                        const idx = photoWrapper ? parseInt(photoWrapper.dataset.index) || 0 : 0;
+                        openDetail(data, idx);
+                    }
                 }
             }
 
@@ -477,6 +481,19 @@ const SubjectApp = {
             query = query.eq("class_id", targetClassId);
 
             const cacheKey = `announcements_${this.state.subjectId}`;
+            // Helper read cache dgn TTL 10 menit
+            const readCache = () => {
+                try {
+                    const raw = localStorage.getItem(cacheKey);
+                    if (!raw) return null;
+                    const parsed = JSON.parse(raw);
+                    if (!parsed.ts) return null; // format lama → skip
+                    return parsed;
+                } catch (e) { return null; }
+            };
+            const writeCache = (data) => {
+                try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+            };
             let data, error;
             try {
                 // Balikin ke logic asal miz: 
@@ -491,20 +508,31 @@ const SubjectApp = {
                     ...item,
                     content: item.content ? processCardLinks(item.content) : item.content
                 }));
-                try { localStorage.setItem(cacheKey, JSON.stringify(this.state.announcements)); } catch (e) { /* ignore storage errors */ }
+                writeCache(this.state.announcements);
             } catch (err) {
                 console.error("Load announcements failed, using cache if available:", err);
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    try {
-                        const parsed = JSON.parse(cached);
-                        this.state.announcements = (Array.isArray(parsed) ? parsed : []).map(item => ({
-                            ...item,
-                            content: item.content ? processCardLinks(item.content) : item.content
-                        }));
-                    } catch (e) { this.state.announcements = []; }
+                const cached = readCache();
+                if (cached && Array.isArray(cached.data) && cached.data.length > 0) {
+                    // TTL 10 menit atau offline fallback (stale tetap dipake biar ga kosong)
+                    this.state.announcements = cached.data.map(item => ({
+                        ...item,
+                        content: item.content ? processCardLinks(item.content) : item.content
+                    }));
                 } else {
-                    throw err; // biarkan catch luar tangani UI error
+                    // Fallback: format lama (no ts) atau cache kosong
+                    const raw = localStorage.getItem(cacheKey);
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            const arr = Array.isArray(parsed) ? parsed : (parsed.data ? parsed.data : []);
+                            this.state.announcements = arr.map(item => ({
+                                ...item,
+                                content: item.content ? processCardLinks(item.content) : item.content
+                            }));
+                        } catch (e) { this.state.announcements = []; }
+                    } else {
+                        throw err;
+                    }
                 }
             }
 
@@ -971,7 +999,7 @@ const SubjectApp = {
                 if (ann) Object.assign(ann, u);
             });
             try {
-                localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify(this.state.announcements));
+                localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify({ ts: Date.now(), data: this.state.announcements }));
             } catch (e) { }
 
             if (typeof showPopup === 'function') showToast("Semua perubahan tersimpan!", "success");
@@ -1043,8 +1071,8 @@ const SubjectApp = {
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', card.dataset.id);
             requestAnimationFrame(() => {
-                card.style.opacity = '0.35';
-                card.style.outline = '2px dashed rgba(0,234,255,0.4)';
+                // Collapse semua card biar keliatan urutannya
+                container.querySelectorAll('.course-card').forEach(c => c.classList.add('dragging'));
             });
             startAutoScroll();
         });
@@ -1218,9 +1246,9 @@ const SubjectApp = {
     },
 
     _cleanupDrag(card) {
-        if (card) {
-            card.style.opacity = '';
-            card.style.outline = '';
+        const container = document.getElementById('announcements');
+        if (container) {
+            container.querySelectorAll('.course-card.dragging').forEach(c => c.classList.remove('dragging'));
         }
         this._removeDropIndicator();
         this.updateDisplayOrder();
@@ -1333,14 +1361,18 @@ const SubjectApp = {
             ? 'display:flex; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;'
             : 'display:none; position:absolute; top:4px; left:4px; background:rgba(200,0,0,0.85); color:white; border:none; width:24px; height:24px; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; font-size:11px; z-index:5;';
 
-        const makeSlot = (url, extraHTML = '') => `
-            <div class="photo-item photo-wrapper ${this._isImageUrl(url) ? '' : 'file-wrapper'}" style="position:relative;">
+        let photoIdx = 0;
+        const makeSlot = (url, extraHTML = '') => {
+            const idx = photoIdx++;
+            return `
+            <div class="photo-item photo-wrapper ${this._isImageUrl(url) ? '' : 'file-wrapper'}" data-index="${idx}" style="position:relative;">
                 ${this._isImageUrl(url) ? `<img src="${this._escapeAttr(url)}" loading="lazy">` : this._buildFilePreviewHTML(url)}
                 ${extraHTML}
                 <button class="delete-photo-btn" data-url="${this._escapeAttr(url)}" style="${deleteBtnStyle}">
                     <i class="fa-solid fa-trash" style="pointer-events:none;"></i>
                 </button>
             </div>`;
+        };
 
         let gridClass, imgsHTML;
 
@@ -2021,7 +2053,7 @@ function getTodayIndo() {
 }
 
 let currentViewerPhotos = [], currentViewerIndex = 0;
-function openDetail(data) {
+function openDetail(data, photoIndex = 0) {
     const overlay = document.getElementById('detailOverlay');
     const info = document.getElementById('detailInfoSection');
     const btn = document.getElementById('toggleInfoBtn');
@@ -2049,7 +2081,7 @@ function openDetail(data) {
     }
 
     currentViewerPhotos = photos;
-    currentViewerIndex = 0;
+    currentViewerIndex = photoIndex;
     updateSliderUI();
     overlay.classList.add('active');
     lockScroll();

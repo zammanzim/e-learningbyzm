@@ -212,6 +212,21 @@ const UIComponents = {
         body.insertAdjacentHTML('afterbegin', headerHTML);
         body.insertAdjacentHTML('beforeend', modalsHTML);
 
+        // ── Paste handler: sanitize HTML di addIsi ────────────────
+        // code dari VSCode warnanya stay, tapi style layout dibuang biar width ga liar
+        const _addIsi = document.getElementById('addIsi');
+        if (_addIsi) {
+            _addIsi.addEventListener('paste', (e) => {
+                const html = (e.clipboardData || window.clipboardData).getData('text/html');
+                if (html) {
+                    e.preventDefault();
+                    const cleaned = _sanitizePasteHTML(html);
+                    document.execCommand('insertHTML', false, cleaned);
+                }
+                // kalo ga ada HTML (plain text), biarin default
+            });
+        }
+
         // 3. CONTEXT MENU
         this.contextMenu.init();
     },
@@ -648,6 +663,56 @@ const SkeletonUI = {
         return section(80) + section(60);
     }
 };
+
+// ── Sanitize pasted HTML: strip layout styles, keep color/font ──
+function _sanitizePasteHTML(html) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+
+    const layoutProps = new Set([
+        'width', 'min-width', 'max-width',
+        'height', 'min-height', 'max-height',
+        'display', 'position', 'float', 'clear',
+        'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+        'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'overflow', 'overflow-x', 'overflow-y',
+        'white-space',
+        'box-sizing',
+        'flex', 'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis',
+        'align-items', 'align-content', 'align-self',
+        'justify-content', 'justify-items', 'justify-self',
+        'gap', 'row-gap', 'column-gap',
+        'grid', 'grid-template', 'grid-column', 'grid-row',
+        'transform', 'transition', 'animation',
+        'border', 'border-top', 'border-right', 'border-bottom', 'border-left',
+        'border-radius', 'outline', 'visibility',
+        'z-index', 'top', 'right', 'bottom', 'left',
+        'table-layout', 'border-collapse', 'border-spacing',
+    ]);
+
+    const walker = document.createTreeWalker(d, NodeFilter.SHOW_ELEMENT, null, false);
+    while (walker.nextNode()) {
+        const el = walker.currentNode;
+
+        el.removeAttribute('class');
+        el.removeAttribute('id');
+
+        const style = el.getAttribute('style');
+        if (style) {
+            const kept = style.split(';').filter(Boolean).map(s => s.trim()).filter(s => {
+                const prop = s.split(':')[0].trim().toLowerCase();
+                return !layoutProps.has(prop);
+            });
+            if (kept.length) {
+                el.setAttribute('style', kept.join(';'));
+            } else {
+                el.removeAttribute('style');
+            }
+        }
+    }
+
+    return d.innerHTML;
+}
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => UIComponents.inject());

@@ -89,6 +89,22 @@ function toggleClassSwitcher() {
 }
 window.toggleClassSwitcher = toggleClassSwitcher;
 
+function renderClassOptions(classes, current) {
+    return classes.map(c => `
+        <div onclick="switchClass('${c.id}','${c.name}')" style="
+            padding:10px 14px; font-size:13px; cursor:pointer;
+            color:${String(c.id)===current?'var(--accent,#00eaff)':'#ddd'};
+            background:${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'};
+            display:flex; align-items:center; gap:8px; transition:background 0.15s;"
+            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+            onmouseout="this.style.background='${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'}'">
+            ${String(c.id)===current
+                ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
+                : '<span style="width:12px;"></span>'}
+            ${c.name}
+        </div>`).join('');
+}
+
 async function renderClassSwitcher(retries = 0) {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user || user.role !== 'super_admin') return;
@@ -106,6 +122,17 @@ async function renderClassSwitcher(retries = 0) {
     }
 
     try {
+        // Cache-first: tampil dari cache dulu
+        const cachedClasses = (() => { try { const r = localStorage.getItem('cached_classes'); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
+        if (cachedClasses?.length) {
+            const current = getEffectiveClassId();
+            const cur = cachedClasses.find(c => String(c.id) === current);
+            if (label) label.innerText = cur?.name || `Kelas ${current}`;
+            switcher.innerHTML = renderClassOptions(cachedClasses, current);
+            wrapper.style.display = 'flex';
+        }
+
+        // Fetch fresh di background
         const { data: classes } = await supabase.from('classes').select('id, name').order('id');
         if (!classes?.length) return;
 
@@ -114,21 +141,7 @@ async function renderClassSwitcher(retries = 0) {
         const current = getEffectiveClassId();
         const cur = classes.find(c => String(c.id) === current);
         if (label) label.innerText = cur?.name || `Kelas ${current}`;
-
-        switcher.innerHTML = classes.map(c => `
-            <div onclick="switchClass('${c.id}','${c.name}')" style="
-                padding:10px 14px; font-size:13px; cursor:pointer;
-                color:${String(c.id)===current?'var(--accent,#00eaff)':'#ddd'};
-                background:${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'};
-                display:flex; align-items:center; gap:8px; transition:background 0.15s;"
-                onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-                onmouseout="this.style.background='${String(c.id)===current?'rgba(0,234,255,0.08)':'transparent'}'">
-                ${String(c.id)===current
-                    ? '<i class="fa-solid fa-check" style="font-size:10px;color:var(--accent,#00eaff);"></i>'
-                    : '<span style="width:12px;"></span>'}
-                ${c.name}
-            </div>`).join('');
-
+        switcher.innerHTML = renderClassOptions(classes, current);
         wrapper.style.display = 'flex';
     } catch (err) {
         console.warn('Render class switcher failed:', err);
@@ -162,7 +175,7 @@ function writeCache(classId, groups, items) {
 function isCacheSame(classId, groups, items) {
     const old = readCache(classId);
     if (!old) return false;
-    const sig = d => d.map(x => JSON.stringify(x)).sort().join('|');
+    const sig = d => d.map(x => JSON.stringify(x, Object.keys(x).sort())).sort().join('|');
     return sig(old.groups) === sig(groups) && sig(old.items) === sig(items);
 }
 
@@ -346,9 +359,6 @@ function processAndRenderSidebar(groups, items, user) {
     const rootPrefix  = isInAdmin ? '../a/' : isInA ? '' : 'a/';
     const adminPrefix = isInAdmin ? '' : isInA ? '../admiii/' : 'admiii/';
 
-    const currentPath = window.location.pathname.toLowerCase();
-    const currentId   = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
-
     // ── Filter grup berdasarkan role ──
     const visibleGroups = groups.filter(g => {
         if (g.group_type === 'bottomnav' || g.group_key === 'bottomnav') return false;
@@ -408,17 +418,6 @@ function processAndRenderSidebar(groups, items, user) {
                     }
             }
 
-            // ── Active state ──
-            const urlLow = url.toLowerCase();
-            let isActive = '';
-            if (urlLow.includes('id=')) {
-                if (currentId === urlLow.split('id=')[1]) isActive = 'active';
-            } else {
-                const itemSeg = urlLow.split('/').pop();
-                const pathSeg = currentPath.split('/').pop();
-                if (pathSeg === itemSeg) isActive = 'active';
-            }
-            
             // TRANSLASI NAMA MENU (Berdasarkan subject_id)
             const translatedName = t(item.subject_id) !== item.subject_id 
                 ? t(item.subject_id) 
@@ -447,7 +446,7 @@ function processAndRenderSidebar(groups, items, user) {
             }
 
             html += `
-            <li class="sidebar-menu-item ${isActive}${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
+            <li class="sidebar-menu-item${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                 <a href="${url}">
                     <i class="${escapeSidebarHtml(icon)}"></i> <span>${escapeSidebarHtml(translatedName)}</span>
                 </a>
@@ -458,18 +457,55 @@ function processAndRenderSidebar(groups, items, user) {
         html += '</ul>';
     });
 
+    // Hapus active dulu biar comparison akurat (re-added via updateActiveSidebar)
+    sidebar.querySelectorAll('.sidebar-menu-item.active').forEach(el => el.classList.remove('active'));
+
+    // Skip DOM replacement kalo html sama (cegah blink)
+    if (sidebar.innerHTML === html) {
+        _sidebarState = { groups, items, user, classId };
+        updateActiveSidebar();
+        return;
+    }
+
     sidebar.innerHTML = html;
     _sidebarState = { groups, items, user, classId };
+    updateActiveSidebar();
 
     // Restore scroll position
     const savedScroll = sessionStorage.getItem('sidebar_scroll');
     if (savedScroll) sidebar.scrollTop = parseInt(savedScroll);
 
-    sidebar.addEventListener('scroll', () => {
-        sessionStorage.setItem('sidebar_scroll', sidebar.scrollTop);
-    }, { passive: true });
+    if (!sidebar.dataset.scrollListener) {
+        sidebar.dataset.scrollListener = '1';
+        sidebar.addEventListener('scroll', () => {
+            sessionStorage.setItem('sidebar_scroll', sidebar.scrollTop);
+        }, { passive: true });
+    }
 
     setupInlineSidebarManager(sidebar, user, classId);
+}
+
+// ── ACTIVE STATE ──────────────────────────────────────────────
+function updateActiveSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    const currentPath = window.location.pathname.toLowerCase();
+    const currentId = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
+    sidebar.querySelectorAll('.sidebar-menu-item.active').forEach(el => el.classList.remove('active'));
+    sidebar.querySelectorAll('.sidebar-menu-item a').forEach(a => {
+        const href = a.getAttribute('href');
+        if (!href) return;
+        const urlLow = href.toLowerCase();
+        let isMatch = false;
+        if (urlLow.includes('id=')) {
+            if (currentId === urlLow.split('id=')[1]) isMatch = true;
+        } else {
+            const itemSeg = urlLow.split('/').pop();
+            const pathSeg = currentPath.split('/').pop();
+            if (pathSeg === itemSeg) isMatch = true;
+        }
+        if (isMatch) a.closest('.sidebar-menu-item')?.classList.add('active');
+    });
 }
 
 // ── AUTO INIT ─────────────────────────────────────────────────

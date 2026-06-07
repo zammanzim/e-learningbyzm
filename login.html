@@ -1410,6 +1410,7 @@
 
         // 1. Fungsi buat milih kelas via shortcut
         function selectClassById(id) {
+            closeModal(); // Tutup popup kelas kalo masih kebuka
             selectedClassId = id;
             const namaKelas = DAFTAR_KELAS[id];
             document.getElementById('displayClass').innerText = namaKelas;
@@ -1546,6 +1547,35 @@
                 `;
             }
         });
+    </script>
+
+    <!-- Form persistence: restore username guest name kalo balik ke login -->
+    <script>
+        (function() {
+            const KEY = 'form_persist_' + window.location.pathname.replace(/[/\\]/g, '_');
+            function restore() {
+                try {
+                    const data = JSON.parse(sessionStorage.getItem(KEY));
+                    if (!data) return;
+                    document.querySelectorAll('input:not([type="password"]):not([type="file"])').forEach(el => {
+                        const k = el.id || el.name;
+                        if (k && k in data) el.value = data[k];
+                    });
+                } catch(e) {}
+            }
+            function save() {
+                const data = {};
+                document.querySelectorAll('input:not([type="password"]):not([type="file"])').forEach(el => {
+                    const k = el.id || el.name;
+                    if (k) data[k] = el.value;
+                });
+                sessionStorage.setItem(KEY, JSON.stringify(data));
+            }
+            document.addEventListener('DOMContentLoaded', restore);
+            document.addEventListener('input', save);
+            document.addEventListener('submit', () => setTimeout(() => sessionStorage.removeItem(KEY), 0));
+            window.clearFormPersist = () => sessionStorage.removeItem(KEY);
+        })();
     </script>
 </body>
 

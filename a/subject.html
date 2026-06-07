@@ -32,18 +32,50 @@
     <script src="../js/system-notice.js"></script>
     <link rel="stylesheet" href="../css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .glass-card {
+            background: rgba(15, 20, 30, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            #announcements { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            #announcements > :first-child { grid-column: 1 / -1; }
+        }
+    </style>
 </head>
 
 <body>
     <div class="sidebar" id="sidebar"></div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <div class="main-content">
-        <h2 id="welcomeText">Memuat Materi...</h2>
-        <div class="left-section">
-            <div id="announcements"></div>
-            <div id="editControls"></div>
+    <div class="main-content" style="flex-wrap: wrap;">
+        <div class="glass-card" id="subjectInfoCard" style="flex:0 0 100%; margin-bottom:20px;">
+            <div style="text-align:center; padding:25px 15px 20px;">
+                <i class="fa-solid" id="subjectIcon" style="font-size:44px; color:var(--accent); margin-bottom:8px;"></i>
+                <h2 id="subjectName" style="font-size:20px; margin:0 0 5px;">Memuat...</h2>
+                <div id="subjectStatusBadge" style="display:inline-block; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:15px;"></div>
+
+                <div id="teacherSection" style="display:none; text-align:left; background:rgba(255,255,255,0.03); border-radius:12px; padding:12px 15px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:12px; opacity:0.5; margin-bottom:4px;"><i class="fa-solid fa-chalkboard-user"></i> Nama Guru</div>
+                    <div id="teacherName" style="font-weight:600; font-size:14px;">-</div>
+                    <div id="teacherContact" style="font-size:12px; opacity:0.7; margin-top:4px;"></div>
+                </div>
+
+                <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                    <div class="stat-badge" style="min-width:80px;"><span class="label">Total Materi</span><span class="value" id="totalMateri" style="font-size:18px;">-</span></div>
+                    <div class="stat-badge" style="min-width:80px;"><span class="label">Selesai</span><span class="value" id="doneMateri" style="font-size:18px;">-</span></div>
+                </div>
+            </div>
         </div>
+
+        <div id="announcements" style="flex:0 0 100%;"></div>
+        <div id="editControls" style="flex:0 0 100%;"></div>
     </div>
 
     <script type="module">
@@ -57,30 +89,79 @@
                 return;
             }
 
-            // Ambil data dari tabel subjects_config
-            const { data, error } = await supabase
-                .from('subjects_config')
-                .select('*')
-                .eq('subject_id', subjectId)
-                .limit(1)
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) return;
 
-            if (error) {
-                console.error("Supabase Error:", error.message);
+            const [configRes, teacherRes, countRes] = await Promise.all([
+                supabase.from('subjects_config').select('*').eq('subject_id', subjectId).limit(1),
+                supabase.from('subject_teachers').select('*').eq('subject_id', subjectId).maybeSingle(),
+                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId)
+            ]);
+
+            if (configRes.error) {
+                console.error("Supabase Error:", configRes.error.message);
+                document.getElementById('subjectName').innerText = "Gagal memuat data.";
                 return;
             }
 
-            // Jika ada banyak (duplikat), ambil yang pertama saja
-            const config = data[0];
+            const config = configRes.data[0];
             if (!config) {
-                document.getElementById('welcomeText').innerText = "Materi tidak ditemukan.";
+                document.getElementById('subjectName').innerText = "Materi tidak ditemukan.";
                 return;
             }
+
+            // ── Isi info card ──
+            document.getElementById('subjectIcon').className = `fa-solid ${config.icon}`;
+            document.getElementById('subjectName').innerText = config.subject_name;
+
+            // Status badge
+            const badge = document.getElementById('subjectStatusBadge');
+            if (config.locked) {
+                badge.innerHTML = '🔒 Terkunci';
+                badge.style.background = 'rgba(231,76,60,0.15)';
+                badge.style.color = '#e74c3c';
+            } else {
+                badge.innerHTML = '✅ Aktif';
+                badge.style.background = 'rgba(46,204,113,0.15)';
+                badge.style.color = '#2ecc71';
+            }
+
+            // Guru
+            const teacher = teacherRes.data;
+            if (teacher) {
+                document.getElementById('teacherSection').style.display = 'block';
+                document.getElementById('teacherName').innerText = teacher.teacher_name;
+                if (teacher.teacher_contact) {
+                    document.getElementById('teacherContact').innerHTML = `<i class="fa-solid fa-phone"></i> ${teacher.teacher_contact}`;
+                }
+            }
+
+            const total = countRes.count || 0;
+            document.getElementById('totalMateri').innerText = total;
+
+            // Hitung berapa yg udah selesai dikerjain user ini
+            let doneCount = 0;
+            if (total > 0) {
+                const { data: anns } = await supabase
+                    .from('subject_announcements')
+                    .select('id')
+                    .eq('subject_id', subjectId);
+                if (anns && anns.length) {
+                    const annIds = anns.map(a => a.id);
+                    const { count } = await supabase
+                        .from('user_progress')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .in('announcement_id', annIds);
+                    doneCount = count || 0;
+                }
+            }
+            document.getElementById('doneMateri').innerText = doneCount;
 
             const fullTitleHtml = `<h3><i class="fa-solid ${config.icon}"></i> ${config.subject_name}</h3>`;
             const isLesson = config.menu_group === 'lessons' &&
                 config.menu_group !== 'tesmenubaru';
 
-            // Inisialisasi aplikasi dengan data dari database
             SubjectApp.init(config.subject_id, fullTitleHtml, config.subject_name, isLesson);
 
             if (typeof logVisitor === 'function') {

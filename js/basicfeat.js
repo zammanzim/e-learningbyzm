@@ -197,3 +197,53 @@ document.getElementById('closeVisitorPopup')?.addEventListener('click', () => {
         history.back();
     }
 });
+
+// ==========================================
+// 6. FORM PERSISTENCE — sessionStorage
+// ==========================================
+// Nyimpen isi form ke sessionStorage biar ga ilang kalo pindah halaman
+(function() {
+    const KEY = 'form_persist_' + window.location.pathname.replace(/[/\\]/g, '_');
+
+    function save() {
+        const data = {};
+        document.querySelectorAll('input:not([type="password"]):not([type="file"]), textarea, select, [contenteditable]').forEach(el => {
+            const key = el.id || el.name;
+            if (!key) return;
+            if (el.isContentEditable) {
+                data[key] = el.innerHTML;
+            } else if (el.type === 'checkbox' || el.type === 'radio') {
+                data[key] = el.checked;
+            } else {
+                data[key] = el.value;
+            }
+        });
+        sessionStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    function restore() {
+        const saved = sessionStorage.getItem(KEY);
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            document.querySelectorAll('input:not([type="password"]):not([type="file"]), textarea, select, [contenteditable]').forEach(el => {
+                const key = el.id || el.name;
+                if (!key || !(key in data)) return;
+                if (el.isContentEditable) {
+                    el.innerHTML = data[key];
+                } else if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = data[key];
+                } else {
+                    el.value = data[key];
+                }
+            });
+        } catch(e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', restore);
+    document.addEventListener('input', save);
+    document.addEventListener('change', save);
+    document.addEventListener('submit', () => setTimeout(() => sessionStorage.removeItem(KEY), 0));
+
+    window.clearFormPersist = () => sessionStorage.removeItem(KEY);
+})();

@@ -98,11 +98,6 @@
             font-weight: 800;
         }
 
-        .main-content {
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-        }
-
         .modern-table {
             width: 100%;
             border-collapse: separate;
@@ -337,6 +332,38 @@
             background: var(--accent); color: #000;
             font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s;
         }
+
+        @media (min-width: 1024px) {
+            .main-content { flex-wrap: wrap; }
+            #filesCard { flex: 0 0 100%; }
+        }
+
+        .file-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px; background: rgba(255,255,255,0.03);
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 8px; transition: transform 0.2s;
+        }
+        .file-item:hover { transform: translateX(4px); background: rgba(255,255,255,0.06); }
+        .file-item .icon { font-size: 26px; color: #e74c3c; }
+        .file-item .info { flex: 1; min-width: 0; }
+        .file-item .info .name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-item .info .date { font-size: 11px; opacity: 0.5; }
+        .slide-row {
+            animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .file-item .btn-lihat {
+            padding: 8px 16px; border-radius: 8px;
+            background: rgba(0,234,255,0.1); color: var(--accent);
+            text-decoration: none; font-size: 13px; font-weight: 600;
+            white-space: nowrap; transition: 0.2s;
+        }
+        .file-item .btn-lihat:hover { background: rgba(0,234,255,0.2); }
     </style>
 </head>
 
@@ -363,6 +390,18 @@
             <p style="opacity: 0.6; font-size: 13px; margin-bottom: 20px;">Pilih mapel yang ingin <b>DISEMBUNYIKAN</b>.</p>
             <div id="adminConfigList" class="config-list"></div>
             <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> Simpan Konfigurasi</button>
+
+            <hr style="border-color:rgba(255,255,255,0.1);margin:25px 0;">
+            <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> Kelola File Nilai</h3>
+            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;">Upload file asli (PDF/gambar) biar siswa bisa verifikasi.</p>
+            <div id="adminFilesList" class="config-list" style="margin-bottom:15px;"></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="fileLabelInput" placeholder="Label (mis: PSAT X RPL)" style="flex:1; min-width:140px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:white; font-size:13px;">
+                <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;" onchange="document.getElementById('fileNameDisplay').textContent = this.files[0]?.name || ''">
+                <button class="fab-admin secondary" style="display:flex; position:static; width:auto; height:auto; padding:10px 18px; border-radius:8px; font-size:13px;" onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-folder-open"></i> Pilih File</button>
+                <span id="fileNameDisplay" style="font-size:12px; opacity:0.6; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+            </div>
+            <button class="btn-save-config" onclick="uploadFile()" style="margin-top:12px;"><i class="fa-solid fa-upload"></i> Upload</button>
         </div>
     </div>
 
@@ -414,6 +453,15 @@
                 <table class="modern-table"><thead><tr><th style="width: 40px;">#</th><th>Nama Siswa</th><th style="text-align: right;">Nilai</th></tr></thead><tbody id="classTableBody"></tbody></table>
             </div>
         </div>
+
+        <div class="glass-card" id="filesCard" style="display:none;">
+            <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> File Nilai Asli</h3>
+            <div style="background:rgba(255,200,0,0.08); border:1px solid rgba(255,200,0,0.2); border-radius:12px; padding:12px 15px; margin-bottom:20px; font-size:13px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color:#f39c12; margin-right:8px;"></i>
+                Nilai yang admin masukkan <b>tidak 100% benar</b>. Cek file asli di bawah untuk memastikan.
+            </div>
+            <div id="filesList"></div>
+        </div>
     </div>
 
     <script>
@@ -424,7 +472,20 @@
         };
         const MAPEL_CONFIG = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda', senibudaya: 'Seni Budaya', informatika: 'Informatika', pjok: 'PJOK', proipas: 'Proipas', dasprog1: 'DASPROGRPL 1', dasprog2: 'DASPROGRPL 2', dasprog3: 'DASPROGRPL 3' };
         const KKM = 75;
-        let globalData = [], myGlobalData = [], avatarMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
+        const SCORES_CACHE_TTL = 5 * 60 * 1000; // 5 menit
+        function _scoresCacheGet(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed.ts || Date.now() - parsed.ts > SCORES_CACHE_TTL) return null;
+                return parsed;
+            } catch (e) { return null; }
+        }
+        function _scoresCacheSet(key, data) {
+            try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), ...data })); } catch (e) {}
+        }
+        let globalData = [], myGlobalData = [], avatarMap = {}, avatarUrlMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
         const localUser = JSON.parse(localStorage.getItem("user"));
         const myIdentifier = localUser ? (localUser.full_name || localUser.nickname) : null;
         const myNickname = localUser ? localUser.nickname : null;
@@ -447,6 +508,8 @@
             });
 
             updateProfileUI(localUser);
+            if (typeof SkeletonUI !== 'undefined') SkeletonUI.injectCSS();
+            showSkeletons();
             await loadData();
         });
 
@@ -468,34 +531,39 @@
 
         async function loadData() {
             if (!localUser) return;
-            const mainContent = document.querySelector('.main-content');
-            mainContent.style.opacity = '0';
             const effectiveClassId = document.getElementById('classSelector').value || getEffectiveClassId();
             const tableName = TEST_CONFIG[currentTestId].table;
             const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
 
-            const cached = localStorage.getItem(cacheKey);
+            // Cache-first (TTL 5 menit)
+            const cached = _scoresCacheGet(cacheKey);
             if (cached) {
-                try {
-                    const parsed = JSON.parse(cached);
-                    globalData = parsed.globalData; myGlobalData = parsed.myGlobalData; avatarMap = parsed.avatarMap; nicknameMap = parsed.nicknameMap || {}; currentHiddenSubjects = parsed.currentHiddenSubjects || [];
-                    renderAll(); mainContent.style.opacity = '1';
-                } catch (e) {}
+                globalData = cached.globalData; myGlobalData = cached.myGlobalData; avatarMap = cached.avatarMap; avatarUrlMap = cached.avatarUrlMap || {}; nicknameMap = cached.nicknameMap || {}; currentHiddenSubjects = cached.currentHiddenSubjects || [];
+                renderAll(); loadAndRenderFiles();
+                // Background refresh
+                _scoresFetchFresh({ effectiveClassId, tableName, cacheKey }).catch(err => console.error(err));
+                return;
             }
 
+            // No cache → blocking fetch
+            await _scoresFetchFresh({ effectiveClassId, tableName, cacheKey, render: true });
+        }
+
+        async function _scoresFetchFresh({ effectiveClassId, tableName, cacheKey, render }) {
             try {
                 const [nRes, uRes, mRes, cRes] = await Promise.all([
                     supabase.from(tableName).select('*, is_private').eq('class_id', effectiveClassId),
-                    supabase.from('users').select('id, full_name, nickname').eq('class_id', effectiveClassId),
+                    supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', effectiveClassId),
                     supabase.from(tableName).select('*, is_private').eq('class_id', localUser.class_id),
                     supabase.from('nilai_config').select('hidden_subjects').eq('test_id', currentTestId).eq('class_id', effectiveClassId).maybeSingle()
                 ]);
                 if (nRes.error) throw nRes.error;
                 currentHiddenSubjects = cRes.data ? cRes.data.hidden_subjects : [];
                 const newAvatarMap = {}, newNicknameMap = {};
+                const newAvatarUrlMap = {};
                 uRes.data?.forEach(u => {
-                    if (u.full_name) { newAvatarMap[u.full_name.toLowerCase()] = u.id; newNicknameMap[u.full_name.toLowerCase()] = u.nickname; }
-                    if (u.nickname) { newAvatarMap[u.nickname.toLowerCase()] = u.id; newNicknameMap[u.nickname.toLowerCase()] = u.nickname; }
+                    if (u.full_name) { newAvatarMap[u.full_name.toLowerCase()] = u.id; if (u.avatar_url) newAvatarUrlMap[u.full_name.toLowerCase()] = u.avatar_url; newNicknameMap[u.full_name.toLowerCase()] = u.nickname; }
+                    if (u.nickname) { newAvatarMap[u.nickname.toLowerCase()] = u.id; if (u.avatar_url) newAvatarUrlMap[u.nickname.toLowerCase()] = u.avatar_url; newNicknameMap[u.nickname.toLowerCase()] = u.nickname; }
                 });
                 const process = (s) => {
                     let t = 0, c = 0;
@@ -507,10 +575,10 @@
                 };
                 globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
                 myGlobalData = (mRes.data || []).map(process).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
-                avatarMap = newAvatarMap; nicknameMap = newNicknameMap;
-                localStorage.setItem(cacheKey, JSON.stringify({ globalData, myGlobalData, avatarMap, nicknameMap, currentHiddenSubjects }));
-                renderAll(); mainContent.style.opacity = '1';
-            } catch (err) { console.error(err); mainContent.style.opacity = '1'; }
+                avatarMap = newAvatarMap; avatarUrlMap = newAvatarUrlMap; nicknameMap = newNicknameMap;
+                _scoresCacheSet(cacheKey, { globalData, myGlobalData, avatarMap, avatarUrlMap, nicknameMap, currentHiddenSubjects });
+                renderAll(); loadAndRenderFiles();
+            } catch (err) { if (render) console.error(err); }
         }
 
         function renderAll() { renderMapelSelector(); renderPersonal(); renderPodium(); renderClassTable(); }
@@ -539,10 +607,16 @@
             else if (data.average >= 70) ucapan.innerText = "yah dikit lagi KKM";
             else ucapan.innerText = "gapapa, semangat trus";
             const tbody = document.getElementById('personalTableBody'); tbody.innerHTML = "";
+            let rowIdx = 0;
             for (let k in MAPEL_CONFIG) {
                 if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
                 const v = parseFloat(data[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff";
-                tbody.innerHTML += `<tr><td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td></tr>`;
+                const tr = document.createElement('tr');
+                tr.className = 'slide-row';
+                tr.style.animationDelay = `${rowIdx * 0.06}s`;
+                tr.innerHTML = `<td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td>`;
+                tbody.appendChild(tr);
+                rowIdx++;
             }
         }
 
@@ -550,8 +624,8 @@
             const t3 = document.getElementById('podiumTop3'), rs = document.getElementById('podiumRest');
             t3.innerHTML = ""; rs.innerHTML = "";
             const mkP = (s, r, c) => {
-                const uid = avatarMap[s.nama_siswa.toLowerCase()];
-                const url = uid ? supabase.storage.from('avatars').getPublicUrl(uid + '.jpg').data.publicUrl : '../icons/profpicture.png';
+                const key = s.nama_siswa.toLowerCase();
+                const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                 return `<div class="podium-box ${c}" onclick="showStudentScores('${s.nama_siswa}')" style="cursor:pointer;"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
             };
             if (globalData[1]) t3.innerHTML += mkP(globalData[1], 2, 'p2');
@@ -559,8 +633,8 @@
             if (globalData[2]) t3.innerHTML += mkP(globalData[2], 3, 'p3');
             for (let i = 3; i < 15; i++) {
                 if (globalData[i]) {
-                    const uid = avatarMap[globalData[i].nama_siswa.toLowerCase()];
-                    const url = uid ? supabase.storage.from('avatars').getPublicUrl(uid + '.jpg').data.publicUrl : '../icons/profpicture.png';
+                    const key = globalData[i].nama_siswa.toLowerCase();
+                    const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                     rs.innerHTML += `<div class="leader-item" onclick="showStudentScores('${globalData[i].nama_siswa}')" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
                 }
             }
@@ -612,6 +686,7 @@
             const list = document.getElementById('adminConfigList'); let html = '';
             for (let k in MAPEL_CONFIG) { html += `<div class="config-item"><span>${MAPEL_CONFIG[k]}</span><label class="toggle-switch"><input type="checkbox" class="admin-subject-toggle" value="${k}" ${currentHiddenSubjects.includes(k) ? 'checked' : ''}><span class="toggle-slider"></span></label></div>`; }
             list.innerHTML = html; document.getElementById('adminModal').classList.add('active'); document.body.style.overflow = 'hidden'; window.history.pushState({ adminModal: true }, "");
+            renderAdminFiles();
         }
 
         function closeAdminModal(e) { if (e && e.target !== document.getElementById('adminModal')) return; document.getElementById('adminModal').classList.remove('active'); document.body.style.overflow = ''; if (window.history.state?.adminModal) window.history.back(); }
@@ -637,6 +712,122 @@
             const sM = document.getElementById('scoreModal'), aM = document.getElementById('adminModal');
             if (sM) sM.classList.remove('active'); if (aM) aM.classList.remove('active'); document.body.style.overflow = '';
         };
+
+        // ── Skeletons ──
+        function showSkeletons() {
+            // Podium skeleton
+            document.getElementById('podiumTop3').innerHTML =
+                `<div class="podium-box p2" style="border-color:transparent;height:160px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>` +
+                `<div class="podium-box p1" style="border-color:transparent;height:200px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>` +
+                `<div class="podium-box p3" style="border-color:transparent;height:140px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>`;
+
+            // Leaderboard skeleton (12 items)
+            const lb = Array(12).fill(
+                `<div class="leader-item" style="border-color:transparent;"><span style="width:20px;"><div class="sk" style="width:16px;height:16px;border-radius:4px;"></div></span><div class="sk" style="width:35px;height:35px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="sk" style="width:55%;height:12px;margin-bottom:4px;"></div><div class="sk" style="width:30%;height:11px;"></div></div></div>`
+            ).join('');
+            document.getElementById('podiumRest').innerHTML = lb;
+
+            // Class table skeleton (8 rows)
+            const ct = Array(8).fill(
+                `<tr><td><div class="sk" style="height:14px;width:20px;margin:0 auto;"></div></td><td><div class="sk" style="height:14px;width:55%;"` +
+                `></div></td><td style="text-align:right;"><div class="sk" style="height:22px;width:50px;border-radius:20px;margin-left:auto;"></div></td></tr>`
+            ).join('');
+            document.getElementById('classTableBody').innerHTML = ct;
+
+            // Personal table skeleton (as many rows as mapel subjects)
+            let pt = '';
+            for (let k in MAPEL_CONFIG) {
+                pt += `<tr><td><div class="sk" style="height:14px;width:50%;"></div></td>` +
+                      `<td style="text-align:center;"><div class="sk" style="height:24px;width:70px;border-radius:20px;margin:0 auto;"></div></td>` +
+                      `<td style="text-align:center;"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin:0 auto;"></div></td></tr>`;
+            }
+            document.getElementById('personalTableBody').innerHTML = pt;
+
+            // Stat badges
+            document.getElementById('rataNum').innerHTML = '<div class="sk" style="height:24px;width:50px;margin:0 auto;"></div>';
+            document.getElementById('peringkatNum').innerHTML = '<div class="sk" style="height:24px;width:50px;margin:0 auto;"></div>';
+        }
+
+        // ── File Nilai Asli ──
+        async function loadAndRenderFiles() {
+            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const { data, error } = await supabase.from('nilai_files')
+                .select('*').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('created_at', { ascending: false });
+            if (error) return;
+            const card = document.getElementById('filesCard');
+            const list = document.getElementById('filesList');
+            if (!data || !data.length) { card.style.display = 'none'; return; }
+            card.style.display = 'block';
+            list.innerHTML = data.map(f => `
+                <div class="file-item">
+                    <i class="fa-solid fa-file-pdf icon"></i>
+                    <div class="info">
+                        <div class="name">${f.label || f.file_name}</div>
+                        <div class="date">${new Date(f.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'long', day:'numeric' })}</div>
+                    </div>
+                    <a href="${f.file_url}" target="_blank" rel="noopener" class="btn-lihat"><i class="fa-solid fa-eye"></i> Lihat</a>
+                </div>
+            `).join('');
+        }
+
+        async function uploadFile() {
+            const input = document.getElementById('fileInput');
+            const label = document.getElementById('fileLabelInput').value.trim();
+            if (!input.files.length) return showToast('Pilih file dulu', 'error');
+            const file = input.files[0];
+            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const storagePath = `${currentTestId}/${classId}/${Date.now()}_${file.name}`;
+            showToast('Mengupload...', 'info');
+            const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, file);
+            if (upErr) return showPopup('Gagal upload: ' + upErr.message, 'error');
+            const { data: urlData } = supabase.storage.from('nilai-files').getPublicUrl(storagePath);
+            const { error: dbErr } = await supabase.from('nilai_files').insert({
+                test_id: currentTestId, class_id: classId,
+                file_name: file.name, file_url: urlData.publicUrl,
+                label: label || file.name
+            });
+            if (dbErr) {
+                await supabase.storage.from('nilai-files').remove([storagePath]);
+                return showToast('Gagal: ' + dbErr.message, 'error');
+            }
+            showToast('Berhasil upload!', 'success');
+            input.value = ''; document.getElementById('fileLabelInput').value = '';
+            document.getElementById('fileNameDisplay').textContent = '';
+            loadAndRenderFiles();
+            renderAdminFiles();
+        }
+
+        async function renderAdminFiles() {
+            const list = document.getElementById('adminFilesList');
+            if (!list) return;
+            const classId = document.getElementById('classSelector').value || getEffectiveClassId();
+            const { data } = await supabase.from('nilai_files')
+                .select('*').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('created_at', { ascending: false });
+            if (!data || !data.length) { list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">Belum ada file. Upload file asli biar siswa bisa verifikasi nilainya.</div>'; return; }
+            list.innerHTML = data.map(f => `
+                <div class="config-item">
+                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                        <i class="fa-solid fa-file-pdf" style="color:#e74c3c;"></i>
+                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.label || f.file_name}</span>
+                    </div>
+                    <button onclick="deleteFile(${f.id})" style="background:none; border:none; color:#e74c3c; cursor:pointer; padding:5px; font-size:16px;" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteFile(id) {
+            if (!confirm('Hapus file ini?')) return;
+            const { data } = await supabase.from('nilai_files').select('file_url').eq('id', id).single();
+            if (data) {
+                const path = data.file_url.split('/nilai-files/')[1];
+                if (path) await supabase.storage.from('nilai-files').remove([decodeURIComponent(path)]);
+            }
+            await supabase.from('nilai_files').delete().eq('id', id);
+            loadAndRenderFiles();
+            renderAdminFiles();
+        }
     </script>
 </body>
 
