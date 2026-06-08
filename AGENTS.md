@@ -38,11 +38,12 @@ Semua halaman `/a/*.html` harus pake urutan script yg sama persis:
 | 7 | `basicfeat.js` | no |
 | 8 | `show-popup.js` | no |
 | 9 | `auth.js` | **defer** |
-| 10 | `visitor.js` | **defer** |
-| 11 | `theme.js` | no |
-| 12 | `toast.js` | no |
-| 13 | `bottom-nav.js` | no |
-| 14 | `system-notice.js` | no |
+| 10 | `activity.js` | **defer** |
+| 11 | `visitor.js` | **defer** |
+| 12 | `theme.js` | no |
+| 13 | `toast.js` | no |
+| 14 | `bottom-nav.js` | no |
+| 15 | `system-notice.js` | no |
 
 Tambahan kalo perlu:
 - `subject-manager.js` (defer) — **cuma** kalo halaman pake card (announcements, subject, tugas, kisi-kisi)

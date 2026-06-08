@@ -25,36 +25,41 @@ window.currentViewDay = null;
             0%   { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        .dc-skel-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            border-radius: 0.6rem;
-            overflow: hidden;
+        .dc-skel-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
             margin-bottom: 1.4rem;
         }
-        .dc-skel-card {
-            height: 54px;
-            border-radius: 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .dc-skel-card:last-child {
-            border-bottom: none;
+        .dc-skel-info-card {
+            height: 64px;
+            border-radius: 0.6rem;
         }
         .dc-skel-section-title {
             height: 14px;
             width: 140px;
             margin-bottom: 12px;
         }
-        .dc-skel-row {
+        .dc-skel-timeline {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            flex-direction: column;
+            gap: 0;
         }
-        .dc-skel-time  { height: 12px; width: 52px; flex-shrink: 0; }
-        .dc-skel-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .dc-skel-subj  { height: 12px; flex: 1; }
+        .dc-skel-tl-row {
+            display: grid;
+            grid-template-columns: 6.5rem 1px 1fr;
+            gap: 0 0.8rem;
+            min-height: 2.4rem;
+            align-items: center;
+            padding: 0.4rem 0;
+        }
+        .dc-skel-tl-time  { height: 11px; width: 48px; }
+        .dc-skel-tl-marker {
+            display: flex;
+            justify-content: center;
+        }
+        .dc-skel-tl-dot   { width: 9px; height: 9px; border-radius: 50%; }
+        .dc-skel-tl-subj  { height: 11px; }
         .dc-skel-pills { display: flex; gap: 8px; flex-wrap: wrap; }
         .dc-skel-pill  { height: 30px; width: 80px; border-radius: 20px; }
         .dc-skel-header-badge { height: 18px; width: 70px; border-radius: 6px; margin-bottom: 8px; }
@@ -121,23 +126,27 @@ async function _navigateToSubject(name, classId) {
 }
 
 function _buildDailyCardSkeleton() {
-    const rows = [1, 2, 3, 4, 5].map(() => `
-        <div class="dc-skel-row">
-            <div class="dc-skel dc-skel-time"></div>
-            <div class="dc-skel dc-skel-dot"></div>
-            <div class="dc-skel dc-skel-subj" style="width:${50 + Math.floor(Math.random() * 35)}%"></div>
+    const timelineRows = [1, 2, 3, 4, 5, 6, 7].map(i => `
+        <div class="dc-skel-tl-row">
+            <div class="dc-skel dc-skel-tl-time"></div>
+            <div class="dc-skel-tl-marker">
+                <div class="dc-skel dc-skel-tl-dot"></div>
+            </div>
+            <div class="dc-skel dc-skel-tl-subj" style="width:${45 + Math.floor(Math.random() * 40)}%"></div>
         </div>`).join('');
 
     return `
-        <div class="dc-skel-cards">
-            <div class="dc-skel dc-skel-card"></div>
-            <div class="dc-skel dc-skel-card"></div>
-            <div class="dc-skel dc-skel-card"></div>
+        <div class="dc-skel-info-grid">
+            <div class="dc-skel dc-skel-info-card"></div>
+            <div class="dc-skel dc-skel-info-card"></div>
+            <div class="dc-skel dc-skel-info-card"></div>
         </div>
         <div class="final-spacer"></div>
         <div class="final-section">
             <div class="dc-skel dc-skel-section-title"></div>
-            ${rows}
+            <div class="dc-skel-timeline">
+                ${timelineRows}
+            </div>
         </div>
         <div class="final-spacer"></div>
         <div class="final-section">
@@ -146,6 +155,8 @@ function _buildDailyCardSkeleton() {
                 <div class="dc-skel dc-skel-pill"></div>
                 <div class="dc-skel dc-skel-pill" style="width:65px;"></div>
                 <div class="dc-skel dc-skel-pill" style="width:90px;"></div>
+                <div class="dc-skel dc-skel-pill" style="width:72px;"></div>
+                <div class="dc-skel dc-skel-pill" style="width:58px;"></div>
             </div>
         </div>
     `;
@@ -334,6 +345,11 @@ async function initDailyCard() {
             </div>
 
             <div id="normalConfigArea">
+                <div style="margin-bottom:15px; display: flex; gap: 8px;">
+                    <button class="btn-tool" onclick="importScheduleFromText()" style="flex: 1; background: rgba(0, 234, 255, 0.1); border: 1px dashed #00eaff; color: #00eaff; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold;">
+                        <i class="fa-solid fa-file-pdf"></i> IMPOR PDF JADWAL
+                    </button>
+                </div>
                 <div style="margin-bottom:15px;">
                     <label style="font-size:12px; display:block; margin-bottom:5px; color:#00eaff; font-weight:bold;">${t('edit_day')}</label>
                     <select id="editDaySelector" class="glass-input">
@@ -903,6 +919,11 @@ function applyEditMode(isActive) {
     if (btnLesson) btnLesson.style.display = isActive ? 'block' : 'none';
     if (btnPicket) btnPicket.style.display = isActive ? 'block' : 'none';
     if (configPanel) configPanel.style.display = isActive ? 'block' : 'none';
+
+    // Set draggable buat drag & drop reorder
+    document.querySelectorAll('#timelineList .tl-item-final, #picketList .picket-pill').forEach(el => {
+        el.draggable = isActive;
+    });
 }
 
 // Fungsi terpisah agar removeEventListener bisa tracking referensi yang sama
@@ -1029,6 +1050,7 @@ window.addLessonRow = function () {
 
     div.querySelector('.btn-del-inline').onclick = function () { div.remove(); autoSaveDraft(); };
     div.querySelectorAll('.editable-text').forEach(el => el.addEventListener('keydown', _blockEnterKey));
+    div.draggable = true;
 
     document.getElementById('timelineList').appendChild(div);
     autoSaveDraft();
@@ -1047,18 +1069,94 @@ window.addPicketRow = function () {
 
     div.querySelector('.btn-del-inline').onclick = function () { div.remove(); autoSaveDraft(); };
     div.querySelector('span').addEventListener('keydown', _blockEnterKey);
+    div.draggable = true;
 
     document.getElementById('picketList').appendChild(div);
     autoSaveDraft();
 };
 
+// ── DRAG & DROP REORDER (EDIT MODE) ──
+window._dcDragState = null;
+
+function handleDcDragStart(e) {
+    const item = e.target.closest('.tl-item-final, .picket-pill');
+    if (!item || !window.isDailyEditing) return;
+    if (e.target.closest('.btn-del-inline')) return;
+
+    window._dcDragState = { element: item, moved: false };
+    item.classList.add('dc-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+}
+
+function handleDcDragOver(e) {
+    if (!window._dcDragState) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const target = e.target.closest('.tl-item-final, .picket-pill');
+    if (!target || target === window._dcDragState.element) return;
+
+    window._dcDragState.moved = true;
+
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const parent = target.parentElement;
+
+    if (e.clientY < midY) {
+        parent.insertBefore(window._dcDragState.element, target);
+    } else {
+        parent.insertBefore(window._dcDragState.element, target.nextSibling);
+    }
+}
+
+function handleDcDrop(e) {
+    if (!window._dcDragState) return;
+    e.preventDefault();
+    if (window._dcDragState.moved) autoSaveDraft();
+}
+
+function handleDcDragEnd() {
+    document.querySelectorAll('.dc-dragging').forEach(el => el.classList.remove('dc-dragging'));
+    window._dcDragState = null;
+}
+
+// Init drag events sekali (delegation via document)
+document.addEventListener('dragstart', handleDcDragStart);
+document.addEventListener('dragover', handleDcDragOver);
+document.addEventListener('drop', handleDcDrop);
+document.addEventListener('dragend', handleDcDragEnd);
+
 // ==========================================
-// INIT
+// INIT — Skeleton langsung render, data di-fetch setelahnya
 // ==========================================
+(function() {
+    const container = document.querySelector('.left-section');
+    if (!container) return;
+    const user = _getDailyUser();
+    if (!user || !user.class_id) return;
+    if (document.getElementById('dailyInfoCard')) return;
+
+    const cardHTML = `
+        <div id="dailyInfoCard" class="daily-card-final glass-card-effect">
+            <div class="final-header animate-pop-in" id="dcHeader">${_buildHeaderSkeleton()}</div>
+            <div id="dcContentFinal" class="final-content">
+                ${_buildDailyCardSkeleton()}
+            </div>
+            <div id="dailyConfigPanel" class="config-panel"></div>
+            <div class="final-watermark">v14 dynamic-range-system</div>
+        </div>
+    `;
+    const welcome = document.getElementById('welcomeText');
+    if (welcome) welcome.insertAdjacentHTML('afterend', cardHTML);
+    else container.innerHTML += cardHTML;
+})();
+
+// Data fetching — jalan setelah DOM siap + dikit delay biar ga clash
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initDailyCard, 500));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initDailyCard, 300));
 } else {
-    setTimeout(initDailyCard, 500);
+    setTimeout(initDailyCard, 300);
 }
 
 // ==========================================
@@ -1097,3 +1195,154 @@ document.addEventListener('keydown', function (e) {
         addPicketRow();
     }
 });
+
+// ==========================================
+// PDF / OCR IMPORTER
+// ==========================================
+window.importScheduleFromText = async function() {
+    // Buka file picker langsung buat PDF
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        showToast('Sedang membaca PDF...', 'info');
+
+        try {
+            if (!window.pdfjsLib) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            }
+
+            const typedarray = new Uint8Array(await file.arrayBuffer());
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            let fullText = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                let lastY = -1;
+                let pageText = '';
+                textContent.items.forEach(item => {
+                    if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+                        pageText += '\n';
+                    }
+                    pageText += item.str + ' ';
+                    lastY = item.transform[5];
+                });
+                fullText += pageText + '\n';
+            }
+
+            window.processScheduleText(fullText);
+        } catch (err) {
+            console.error('PDF Error:', err);
+            showPopup('Gagal membaca PDF. Pastikan file tidak rusak.', 'error');
+        }
+    };
+    input.click();
+};
+
+window.processScheduleText = async function(rawText) {
+    const classOptions = [
+        { label: 'X RPL 1', id: 1, idx: 5 },
+        { label: 'X RPL 2', id: 2, idx: 6 },
+        { label: 'X RPL 3', id: 3, idx: 7 },
+        { label: 'X RPL 4', id: 4, idx: 8 }
+    ];
+
+    // Auto-detect kelas user, skip popup kalo cocok
+    const userId = getEffectiveClassId ? getEffectiveClassId() : null;
+    let target = classOptions.find(c => c.id == userId);
+
+    if (!target) {
+        const choice = await showPopup('Pilih Kelas', 'choice', {
+            options: classOptions
+        });
+        if (!choice) return;
+        target = classOptions.find(c => c.label === choice);
+    }
+    
+    const lines = rawText.split('\n');
+    let currentDay = 'Senin';
+    const dayKeywords = ['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT'];
+    const skipDays = ['SABTU', 'MINGGU'];
+    const result = {};
+
+    lines.forEach((line, lineIdx) => {
+        const upper = line.toUpperCase().trim();
+        if (!upper) return;
+        
+        // Skip kalo baris Sabtu/Minggu
+        if (skipDays.some(d => upper.includes(d))) {
+            currentDay = null;
+            return;
+        }
+
+        const foundDay = dayKeywords.find(d => upper.includes(d));
+        if (foundDay) {
+            currentDay = foundDay.charAt(0) + foundDay.slice(1).toLowerCase();
+            return;
+        }
+
+        if (!currentDay) return;
+
+        const timeMatch = line.match(/(\d{2}\.\d{2}[- ]+\d{2}\.\d{2})/);
+        if (timeMatch) {
+            const parts = line.split(/\s+/).filter(p => p.length > 0);
+            const time = timeMatch[0].split(/[- ]+/)[0];
+            let subject = parts[target.idx] || '-';
+            
+            // Ilangin nomor guru di depan (misal "21Jepang" → "Jepang")
+            subject = subject.replace(/^\d+/, '').trim();
+            
+            if (!result[currentDay]) result[currentDay] = [];
+            if (subject && subject !== '-' && !subject.includes('ISTIRAHAT')) {
+                result[currentDay].push(`${time} - ${subject}`);
+            }
+        }
+    });
+
+    Object.keys(result).forEach(day => {
+        const draftKey = `${day}_regular`;
+        window.dailyDrafts[draftKey] = {
+            day_name: day,
+            type: 'regular',
+            class_id: target.id,
+            uniform: '-', activity: 'KBM Normal', notes: '-',
+            lessons: result[day].join('; '),
+            picket: ''
+        };
+    });
+
+    // Kalo ada hari Senin-Jumat yang kosong, isi dummy biar muncul di edit mode
+    const allWeekdays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+    allWeekdays.forEach(day => {
+        const key = `${day}_regular`;
+        if (!window.dailyDrafts[key]) {
+            window.dailyDrafts[key] = {
+                day_name: day,
+                type: 'regular',
+                class_id: target.id,
+                uniform: '-', activity: 'KBM Normal', notes: '-',
+                lessons: '',
+                picket: ''
+            };
+        }
+    });
+
+    if (typeof showToast === 'function') showToast('Jadwal PDF berhasil di-impor! Geser-geser urutannya kalo perlu, lalu klik Simpan.', 'success');
+
+    // Auto masuk edit mode & tampilkan hari pertama yang terisi
+    const firstDay = Object.keys(result)[0];
+    if (firstDay) {
+        window.isDailyEditing = true;
+        window.editingDay = firstDay;
+        document.getElementById('dailyInfoCard')?.classList.add('edit-mode-on');
+    }
+    initDailyCard();
+};

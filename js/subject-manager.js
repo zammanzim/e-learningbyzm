@@ -879,6 +879,10 @@ const SubjectApp = {
         }
 
         this.state.isToggling = false;
+
+        window.dispatchEvent(new CustomEvent('editmodetoggle', {
+            detail: { editMode: this.state.editMode }
+        }));
     },
 
     async saveAllChanges() {

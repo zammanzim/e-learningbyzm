@@ -13,6 +13,7 @@ const _getVisitorUser = () => {
 // 1. LOG KUNJUNGAN — 1 query, debounce 2 menit
 // ==========================================
 let _globalPresenceChannel = null;
+window._onlineUsers = new Set();
 
 async function logVisitor() {
     const user = _getVisitorUser();
@@ -23,6 +24,23 @@ async function logVisitor() {
         _globalPresenceChannel = supabase.channel('online-users', {
             config: { presence: { key: user.id } }
         });
+
+        _globalPresenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = _globalPresenceChannel.presenceState();
+                window._onlineUsers = new Set();
+                Object.values(state).forEach(users => {
+                    users.forEach(u => {
+                        if (u.id) window._onlineUsers.add(String(u.id));
+                    });
+                });
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                newPresences.forEach(u => { if (u.id) window._onlineUsers.add(String(u.id)); });
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                leftPresences.forEach(u => { if (u.id) window._onlineUsers.delete(String(u.id)); });
+            });
 
         // Cek apakah ada script monitor (admin) yang mau nambahin callback
         if (typeof window._initPresenceHandlers === 'function') {
@@ -87,52 +105,6 @@ async function logVisitor() {
 
 // ==========================================
 // 1.5 LOG AKTIVITAS (BUAT LEADERBOARD)
-// ==========================================
-// Irit database: Pake sessionStorage biar 1 aksi cuma dicatat 1x per sesi
-async function logActivity(action, page, points = 1, uniqueId = "") {
-    const user = _getVisitorUser();
-    if (!user || typeof supabase === 'undefined') return;
-
-    const userId = user.id;
-    const actionId = action.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
-    const activityKey = `act_${userId}_${actionId}_${uniqueId}`;
-    
-    // 1. ANTI-SPAM: Jika aksi ini sama persis dengan aksi TERAKHIR (misal: refresh halaman)
-    const lastKey = sessionStorage.getItem('last_activity_key');
-    if (activityKey === lastKey) return;
-
-    // 2. LOGIC TOGGLE: 
-    // - Jika Navigation: Boleh berulang (a > b > a) tapi tidak boleh refresh (a > a).
-    // - Jika Materi/Tugas: Tetap 1x per sesi (agar tidak bisa farming poin klik card).
-    if (page !== "Navigation") {
-        if (sessionStorage.getItem(activityKey)) {
-            console.log(`logActivity: Content "${action}" already logged in this session.`);
-            return;
-        }
-    }
-
-    const classId = (typeof getEffectiveClassId === 'function') 
-        ? getEffectiveClassId() 
-        : (user.class_id || "unknown");
-
-    try {
-        const { error } = await supabase.from("activity_logs").insert({
-            user_id: userId,
-            action_text: action,
-            page_name: page,
-            points: points,
-            class_id: classId,
-            reference_id: uniqueId // Simpan ID unik materi/tugas/halaman
-        });
-
-        if (!error) {
-            sessionStorage.setItem(activityKey, "true");
-            sessionStorage.setItem('last_activity_key', activityKey); // Catat sebagai aksi terakhir
-            console.log(`%cActivity Logged: ${action} (+${points} pts)`, "color: #0be881; font-weight: bold;");
-        }
-    } catch (err) { console.error("Activity Log Execution Error:", err); }
-}
-
 // ==========================================
 // 2. BADGE COUNT — via Realtime, tanpa polling
 // ==========================================
@@ -268,10 +240,14 @@ async function renderVisitorStats() {
             const tanggal = ts.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
             const jam = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
+            const isOnline = window._onlineUsers.has(String(v.user_id));
             const item = document.createElement('div');
             item.className = 'visitor-item';
             item.innerHTML = `
-                <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+                <div style="position:relative; width:30px; height:30px; flex-shrink:0;">
+                    <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                    ${isOnline ? '<div style="position:absolute; bottom:-1px; left:-1px; width:11px; height:11px; border-radius:50%; background:#22c55e; border:2px solid #0a0f19;"></div>' : ''}
+                </div>
                 <div style="flex:1; margin-left:10px;">
                     <div style="font-size:13px; font-weight:bold;">${nickname}</div>
                     <div style="font-size:11px; display:flex; justify-content:space-between; align-items:center; gap:8px;">

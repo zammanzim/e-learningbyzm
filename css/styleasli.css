@@ -3244,6 +3244,24 @@ input:checked+.slider:before {
     animation: popUp 0.3s forwards;
 }
 
+/* ── DRAG & DROP REORDER (DAILY CARD) ── */
+.edit-mode-on .tl-item-final,
+.edit-mode-on .picket-pill {
+    cursor: grab;
+}
+
+.edit-mode-on .tl-item-final:active,
+.edit-mode-on .picket-pill:active {
+    cursor: grabbing;
+}
+
+.tl-item-final.dc-dragging,
+.picket-pill.dc-dragging {
+    opacity: 0.35;
+    outline: 1px dashed #00eaff;
+    background: rgba(0, 234, 255, 0.08);
+}
+
 .bg-custom {
     color: #000 !important;
     border-color: #ffd700 !important;
