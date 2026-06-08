@@ -658,6 +658,7 @@
 
             <div class="glass-card">
                 <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-list-ol"></i> Rincian Nilai Pribadi</h3>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Note: Nilai yang atmin input tidak 100% bener, siapa tau ada yang salah, jadi cek nilai asli di dokumen yang dikasih guru.</p>
                 <table class="modern-table">
                     <thead>
                         <tr>
@@ -668,6 +669,8 @@
                     </thead>
                     <tbody id="personalTableBody"></tbody>
                 </table>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Jangan putus asa kalo nilai kecil. Yang penting udah belajar, berusaha buat ulangan. Jangan hiraukan juga yang nilainya lebih gede tapi "tidak sesuai" dengan keseharian. <br> Semua guru pasti tau, siapa yang pantas mendapat nilai besar, dan mendapat nilai kecil. Karena penilaian guru bukan cuma dari nilai ulangan aja, tapi dari keseharian, sikap, dan tugas. Jadi kalo ada siswa yang ke 3 itu jelek tapi nilai PSAT nya gede itu anomali itu, pasti guru akan menurunkan nilai akhirnya.</p>
+
             </div>
         </div>
 
@@ -675,6 +678,7 @@
             <div class="glass-card">
                 <h3 style="margin-bottom: 10px; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15
                     Leaderboard</h3>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Ranking 15 besar berdasarkan <strong>NILAI PSAT</strong></p>
                 <div class="podium-section" id="podiumTop3"></div>
                 <div class="leaderboard-list" id="podiumRest"></div>
             </div>
@@ -849,6 +853,7 @@
             if (idx === -1 && myNickname) idx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
             const data = myGlobalData[idx]; if (!data) return;
             document.getElementById('name').innerText = getDisplayName(data.nama_siswa);
+            if (idx >= 0 && idx < 10) data.is_private = false;
             document.getElementById('privacyToggle').checked = !!data.is_private;
             const color = getDynamicColor(data.average);
             document.getElementById('rataNum').innerText = data.average.toFixed(2); document.getElementById('rataNum').style.color = color;
@@ -878,7 +883,8 @@
             const mkP = (s, r, c) => {
                 const key = s.nama_siswa.toLowerCase();
                 const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
-                const privIcon = s.is_private ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
+                const isT10 = globalData.indexOf(s) < 10;
+                const privIcon = s.is_private && !isT10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
                 return `<div class="podium-box ${c}" onclick="showStudentScores('${s.nama_siswa}')" style="cursor:pointer;"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
             };
             if (globalData[1]) t3.innerHTML += mkP(globalData[1], 2, 'p2');
@@ -888,7 +894,7 @@
                 if (globalData[i]) {
                     const key = globalData[i].nama_siswa.toLowerCase();
                     const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
-                    const gPrivIcon = globalData[i].is_private ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
+                    const gPrivIcon = globalData[i].is_private && i >= 10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
                     rs.innerHTML += `<div class="leader-item" onclick="showStudentScores('${globalData[i].nama_siswa}')" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
                 }
             }
@@ -912,8 +918,10 @@
         function showStudentScores(nama) {
             const s = globalData.find(x => x.nama_siswa.toLowerCase() === nama.toLowerCase()); if (!s) return;
             const isMe = (myIdentifier && nama.toLowerCase() === myIdentifier.toLowerCase()) || (myNickname && nama.toLowerCase() === myNickname.toLowerCase());
+            const top10Idx = globalData.findIndex(x => x.nama_siswa.toLowerCase() === nama.toLowerCase());
+            const isTop10 = top10Idx >= 0 && top10Idx < 10;
             let html = ""; const color = getDynamicColor(s.average);
-            if (s.is_private && !isMe && !isAdminViewAll && localUser?.role !== 'super_admin') html = `<div style="text-align:center; padding: 30px 10px;"><i class="fa-solid fa-eye-slash" style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;"></i><h2 style="margin-bottom: 10px;">Nilai Tersembunyi</h2><p style="opacity:0.6;">Siswa ini mengaktifkan mode privasi.</p></div>`;
+            if (s.is_private && !isMe && !isAdminViewAll && localUser?.role !== 'super_admin' && !isTop10) html = `<div style="text-align:center; padding: 30px 10px;"><i class="fa-solid fa-eye-slash" style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;"></i><h2 style="margin-bottom: 10px;">Nilai Tersembunyi</h2><p style="opacity:0.6;">Siswa ini mengaktifkan mode privasi.</p></div>`;
             else {
                 html = `<div style="text-align:left;"><h2 style="color:${color}; margin-bottom:5px; font-size:24px;">${getDisplayName(s.nama_siswa)}</h2><p style="opacity:0.7; margin-bottom:25px;">Rata-Rata: <b style="color:${color}">${s.average.toFixed(2)}</b></p><table class="modern-table"><thead><tr><th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th></tr></thead><tbody>`;
                 for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff"; html += `<tr><td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '✅' : '❌') : '-'}</td></tr>`; }
@@ -954,6 +962,15 @@
         }
 
         async function togglePrivacy(isP) {
+            if (isP) {
+                let myIdx = myGlobalData.findIndex(s => myIdentifier && s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase());
+                if (myIdx === -1 && myNickname) myIdx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
+                if (myIdx >= 0 && myIdx < 10) {
+                    document.getElementById('privacyToggle').checked = false;
+                    showPopup(`Kamu ada di peringkat #${myIdx + 1}, jadi gabisa privasi nilai.`, 'error');
+                    return;
+                }
+            }
             showToast('Menyimpan...', 'info');
             const { error } = await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myIdentifier);
             if (error && myNickname) await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myNickname);
