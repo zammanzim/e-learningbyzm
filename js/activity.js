@@ -6,9 +6,9 @@ const _getActivityUser = () => {
     try { return JSON.parse(localStorage.getItem("user")); } catch (e) { return null; }
 };
 
-// ── ONLINE TIMER: +5 poin kalo online > 30 detik ──
+// ── ONLINE TIMER: +5 poin setiap 30 detik ──
 window._activityStart = Date.now();
-setTimeout(async () => {
+setInterval(async () => {
     const user = _getActivityUser();
     if (!user || typeof supabase === 'undefined') return;
     await logActivity('Online 30 Detik', 'Online', 5, `online_${Date.now()}`);

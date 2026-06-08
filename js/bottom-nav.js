@@ -11,7 +11,7 @@
 
     // ── FALLBACK default kalau cache kosong & DB belum load ──
     const DEFAULT_ITEMS = [
-        { id: 'announcements', icon: 'fa-solid fa-table-columns', label: 'Home', href: 'announcements' },
+        { id: 'announcements', icon: 'fa-solid fa-table-columns', label: 'Home', href: '/' },
         { id: 'tugas', icon: 'fa-solid fa-list-check', label: 'Tugas', href: 'tugas' },
         { id: 'feed', icon: 'fa-solid fa-newspaper', label: 'Feed', href: 'feed' },
         { id: 'user', icon: 'fa-solid fa-circle-user', label: 'Profil', href: 'user' },
@@ -25,7 +25,7 @@
     function getClassId() {
         try {
             const u = getUser();
-            if (!u) return null;
+            if (!u) return '2';
             if (u.role === 'super_admin') {
                 const ov = sessionStorage.getItem('class_override');
                 if (ov) return ov;

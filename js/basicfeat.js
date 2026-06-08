@@ -122,7 +122,7 @@ document.addEventListener("click", (e) => {
     }
 });
 
-function goAnnouncements() { window.location.href = "announcements"; }
+function goAnnouncements() { window.location.href = "/"; }
 function goProfile() { window.location.href = "settingacc"; }
 
 // ==========================================

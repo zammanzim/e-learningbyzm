@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pathPrefix = isInAdmin ? "../" : isInA ? "../" : "";
 
     const isPublicPage = window.location.pathname.includes("login") || window.location.pathname.includes("404");
-    if (isPublicPage) return;
+    const isIndex = !window.location.pathname || window.location.pathname === '/' || window.location.pathname.endsWith('/index.html');
+    if (isPublicPage || isIndex) return;
 
     const user = getUser();
     if (user) {
@@ -26,7 +27,7 @@ async function checkPathAccess(user) {
     if (!user || user.role === 'super_admin') return;
 
     const currentId = getPathIdentifier();
-    const whitelist = ['login', '404', 'index', 'announcements', 'theme', 'settingacc', 'user'];
+    const whitelist = ['login', '404', 'index', 'theme', 'settingacc', 'user'];
     
     // 1. Cek Whitelist Dasar
     if (whitelist.includes(currentId) || !currentId) return;
@@ -92,7 +93,7 @@ function renderAccessDenied() {
     }
 
     const isA = window.location.pathname.includes('/a/');
-    const homeUrl = isA ? 'announcements' : '../a/announcements';
+    const homeUrl = isA ? '../' : '../';
 
     mainContent.innerHTML = `
         <div class="course-card animate-pop-up" style="text-align:center; max-width:500px; margin:40px auto; padding:40px; background:rgba(20,20,25,0.7); border:1px solid rgba(255,71,87,0.2);">

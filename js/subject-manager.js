@@ -62,8 +62,12 @@ const SubjectApp = {
         this.state.user = this.getUserData();
 
         if (!this.state.user) {
-            window.location.href = "login";
-            return;
+            if (this.state.subjectId === 'guest') {
+                this.state.user = { id: 'guest', role: '', class_id: 2 };
+            } else {
+                window.location.href = "login";
+                return;
+            }
         }
 
 

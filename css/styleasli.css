@@ -139,6 +139,25 @@ header {
     border: 2px solid white;
 }
 
+.guest-login-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--accent, #00eaff);
+    border-radius: 20px;
+    color: var(--accent, #00eaff);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: .2s;
+    margin-right: 8px;
+}
+.guest-login-btn:hover {
+    background: var(--accent, #00eaff);
+    color: #000;
+}
+
 .profile-dropdown {
     position: absolute;
     right: 0.7969rem;

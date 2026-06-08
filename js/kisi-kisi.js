@@ -311,7 +311,7 @@ function _renderKisiInfoList(items) {
         </div>
         <div class="header-right-group">
             ${simShortcutHTML}
-            <div class="task-shortcut-box" onclick="window.location.href='announcements'">
+            <div class="task-shortcut-box" onclick="window.location.href='../'">
                 <i class="fa-solid fa-house"></i>
                 <span>HOME</span>
             </div>

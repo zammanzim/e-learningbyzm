@@ -93,6 +93,13 @@ window.currentViewDay = null;
 async function _navigateToSubject(name, classId) {
     if (!name || name === '-' || window.isDailyEditing) return;
 
+    // Guest mode → popup login
+    if (!localStorage.getItem('user')) {
+        const result = await showPopup('Login dulu untuk akses fitur ini', 'confirm');
+        if (result) window.location.href = 'login';
+        return;
+    }
+
     // Fungsi normalize biar "Bahasa Indonesia" cocok sama "bahasaindonesia"
     const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 
@@ -222,15 +229,21 @@ function _dcCacheInvalidate(classId) {
     } catch (e) { }
 }
 
-async function initDailyCard() {
+async function initDailyCard(guestClassId) {
     const container = document.querySelector('.left-section');
     if (!container) return;
 
-    const user = _getDailyUser();
-    if (!user || !user.class_id) return;
-    
+    let user, USER_CLASS_ID;
+    if (guestClassId) {
+        USER_CLASS_ID = String(guestClassId);
+        user = { role: '', class_id: USER_CLASS_ID };
+    } else {
+        user = _getDailyUser();
+        if (!user || !user.class_id) return;
+        USER_CLASS_ID = getEffectiveClassId() || user.class_id;
+    }
+
     const MASTER_CLASS_ID = 2; // Class ID pusat untuk Global Exam
-    const USER_CLASS_ID = getEffectiveClassId() || user.class_id;
 
     // --- 1. LOGIC CONFIG & GLOBAL EXAM ---
     let config = window.currentConfig;

@@ -65,6 +65,27 @@ const UIComponents = {
         }
 
         // 1. HEADER & VISITOR
+        const _pathPrefix = _isSubDir ? '../' : '';
+        const profileHTML = _uData ? `
+            <div class="profile-box" id="profileTrigger">
+                <span id="headerName">Haii, ${_displayName}</span>
+                <img id="headerPP" class="header-pp" src="${_avatarSrc}">
+                <i class="fa-solid fa-caret-down"></i>
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <ul>
+                    <li onclick="goAnnouncements()"><i class="fa-solid fa-table-columns"></i>${t('announcements2')}</li>
+                    <li onclick="goProfile()"><i class="fa-solid fa-user"></i>${t('edit_prof')}</li>
+                    <li onclick="window.location.href='${_pathPrefix}theme'"><i class="fa-solid fa-palette"></i>${t('theme2')}</li>
+                    ${_uData.role === 'super_admin' || _uData.role === 'class_admin' ? `<li onclick="window.location.href='${_pathPrefix}admiii/visitor'"><i class="fa-solid fa-tower-broadcast"></i> Monitor Visitor</li>` : ''}
+                    <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+                </ul>
+            </div>
+        ` : `
+            <a href="${_pathPrefix}login" class="guest-login-btn">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </a>`;
+
         const headerHTML = `
         <header>
             <div class="header-left">
@@ -80,22 +101,8 @@ const UIComponents = {
                 ${povToggleHTML}
                 ${classSwitcherHTML}
             </div>
-            <div class="profile-box" id="profileTrigger">
-                <span id="headerName">Haii, ${_displayName}</span>
-                <img id="headerPP" class="header-pp" src="${_avatarSrc}">
-                <i class="fa-solid fa-caret-down"></i>
-            </div>
-            <div class="profile-dropdown" id="profileDropdown">
-                <ul>
-                    <li onclick="goAnnouncements()"><i class="fa-solid fa-table-columns"></i>${t('announcements2')}</li>
-                    <li onclick="goProfile()"><i class="fa-solid fa-user"></i>${t('edit_prof')}</li>
-                    <li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'../':'')+'theme'"><i class="fa-solid fa-palette"></i>${t('theme2')}</li>
-                    ${_uData && (_uData.role === 'super_admin' || _uData.role === 'class_admin') ? `<li onclick="window.location.href=(window.location.pathname.includes('/admiii/')?'':'admiii/')+'visitor'"><i class="fa-solid fa-tower-broadcast"></i> Monitor Visitor</li>` : ''}
-                    <li onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
-                </ul>
-            </div>
+            ${profileHTML}
         </header>
- 
         <div id="visitorOverlay" class="visitor-overlay">
             <div class="visitor-popup">
                 <div class="popup-header">

@@ -238,10 +238,14 @@
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) return;
 
+            const classId = typeof getEffectiveClassId === 'function'
+                ? getEffectiveClassId()
+                : user.class_id;
+
             const [configRes, teacherRes, countRes] = await Promise.all([
                 supabase.from('subjects_config').select('*').eq('subject_id', subjectId).limit(1),
                 supabase.from('subject_teachers').select('*').eq('subject_id', subjectId).maybeSingle(),
-                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId)
+                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId).eq('class_id', classId)
             ]);
 
             if (configRes.error) {
@@ -291,21 +295,27 @@
             const total = countRes.count || 0;
             document.getElementById('totalMateri').innerText = total;
 
-            // Hitung berapa yg udah selesai dikerjain user ini
+            // Hitung berapa yg udah selesai (is_done + user_progress)
             let doneCount = 0;
             if (total > 0) {
                 const { data: anns } = await supabase
                     .from('subject_announcements')
-                    .select('id')
-                    .eq('subject_id', subjectId);
+                    .select('id, is_done')
+                    .eq('subject_id', subjectId)
+                    .eq('class_id', classId);
+
                 if (anns && anns.length) {
                     const annIds = anns.map(a => a.id);
-                    const { count } = await supabase
+                    const doneIds = new Set(anns.filter(a => a.is_done).map(a => a.id));
+
+                    const { data: progress } = await supabase
                         .from('user_progress')
-                        .select('*', { count: 'exact', head: true })
+                        .select('announcement_id')
                         .eq('user_id', user.id)
                         .in('announcement_id', annIds);
-                    doneCount = count || 0;
+
+                    if (progress) progress.forEach(p => doneIds.add(p.announcement_id));
+                    doneCount = doneIds.size;
                 }
             }
             document.getElementById('doneMateri').innerText = doneCount;

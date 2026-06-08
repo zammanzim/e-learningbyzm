@@ -1,7 +1,6 @@
 const CACHE_NAME = 'elearniz-v1';
 const STATIC_ASSETS = [
   '/',
-  '/announcements',
   '/css/styleasli.css',
   '/js/supabase-clients.js',
   '/js/ui-components.js',

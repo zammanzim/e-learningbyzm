@@ -1090,7 +1090,7 @@
 
         // AUTO REDIRECT IF LOGGED IN
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user) window.location.href = "a/announcements";
+        if (user) window.location.href = "index.html";
 
         // VARIABLES
         let selectedClassId = forcedClassId || null;
@@ -1338,7 +1338,7 @@
             // 2. Cek Password
             if (pwInput === selectedUserObj.password) {
                 localStorage.setItem("user", JSON.stringify(selectedUserObj));
-                window.location.href = "a/announcements";
+                window.location.href = "index.html";
             } else {
                 // Password Salah
                 pwInputEl.classList.add('error');
@@ -1349,7 +1349,7 @@
         function loginDirect() {
             if (!selectedUserObj) return;
             localStorage.setItem("user", JSON.stringify(selectedUserObj));
-            window.location.href = "a/announcements";
+            window.location.href = "index.html";
         }
 
         // Close modal when clicking outside
@@ -1522,7 +1522,7 @@
             // Simpan ke localStorage — user session + riwayat tamu
             localStorage.setItem('user', JSON.stringify(guestObj));
             localStorage.setItem('prevGuest', JSON.stringify(guestObj));
-            window.location.href = 'a/announcements';
+            window.location.href = 'index.html';
         }
 
         // Hapus guest yang sudah 3 hari tidak aktif (dipanggil saat halaman login dibuka)

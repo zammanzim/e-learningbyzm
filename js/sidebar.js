@@ -317,8 +317,11 @@ async function renderSidebar() {
     if (!sidebar) return;
 
     let user;
-    try { user = JSON.parse(localStorage.getItem('user')); } catch(e) { return; }
-    if (!user) return;
+    try { user = JSON.parse(localStorage.getItem('user')); } catch(e) { user = null; }
+    window._sidebarGuestMode = !user;
+    if (!user) {
+        user = { id: 'guest', role: '', class_id: 2 };
+    }
 
     const classId = getEffectiveClassId() || String(user.class_id);
     const cached  = readCache(classId);
@@ -343,7 +346,9 @@ async function renderSidebar() {
         }
     }
 
-    setupSidebarRealtime(classId, user);
+    if (!window._sidebarGuestMode) {
+        setupSidebarRealtime(classId, user);
+    }
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -432,8 +437,8 @@ function processAndRenderSidebar(groups, items, user) {
                 ? `<span class="sidebar-badge ${escapeSidebarHtml(item.badge_type || 'badge-new')}">${escapeSidebarHtml(item.badge)}</span>`
                 : '';
 
-            // ── Locked ──
-            if (item.locked) {
+            // ── Locked (guest mode atau admin lock) ──
+            if (item.locked || window._sidebarGuestMode) {
                 html += `
                 <li class="sidebar-menu-item sidebar-locked${canManageSidebar ? ' sidebar-manageable' : ''}" data-menu-id="${item.id}" data-menu-group="${escapeSidebarHtml(item.menu_group)}" data-menu-class="${escapeSidebarHtml(item.class_id)}" data-menu-order="${item.display_order || 0}" ${canManageSidebar ? 'draggable="true"' : ''}>
                     <a href="#" onclick="event.preventDefault();" style="cursor:default;">
