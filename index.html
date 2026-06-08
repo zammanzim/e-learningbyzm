@@ -127,17 +127,19 @@
 
     <div class="main-content" style="flex-wrap: wrap;">
         <div class="left-section">
-            <div class="guest-card" id="guestIntroCard">
-                <h3><i class="fa-solid fa-graduation-cap"></i> Selamat Datang</h3>
-                <p>Platform E-Learning Nizam — tempat belajar online, akses materi, tugas, dan jadwal pelajaran.</p>
-                <p style="margin-top:8px;">Login untuk akses penuh, atau lihat informasi di bawah.</p>
-            </div>
-
-            <div id="guestAnnouncements"></div>
-        </div>
-
-        <div class="right-section">
             <h2 id="welcomeText"></h2>
+            <div id="guestContent" style="display:none;">
+                <div class="guest-card" id="guestIntroCard">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Selamat Datang</h3>
+                    <p>Platform E-Learning Nizam — tempat belajar online, akses materi, tugas, dan jadwal pelajaran.</p>
+                    <p style="margin-top:8px;">Login untuk akses penuh, atau lihat informasi di bawah.</p>
+                </div>
+                <div id="guestAnnouncements"></div>
+            </div>
+        </div>
+        <div class="right-section">
+            <div id="announcements" style="display:none;"></div>
+            <div id="editControls"></div>
         </div>
     </div>
 
@@ -161,6 +163,8 @@
             }
 
             if (user) {
+                document.getElementById('guestContent').style.display = 'none';
+                document.getElementById('announcements').style.display = '';
                 document.getElementById('welcomeText').innerText = 'Halo, ' + (user.nickname || user.short_name || '');
                 initDailyCard();
                 SubjectApp.init('announcements', `<h3><i class="fa-solid fa-bullhorn"></i>${t("announcements3")}</h3>`, 'Class Announcements', false);
@@ -168,6 +172,7 @@
             }
 
             // ── GUEST MODE ──
+            document.getElementById('guestContent').style.display = '';
             document.getElementById('welcomeText').innerText = 'Jadwal Pelajaran';
             initDailyCard(2);
 
@@ -308,7 +313,7 @@
                 showToast('Informasi ditambahkan', 'success');
             };
             overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-git        }
+        }
 
         if (typeof t === 'function') initApp();
         else {
