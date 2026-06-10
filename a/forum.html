@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forum • E-Learning Nizam</title>
+    <title id="pageTitle">Forum • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -436,12 +436,12 @@
         <!-- LEFT: Compose -->
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-comments" style="font-size:24px;"></i> Forum</h1>
+                <h1 data-i18n="forum"><i class="fa-solid fa-comments" style="font-size:24px;"></i></h1>
             </div>
 
             <div class="compose-box">
                 <h3 data-i18n="post_discussion"><i class="fa-solid fa-pen-to-square"></i></h3>
-                <input id="topicTitle" class="compose-input" type="text" placeholder="Judul...">
+                <input id="topicTitle" class="compose-input" type="text" data-i18n-placeholder="title">
                 <textarea id="topicContent" class="compose-input" data-i18n="what_discussion"
                     rows="4"></textarea>
                 <button onclick="postNewTopic()" class="btn-glass-save" style="width:100%; margin-top:4px;">
@@ -492,12 +492,12 @@
             <button class="drawer-close" onclick="closeCommentDrawer()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="comment-list" id="commentList">
-            <div class="comment-loading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat...</div>
+            <div class="comment-loading" data-i18n="loading"><i class="fa-solid fa-spinner fa-spin"></i></div>
         </div>
         <div class="comment-input-bar">
             <img id="commentUserAvatar" src="icons/profpicture.png">
             <div class="comment-input-wrap">
-                <input class="comment-input" id="commentInput" placeholder="Tambah komentar..." autocomplete="off">
+                <input class="comment-input" id="commentInput" data-i18n-placeholder="add_comment_placeholder" autocomplete="off">
                 <button class="comment-send" id="commentSendBtn" onclick="sendComment()">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
@@ -506,6 +506,7 @@
     </div>
 
     <script src="../js/forum.js" defer></script>
+    <script>document.title = t('forum') + ' • E-Learning Nizam';</script>
 </body>
 
 </html>

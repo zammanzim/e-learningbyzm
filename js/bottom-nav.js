@@ -11,10 +11,10 @@
 
     // ── FALLBACK default kalau cache kosong & DB belum load ──
     const DEFAULT_ITEMS = [
-        { id: 'announcements', icon: 'fa-solid fa-table-columns', label: 'Home', href: '/' },
-        { id: 'tugas', icon: 'fa-solid fa-list-check', label: 'Tugas', href: 'tugas' },
-        { id: 'feed', icon: 'fa-solid fa-newspaper', label: 'Feed', href: 'feed' },
-        { id: 'user', icon: 'fa-solid fa-circle-user', label: 'Profil', href: 'user' },
+        { id: 'announcements', icon: 'fa-solid fa-table-columns', label: t('home'), href: '/' },
+        { id: 'tugas', icon: 'fa-solid fa-list-check', label: t('nav_tugas'), href: 'tugas' },
+        { id: 'feed', icon: 'fa-solid fa-newspaper', label: t('feed'), href: 'feed' },
+        { id: 'user', icon: 'fa-solid fa-circle-user', label: t('nav_profile'), href: 'user' },
     ];
 
     // ── HELPERS ──────────────────────────────────────────────
@@ -265,7 +265,7 @@
     function buildNav(items) {
         const nav = document.createElement('nav');
         nav.id = 'bottomNav';
-        nav.setAttribute('aria-label', 'Navigasi utama');
+        nav.setAttribute('aria-label', t('main_navigation'));
 
         markVisited(activeId);
 
@@ -285,7 +285,7 @@
         nav.innerHTML =
             leftItems.map(itemHTML).join('') +
             `<div class="bn-center-wrap">
-                <button class="bn-center-btn" id="bnCenterBtn" aria-label="Menu" type="button">
+                <button class="bn-center-btn" id="bnCenterBtn" aria-label="${t('sidebar_main')}" type="button">
                     <i class="fa-solid fa-bars"></i>
                 </button>
             </div>` +

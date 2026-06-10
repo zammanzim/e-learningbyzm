@@ -96,21 +96,21 @@
     <div class="main-content">
         <div class="left-section">
             <h1 style="color:#00eaff; margin-bottom:10px;">Input Nilai PSTS</h1>
-            <p style="opacity:0.8; margin-bottom:30px;">Pilih nickname siswa, isi nilai, lalu simpan.</p>
+            <p style="opacity:0.8; margin-bottom:30px;" data-i18n="select_student_fill_score">Pilih nickname siswa, isi nilai, lalu simpan.</p>
 
             <div class="admin-container">
                 <!-- Pilih Siswa -->
                 <div class="input-group">
-                    <label><i class="fa-solid fa-user"></i> Pilih Siswa (Nickname)</label>
+                    <label><i class="fa-solid fa-user"></i> <span data-i18n="select_student_nickname">Pilih Siswa (Nickname)</span></label>
                     <select id="studentSelect" class="admin-select" onchange="loadStudentData()">
-                        <option value="">-- Pilih Nama Siswa --</option>
+                        <option value="" data-i18n="select_student">-- Pilih Nama Siswa --</option>
                     </select>
                 </div>
 
                 <hr style="border-color:rgba(255,255,255,0.1); margin:25px 0;">
 
                 <!-- Input Nilai -->
-                <label><i class="fa-solid fa-list-ol"></i> Input Nilai Mata Pelajaran</label>
+                <label><i class="fa-solid fa-list-ol"></i> <span data-i18n="input_subject_score">Input Nilai Mata Pelajaran</span></label>
                 <div class="nilai-grid">
                     <div><label style="font-size:12px; color:#fff;">PABP</label>         <input type="number" id="inp_pabp"        class="admin-input" placeholder="0"></div>
                     <div><label style="font-size:12px; color:#fff;">PP</label>           <input type="number" id="inp_pp"          class="admin-input" placeholder="0"></div>
@@ -130,7 +130,7 @@
                 </div>
 
                 <button onclick="saveNilai()" class="btn-save" id="btnSave">
-                    <i class="fa-solid fa-floppy-disk"></i> SIMPAN DATA
+                    <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save">SIMPAN DATA</span>
                 </button>
             </div>
         </div>
@@ -163,7 +163,7 @@
             if (error) { console.error("Gagal load users:", error); return; }
 
             const select = document.getElementById('studentSelect');
-            select.innerHTML = '<option value="">-- Pilih Nama Siswa --</option>';
+            select.innerHTML = '<option value="">' + t('select_student') + '</option>';
             data.forEach(u => {
                 if (u.nickname) {
                     const opt = document.createElement('option');
@@ -190,10 +190,10 @@
                     const el = document.getElementById('inp_' + id);
                     if (el) el.value = data[id] !== null ? parseFloat(data[id]).toFixed(2) : '';
                 });
-                document.getElementById('btnSave').innerText = `UPDATE DATA (${nama})`;
+                document.getElementById('btnSave').innerText = t('save') + ` (${nama})`;
             } else {
                 resetForm();
-                document.getElementById('btnSave').innerText = "SIMPAN DATA BARU";
+                document.getElementById('btnSave').innerText = t('save') + " BARU";
             }
         }
 
@@ -203,17 +203,17 @@
                 const el = document.getElementById('inp_' + id);
                 if (el) el.value = '';
             });
-            document.getElementById('btnSave').innerText = "SIMPAN DATA";
+            document.getElementById('btnSave').innerText = t('save');
         }
 
         // ── Simpan ke Supabase (upsert) ──
         async function saveNilai() {
             const nama = document.getElementById('studentSelect').value;
-            if (!nama) { alert("Pilih nama siswa dulu!"); return; }
+            if (!nama) { alert(t('select_student_first_alert')); return; }
 
             const btn       = document.getElementById('btnSave');
             btn.disabled    = true;
-            btn.innerText   = "Menyimpan...";
+            btn.innerText   = t('loading');
 
             const payload = { nama_siswa: nama, class_id: adminClass };
             MAPEL_IDS.forEach(id => {
@@ -229,14 +229,14 @@
 
             if (error) {
                 console.error("Error save:", error);
-                alert("Gagal simpan: " + error.message);
-                btn.innerText = "GAGAL";
+                alert(t('failed_save_label') + error.message);
+                btn.innerText = t('failed_generic');
             } else {
-                alert(`Berhasil disimpan untuk ${nama}!`);
-                btn.innerText = "DATA TERSIMPAN";
+                alert(t('saved_success_for', { name: nama }));
+                btn.innerText = t('success_generic');
                 setTimeout(() => {
                     if (document.getElementById('studentSelect').value === nama) {
-                        btn.innerText = `UPDATE DATA (${nama})`;
+                        btn.innerText = t('save') + ` (${nama})`;
                     }
                 }, 2000);
             }

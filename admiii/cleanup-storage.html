@@ -64,7 +64,7 @@
     <h1>Cleanup Orphaned Photos</h1>
     <button onclick="scanStorage()">1. Scan & Preview</button>
     <button id="deleteBtn" onclick="runCleanup()"
-        style="display:none; background: #ff4757; color: white; border: none;">2. Hapus File yang Terpilih</button>
+        style="display:none; background: #ff4757; color: white; border: none;">2. <span data-i18n="delete_selected_files">Hapus File yang Terpilih</span></button>
 
     <div id="fileList" class="file-list"></div>
     <div id="log" class="log"></div>
@@ -151,7 +151,7 @@
             try {
                 log("Deleting files...");
                 await supabase.storage.from('subject-photos').remove(orphanedFiles);
-                log("Berhasil dihapus!");
+                log(t('deleted_success'));
                 document.getElementById('deleteBtn').style.display = 'none';
                 document.getElementById('fileList').innerHTML = "";
             } catch (e) {

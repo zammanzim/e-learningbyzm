@@ -63,7 +63,7 @@ async function initClassSwitcher() {
         if (error) throw error;
 
         console.log("[VisitorMonitor] Classes fetched:", classes.length);
-        let html = `<button class="class-btn active" data-id="global" onclick="switchClass('global')">Global</button>`;
+        let html = `<button class="class-btn active" data-id="global" onclick="switchClass('global')">${t('global_label')}</button>`;
         classes.forEach(cls => {
             html += `<button class="class-btn" data-id="${cls.id}" onclick="switchClass(${cls.id})">${cls.name}</button>`;
         });
@@ -71,7 +71,7 @@ async function initClassSwitcher() {
         console.log("[VisitorMonitor] Switcher Rendered");
     } catch (e) {
         console.error("[VisitorMonitor] Error loading classes:", e);
-        container.innerHTML = `<div style="color:#ff4757; font-size:12px; padding:10px;">Gagal memuat daftar kelas.</div>`;
+        container.innerHTML = `<div style="color:#ff4757; font-size:12px; padding:10px;">${t('failed_load_data')}</div>`;
     }
 }
 
@@ -177,9 +177,9 @@ function actualRenderPresence(list, countLabel) {
         return (a.nickname || '').localeCompare(b.nickname || '');
     });
 
-    countLabel.innerText = `${displayUsers.length} Online`;
+    countLabel.innerText = t('online_count', { n: displayUsers.length });
     if (displayUsers.length === 0) {
-        list.innerHTML = '<div style="padding:20px; text-align:center; color:#555;">Tidak ada yang online.</div>';
+        list.innerHTML = `<div style="padding:20px; text-align:center; color:#555;">${t('no_one_online')}</div>`;
         return;
     }
 
@@ -187,14 +187,14 @@ function actualRenderPresence(list, countLabel) {
         <li class="item-card" style="opacity: ${_graceTimers.has(u.id) ? '0.5' : '1'};">
             <img src="${u.avatar_url || '../icons/profpicture.png'}" class="avatar">
             <div class="info">
-                <div class="name">${u.nickname || 'Unknown'}</div>
+                <div class="name">${u.nickname || t('unknown')}</div>
                 <div class="meta">
                     <span class="badge role-${u.role}">${(u.role || '').replace('_',' ')}</span>
-                    <span class="class-tag">KLS ${u.class_id || '?'}</span>
+                    <span class="class-tag">${t('class')} ${u.class_id || '?'}</span>
                 </div>
             </div>
             <div class="time" style="color:${_graceTimers.has(u.id) ? '#888' : '#2ed573'};">
-                ${_graceTimers.has(u.id) ? 'Leaving...' : 'Active'}
+                ${_graceTimers.has(u.id) ? t('leaving') : t('active')}
             </div>
         </li>
     `).join('');
@@ -223,9 +223,9 @@ async function initLastVisitors() {
         if (error) throw error;
 
         console.log("[VisitorMonitor] Last visitors fetched:", data?.length);
-        if (countLabel) countLabel.innerText = `${data.length} Hari Ini`;
+        if (countLabel) countLabel.innerText = t('visitors_today', { n: data.length });
         if (data.length === 0) {
-            list.innerHTML = '<div style="padding:20px; text-align:center; color:#555;">Belum ada kunjungan.</div>';
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#555;">${t('no_visitors')}</div>`;
             return;
         }
 
@@ -236,10 +236,10 @@ async function initLastVisitors() {
             <li class="item-card">
                 <img src="${u.avatar_url || '../icons/profpicture.png'}" class="avatar">
                 <div class="info">
-                    <div class="name">${u.nickname || 'Guest'}</div>
+                    <div class="name">${u.nickname || t('guest')}</div>
                     <div class="meta">
-                        <span class="accent-text">${v.last_page || 'Muter-muter'}</span>
-                        <span class="class-tag">KLS ${v.class_id}</span>
+                        <span class="accent-text">${v.last_page || t('browsing')}</span>
+                        <span class="class-tag">${t('class')} ${v.class_id}</span>
                     </div>
                 </div>
                 <div class="time">${time}</div>
@@ -285,9 +285,9 @@ async function initActivityLogs() {
             enrichedLogs = enrichedLogs.filter(l => l.users?.nickname?.toLowerCase().includes(userSearch));
         }
 
-        if (countLabel) countLabel.innerText = `${enrichedLogs.length} Ditemukan`;
+        if (countLabel) countLabel.innerText = t('logs_found', { n: enrichedLogs.length });
         if (enrichedLogs.length === 0) {
-            list.innerHTML = '<div style="padding:40px; text-align:center; color:#555;">Tidak ada data log yang sesuai filter.</div>';
+            list.innerHTML = `<div style="padding:40px; text-align:center; color:#555;">${t('no_logs_match_filter')}</div>`;
             return;
         }
 
@@ -300,7 +300,7 @@ async function initActivityLogs() {
 }
 
 function createActivityItemHTML(log) {
-    const u = log.users || { nickname: 'Unknown', avatar_url: '../icons/profpicture.png', role: 'guest' };
+    const u = log.users || { nickname: t('unknown'), avatar_url: '../icons/profpicture.png', role: 'guest' };
     const time = new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     return `
         <li class="item-card">
@@ -308,7 +308,7 @@ function createActivityItemHTML(log) {
             <div class="info">
                 <div class="name">${u.nickname} <span style="font-weight:400; font-size:12px; color:#888;">${log.action_text}</span></div>
                 <div class="meta">
-                    <span class="class-tag">KLS ${log.class_id}</span>
+                    <span class="class-tag">${t('class')} ${log.class_id}</span>
                     <span class="accent-text">@ ${log.page_name}</span>
                 </div>
             </div>
@@ -319,7 +319,7 @@ function createActivityItemHTML(log) {
 function prependActivityLog(log) {
     const list = document.getElementById('activityList');
     if (!list) return;
-    if (list.innerHTML.includes('Tidak ada data')) list.innerHTML = '';
+    if (list.innerHTML.includes(t('no_logs_match_filter'))) list.innerHTML = '';
     list.insertAdjacentHTML('afterbegin', createActivityItemHTML(log));
     const limitInput = document.getElementById('filterLimit');
     const limit = limitInput ? parseInt(limitInput.value) : 50;

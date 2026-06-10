@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realtime Visitor Monitor • E-Learning Nizam</title>
+    <title data-i18n="visitor">Realtime Visitor Monitor • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -153,12 +153,12 @@
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <div class="main-content">
-        <h2 style="color: var(--accent, #00eaff); margin-bottom: 25px;"><i class="fa-solid fa-tower-broadcast"></i> Visitor Monitor</h2>
+        <h2 style="color: var(--accent, #00eaff); margin-bottom: 25px;"><i class="fa-solid fa-tower-broadcast"></i> <span data-i18n="visitor">Visitor Monitor</span></h2>
 
         <!-- CLASS SWITCHER (Dynamic) -->
         <div class="class-filter-bar" id="classSwitcher">
             <div style="padding: 10px; color: #555; font-size: 12px;">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Classes...
+                <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Loading Classes...</span>
             </div>
         </div>
         
@@ -171,7 +171,7 @@
                 </div>
                 <ul class="user-list" id="onlineUserList">
                     <div style="padding: 40px; text-align: center; color: #555;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> Connecting Presence...
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Connecting Presence...</span>
                     </div>
                 </ul>
             </div>
@@ -184,7 +184,7 @@
                 </div>
                 <ul class="visitor-list" id="lastVisitorList">
                     <div style="padding: 40px; text-align: center; color: #555;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading visitors...
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Loading visitors...</span>
                     </div>
                 </ul>
             </div>
@@ -199,7 +199,7 @@
                 <!-- FILTERS -->
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label>Cari User</label>
+                        <label data-i18n="search_user">Cari User</label>
                         <input type="text" id="filterUser" class="filter-input" placeholder="Nama..." oninput="debounceFilter()">
                     </div>
                     <div class="filter-group">
@@ -216,13 +216,13 @@
                         </select>
                     </div>
                     <div class="filter-group" style="margin-left:auto; justify-content: flex-end;">
-                         <button class="uni-btn" style="padding:6px 15px; font-size:12px;" onclick="resetFilters()">Reset</button>
+                         <button class="uni-btn" style="padding:6px 15px; font-size:12px;" onclick="resetFilters()" data-i18n="reset">Reset</button>
                     </div>
                 </div>
 
                 <ul class="activity-list" id="activityList">
                     <div style="padding: 40px; text-align: center; color: #555;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> Menarik data log...
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Menarik data log...</span>
                     </div>
                 </ul>
             </div>

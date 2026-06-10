@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Manager • E-Learning Nizam</title>
+    <title>E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -555,7 +555,7 @@
         <!-- ──────── LEFT: FORM ──────── -->
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-gears"></i> Menu Manager</h1>
+                <h1><i class="fa-solid fa-gears"></i> <span data-i18n="menu_manager">Menu Manager</span></h1>
                 <p style="color:#aaa; margin-top:4px; font-size:13px;">Kelola routing sidebar secara langsung.</p>
             </div>
 
@@ -563,7 +563,7 @@
                 <div style="display:flex; align-items:center; margin-bottom:16px;">
                     <div class="section-label" style="margin:0;">
                         <i class="fa-solid fa-pen-to-square"></i>
-                        <span id="formTitleText">Tambah Menu</span>
+                        <span id="formTitleText" data-i18n="add_menu">Tambah Menu</span>
                     </div>
                     <span class="form-mode-badge add" id="formModeBadge">
                         <i class="fa-solid fa-plus"></i> Baru
@@ -574,13 +574,13 @@
 
                 <div class="form-row">
                     <div class="form-group" style="margin:0;">
-                        <label>Kelas</label>
+                        <label data-i18n="class">Kelas</label>
                         <select id="mClassId" class="glass-input" onchange="onClassChange()">
                             <option value="">-- Pilih --</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label>Grup Menu</label>
+                        <label data-i18n="menu_group">Grup Menu</label>
                         <select id="mGroup" class="glass-input" onchange="autoCalculateOrder()">
                             <option value="">-- Pilih Kelas Dulu --</option>
                         </select>
@@ -588,7 +588,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Nama Menu</label>
+                    <label data-i18n="menu_name">Nama Menu</label>
                     <input type="text" id="mSubjectName" class="glass-input" placeholder="contoh: Matematika"
                         oninput="autoSlug(this.value)">
                 </div>
@@ -637,10 +637,10 @@
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
                     <button id="btnReset" onclick="resetForm()" class="btn-glass-cancel" style="flex:1; display:none;">
-                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Batal
+                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i><span data-i18n="cancel">Batal</span>
                     </button>
                     <button type="button" onclick="saveMenu()" class="btn-glass-save" style="flex:2;">
-                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i>Simpan
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i><span data-i18n="save">Simpan</span>
                     </button>
                 </div>
             </div>
@@ -667,12 +667,12 @@
                 <!-- Form tambah/edit grup -->
                 <div
                     style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:10px;">
-                    Tambah / Edit Grup
+                    <span data-i18n="add_edit_group">Tambah / Edit Grup</span>
                 </div>
                 <input type="hidden" id="cgEditId">
                 <div class="form-row" style="margin-bottom:10px;">
                     <div class="form-group" style="margin:0;">
-                        <label>Kelas</label>
+                        <label data-i18n="class">Kelas</label>
                         <select id="cgClassId" class="glass-input" onchange="onCgClassChange()">
                             <option value="">-- Pilih --</option>
                         </select>
@@ -680,10 +680,10 @@
                     <div class="form-group" style="margin:0;">
                         <label>Tipe</label>
                         <select id="cgType" class="glass-input">
-                            <option value="main">Main Menu</option>
+                            <option value="main" data-i18n="main_menu_type">Main Menu</option>
                             <option value="lessons">Lessons</option>
-                            <option value="custom">Menu Tambahan</option>
-                            <option value="admin">Admin Panel</option>
+                            <option value="custom" data-i18n="additional_menu">Menu Tambahan</option>
+                            <option value="admin" data-i18n="admin_panel_type">Admin Panel</option>
                             <option value="system">System (Super Admin)</option>
                         </select>
                     </div>
@@ -708,10 +708,10 @@
                 <div style="display:flex;gap:8px;">
                     <button id="cgBtnReset" type="button" onclick="cgResetForm()" class="btn-glass-cancel"
                         style="flex:1;display:none;">
-                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Batal
+                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i><span data-i18n="cancel">Batal</span>
                     </button>
                     <button type="button" onclick="cgSave()" class="btn-glass-save" style="flex:2;">
-                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i>Simpan Grup
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i><span data-i18n="save_group">Simpan Grup</span>
                     </button>
                 </div>
             </div>
@@ -722,21 +722,21 @@
             <div class="admin-box" style="margin-bottom:14px;">
                 <div class="section-label"><i class="fa-solid fa-filter"></i> Filter Tampilan</div>
                 <select id="targetClassId" class="glass-input" onchange="onFilterChange()">
-                    <option value="all">Semua Kelas</option>
+                    <option value="all" data-i18n="all_classes">Semua Kelas</option>
                 </select>
                 <div class="filter-pills">
-                    <span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>
+                    <span class="pill active" data-group="all" onclick="filterGroup(this)" data-i18n="all">Semua</span>
                 </div>
             </div>
 
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Struktur Menu</div>
+                <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> <span data-i18n="menu_structure">Struktur Menu</span></div>
                 <span id="itemCount" style="font-size:11px; color:#555;"></span>
             </div>
             <div id="menuListContainer">
                 <div class="empty-state">
                     <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
-                    <p style="font-size:13px;">Memuat data...</p>
+                    <p style="font-size:13px;" data-i18n="loading">Memuat data...</p>
                 </div>
             </div>
         </div>
@@ -746,7 +746,7 @@
     <div class="mm-modal-overlay" id="iconPickerModal">
         <div class="mm-modal-box">
             <div class="mm-modal-head">
-                <h3><i class="fa-solid fa-icons" style="margin-right:8px;"></i>Pilih Ikon</h3>
+                <h3><i class="fa-solid fa-icons" style="margin-right:8px;"></i><span data-i18n="select_icon_modal">Pilih Ikon</span></h3>
                 <button onclick="closeModal('iconPickerModal')" class="btn-act"
                     style="background:rgba(255,71,87,0.1);color:#ff4757;width:30px;height:30px;">
                     <i class="fa-solid fa-xmark"></i>
@@ -754,7 +754,7 @@
             </div>
             <div class="mm-modal-search">
                 <input type="text" id="searchIconInput" class="glass-input"
-                    placeholder="Cari ikon... (misal: book, math, code)" oninput="filterIcons(this.value)">
+                    data-i18n-placeholder="search_icon_placeholder" placeholder="Cari ikon... (misal: book, math, code)" oninput="filterIcons(this.value)">
             </div>
             <div class="mm-modal-body">
                 <div id="iconGrid"></div>
@@ -766,14 +766,14 @@
     <div class="mm-modal-overlay" id="slugPickerModal">
         <div class="mm-modal-box">
             <div class="mm-modal-head">
-                <h3><i class="fa-solid fa-folder-open" style="margin-right:8px;"></i>Pilih File / Halaman</h3>
+                <h3><i class="fa-solid fa-folder-open" style="margin-right:8px;"></i><span data-i18n="select_file_page_modal">Pilih File / Halaman</span></h3>
                 <button onclick="closeModal('slugPickerModal')" class="btn-act"
                     style="background:rgba(255,71,87,0.1);color:#ff4757;width:30px;height:30px;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <div class="mm-modal-search">
-                <input type="text" id="searchSlugInput" class="glass-input" placeholder="Cari halaman..."
+                <input type="text" id="searchSlugInput" class="glass-input" data-i18n-placeholder="search_page_placeholder" placeholder="Cari halaman..."
                     oninput="filterSlugs(this.value)">
             </div>
             <div class="mm-modal-body" id="slugList"></div>
@@ -782,7 +782,7 @@
 
     <!-- ── SAVING INDICATOR ── -->
     <div class="save-indicator" id="saveIndicator">
-        <i class="fa-solid fa-circle-notch fa-spin"></i> Menyimpan urutan...
+        <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Menyimpan urutan...</span>
     </div>
 
     <!-- ── SHORTCUT TOAST ── -->
@@ -905,7 +905,7 @@
                     // Edit mode → batal
                     if (document.getElementById('editId').value) {
                         resetForm();
-                        showToast('Edit dibatalkan');
+                        showToast(t('edit_cancelled'));
                         return;
                     }
                 }
@@ -932,7 +932,7 @@
                 if (!isTyping && !isModalOpen && e.key === '0') {
                     document.getElementById('targetClassId').value = 'all';
                     onFilterChange();
-                    showToast('Semua Kelas');
+                    showToast(t('all_classes'));
                 }
             });
         });
@@ -971,7 +971,7 @@
             }
 
             const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-            const TYPE_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+            const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), main: t('sidebar_main'), lessons: t('sidebar_lessons') };
 
             // Prioritas: dari menu_groups table
             let groups = allMenuGroups
@@ -1038,7 +1038,7 @@
         async function loadGroupList(classId) {
             const el = document.getElementById('groupListEl');
             if (!classId) {
-                el.innerHTML = '<div style="color:#555;font-size:12px;">— pilih kelas dulu —</div>';
+                el.innerHTML = '<div style="color:#555;font-size:12px;">— ' + t('select_class_error') + ' —</div>';
                 return;
             }
             const { data } = await supabase.from('menu_groups')
@@ -1054,7 +1054,7 @@
             let displayGroups = filtered;
             if (!displayGroups.length) {
                 const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-                const TYPE_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+                const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), main: t('sidebar_main'), lessons: t('sidebar_lessons') };
                 const seen = new Set();
                 displayGroups = allMenuData
                     .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
@@ -1136,7 +1136,7 @@
         }
 
         async function cgDelete(id, label) {
-            const ok = await showPopup(`Hapus grup "${label}"? Item di grup ini tidak ikut terhapus.`, 'confirm');
+            const ok = await showPopup(t('confirm_delete_group', { name: label }) + ' Item di grup ini tidak ikut terhapus.', 'confirm');
             if (!ok) return;
             const { error } = await supabase.from('menu_groups').delete().eq('id', id);
             if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
@@ -1154,7 +1154,7 @@
             const label = document.getElementById('cgLabel').value.trim();
             const order = parseInt(document.getElementById('cgOrder').value) || 0;
 
-            if (!classId) { showPopup('Pilih kelas!', 'error'); return; }
+            if (!classId) { showPopup(t('select_class_error'), 'error'); return; }
             if (!key) { showPopup('ID Grup wajib diisi!', 'error'); return; }
             if (!label) { showPopup('Nama tampil wajib diisi!', 'error'); return; }
 
@@ -1212,7 +1212,7 @@
 
         function updateGroupPills(groups) {
             const pillsContainer = document.querySelector('.filter-pills');
-            pillsContainer.innerHTML = '<span class="pill active" data-group="all" onclick="filterGroup(this)">Semua</span>';
+            pillsContainer.innerHTML = '<span class="pill active" data-group="all" onclick="filterGroup(this)" data-i18n="all">Semua</span>';
             groups.sort((a, b) => a.display_order - b.display_order).forEach(g => {
                 const pill = document.createElement('span');
                 pill.className = 'pill';
@@ -1522,9 +1522,9 @@
             const el = document.getElementById(`item-${item.id}`);
             if (el) el.classList.add('editing');
 
-            document.getElementById('formTitleText').textContent = 'Edit Menu';
+            document.getElementById('formTitleText').textContent = t('edit_menu');
             document.getElementById('formModeBadge').className = 'form-mode-badge edit';
-            document.getElementById('formModeBadge').innerHTML = '<i class="fa-solid fa-pen"></i> Edit';
+            document.getElementById('formModeBadge').innerHTML = '<i class="fa-solid fa-pen"></i> ' + t('edit_menu');
             document.getElementById('btnReset').style.display = 'block';
 
             document.getElementById('editId').value = item.id;
@@ -1547,7 +1547,7 @@
 
         function resetForm() {
             document.querySelectorAll('.menu-item.editing').forEach(el => el.classList.remove('editing'));
-            document.getElementById('formTitleText').textContent = 'Tambah Menu';
+            document.getElementById('formTitleText').textContent = t('add_menu');
             document.getElementById('formModeBadge').className = 'form-mode-badge add';
             document.getElementById('formModeBadge').innerHTML = '<i class="fa-solid fa-plus"></i> Baru';
             document.getElementById('btnReset').style.display = 'none';
@@ -1578,10 +1578,10 @@
             const badgeType = document.getElementById('mBadgeType').value;
 
             if (!classId || !subjectName) {
-                showPopup && showPopup('Kelas dan nama menu wajib diisi!', 'error'); return;
+                showPopup && showPopup(t('menu_name_class_required'), 'error'); return;
             }
             if (!menuGroup) {
-                showPopup && showPopup('Pilih atau buat grup menu terlebih dahulu!', 'error'); return;
+                showPopup && showPopup(t('select_group_first'), 'error'); return;
             }
 
             let displayOrder = parseInt(document.getElementById('mOrder').value) || 1;
@@ -1619,7 +1619,7 @@
             if (error) {
                 showPopup && showPopup('Gagal: ' + error.message, 'error');
             } else {
-                showToast && showToast(id ? 'Berhasil diupdate!' : 'Menu ditambahkan!', 'success');
+                showToast && showToast(id ? t('updated_success') : t('menu_added'), 'success');
                 resetForm();
                 loadClassMenus();
             }
@@ -1628,12 +1628,12 @@
         async function deleteMenu(id) {
             const item = allMenuData.find(m => m.id === id);
             const name = item ? item.subject_name : 'item ini';
-            const ok = await showPopup(`Hapus <b>${name}</b>?<br>`, 'confirm');
+            const ok = await showPopup(t('confirm_delete_group', { name: '<b>' + name + '</b>' }) + '<br>', 'confirm');
             if (!ok) return;
 
             const { error } = await supabase.from('subjects_config').delete().eq('id', id);
             if (error) { showPopup && showPopup('Gagal hapus: ' + error.message, 'error'); return; }
-            showToast && showToast('Menu dihapus!', 'success');
+            showToast && showToast(t('menu_deleted'), 'success');
             loadClassMenus();
         }
 
@@ -1741,7 +1741,7 @@
                     div.innerHTML = `
                     <i class="fa-solid ${f.icon} slug-icon"></i>
                     <div>
-                        <div class="slug-name">${f.label}</div>
+                        <div class="slug-name">${t(f.slug) || f.label}</div>
                         <div class="slug-path">/${f.slug}</div>
                     </div>`;
                     div.onclick = () => {

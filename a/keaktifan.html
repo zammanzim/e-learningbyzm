@@ -250,7 +250,7 @@
                 </div>
 
                 <div style="display:flex; gap:8px; margin: 5px 0 15px;">
-                    <button class="btn-filter active" id="btn-all" onclick="loadLeaderboard('all')">All Time</button>
+                    <button class="btn-filter active" id="btn-all" onclick="loadLeaderboard('all')" data-i18n="all_time">All Time</button>
                     <button class="btn-filter" id="btn-month" onclick="loadLeaderboard('month')">Bulan Ini</button>
                     <button class="btn-filter" id="btn-week" onclick="loadLeaderboard('week')">Minggu Ini</button>
                 </div>
@@ -268,7 +268,7 @@
                 <div id="trackerContent">
                     <div class="empty-state">
                         <i class="fa-solid fa-shoe-prints"></i>
-                        <p>Pilih siswa untuk melihat jejak aktivitasnya.</p>
+                        <p data-i18n="select_student_activity">Pilih siswa untuk melihat jejak aktivitasnya.</p>
                     </div>
                 </div>
             </div>
@@ -327,7 +327,7 @@
             // Tombol Edit Excluded
             html += `
                 <button class="btn-filter" onclick="openExcludeModal()" 
-                        style="border-radius:10px; padding:6px 12px; font-size:10px; border-color:#ff4757; color:#ff4757;">
+                        style="border-radius:10px; padding:6px 12px; font-size:10px; border-color:#ff4757; color:#ff4757;" data-i18n="edit_excluded">
                     <i class="fa-solid fa-user-slash"></i> Excluded
                 </button>
             `;
@@ -340,7 +340,7 @@
             const classId = getEffectiveClassId();
             
             document.getElementById('excludeModal').classList.remove('hidden');
-            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat daftar...</div>`;
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading_data')}</div>`;
 
             const { data: users, error } = await supabase
                 .from('users')
@@ -349,7 +349,7 @@
                 .order('full_name');
 
             if (error) {
-                container.innerHTML = 'Gagal memuat daftar.';
+                container.innerHTML = t('failed_load_data');
                 return;
             }
 
@@ -414,7 +414,7 @@
 
             const list = document.getElementById('lbList');
             const podium = document.getElementById('podiumContainer');
-            list.innerHTML = `<div style="padding:20px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat...</div>`;
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading')}</div>`;
             podium.innerHTML = '';
 
             try {
@@ -443,7 +443,7 @@
 
             } catch (e) {
                 console.error(e);
-                list.innerHTML = `<div class="empty-state">Gagal memuat data.</div>`;
+                list.innerHTML = `<div class="empty-state">${t('failed_load_data')}</div>`;
             }
         }
 
@@ -495,7 +495,7 @@
                 if (typeof lockScroll === 'function') lockScroll();
             }
 
-            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Menarik jejak...</div>`;
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading_data')}</div>`;
 
             try {
                 const user = currentUsers.find(u => u.id == userId);
@@ -520,7 +520,7 @@
                 `;
 
                 if (!logs || logs.length === 0) {
-                    html += `<p style="color:#555; font-size:13px; text-align:center; padding:20px;">Belum ada jejak aktivitas tercatat.</p>`;
+                    html += `<p style="color:#555; font-size:13px; text-align:center; padding:20px;">${t('no_activity_log')}</p>`;
                 } else {
                     html += logs.map((l, i) => `
                         <div class="timeline-item ${i === 0 ? 'recent' : ''}">
@@ -538,7 +538,7 @@
 
             } catch (e) {
                 console.error(e);
-                container.innerHTML = `<div class="empty-state">Gagal mengambil data aktivitas.</div>`;
+                container.innerHTML = `<div class="empty-state">${t('failed_load_data')}</div>`;
             }
         }
 

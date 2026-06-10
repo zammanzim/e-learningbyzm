@@ -191,7 +191,7 @@
                 <input type="hidden" id="editId" value="">
 
                 <div class="form-group">
-                    <label>Pilih Warna / Tipe</label>
+                    <label data-i18n="select_color_type">Pilih Warna / Tipe</label>
                     <div class="type-selector" id="typeSelector">
                         <div class="type-opt type-yellow active" data-type="yellow">WARNING</div>
                         <div class="type-opt type-blue" data-type="blue">INFO</div>
@@ -206,7 +206,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Warna Text Notice</label>
+                    <label data-i18n="notice_text_color">Warna Text Notice</label>
                     <input type="hidden" id="noticeTextColor" value="#ffffff">
                     <div class="color-preset-grid" id="colorPresetGrid">
                         <div class="color-opt active" style="--c:#ffffff;" onclick="selectColor(this, '#ffffff')"><span>White</span></div>
@@ -255,9 +255,9 @@
                 </style>
 
                 <div class="form-group">
-                    <label>Target Kelas</label>
+                    <label data-i18n="target_class">Target Kelas</label>
                     <select id="noticeClassId" class="glass-select">
-                        <option value="">Semua Kelas (Global)</option>
+                        <option value="" data-i18n="all_classes_global">Semua Kelas (Global)</option>
                     </select>
                 </div>
 
@@ -268,10 +268,10 @@
                 </div>
 
                 <button class="btn-glass-save" id="btnSubmit" style="width: 100%;" onclick="submitNotice()">
-                    <i class="fa-solid fa-paper-plane"></i> Kirim Notice
+                    <i class="fa-solid fa-paper-plane"></i> <span data-i18n="send_notice">Kirim Notice</span>
                 </button>
                 <button class="btn-glass-cancel" id="btnReset" style="width: 100%; margin-top: 8px; display: none;" onclick="resetForm()">
-                    Batal Edit
+                    <span data-i18n="cancel_edit">Batal Edit</span>
                 </button>
             </div>
 
@@ -285,7 +285,7 @@
 
                 <div class="notice-list" id="noticeListBody">
                     <!-- Filled by JS -->
-                    <div style="text-align: center; color: #444; padding: 20px;">Memuat data...</div>
+                    <div style="text-align: center; color: #444; padding: 20px;" data-i18n="loading">Memuat data...</div>
                 </div>
             </div>
         </div>
@@ -392,12 +392,12 @@
             allNotices = data || [];
 
             if (!allNotices.length) {
-                container.innerHTML = `<div style="text-align: center; color: #444; padding: 20px;">Belum ada riwayat notice.</div>`;
+                container.innerHTML = `<div style="text-align: center; color: #444; padding: 20px;">${t('no_notice_history')}</div>`;
                 return;
             }
 
             container.innerHTML = allNotices.map(n => {
-                const className = n.class_id ? (classesMap[n.class_id] || `Kelas ${n.class_id}`) : 'Global';
+                const className = n.class_id ? (classesMap[n.class_id] || `Kelas ${n.class_id}`) : t('global_label');
                 return `
                 <div class="notice-item">
                     <div class="sn-icon type-${n.type}"><i class="fa-solid ${n.icon}"></i></div>
@@ -409,7 +409,7 @@
                         </div>
                     </div>
                     <div class="ni-actions">
-                        <button class="btn-toggle" onclick="editNotice(${n.id})" title="Edit Notice">
+                        <button class="btn-toggle" onclick="editNotice(${n.id})" title="${t('edit_notice')}">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                         <button class="btn-toggle ${n.is_active ? 'active' : ''}" onclick="toggleNotice(${n.id}, ${n.is_active})" title="Aktif/Nonaktif">
@@ -428,7 +428,7 @@
             if (!n) return;
 
             document.getElementById('editId').value = n.id;
-            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Notice`;
+            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${t('edit_notice')}`;
             document.getElementById('noticeMsg').value = n.message;
             document.getElementById('noticeIcon').value = n.icon;
             document.getElementById('noticeClassId').value = n.class_id || '';
@@ -446,7 +446,7 @@
                 if (style && style.includes(n.text_color)) opt.classList.add('active');
             });
 
-            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan`;
+            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ${t('save_changes_notice')}`;
             document.getElementById('btnReset').style.display = 'block';
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -457,7 +457,7 @@
             document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Buat Notice Baru`;
             document.getElementById('noticeMsg').value = '';
             document.getElementById('noticeClassId').value = '';
-            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Notice`;
+            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${t('send_notice')}`;
             document.getElementById('btnReset').style.display = 'none';
             
             // Reset to default Warning/White
@@ -510,7 +510,7 @@
         }
 
         async function deleteNotice(id) {
-            const yakin = await showPopup("Hapus notice ini dari riwayat?<br><small style='color:#555'>Tindakan ini tidak bisa dibatalkan.</small>", "confirm");
+            const yakin = await showPopup(t('confirm_delete_notice') + "<br><small style='color:#555'>Tindakan ini tidak bisa dibatalkan.</small>", "confirm");
             if (!yakin) return;
 
             const { error } = await supabase.from('system_notifications').delete().eq('id', id);

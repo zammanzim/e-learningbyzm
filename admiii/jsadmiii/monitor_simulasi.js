@@ -68,7 +68,7 @@ const MonitorSim = {
             this.state.subjects = data || [];
 
             const filterSel = document.getElementById('filterSubject');
-            let html = '<option value="all">Semua Mapel</option>';
+            let html = '<option value="all">' + t('all_subjects') + '</option>';
             data.forEach(s => {
                 html += `<option value="${s.subject_id}">${s.subject_name}</option>`;
             });
@@ -82,7 +82,7 @@ const MonitorSim = {
         const tbody = document.getElementById('monitorBody');
         // Tampilkan loading kalo data lagi kosong
         if (tbody && this.state.progressData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;"><i class="fa-solid fa-spinner fa-spin"></i> ' + t('loading_data') + '</td></tr>';
         }
 
         try {
@@ -115,7 +115,7 @@ const MonitorSim = {
             this.renderTable();
         } catch (err) {
             console.error('Load monitor data failed:', err);
-            showPopup('Gagal memuat data monitor.', 'error');
+            showPopup(t('failed_load_data'), 'error');
         }
     },
 
@@ -145,7 +145,7 @@ const MonitorSim = {
         const now = new Date();
 
         if (this.state.progressData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;">Belum ada aktivitas simulasi.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; opacity:0.5;">' + t('no_activity_log') + '</td></tr>';
             return;
         }
 
@@ -154,16 +154,16 @@ const MonitorSim = {
             const subjectName = subject ? subject.subject_name : p.subject_id;
             
             // Hitung Status
-            let statusText = 'ONGOING';
+            let statusText = t('status_ongoing');
             let statusClass = 'status-ongoing';
 
             if (p.is_completed) {
-                statusText = 'SELESAI';
+                statusText = t('status_completed');
                 statusClass = 'status-completed';
             } else {
                 const diffMinutes = (now - new Date(p.updated_at)) / 1000 / 60;
                 if (diffMinutes >= 5) {
-                    statusText = 'STOPPED';
+                    statusText = t('status_stopped');
                     statusClass = 'status-stopped';
                 }
             }
@@ -174,8 +174,8 @@ const MonitorSim = {
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="font-weight:700;">${p.users?.full_name || 'Unknown'}</td>
-                <td><span class="badge-subject" style="background:rgba(255,255,255,0.05); color:white; border-color:rgba(255,255,255,0.1);">Kelas ${p.users?.class_id || '?'}</span></td>
+                <td style="font-weight:700;">${p.users?.full_name || t('unknown')}</td>
+                <td><span class="badge-subject" style="background:rgba(255,255,255,0.05); color:white; border-color:rgba(255,255,255,0.1);">${t('class')} ${p.users?.class_id || '?'}</span></td>
                 <td>${subjectName}</td>
                 <td>
                     <span class="progress-pill">${displayProgress}</span>
@@ -196,9 +196,9 @@ const MonitorSim = {
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
 
-        if (diffInSeconds < 60) return 'Baru saja';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m lalu`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}j lalu`;
+        if (diffInSeconds < 60) return t('just_now');
+        if (diffInSeconds < 3600) return t('minutes_ago', { n: Math.floor(diffInSeconds / 60) });
+        if (diffInSeconds < 86400) return t('hours_ago', { n: Math.floor(diffInSeconds / 3600) });
         return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     },
 

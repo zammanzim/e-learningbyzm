@@ -11,7 +11,7 @@ async function initSearchPage() {
 
     const headerName = document.getElementById('headerName');
     const headerPP   = document.getElementById('headerPP');
-    if (headerName) headerName.innerText = `Haii, ${user.full_name.split(' ')[0]}`;
+    if (headerName) headerName.innerText = `${t('hi')}, ${user.full_name.split(' ')[0]}`;
     if (headerPP && headerPP.getAttribute('src') !== (user.avatar_url || 'icons/profpicture.png')) headerPP.src = user.avatar_url || 'icons/profpicture.png';
 
     await loadClasses();
@@ -136,7 +136,7 @@ function renderClassCard(container, cls, isMine, count) {
         </div>
         <div style="flex:1;min-width:0;">
             <h3 style="margin:0;font-size:15px;color:#fff;">
-                ${cls.name}${isMine ? ' <span style="font-size:10px;color:var(--accent,#00eaff);font-weight:400;margin-left:6px;">(Kelas Kamu)</span>' : ''}
+                ${cls.name}${isMine ? ` <span style="font-size:10px;color:var(--accent,#00eaff);font-weight:400;margin-left:6px;">${t('your_class_badge')}</span>` : ''}
             </h3>
             <p style="margin:3px 0 0;font-size:12px;color:rgba(255,255,255,0.35);">${count} siswa</p>
         </div>
@@ -150,7 +150,7 @@ async function showStudents(classId, className) {
     _activeClassId = classId;
 
     const cls  = _allClasses.find(c => String(c.id) === String(classId));
-    const name = className || cls?.name || 'Kelas ' + classId;
+    const name = className || cls?.name || t('class') + ' ' + classId;
 
     setBackBtn(true);
 
@@ -179,7 +179,7 @@ async function showStudents(classId, className) {
         container.appendChild(divider);
 
         if (!data || data.length === 0) {
-            container.innerHTML += '<p style="text-align:center;padding:30px;color:#aaa;">Belum ada siswa di kelas ini.</p>';
+            container.innerHTML += '<p style="text-align:center;padding:30px;color:#aaa;">' + t('no_students_in_class') + '</p>';
             return;
         }
 
@@ -240,7 +240,7 @@ async function searchUser(query) {
         container.innerHTML = '';
 
         if (data.length === 0) {
-            container.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa;">Akun tidak ditemukan.</p>';
+            container.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa;">' + t('account_not_found') + '</p>';
             return;
         }
 
@@ -284,7 +284,7 @@ function setBackBtn(show) {
         wrap.style.cssText = 'display:none;margin-bottom:14px;';
         wrap.innerHTML = `
             <button onclick="backToClasses()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">
-                <i class="fa-solid fa-arrow-left" style="margin:0;font-size:12px;"></i> Semua Kelas
+                <i class="fa-solid fa-arrow-left" style="margin:0;font-size:12px;"></i> ${t('all_classes')}
             </button>
         `;
         const list = document.getElementById('userResultList');

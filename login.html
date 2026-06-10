@@ -728,6 +728,43 @@
             box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
         }
 
+        /* --- TEACHER BUTTON --- */
+        .btn-teacher {
+            width: 100%;
+            padding: 13px;
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 11px;
+            color: #16a34a;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .btn-teacher:hover {
+            background: #dcfce7;
+            border-color: #22c55e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
+        }
+        .btn-teacher.locked {
+            background: #f5f5f5;
+            border-color: #e0e0e0;
+            color: #bbb;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+            pointer-events: none;
+        }
+        .btn-teacher.locked:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         /* --- FOOTER --- */
         .footer-link {
             text-align: center;
@@ -824,13 +861,26 @@
                             <span class="trigger-label">PILIH KELAS</span>
                             <div class="trigger-value" id="dispClassSelected">
                                 <i class="fa-solid fa-graduation-cap"></i>
-                                <span>Pilih Kelas</span>
+                                <span data-i18n="select_class">Pilih Kelas</span>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px; margin:18px 0 8px;">
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                        <span style="font-size:11px; color:#bbb; white-space:nowrap;">atau</span>
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                    </div>
+
+                    <!-- Teacher Login Button (locked, buka via ?password=ticermod) -->
+                    <button class="btn-teacher locked" id="btnTeacherLogin" onclick="goToTeacherStep()">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <span>Masuk sebagai Guru</span>
+                        <i class="fa-solid fa-lock" id="teacherLockIcon" style="font-size:11px; opacity:0.6;"></i>
+                    </button>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin:12px 0 12px;">
                         <div style="flex:1; height:1px; background:#eee;"></div>
                         <span style="font-size:11px; color:#bbb; white-space:nowrap;">atau</span>
                         <div style="flex:1; height:1px; background:#eee;"></div>
@@ -853,7 +903,7 @@
                             <span class="trigger-label">PILIH IDENTITAS</span>
                             <div class="trigger-value" id="valName">
                                 <i class="fa-solid fa-user"></i>
-                                <span>Pilih Nama Kamu</span>
+                                <span data-i18n="select_name">Pilih Nama Kamu</span>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-down"></i>
@@ -949,7 +999,7 @@
                                 onkeydown="if(event.key==='Enter') loginAsGuest()">
                         </div>
                         <p style="font-size:11px; color:#bbb; margin-bottom:18px; padding-left:4px;">
-                            <i class="fa-solid fa-clock" style="margin-right:4px;"></i> Data tamu otomatis hilang
+                            <i class="fa-solid fa-clock" style="margin-right:4px;"></i> <span data-i18n="guest_expiry">Data tamu otomatis hilang</span>
                             setelah 3 hari tidak aktif.
                         </p>
                         <button class="btn-neon" onclick="loginAsGuest()"
@@ -1021,9 +1071,10 @@
                     font-size:13px; color:#bbb;
                     cursor:pointer; font-family:'Segoe UI',sans-serif;
                     transition:color 0.2s;
-                " onmouseover="this.style.color='#999'" onmouseout="this.style.color='#bbb'">
-                    Tutup
-                </button>
+                    " onmouseover="this.style.color='#999'" onmouseout="this.style.color='#bbb'" data-i18n="close">
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1035,7 +1086,7 @@
                 </div>
 
                 <div class="search-wrapper" id="searchWrapper" style="display:none;">
-                    <input type="text" class="search-input" id="nameSearch" placeholder="Cari nama kamu..."
+                    <input type="text" class="search-input" id="nameSearch" placeholder="Cari nama kamu..." data-i18n-placeholder="search_name_placeholder"
                         oninput="filterNames()">
                 </div>
 
@@ -1066,6 +1117,7 @@
                 const { data, error } = await supabase
                     .from('classes')
                     .select('id, name, is_active')
+                    .eq('is_active', true)
                     .order('name', { ascending: true });
 
                 if (error) throw error;
@@ -1087,14 +1139,17 @@
         // AMBIL ID DARI URL
         const urlParams = new URLSearchParams(window.location.search);
         const forcedClassId = urlParams.get('id');
+        const _teacherUnlocked = urlParams.get('password') === 'ticermod';
 
         // AUTO REDIRECT IF LOGGED IN
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user) window.location.href = "index.html";
+        if (user) window.location.href = "/";
 
         // VARIABLES
         let selectedClassId = forcedClassId || null;
         let selectedUserObj = null;
+        let _teacherMode = false;
+        let _teacherNameFilter = urlParams.get('name') || '';
 
 
         let currentStep = 0; // Track step saat ini
@@ -1102,7 +1157,7 @@
         function goToStep1() {
             currentStep = 1;
             document.getElementById('mainSlider').classList.add('step-1');
-            document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
+            document.getElementById('headerSubtitle').innerText = t('select_class_first');
             document.getElementById('globalBackBtn').classList.add('show');
         }
 
@@ -1113,7 +1168,7 @@
             document.getElementById('mainSlider').classList.add('step-2');
 
             const isSuper = (selectedClassId === "0");
-            document.getElementById('headerSubtitle').innerText = isSuper ? "Akses Kendali Pusat" : "Pilih Nama Kamu";
+            document.getElementById('headerSubtitle').innerText = isSuper ? t('central_access') : t('select_name');
 
             document.getElementById('classBadge').style.display = 'block';
             const badgeSpan = document.getElementById('classBadge').querySelector('span');
@@ -1127,24 +1182,38 @@
                 currentStep = 1;
                 document.getElementById('mainSlider').classList.remove('step-3');
                 document.getElementById('mainSlider').classList.add('step-1');
-                document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
+                document.getElementById('headerSubtitle').innerText = t('select_class_first');
                 document.getElementById('guestNameInput').value = '';
             } else if (currentStep === 2) {
-                // Kembali ke pilih kelas
-                currentStep = 1;
-                document.getElementById('mainSlider').classList.remove('step-2');
-                document.getElementById('mainSlider').classList.add('step-1');
-                document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
-                document.getElementById('classBadge').style.display = 'none';
-                document.getElementById('authContainer').classList.remove('show');
-                document.getElementById('valName').innerHTML = '<i class="fa-solid fa-user"></i><span>Pilih Nama Kamu</span>';
-                document.getElementById('btnName').classList.remove('active');
-                selectedUserObj = null;
+                if (_teacherMode) {
+                    // Kembali dari teacher ke step 1
+                    _teacherMode = false;
+                    currentStep = 1;
+                    document.getElementById('mainSlider').classList.remove('step-2');
+                    document.getElementById('mainSlider').classList.add('step-1');
+                    document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                    document.getElementById('classBadge').style.display = 'none';
+                    document.getElementById('authContainer').classList.remove('show');
+                    document.getElementById('valName').innerHTML = '<i class="fa-solid fa-user"></i><span>' + t('select_name') + '</span>';
+                    document.getElementById('btnName').classList.remove('active');
+                    selectedUserObj = null;
+                } else {
+                    // Kembali ke pilih kelas
+                    currentStep = 1;
+                    document.getElementById('mainSlider').classList.remove('step-2');
+                    document.getElementById('mainSlider').classList.add('step-1');
+                    document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                    document.getElementById('classBadge').style.display = 'none';
+                    document.getElementById('authContainer').classList.remove('show');
+                    document.getElementById('valName').innerHTML = '<i class="fa-solid fa-user"></i><span>' + t('select_name') + '</span>';
+                    document.getElementById('btnName').classList.remove('active');
+                    selectedUserObj = null;
+                }
             } else if (currentStep === 1) {
                 // Kembali ke Welcome Screen
                 currentStep = 0;
                 document.getElementById('mainSlider').classList.remove('step-1');
-                document.getElementById('headerSubtitle').innerText = "Pilih Kelas Terlebih Dahulu";
+                document.getElementById('headerSubtitle').innerText = t('select_class_first');
                 document.getElementById('globalBackBtn').classList.remove('show');
                 if (!forcedClassId) selectedClassId = null;
             }
@@ -1152,17 +1221,17 @@
 
         function openClassModal() {
             document.getElementById('modalOverlay').classList.add('open');
-            document.getElementById('modalTitle').innerText = "PILIH KELAS";
+            document.getElementById('modalTitle').innerText = t('select_class').toUpperCase();
             document.getElementById('searchWrapper').style.display = 'none';
 
             const list = document.getElementById('modalList');
 
             // Jika data kelas belum dimuat, tampilkan loader dulu
             if (DAFTAR_KELAS_ARRAY.length === 0) {
-                list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat daftar kelas...</div>';
+                list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('loading_class_list') + '</div>';
                 loadDaftarKelas().then(() => {
                     if (DAFTAR_KELAS_ARRAY.length === 0) {
-                        list.innerHTML = '<div style="text-align:center; padding:20px; color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i><br><b>Gagal Memuat Kelas!</b><br><small>Cek koneksi atau hubungi developer.</small></div>';
+                        list.innerHTML = '<div style="text-align:center; padding:20px; color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i><br><b>' + t('failed_load_class') + '</b><br><small>Cek koneksi atau hubungi developer.</small></div>';
                     } else {
                         renderClassList(list);
                     }
@@ -1221,30 +1290,34 @@
 
         // --- MODAL NAME LOGIC ---
         async function openModal() {
-            if (!selectedClassId) return;
+            if (!selectedClassId && !_teacherMode) return;
 
             document.getElementById('modalOverlay').classList.add('open');
-            document.getElementById('modalTitle').innerText = "PILIH NAMA";
+            document.getElementById('modalTitle').innerText = _teacherMode ? t('select_teacher').toUpperCase() : t('select_name').toUpperCase();
 
             // TAMPILKAN SEARCH BAR
             document.getElementById('searchWrapper').style.display = 'block';
             document.getElementById('nameSearch').value = ''; // Reset input tiap buka
 
             const list = document.getElementById('modalList');
-            list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat data siswa...</div>';
+            list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('loading_data') + '</div>';
 
             try {
                 if (typeof supabase === 'undefined') {
                     throw new Error("Supabase tidak terhubung (Client Error).");
                 }
 
-                console.log("Mengambil data untuk Class ID:", selectedClassId);
+                let query = supabase.from('users').select('*');
+                if (_teacherMode) {
+                    query = query.eq('role', 'teacher');
+                    console.log("Mengambil data guru...");
+                } else {
+                    query = query.eq('class_id', selectedClassId);
+                    console.log("Mengambil data untuk Class ID:", selectedClassId);
+                }
+                query = query.order('nickname', { ascending: true });
 
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('class_id', selectedClassId)
-                    .order('nickname', { ascending: true });
+                const { data, error } = await query;
 
                 if (error) {
                     console.error("Supabase DB Error:", error);
@@ -1252,23 +1325,34 @@
                 }
 
                 if (!data || data.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Data siswa tidak ditemukan di kelas ini.</div>';
+                    list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">' + (_teacherMode ? t('no_teacher_registered') : t('student_not_found')) + '</div>';
                     return;
                 }
 
                 list.innerHTML = "";
                 data.forEach(u => {
                     const item = document.createElement('div');
-                    item.className = 'list-item';
+
+                    // Locking logic for teacher mode
+                    let isLocked = false;
+                    if (_teacherMode && _teacherNameFilter) {
+                        const matchName = _teacherNameFilter.trim().toLowerCase();
+                        const userName = (u.nickname || '').trim().toLowerCase();
+                        isLocked = userName !== matchName;
+                    }
+
+                    item.className = isLocked ? 'list-item disabled' : 'list-item';
                     item.innerHTML = `
                         <div class="dot"></div>
-                        <span>${u.nickname}</span>
+                        <span>${u.nickname}${isLocked ? ' <i class="fa-solid fa-lock" style="font-size:10px;margin-left:5px;opacity:0.5;"></i>' : ''}</span>
                     `;
 
-                    item.onclick = () => {
-                        handleUserSelect(u);
-                        closeModal();
-                    };
+                    if (!isLocked) {
+                        item.onclick = () => {
+                            handleUserSelect(u);
+                            closeModal();
+                        };
+                    }
                     list.appendChild(item);
                 });
 
@@ -1277,7 +1361,7 @@
                 list.innerHTML = `
                     <div style="text-align:center; padding:20px; color:#ff4757;">
                         <i class="fa-solid fa-triangle-exclamation"></i><br>
-                        <b>Gagal Memuat Data!</b><br>
+                        <b>${t('failed_load_data')}</b><br>
                         <small>${err.message}</small>
                     </div>
                 `;
@@ -1337,8 +1421,9 @@
 
             // 2. Cek Password
             if (pwInput === selectedUserObj.password) {
+                setTeacherDefaultClass(selectedUserObj);
                 localStorage.setItem("user", JSON.stringify(selectedUserObj));
-                window.location.href = "index.html";
+                window.location.href = "/";
             } else {
                 // Password Salah
                 pwInputEl.classList.add('error');
@@ -1348,8 +1433,19 @@
 
         function loginDirect() {
             if (!selectedUserObj) return;
+            setTeacherDefaultClass(selectedUserObj);
             localStorage.setItem("user", JSON.stringify(selectedUserObj));
-            window.location.href = "index.html";
+            window.location.href = "/";
+        }
+
+        function setTeacherDefaultClass(user) {
+            if (!user || user.role !== 'teacher') return;
+            // Cari kelas pertama yg bukan id=0 (All Classes)
+            const defaultClass = DAFTAR_KELAS_ARRAY.find(c => String(c.id) !== '0');
+            if (defaultClass) {
+                sessionStorage.setItem('class_override', String(defaultClass.id));
+                sessionStorage.setItem('class_override_name', defaultClass.nama);
+            }
         }
 
         // Close modal when clicking outside
@@ -1365,8 +1461,9 @@
 
             // 1. Shortcut Tombol ESC (Tutup Modal / Kembali)
             if (e.key === 'Escape') {
-                if (isModalOpen) closeModal();
-                else if (currentStep > 0) goBack(); // Bisa balik sampe ke Step 0
+                if (isModalOpen) {
+                    closeModal();
+                } else if (currentStep > 0) goBack();
                 return;
             }
 
@@ -1522,7 +1619,7 @@
             // Simpan ke localStorage — user session + riwayat tamu
             localStorage.setItem('user', JSON.stringify(guestObj));
             localStorage.setItem('prevGuest', JSON.stringify(guestObj));
-            window.location.href = 'index.html';
+            window.location.href = '/';
         }
 
         // Hapus guest yang sudah 3 hari tidak aktif (dipanggil saat halaman login dibuka)
@@ -1533,10 +1630,36 @@
             } catch (e) { /* silent fail */ }
         }
 
+        // ── TEACHER FLOW ──────────────────────────────────────────────
+
+        function checkTeacherUnlock() {
+            if (!_teacherUnlocked) return;
+            const btn = document.getElementById('btnTeacherLogin');
+            if (!btn) return;
+            btn.classList.remove('locked');
+            const lockIcon = document.getElementById('teacherLockIcon');
+            if (lockIcon) lockIcon.style.display = 'none';
+        }
+
+        function goToTeacherStep() {
+            if (!_teacherUnlocked) return;
+            _teacherMode = true;
+            currentStep = 2;
+            document.getElementById('mainSlider').classList.remove('step-1');
+            document.getElementById('mainSlider').classList.add('step-2');
+            document.getElementById('headerSubtitle').innerText = t('select_teacher');
+            document.getElementById('classBadge').style.display = 'block';
+            const badgeSpan = document.getElementById('classBadge').querySelector('span');
+            badgeSpan.innerText = 'Guru';
+        }
+
         // Jalankan cleanup + load kelas saat halaman login dibuka
         document.addEventListener('DOMContentLoaded', async () => {
             cleanupOldGuests();
             await loadDaftarKelas();
+
+            // Cek unlock teacher login dari URL (?password=ticermod)
+            checkTeacherUnlock();
 
             // Setelah kelas berhasil dimuat, cek forcedClassId dari URL
             if (forcedClassId && DAFTAR_KELAS[forcedClassId]) {

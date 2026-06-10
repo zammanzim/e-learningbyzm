@@ -99,7 +99,7 @@ const QuizApp = {
     async loadQuizMenu() {
         try {
             const hTitle = document.getElementById('headerTitle');
-            if (hTitle) hTitle.innerHTML = '<i class="fa-solid fa-graduation-cap"></i> Hub Simulasi Ujian';
+            if (hTitle) hTitle.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${t('exam_simulation')}`;
             
             const classId = getEffectiveClassId() || this.state.user.class_id;
             
@@ -176,7 +176,7 @@ const QuizApp = {
         // Others
         const unassigned = subjectsWithProgress.filter(s => !assignedIds.has(s.id));
         if (unassigned.length > 0) {
-            this.createDaySection('Lainnya', unassigned, true);
+            this.createDaySection(t('other'), unassigned, true);
         }
     },
 
@@ -271,7 +271,7 @@ const QuizApp = {
         const subtitle = document.getElementById('subjectSubtitle');
         if (!subtitle) return;
         const name = (typeof t === 'function') ? t(this.state.subjectId) : this.state.subjectId;
-        subtitle.innerText = `Mata Pelajaran: ${name}`;
+        subtitle.innerText = `${t('subject_lesson')}: ${name}`;
     },
 
     showInfoView() {
@@ -299,9 +299,9 @@ const QuizApp = {
             container.innerHTML = `
                 <div class="question-card" style="text-align:center; padding:50px;">
                     <i class="fa-solid fa-face-surprise" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
-                    <h3>Belum ada soal simulasi.</h3>
+                    <h3>${t('no_simulation_questions')}</h3>
                     <p style="opacity:0.7;">Admin belum masukin soal buat ${this.state.subjectId ? 'mapel ini' : 'kelas lo'}. Tungguin aja ya! wkwk</p>
-                    <button onclick="window.location.href='kisi-kisi'" class="btn-back" style="margin:20px auto;">Balik ke Kisi-Kisi</button>
+                    <button onclick="window.location.href='kisi-kisi'" class="btn-back" style="margin:20px auto;">${t('back_to_topics')}</button>
                 </div>
             `;
         }

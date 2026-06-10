@@ -511,7 +511,7 @@
                 <!-- ── CLASS SELECTOR ── -->
                 <div class="section-box">
                     <div class="class-row">
-                        <label><i class="fa-solid fa-users"></i> Kelas</label>
+                        <label><i class="fa-solid fa-users"></i> <span data-i18n="class">Kelas</span></label>
                         <select id="selClass" class="glass-input" onchange="onClassChange()">
                             <option value="">-- Pilih Kelas --</option>
                         </select>
@@ -549,13 +549,13 @@
                 <div class="section-box" id="pickerBox" style="display:none;">
                     <div class="section-title">
                         <i class="fa-solid fa-plus"></i>
-                        Tambah Item
+                        <span data-i18n="add_item">Tambah Item</span>
                     </div>
-                    <input type="text" class="search-mini" id="searchPicker" placeholder="Cari halaman..."
+                    <input type="text" class="search-mini" id="searchPicker" data-i18n-placeholder="search_page_placeholder" placeholder="Cari halaman..."
                         oninput="renderPicker(this.value)">
                     <div class="picker-grid" id="pickerGrid"></div>
 
-                    <!-- Custom / manual -->
+                    <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:12px;margin-bottom:6px;" data-i18n="custom_manual">Custom / manual</div>
                     <div class="custom-add-row">
                         <div class="icon-mini-wrap">
                             <button type="button" id="iconPreviewBtn" onclick="toggleIconDropdown()">
@@ -566,7 +566,7 @@
                         <input type="text" id="customLabel" class="glass-input" placeholder="Label" spellcheck="false">
                         <input type="text" id="customHref" class="glass-input narrow" placeholder="URL / slug">
                         <button class="btn-add-custom" id="btnAddCustom" onclick="addCustomItem()">
-                            <i class="fa-solid fa-plus"></i> Tambah
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="add">Tambah</span>
                         </button>
                     </div>
                 </div>
@@ -711,7 +711,7 @@
                     <small>${item.subject_id || '—'}</small>
                 </div>
                 <span class="slot-order">#${idx + 1}</span>
-                <button class="btn-remove" title="Hapus dari Bottom Nav"><i class="fa-solid fa-xmark"></i></button>
+                <button class="btn-remove" title="${t('remove_from_bottom_nav')}"><i class="fa-solid fa-xmark"></i></button>
             `;
 
                 div.querySelector('.btn-remove').onclick = () => removeItem(item.id);
@@ -824,7 +824,7 @@
                     div.innerHTML = `
                     <div class="picker-icon"><i class="fa-solid ${p.icon}"></i></div>
                     <div>
-                        <div class="picker-label">${p.label}</div>
+                        <div class="picker-label">${t(p.slug) || p.label}</div>
                         <div class="picker-path">/${p.slug}</div>
                     </div>
                 `;

@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Account • E-Learning Nizam</title>
+    <title>Cari Akun</title>
+    <script>document.title = t('search') + ' • ' + t('app_name');</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/sidebar.js"></script>
@@ -31,15 +32,15 @@
     <div class="main-content">
         <div class="left-section">
             <div class="page-title-header glow" style="margin-bottom: 30px;">
-                <h1><i class="fa-solid fa-magnifying-glass"></i> Cari Akun</h1>
+                <h1><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="search">Cari Akun</span></h1>
             </div>
 
             <div class="glass-card-effect" style="padding: 20px; border-radius: 15px; margin-bottom: 30px;">
-                <input type="text" id="searchInput" class="glass-input" placeholder="Ketik nama atau username...">
+                <input type="text" id="searchInput" class="glass-input" placeholder="Ketik nama atau username..." data-i18n-placeholder="search_user_placeholder">
             </div>
 
             <div id="userResultList" class="announcements">
-                <p style="text-align: center; color: #aaa; padding: 40px;">Loading...
+                <p style="text-align: center; color: #aaa; padding: 40px;" data-i18n="loading">Loading...
                 </p>
             </div>
         </div>

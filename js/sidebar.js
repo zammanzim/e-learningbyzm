@@ -38,7 +38,7 @@ function getEffectiveClassId() {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) return null;
-        if (user.role === 'super_admin') {
+        if (user.role === 'super_admin' || user.role === 'teacher') {
             const override = sessionStorage.getItem('class_override');
             if (override) return override;
         }
@@ -51,7 +51,7 @@ function getEffectiveClassName() {
         const override = sessionStorage.getItem('class_override_name');
         if (override) return override;
         const user = JSON.parse(localStorage.getItem('user'));
-        return user?.class_name || `Kelas ${user?.class_id}` || '';
+        return user?.class_name || `${t('class')} ${user?.class_id}` || '';
     } catch(e) { return ''; }
 }
 
@@ -107,7 +107,7 @@ function renderClassOptions(classes, current) {
 
 async function renderClassSwitcher(retries = 0) {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (!user || user.role !== 'super_admin') return;
+    if (!user || (user.role !== 'super_admin' && user.role !== 'teacher')) return;
 
     const switcher = document.getElementById('classSwitcher');
     const wrapper  = document.getElementById('classSwitcherWrapper');
@@ -127,7 +127,7 @@ async function renderClassSwitcher(retries = 0) {
         if (cachedClasses?.length) {
             const current = getEffectiveClassId();
             const cur = cachedClasses.find(c => String(c.id) === current);
-            if (label) label.innerText = cur?.name || `Kelas ${current}`;
+            if (label) label.innerText = cur?.name || `${t('class')} ${current}`;
             switcher.innerHTML = renderClassOptions(cachedClasses, current);
             wrapper.style.display = 'flex';
         }
@@ -140,7 +140,7 @@ async function renderClassSwitcher(retries = 0) {
 
         const current = getEffectiveClassId();
         const cur = classes.find(c => String(c.id) === current);
-        if (label) label.innerText = cur?.name || `Kelas ${current}`;
+        if (label) label.innerText = cur?.name || `${t('class')} ${current}`;
         switcher.innerHTML = renderClassOptions(classes, current);
         wrapper.style.display = 'flex';
     } catch (err) {
@@ -257,7 +257,7 @@ async function fetchSidebarData(classId, retries = 0) {
 // Fallback: generate menu_groups dari distinct menu_group di subjects_config
 function generateGroupsFromItems(items, classId) {
     const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-    const TYPE_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+    const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), main: t('sidebar_main'), lessons: t('sidebar_lessons') };
     const seen = new Set();
     const groups = [];
     items.forEach(item => {
@@ -706,12 +706,12 @@ function provideSidebarContextMenu(e) {
         return {
             html: `
                 <ul>
-                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>Tambah menu baru</span></li>
+                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>${t('add_menu')}</span></li>
                     <div class="divider"></div>
-                    <li data-sidebar-action="rename"><i class="fa-solid fa-pen"></i><span>Edit nama</span></li>
+                    <li data-sidebar-action="rename"><i class="fa-solid fa-pen"></i><span>${t('edit_menu')}</span></li>
                     <li data-sidebar-action="toggle-lock"><i class="fa-solid ${lockIcon}"></i><span>${lockText}</span></li>
                     <div class="divider"></div>
-                    <li data-sidebar-action="delete" class="danger"><i class="fa-solid fa-trash"></i><span>Hapus</span></li>
+                    <li data-sidebar-action="delete" class="danger"><i class="fa-solid fa-trash"></i><span>${t('delete')}</span></li>
                 </ul>
             `
         };
@@ -721,7 +721,7 @@ function provideSidebarContextMenu(e) {
         return {
             html: `
                 <ul>
-                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>Tambah menu baru</span></li>
+                    <li data-sidebar-action="add-new"><i class="fa-solid fa-plus"></i><span>${t('add_menu')}</span></li>
                 </ul>
             `
         };
@@ -796,7 +796,7 @@ async function deleteSidebarItem(item) {
 
     localStorage.removeItem(getCacheKey(_sidebarState.classId));
     refreshSidebar(_sidebarState.classId, _sidebarState.user);
-    toastSidebar('Menu dihapus', 'success');
+    toastSidebar(t('menu_deleted'), 'success');
 }
 
 async function addSidebarItem(relativeToItem) {
@@ -810,13 +810,13 @@ async function addSidebarItem(relativeToItem) {
     
     const defaultGroup = relativeToItem ? relativeToItem.menu_group : (validGroups[0]?.group_key || 'main');
 
-    const data = await showPopup('Tambah Menu Baru', 'form', {
+    const data = await showPopup(t('add_menu'), 'form', {
         title: 'Detail Menu Baru',
         fields: [
-            { name: 'name', label: 'Nama Menu', type: 'text', placeholder: 'Contoh: Matematika' },
+            { name: 'name', label: t('menu_name'), type: 'text', placeholder: 'Contoh: Matematika' },
             { name: 'subject_id', label: 'URL / Path', type: 'text', placeholder: 'Contoh: math' },
             { name: 'icon', label: 'Icon (FontAwesome)', type: 'text', placeholder: 'fa-book', value: 'fa-book' },
-            { name: 'group', label: 'Group Menu', type: 'select', options: groupOptions, value: defaultGroup }
+            { name: 'group', label: t('menu_group'), type: 'select', options: groupOptions, value: defaultGroup }
         ]
     });
 

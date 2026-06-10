@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Soal Simulasi • Admin Control</title>
+    <title data-i18n="add_new_question">Input Soal Simulasi • Admin Control</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -165,20 +165,20 @@
 
             <!-- Form Tambah/Edit -->
             <div class="form-card">
-                <h3 id="formTitle" style="margin-bottom: 20px;">Tambah Soal Baru</h3>
+                <h3 id="formTitle" style="margin-bottom: 20px;" data-i18n="add_new_question">Tambah Soal Baru</h3>
                 <input type="hidden" id="editId">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
-                        <label>Mata Pelajaran</label>
+                        <label data-i18n="subject_lesson">Mata Pelajaran</label>
                         <select id="inputSubject" class="form-control">
                             <!-- Populated from subjects_config -->
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Target Kelas</label>
+                        <label data-i18n="target_class">Target Kelas</label>
                         <select id="inputClass" class="form-control">
-                            <option value="0">Semua Kelas (Global)</option>
+                            <option value="0" data-i18n="all_classes_global">Semua Kelas (Global)</option>
                             <option value="1">Kelas 10 (SIJA/RPL)</option>
                             <option value="2">Master Class (Pusat)</option>
                         </select>
@@ -191,23 +191,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Pilihan Jawaban (Centang yang benar)</label>
+                    <label data-i18n="answer_choices">Pilihan Jawaban (Centang yang benar)</label>
                     <div class="options-list">
                         <div class="option-item">
                             <input type="radio" name="correctAnswer" value="0" class="radio-correct" checked>
-                            <input type="text" class="form-control option-input" placeholder="Pilihan A">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_a" placeholder="Pilihan A">
                         </div>
                         <div class="option-item">
                             <input type="radio" name="correctAnswer" value="1" class="radio-correct">
-                            <input type="text" class="form-control option-input" placeholder="Pilihan B">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_b" placeholder="Pilihan B">
                         </div>
                         <div class="option-item">
                             <input type="radio" name="correctAnswer" value="2" class="radio-correct">
-                            <input type="text" class="form-control option-input" placeholder="Pilihan C">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_c" placeholder="Pilihan C">
                         </div>
                         <div class="option-item">
                             <input type="radio" name="correctAnswer" value="3" class="radio-correct">
-                            <input type="text" class="form-control option-input" placeholder="Pilihan D">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_d" placeholder="Pilihan D">
                         </div>
                     </div>
                 </div>
@@ -217,15 +217,15 @@
                     <textarea id="inputExplanation" class="form-control" rows="2" placeholder="Muncul kalo user jawab bener..."></textarea>
                 </div>
 
-                <button id="btnSave" class="btn-save">Simpan Soal</button>
-                <button id="btnCancel" class="btn-save" style="background:transparent; color:white; border:1px solid rgba(255,255,255,0.2); margin-top:10px; display:none;">Batal Edit</button>
+                <button id="btnSave" class="btn-save" data-i18n="save_question">Simpan Soal</button>
+                <button id="btnCancel" class="btn-save" style="background:transparent; color:white; border:1px solid rgba(255,255,255,0.2); margin-top:10px; display:none;" data-i18n="cancel_edit">Batal Edit</button>
             </div>
 
             <!-- List Soal -->
             <div class="question-list-card">
                 <div class="filter-bar">
                     <select id="filterSubject" class="form-control" style="width: auto; min-width: 200px;">
-                        <option value="all">Semua Mapel</option>
+                        <option value="all" data-i18n="all_subjects">Semua Mapel</option>
                     </select>
                     <div style="flex: 1;"></div>
                     <div id="countInfo" style="font-size: 0.9rem; opacity: 0.7; align-self: center;">0 Soal ditemukan</div>
@@ -233,7 +233,7 @@
 
                 <div id="questionsList">
                     <!-- Questions will be injected here -->
-                    <p style="text-align: center; padding: 20px; opacity: 0.5;">Memuat soal...</p>
+                    <p style="text-align: center; padding: 20px; opacity: 0.5;" data-i18n="loading">Memuat soal...</p>
                 </div>
             </div>
         </div>

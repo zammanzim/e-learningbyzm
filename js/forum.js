@@ -77,7 +77,7 @@ async function loadFeed() {
             feed.innerHTML = `
                 <div class="forum-empty">
                     <i class="fa-regular fa-comments"></i>
-                    <p>Belum ada diskusi.<br>Jadi yang pertama posting!</p>
+                    <p>${t('no_discussion')}</p>
                 </div>`;
             return;
         }
@@ -119,7 +119,7 @@ function renderPost(topic, user, commentCount) {
                 <div class="post-username">${name}</div>
                 <div class="post-time">${timeStr}</div>
             </div>
-            ${isOwner ? `<button class="post-delete-btn" onclick="deleteTopic('${topic.id}')" title="Hapus">
+            ${isOwner ? `<button class="post-delete-btn" onclick="deleteTopic('${topic.id}')" title="${t('delete')}">
                 <i class="fa-solid fa-trash-can"></i>
             </button>` : ''}
         </div>
@@ -175,7 +175,7 @@ async function loadComments(topicId) {
     if (!data || data.length === 0) {
         list.innerHTML = `<div class="forum-empty" style="padding:40px 0;">
             <i class="fa-regular fa-comment" style="font-size:28px;"></i>
-            <p>Belum ada komentar.<br>Mulai dulu!</p>
+            <p>${t('no_comment_forum')}</p>
         </div>`;
         return;
     }
@@ -200,7 +200,7 @@ function buildCommentEl(reply, user) {
             <div class="comment-text">${escHtml(reply.content)}</div>
             <div class="comment-time">${timeAgo(reply.created_at)}</div>
         </div>
-        ${isOwner ? `<button class="comment-delete" onclick="deleteComment('${reply.id}')" title="Hapus">
+        ${isOwner ? `<button class="comment-delete" onclick="deleteComment('${reply.id}')" title="${t('delete')}">
             <i class="fa-solid fa-trash-can"></i>
         </button>` : ''}
     `;
@@ -264,18 +264,18 @@ async function sendComment() {
 // DELETE
 // ─────────────────────────────────────────
 async function deleteTopic(topicId) {
-    if (!confirm('Hapus diskusi ini?')) return;
+    if (!confirm(t('confirm_delete_discussion'))) return;
     const { error } = await supabase.from('forum_topics').delete().eq('id', topicId);
     if (!error) {
         document.getElementById(`post-${topicId}`)?.remove();
-        showPopup('Diskusi dihapus', 'success');
+        showPopup(t('discussion_deleted'), 'success');
     } else {
         showPopup('Gagal hapus', 'error');
     }
 }
 
 async function deleteComment(replyId) {
-    if (!confirm('Hapus komentar ini?')) return;
+    if (!confirm(t('confirm_delete_comment'))) return;
     const { error } = await supabase.from('forum_replies').delete().eq('id', replyId);
     if (!error) {
         const el = document.getElementById(`reply-${replyId}`);
@@ -312,7 +312,7 @@ async function postNewTopic() {
     });
 
     if (!error) {
-        showToast('Diskusi diposting!', 'success');
+        showToast(t('discussion_posted'), 'success');
         document.getElementById('topicTitle').value = '';
         document.getElementById('topicContent').value = '';
         loadFeed();

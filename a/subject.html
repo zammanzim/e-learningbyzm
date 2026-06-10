@@ -181,12 +181,12 @@
                     <div class="subject-icon-box">
                         <i id="subjectIcon" class="fa-solid fa-book"></i>
                     </div>
-                    <h2 id="subjectName">Memuat...</h2>
+                    <h2 id="subjectName" data-i18n="loading">Memuat...</h2>
                 </div>
                 <div class="teacher-info-box">
                     <div class="teacher-row">
                         <span>Nama Pengajar:</span>
-                        <b id="teacherName">Belum diatur</b>
+                        <b id="teacherName" data-i18n="not_set">Belum diatur</b>
                     </div>
                     <div class="teacher-row">
                         <span>Contact Guru:</span>
@@ -197,11 +197,11 @@
 
             <div class="stats-row">
                 <div class="stat-item">
-                    <span class="label">Total Materi</span>
+                    <span class="label" data-i18n="total_material">Total Materi</span>
                     <span class="value" id="totalMateri">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="label">Selesai</span>
+                    <span class="label" data-i18n="done">Selesai</span>
                     <span class="value" id="doneMateri">-</span>
                 </div>
             </div>
@@ -250,13 +250,13 @@
 
             if (configRes.error) {
                 console.error("Supabase Error:", configRes.error.message);
-                document.getElementById('subjectName').innerText = "Gagal memuat data.";
+                document.getElementById('subjectName').innerText = t('failed_load_data');
                 return;
             }
 
             const config = configRes.data[0];
             if (!config) {
-                document.getElementById('subjectName').innerText = "Materi tidak ditemukan.";
+                document.getElementById('subjectName').innerText = t('material_not_found');
                 return;
             }
 
@@ -288,7 +288,7 @@
                     document.getElementById('teacherContact').innerHTML = `<span style="opacity:0.3;">-</span>`;
                 }
             } else {
-                document.getElementById('teacherName').innerText = "Belum diatur";
+                document.getElementById('teacherName').innerText = t('not_set');
                 document.getElementById('teacherContact').innerHTML = `<span style="opacity:0.3;">-</span>`;
             }
 
@@ -325,7 +325,7 @@
             const pb = document.getElementById('subjectProgressBar');
             const pt = document.getElementById('progressText');
             if (pb) pb.style.width = `${percentage}%`;
-            if (pt) pt.innerText = `${percentage}% Selesai`;
+            if (pt) pt.innerText = `${percentage}% ` + t('done');
 
             const fullTitleHtml = `<h3><i class="fa-solid ${config.icon}"></i> ${config.subject_name}</h3>`;
             const isLesson = config.menu_group === 'lessons' &&
@@ -343,7 +343,7 @@
         }
 
         function loadSubjectError() {
-            document.getElementById('subjectName').innerText = 'Materi tidak ditemukan.';
+            document.getElementById('subjectName').innerText = t('material_not_found');
         }
 
         // ── INFO CARD EDITING (teacher name & contact only) ───
@@ -407,7 +407,7 @@
                     contactEl.innerHTML = `<span style="opacity:0.3;">-</span>`;
                 }
 
-                showToast('Data guru berhasil disimpan', 'success');
+                showToast(t('teacher_data_saved'), 'success');
             } catch (e) {
                 console.error('Save teacher error:', e);
                 showPopup('Gagal menyimpan data guru', 'error');

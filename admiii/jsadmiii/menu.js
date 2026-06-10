@@ -54,17 +54,17 @@ async function setupClassDropdown() {
 async function loadClassMenus() {
     const classId = document.getElementById('targetClassId').value;
     const container = document.getElementById('menuListContainer');
-    container.innerHTML = "<p style='text-align:center; padding: 20px;'>Menyusun data...</p>";
+    container.innerHTML = `<p style='text-align:center; padding: 20px;'>${t('loading_data')}</p>`;
 
     let query = supabase.from('subjects_config').select('*').order('class_id').order('display_order');
     if (classId !== 'all') query = query.eq('class_id', classId);
 
     const { data, error } = await query;
-    if (error) return alert("Gagal ambil data!");
+    if (error) return alert(t('failed_load_data'));
 
     container.innerHTML = "";
     if (data.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color: #888; padding: 40px;'>Data kosong.</p>";
+        container.innerHTML = `<p style='text-align:center; color: #888; padding: 40px;'>${t('data_empty')}</p>`;
         return;
     }
 
@@ -78,7 +78,7 @@ async function loadClassMenus() {
         for (const [id, menus] of Object.entries(grouped)) {
             const groupHeader = document.createElement('div');
             groupHeader.innerHTML = `<h2 style="color: #ffd700; font-size: 15px; margin: 25px 0 10px 0; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 5px;">
-                <i class="fa-solid fa-users"></i> KELAS ID: ${id}</h2>`;
+                <i class="fa-solid fa-users"></i> ${t('class')} ID: ${id}</h2>`;
             container.appendChild(groupHeader);
             menus.forEach(item => container.appendChild(createMenuItemElement(item)));
         }
@@ -97,20 +97,20 @@ async function loadClassMenus() {
         };
 
         if (systemItems.length > 0) {
-            renderHeader("SYSTEM MENU (GLOBAL)", "#00eaff");
+            renderHeader(t('system_menu_global'), "#00eaff");
             systemItems.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
 
         if (adminItems.length > 0) {
-            renderHeader("ADMIN PANEL", "#ff4757");
+            renderHeader(t('sidebar_admin'), "#ff4757");
             adminItems.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
         if (main.length > 0) {
-            renderHeader("MAIN MENU", "#ffd700");
+            renderHeader(t('sidebar_main'), "#ffd700");
             main.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
         if (lesson.length > 0) {
-            renderHeader("LESSONS", "#00eaff");
+            renderHeader(t('sidebar_lessons'), "#00eaff");
             lesson.forEach(i => container.appendChild(createMenuItemElement(i)));
         }
     }
@@ -154,7 +154,7 @@ function previewIcon(val) {
 }
 
 function editMenu(item) {
-    document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Materi`;
+    document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${t('edit_material')}`;
     document.getElementById('editId').value = item.id;
     document.getElementById('mClassId').value = item.class_id;
     document.getElementById('mSubjectName').value = item.subject_name;
@@ -187,7 +187,7 @@ async function saveMenu() {
     };
 
     if (!payload.class_id || !payload.subject_name) {
-        if (window.showPopup) showPopup("Data belum lengkap!", "error");
+        if (window.showPopup) showPopup(t('data_incomplete'), "error");
         return;
     }
 
@@ -196,9 +196,9 @@ async function saveMenu() {
         : await supabase.from('subjects_config').insert([payload]);
 
     if (error) {
-        if (window.showPopup) showPopup("Gagal: " + error.message, "error");
+        if (window.showPopup) showPopup(t('failed_generic') + ': ' + error.message, "error");
     } else {
-        if (window.showToast) showToast(id ? "Berhasil diupdate!" : "Berhasil ditambah!", "success");
+        if (window.showToast) showToast(id ? t('updated_success') : t('menu_added'), "success");
 
         // RESET FORM TANPA RESET FILTER
         resetForm();
@@ -210,7 +210,7 @@ async function saveMenu() {
 
 // 2. Fungsi Reset yang Tidak "Lupa Ingatan"
 function resetForm() {
-    document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus"></i> Tambah Materi`;
+    document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus"></i> ${t('add_new')}`;
     document.getElementById('editId').value = "";
     document.getElementById('mSubjectName').value = "";
     document.getElementById('mSubjectId').value = "";
@@ -230,10 +230,10 @@ function resetForm() {
 async function deleteMenu(id) {
     // 1. Cari data materi buat ditampilin namanya di popup
     const item = allMenuData.find(m => String(m.id) === String(id));
-    const itemName = item ? item.subject_name : "materi ini";
+    const itemName = item ? item.subject_name : t('this_material');
 
     // 2. Panggil popup universal dengan mode 'confirm'
-    const yakin = await showPopup(`Yakin mau hapus <b>${itemName}</b>?<br>`, "confirm");
+    const yakin = await showPopup(t('confirm_delete_item', { name: itemName }), "confirm");
 
     // 3. Jika user klik 'Ya' (yakin === true)
     if (yakin) {
@@ -243,9 +243,9 @@ async function deleteMenu(id) {
             .eq('id', id);
 
         if (error) {
-            if (window.showPopup) showPopup("Gagal hapus: " + error.message, "error");
+            if (window.showPopup) showPopup(t('failed_generic') + ': ' + error.message, "error");
         } else {
-            if (window.showToast) showToast("Materi berhasil dihapus!", "success");
+            if (window.showToast) showToast(t('deleted_success'), "success");
 
             // 4. Refresh daftar menu setelah berhasil hapus
             loadClassMenus();

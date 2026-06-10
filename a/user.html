@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard • E-Learning Nizam</title>
+    <title>Profil</title>
+    <script>document.title = t('user') + ' • ' + t('app_name');</script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
@@ -186,7 +187,7 @@
                 <div class="dash-card span-2 dash-profile-info animate-pop-up" onclick="window.location.href='settingacc'">
                     <img id="dashAvatar" src="../icons/profpicture.png" class="dash-avatar" alt="">
                     <div style="flex:1">
-                        <div id="dashFullName" style="font-weight:700; color:#fff; font-size:1.05rem;">Memuat...</div>
+                        <div id="dashFullName" style="font-weight:700; color:#fff; font-size:1.05rem;" data-i18n="loading">Memuat...</div>
                         <div id="dashUsername" style="font-size:0.8rem; color:var(--accent,#00eaff);">@...</div>
                     </div>
                     <i class="fa-solid fa-chevron-right" style="font-size:12px; opacity:0.3;"></i>
@@ -201,18 +202,18 @@
 
                 <!-- Stats: Tasks -->
                 <div class="dash-card animate-pop-up" style="animation-delay: 0.2s;">
-                    <div class="dash-card-title"><i class="fa-solid fa-list-check"></i> Tugas</div>
+                    <div class="dash-card-title"><i class="fa-solid fa-list-check"></i> <span data-i18n="tugas">Tugas</span></div>
                     <div class="dash-stat-val" id="statTasks">–</div>
-                    <div class="dash-stat-label">Selesai</div>
+                    <div class="dash-stat-label"><span data-i18n="done">Selesai</span></div>
                 </div>
 
                 <!-- Task Progress Section -->
                 <div class="dash-card span-4 animate-pop-up" style="animation-delay: 0.3s;" onclick="window.location.href='tugas'">
                     <div class="dash-card-title">
-                        <i class="fa-solid fa-bars-progress"></i> Progress Tugas
+                        <i class="fa-solid fa-bars-progress"></i> <span data-i18n="task_progress">Progress Tugas</span>
                         <span id="dashTaskPercent" style="margin-left:auto; color:var(--accent,#00eaff);">0%</span>
                     </div>
-                    <div id="dashTaskText" style="font-size:0.85rem; color:#ccc; margin-bottom:8px;">Memuat progress tugas...</div>
+                    <div id="dashTaskText" style="font-size:0.85rem; color:#ccc; margin-bottom:8px;" data-i18n="loading_task_progress">Memuat progress tugas...</div>
                     <div class="dash-progress-wrap">
                         <div id="dashTaskBar" class="dash-progress-fill" style="width: 0%;"></div>
                     </div>
@@ -221,7 +222,7 @@
                 <!-- Today's Schedule -->
                 <div class="dash-card span-2 row-2 animate-pop-up" style="animation-delay: 0.4s;">
                     <div class="dash-card-title">
-                        <i class="fa-solid fa-calendar-day"></i> Jadwal Hari Ini
+                        <i class="fa-solid fa-calendar-day"></i> <span data-i18n="today_schedule">Jadwal Hari Ini</span>
                         <span id="dashTodayName" style="margin-left:auto; opacity:0.5; font-size:0.65rem;">...</span>
                     </div>
                     <div id="dashScheduleList">
@@ -230,7 +231,7 @@
                             <i class="fa-solid fa-circle-notch fa-spin"></i>
                         </div>
                     </div>
-                    <button class="btn-glass-save" style="width:100%; margin-top:1rem; padding:8px; font-size:0.75rem;" onclick="window.location.href='../'">
+                    <button class="btn-glass-save" style="width:100%; margin-top:1rem; padding:8px; font-size:0.75rem;" onclick="window.location.href='../'" data-i18n="view_full_schedule">
                         Lihat Full Jadwal
                     </button>
                 </div>
@@ -240,10 +241,10 @@
                     <div class="dash-card-title"><i class="fa-solid fa-bolt"></i> Aksi Cepat</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom: 12px;">
                         <button class="btn-add-post" style="width:100%; justify-content:center;" onclick="openUploadModal()">
-                            <i class="fa-solid fa-plus"></i> Post
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="post_photo">Post</span>
                         </button>
                         <button class="btn-glass-cancel" style="width:100%; border-radius:20px; font-size:0.82rem; font-weight:700; padding: 7px 0;" onclick="window.location.href='theme'">
-                            <i class="fa-solid fa-palette"></i> Tema
+                            <i class="fa-solid fa-palette"></i> <span data-i18n="theme">Tema</span>
                         </button>
                     </div>
 
@@ -280,11 +281,11 @@
     <!-- ===== UPLOAD MODAL ===== -->
     <div class="modal-overlay hidden" id="uploadModal">
         <div class="glass-modal-box">
-            <h3><i class="fa-solid fa-image"></i> Posting Foto</h3>
+            <h3><i class="fa-solid fa-image"></i> <span data-i18n="post_photo">Posting Foto</span></h3>
 
             <div id="uploadDropZone" class="drop-area" onclick="document.getElementById('uploadFileInput').click()">
                 <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                <div class="drop-text"><b>Pilih foto atau video</b> atau drag ke sini</div>
+                <div class="drop-text" data-i18n="select_photo_video">Pilih foto atau video</div>
                 <input type="file" id="uploadFileInput" accept="image/*,video/*" style="display:none;">
             </div>
 
@@ -303,9 +304,9 @@
             <div class="char-counter" id="captionCounter" style="font-size: 0.7rem; color: #555; text-align: right; margin-top: -5px; margin-bottom: 10px;">0/500</div>
 
             <div class="action-buttons">
-                <button class="btn-glass-cancel" onclick="closeUploadModal()">Batal</button>
+                <button class="btn-glass-cancel" onclick="closeUploadModal()" data-i18n="cancel">Batal</button>
                 <button class="btn-glass-save" id="btnPostSave" onclick="submitPost()">
-                    <i class="fa-solid fa-paper-plane"></i> Post
+                    <i class="fa-solid fa-paper-plane"></i> <span data-i18n="post_photo">Post</span>
                 </button>
             </div>
         </div>
@@ -341,7 +342,7 @@
             </div>
 
             <div class="post-modal-actions hidden" id="detailActionsWrap">
-                <button class="btn-delete-post" id="btnDeletePost" onclick="deleteCurrentPost()">
+                <button class="btn-delete-post" id="btnDeletePost" onclick="deleteCurrentPost()" data-i18n="delete_post">
                     <i class="fa-solid fa-trash"></i> Hapus Post
                 </button>
             </div>

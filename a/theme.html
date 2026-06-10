@@ -431,11 +431,11 @@
                 <div class="font-row">
                     <div class="font-opt" id="lang-id" onclick="setLanguage('id')">
                         <span class="size-label">ID</span>
-                        <span class="size-desc">Bahasa Indonesia</span>
+                        <span class="size-desc" data-i18n="lang_id">Bahasa Indonesia</span>
                     </div>
                     <div class="font-opt" id="lang-en" onclick="setLanguage('en')">
                         <span class="size-label">EN</span>
-                        <span class="size-desc">English</span>
+                        <span class="size-desc" data-i18n="lang_en">English</span>
                     </div>
                 </div>
             </div>
@@ -445,15 +445,15 @@
                 <div class="font-row">
                     <div class="font-opt" data-size="kecil" onclick="pickFont(this)">
                         <span class="size-label">Aa</span>
-                        <span class="size-desc">Kecil</span>
+                        <span class="size-desc" data-i18n="small">Kecil</span>
                     </div>
                     <div class="font-opt" data-size="sedang" onclick="pickFont(this)">
                         <span class="size-label">Aa</span>
-                        <span class="size-desc">Sedang</span>
+                        <span class="size-desc" data-i18n="medium">Sedang</span>
                     </div>
                     <div class="font-opt" data-size="besar" onclick="pickFont(this)">
                         <span class="size-label">Aa</span>
-                        <span class="size-desc">Besar</span>
+                        <span class="size-desc" data-i18n="large">Besar</span>
 
                     </div>
                 </div>
@@ -466,7 +466,7 @@
             <div class="course-card">
                 <h2 class="section-title"><i class="fa-solid fa-image"></i> <span data-i18n="bg_title">Background</span></h2>
                 <div class="form-group">
-                    <label class="form-label" data-i18n="lang_select">Pilih Preset</label>
+                    <label class="form-label" data-i18n="select_preset">Pilih Preset</label>
                     <div class="bg-grid" id="bgGrid"></div>
                 </div>
                 <div class="custom-bg-row">
@@ -481,7 +481,7 @@
             <div class="course-card">
                 <h2 class="section-title"><i class="fa-solid fa-droplet"></i> <span data-i18n="accent_title">Warna Aksen</span></h2>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label class="form-label">Warna tombol, link, dan highlight</label>
+                    <label class="form-label" data-i18n="accent_desc">Warna tombol, link, dan highlight</label>
                     <div class="accent-grid" id="accentGrid"></div>
                 </div>
             </div>
@@ -666,7 +666,7 @@
 
             const btn = document.querySelector('.btn-upload-bg');
             const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('uploading');
             btn.disabled = true;
 
             try {
@@ -683,10 +683,10 @@
                 state.bg = url;
                 document.querySelectorAll('.bg-opt').forEach(x => x.classList.remove('selected'));
                 applyPreview();
-                showToast('Foto berhasil diupload!', 'success');
+                showToast(t('photo_uploaded'), 'success');
             } catch (e) {
                 console.error(e);
-                showToast('Gagal upload foto', 'error');
+                showToast(t('error_upload'), 'error');
             } finally {
                 btn.innerHTML = oldHtml;
                 btn.disabled = false;
@@ -698,6 +698,8 @@
         // Highlight Active Language
         const currentLang = localStorage.getItem('app_lang') || 'id';
         document.getElementById(`lang-${currentLang}`)?.classList.add('selected');
+
+        document.title = t('theme_title') + ' • ' + t('app_name');
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.nickname) document.getElementById('pvName').textContent = `Haii, ${user.nickname}!`;
@@ -752,7 +754,7 @@
                 console.warn('[Theme] Gagal sync ke Supabase:', e);
             }
 
-            if (typeof showToast === 'function') showToast('Tema berhasil disimpan!', 'success');
+            if (typeof showToast === 'function') showToast(t('success_save'), 'success');
             setTimeout(() => window.location.reload(), 900);
         }
 
@@ -777,7 +779,7 @@
                 console.warn('[Theme] Gagal sync reset ke Supabase:', e);
             }
 
-            if (typeof showToast === 'function') showToast('Tema direset ke default.', 'success');
+            if (typeof showToast === 'function') showToast(t('reset_default') + ' ✓', 'success');
             setTimeout(() => window.location.reload(), 900);
         }
     </script>

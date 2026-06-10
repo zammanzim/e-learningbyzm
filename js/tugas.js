@@ -72,7 +72,7 @@ async function initTugas() {
 
     // Init SubjectApp in 'tugas' mode
     SubjectApp.state.subjectId = 'tugas';
-    SubjectApp.state.subjectName = 'Daftar Tugas';
+    SubjectApp.state.subjectName = t('task_list');
     SubjectApp.state.isLessonMode = true;
     SubjectApp.state.user = user;
     SubjectApp.setupAdminControls();
@@ -192,7 +192,7 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
             supabase.from('subject_announcements')
                 .select('*')
                 .eq('class_id', classId)
-                .eq('is_lesson', true) // HANYA YANG DITANDAI SEBAGAI TUGAS
+                .or('is_lesson.eq.true,is_task.eq.true')
                 .order('created_at', { ascending: false }),
             supabase.from('user_progress')
                 .select('announcement_id')
@@ -302,12 +302,12 @@ function renderTasks(data) {
         if (isEmptyPending) {
             emptyState.innerHTML = `
                 <i class="fa-solid fa-circle-check"></i>
-                <p>Hore! Semua tugas sudah selesai kamu kerjakan.</p>
+                <p>${t('all_tasks_done')}</p>
             `;
         } else {
             emptyState.innerHTML = `
                 <i class="fa-solid fa-clipboard-list"></i>
-                <p>Belum ada tugas yang tercatat.</p>
+                <p>${t('no_tasks')}</p>
             `;
         }
 

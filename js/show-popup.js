@@ -89,8 +89,8 @@ window.showPopup = function (msg, type = 'info', options = {}) {
 
             btnsHtml = `
                 <div class="uni-actions">
-                    <button class="uni-btn-cancel" id="uniBtnNo">Batal</button>
-                    <button class="uni-btn-confirm" id="uniBtnYes">Simpan</button>
+                    <button class="uni-btn-cancel" id="uniBtnNo">${t('cancel')}</button>
+                    <button class="uni-btn-confirm" id="uniBtnYes">${t('save')}</button>
                 </div>
             `;
         } else {

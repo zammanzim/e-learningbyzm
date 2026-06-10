@@ -17,11 +17,12 @@ const UIComponents = {
         const _avatarSrc = (_uData && _uData.avatar_url) ? _uData.avatar_url : _defaultPP;
         const _displayName = _uData ? (_uData.short_name || _uData.nickname || 'User') : '...';
 
-        // Logika Class Switcher & POV Student (Super Admin only)
+        // Logika Class Switcher & POV Student
         let classSwitcherHTML = '';
         let povToggleHTML = '';
+
+        // POV Toggle — super_admin only
         if (_uData && (_uData.role === 'super_admin' || _uData.original_role === 'super_admin')) {
-            // POV Toggle Logic
             const isPOV = _uData.role === 'student';
             povToggleHTML = `
             <div id="povToggleWrapper" style="display:flex; align-items:center; gap:8px; margin-right:12px; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
@@ -31,7 +32,10 @@ const UIComponents = {
                     <span class="slider round" style="before: {width:14px; height:14px; left:2px; bottom:2px;}"></span>
                 </label>
             </div>`;
+        }
 
+        // Class Switcher — super_admin & teacher
+        if (_uData && (_uData.role === 'super_admin' || _uData.original_role === 'super_admin' || _uData.role === 'teacher')) {
             let currentClassName = `${t('class')}`;
             try {
                 const overrideName = sessionStorage.getItem('class_override_name');
@@ -68,7 +72,7 @@ const UIComponents = {
         const _pathPrefix = _isSubDir ? '../' : '';
         const profileHTML = _uData ? `
             <div class="profile-box" id="profileTrigger">
-                <span id="headerName">Haii, ${_displayName}</span>
+                <span id="headerName">${t('hi')}, ${_displayName}</span>
                 <img id="headerPP" class="header-pp" src="${_avatarSrc}">
                 <i class="fa-solid fa-caret-down"></i>
             </div>
@@ -147,6 +151,13 @@ const UIComponents = {
                             <span class="slider round"></span>
                         </label>
                     </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top:8px;">
+                        <label style="font-size: 13px; color: #ffd32a; cursor: pointer;" for="addIsTask">📋 Wajib Kumpul</label>
+                        <label class="switch">
+                            <input type="checkbox" id="addIsTask">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <input type="text" id="addJudul" class="glass-input" placeholder="${t('title')}" spellcheck="false">
@@ -183,7 +194,7 @@ const UIComponents = {
                 </div>
                 <div id="previewContainer" class="preview-container"></div>
                 <div class="action-buttons">
-                    <button id="btnCancelAdd" class="btn-glass-cancel">Batal</button>
+                    <button id="btnCancelAdd" class="btn-glass-cancel">${t('cancel')}</button>
                     <button id="btnSaveAdd" class="btn-glass-save"><i class="fa-solid fa-paper-plane"></i> Posting</button>
                 </div>
             </div>
@@ -400,7 +411,7 @@ const UIComponents = {
                 // Daily Card Context
                 html += `
                     <li class="has-submenu" onclick="UIComponents.contextMenu.toggleSubmenu(event, this)">
-                        <i class="fa-solid fa-calendar-days"></i> Lihat Jadwal
+                        <i class="fa-solid fa-calendar-days"></i> ${t('view_schedule')}
                         <div class="context-submenu daily-days-grid">
                             ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(day => 
                                 `<div class="ctx-day-item" onclick="window.switchDailyDay('${day}')">${day.substring(0,3)}</div>`
@@ -410,9 +421,9 @@ const UIComponents = {
                 `;
                 if (isAdmin) {
                     if (window.isDailyEditing) {
-                        html += `<li onclick="window.saveAllDrafts()"><i class="fa-solid fa-check"></i> Simpan Jadwal</li>`;
+                        html += `<li onclick="window.saveAllDrafts()"><i class="fa-solid fa-check"></i> ${t('save_schedule')}</li>`;
                     } else {
-                        html += `<li onclick="window.toggleDailyEditMode()"><i class="fa-solid fa-pen-to-square"></i> Edit Jadwal</li>`;
+                        html += `<li onclick="window.toggleDailyEditMode()"><i class="fa-solid fa-pen-to-square"></i> ${t('edit_schedule')}</li>`;
                     }
                 }
                 html += `<div class="divider"></div>`;
@@ -422,9 +433,9 @@ const UIComponents = {
                 
                 if (isAdmin) {
                     html += `
-                        <li onclick="UIComponents.contextMenu.triggerCardAction('edit')"><i class="fa-solid fa-pen-to-square"></i> Edit Materi</li>
+                        <li onclick="UIComponents.contextMenu.triggerCardAction('edit')"><i class="fa-solid fa-pen-to-square"></i> ${t('edit_material')}</li>
                         <li class="has-submenu" onclick="UIComponents.contextMenu.toggleSubmenu(event, this)">
-                            <i class="fa-solid fa-palette"></i> Ganti Warna
+                            <i class="fa-solid fa-palette"></i> ${t('change_color')}
                             <div class="context-submenu">
                                 ${['default', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown'].map(c => 
                                     `<div class="ctx-color-dot ctx-color-${c}" onclick="UIComponents.contextMenu.changeColor('${c}')" title="${c}"></div>`
@@ -432,14 +443,14 @@ const UIComponents = {
                             </div>
                         </li>
                         <div class="divider"></div>
-                        <li class="danger" onclick="UIComponents.contextMenu.triggerCardAction('delete')"><i class="fa-solid fa-trash"></i> Hapus</li>
+                        <li class="danger" onclick="UIComponents.contextMenu.triggerCardAction('delete')"><i class="fa-solid fa-trash"></i> ${t('delete')}</li>
                     `;
                 }
             }
 
             // Global Actions (selalu ada di bawah)
             if (!card && !isDaily && isAdmin) {
-                html += `<li onclick="UIComponents.contextMenu.triggerGlobalAction('add')"><i class="fa-solid fa-plus"></i> Tambah Baru</li>`;
+                html += `<li onclick="UIComponents.contextMenu.triggerGlobalAction('add')"><i class="fa-solid fa-plus"></i> ${t('add_new')}</li>`;
             }
             
             html += `

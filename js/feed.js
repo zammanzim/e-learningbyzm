@@ -28,7 +28,7 @@ const FeedApp = {
 
         const nameEl = document.getElementById('headerName');
         const ppEl   = document.getElementById('headerPP');
-        if (nameEl) nameEl.textContent = 'Haii, ' + (this.state.user.short_name || this.state.user.full_name?.split(' ')[0] || 'User');
+        if (nameEl) nameEl.textContent = t('hi') + ', ' + (this.state.user.short_name || this.state.user.full_name?.split(' ')[0] || 'User');
         if (ppEl && ppEl.getAttribute('src') !== (this.state.user.avatar_url || 'icons/profpicture.png')) ppEl.src = this.state.user.avatar_url || 'icons/profpicture.png';
 
         this.bindScrollSentinel();
@@ -142,8 +142,8 @@ const FeedApp = {
                 <div class="fc-menu-wrap" style="position:relative">
                     <button class="fc-menu-btn"><i class="fa-solid fa-ellipsis"></i></button>
                     <div class="fc-dropdown hidden">
-                        ${isOwn ? `<div class="fc-dd-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i> Edit caption</div>` : ''}
-                        <div class="fc-dd-item fc-dd-del" data-action="delete"><i class="fa-solid fa-trash"></i> Hapus</div>
+                        ${isOwn ? `<div class="fc-dd-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i> ${t('edit_caption')}</div>` : ''}
+                        <div class="fc-dd-item fc-dd-del" data-action="delete"><i class="fa-solid fa-trash"></i> ${t('delete')}</div>
                     </div>
                 </div>` : ''}
             </div>
@@ -172,7 +172,7 @@ const FeedApp = {
                 <div class="fc-comment-list"></div>
                 <div class="fc-comment-form">
                     <img class="fc-self-avatar" src="${this.state.user.avatar_url || 'icons/profpicture.png'}" onerror="this.src='icons/profpicture.png'">
-                    <input class="fc-comment-input" type="text" placeholder="Tambahkan komentar...">
+                    <input class="fc-comment-input" type="text" placeholder="${t('add_comment_placeholder')}">
                     <button class="fc-comment-send"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -394,7 +394,7 @@ const FeedApp = {
         const list = card.querySelector('.fc-comment-list');
         if (!list) return;
         list.innerHTML = (!data || data.length === 0)
-            ? '<p class="fc-no-comments">Belum ada komentar.</p>'
+            ? '<p class="fc-no-comments">' + t('no_comments') + '</p>'
             : (data || []).map(c => this._commentHTML(c)).join('');
     },
 
@@ -446,7 +446,7 @@ const FeedApp = {
     },
 
     async deletePost(postId, card) {
-        const ok = await showPopup('Hapus postingan ini?', 'confirm');
+        const ok = await showPopup(t('confirm_delete_post'), 'confirm');
         if (!ok) return;
 
         const post = this.state.posts.find(p => p.id === postId);
@@ -474,8 +474,8 @@ const FeedApp = {
         capDiv.innerHTML = `
             <textarea class="fc-edit-ta">${prev}</textarea>
             <div class="fc-edit-controls">
-                <button class="fc-btn-cancel-edit">Batal</button>
-                <button class="fc-btn-save-edit">Simpan</button>
+                <button class="fc-btn-cancel-edit">${t('cancel')}</button>
+                <button class="fc-btn-save-edit">${t('save')}</button>
             </div>`;
 
         capDiv.querySelector('.fc-edit-ta').focus();

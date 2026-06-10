@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kirim File • E-Learning Nizam</title>
+    <title></title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js"></script>
     <script src="../js/ctx-menu.js"></script>
@@ -270,18 +270,18 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-paper-plane" style="font-size:26px;"></i> Kirim File</h1>
+                <h1><i class="fa-solid fa-paper-plane" style="font-size:26px;"></i> <span data-i18n="send_file">Kirim File</span></h1>
             </div>
         </div>
         <div class="right-section">
             <div class="upload-card">
-                <h2><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</h2>
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="upload_file">Upload File</span></h2>
 
                 <div class="drop-zone" id="dropZone">
                     <input type="file" id="fileInput" multiple>
                     <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
                     <div class="dz-text">Klik atau seret file ke sini</div>
-                    <div class="dz-hint">Semua format · Bisa pilih banyak sekaligus · Maks 40 MB semua file</div>
+                    <div class="dz-hint" data-i18n="all_formats_max">Semua format file didukung. Maks 40 MB</div>
                 </div>
 
                 <div class="file-queue" id="fileQueue"></div>
@@ -299,6 +299,8 @@
     </div>
 
     <script>
+        document.title = t('send_file') + ' • ' + t('app_name');
+
         let fileQueue = [];
         let uploading = false;
 
@@ -351,7 +353,7 @@
                 <div class="fq-info">
                     <div class="fq-name">${item.file.name}</div>
                     <div class="fq-size">${fmtSize(item.file.size)}</div>
-                    <div class="fq-status pending" id="fqs-${item.id}">Menunggu</div>
+                    <div class="fq-status pending" id="fqs-${item.id}">${t('pending')}</div>
                     <div class="fq-prog"><div class="fq-prog-fill" id="fqp-${item.id}"></div></div>
                 </div>
                 <button class="fq-remove" id="fqr-${item.id}" onclick="removeItem('${item.id}')">
@@ -369,7 +371,7 @@
 
         function updateBtn() {
             const n = fileQueue.filter(i => i.status === 'pending').length;
-            document.getElementById('btnLabel').textContent = n > 1 ? `Kirim ${n} File` : 'Kirim';
+            document.getElementById('btnLabel').textContent = n > 1 ? t('send_n_file', { n }) : t('btn_send');
         }
 
         function setStatus(id, cls, txt) {
@@ -385,15 +387,15 @@
             // Reset item yang error jadi pending dulu supaya bisa di-retry
             fileQueue.filter(i => i.status === 'error').forEach(i => {
                 i.status = 'pending';
-                setStatus(i.id, 'pending', 'Menunggu');
+                setStatus(i.id, 'pending', t('pending'));
                 setProg(i.id, 0);
             });
 
             const pending = fileQueue.filter(i => i.status === 'pending');
-            if (!pending.length) { showToast('Pilih file dulu!', 'error'); return; }
+            if (!pending.length) { showToast(t('select_file_first') + '!', 'error'); return; }
 
             const user = JSON.parse(localStorage.getItem('user') || 'null');
-            if (!user) { showToast('Belum login!', 'error'); return; }
+            if (!user) { showToast(t('not_logged_in'), 'error'); return; }
 
             uploading = true;
             document.getElementById('btnUpload').disabled = true;
@@ -405,7 +407,7 @@
             let done = 0, failed = 0;
 
             for (const item of pending) {
-                setStatus(item.id, 'uploading', 'Mengupload...');
+                setStatus(item.id, 'uploading', t('uploading_text'));
                 let fake = 0;
                 const iv = setInterval(() => { fake = Math.min(fake + Math.random() * 20, 85); setProg(item.id, fake); }, 250);
 
@@ -428,15 +430,15 @@
                     if (de) throw de;
 
                     clearInterval(iv); setProg(item.id, 100);
-                    setStatus(item.id, 'done', '✓ Terkirim');
+                    setStatus(item.id, 'done', t('sent_success'));
                     item.status = 'done'; done++;
                 } catch (err) {
                     clearInterval(iv);
-                    setStatus(item.id, 'error', '✗ ' + (err.message || 'Gagal'));
+                    setStatus(item.id, 'error', t('send_failed') + (err.message ? ' ' + err.message : ''));
                     item.status = 'error'; failed++;
                 }
 
-                op.textContent = `${done + failed} / ${pending.length} selesai`;
+                op.textContent = `${t('done')} ${done + failed} / ${pending.length}`;
             }
 
             uploading = false;
@@ -444,7 +446,7 @@
             document.querySelectorAll('.fq-remove').forEach(b => b.disabled = false);
 
             if (failed === 0) {
-                showToast(`${done} file berhasil terkirim ✓`);
+                showToast(t('sent_success') + ' (' + done + ')');
                 setTimeout(() => {
                     document.getElementById('msgInput').value = '';
                     op.classList.remove('show');
@@ -456,7 +458,7 @@
                     updateBtn();
                 }, 1500);
             } else {
-                showToast(`${done} berhasil, ${failed} gagal`, 'error');
+                showToast(t('done') + ' ' + done + ', ' + t('failed_generic') + ' ' + failed, 'error');
             }
         }
     </script>

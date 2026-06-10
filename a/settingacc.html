@@ -28,9 +28,10 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
         if (!user) { window.location.href = "login"; return; }
+        document.title = t('settingacc') + ' • ' + t('app_name');
         await refreshUserData();
         if (typeof logVisitor === 'function') logVisitor();
-        checkAccountSecurity(); // Cek keamanan saat baru buka
+        checkAccountSecurity();
     });
 
     async function refreshUserData() {
@@ -58,7 +59,7 @@
             if (togglePrivate) togglePrivate.checked = !!data.is_private;
 
             if (document.getElementById('headerName')) {
-                document.getElementById('headerName').innerText = `Haii, ${data.short_name || data.nickname || 'User'}`;
+                document.getElementById('headerName').innerText = t('welcome', {name: data.short_name || data.nickname || 'User'});
             }
         } catch (err) { console.error("Load Error:", err); }
     }
@@ -71,11 +72,11 @@
 
         // [VALIDASI] Harus isi keduanya atau kosong keduanya (tapi disarankan isi)
         if ((usernameVal && !passwordVal) || (!usernameVal && passwordVal)) {
-            showPopup("⚠️ Username dan Password harus diisi!", "error");
+            showPopup(t('warning_credentials_required'), "error");
             return;
         }
 
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> MENYIMPAN...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('saving');
         btn.disabled = true;
 
         try {
@@ -104,7 +105,7 @@
             const { error: updateError } = await supabase.from('users').update(updates).eq('id', user.id);
             if (updateError) throw updateError;
 
-            showPopup("✅ Profil Berhasil Diupdate!", "success");
+            showPopup("✅ " + t('profile_updated'), "success");
             await refreshUserData();
             checkAccountSecurity(); // Langsung update banner tanpa refresh
 
@@ -374,14 +375,14 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-user-gear"></i> Account Setting</h1>
+                <h1><i class="fa-solid fa-user-gear"></i> <span data-i18n="settingacc"></span></h1>
             </div>
             <div class="course-card">
-                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Data Akun</h2>
+                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> <span data-i18n="account_data"></span></h2>
 
                 <div class="form-group">
                     <div class="ganti-foto">
-                        <label class="form-label">Foto Profil</label>
+                        <label class="form-label" data-i18n="profile_photo"></label>
                     </div>
                     <div class="pp-upload-area">
                         <img src="../icons/profpicture.png" id="previewPP" class="current-pp"
@@ -391,47 +392,45 @@
                     </div>
                     <div class="ganti-foto">
                         <label for="inputPPFile" class="file-upload-btn">
-                            <i class="fa-solid fa-camera"></i> Ganti Foto
+                            <i class="fa-solid fa-camera"></i> <span data-i18n="change_photo"></span>
                         </label>
                     </div>
                     <div class="ganti-foto">
-                        <p style="font-size: 12px;"><i>*kamu bisa ganti foto langsung lewat sini tanpa harus chat admin
-                                lewat wa</i></p>
+                        <p style="font-size: 12px;"><i data-i18n="change_photo_note"></i></p>
                     </div>
                 </div>
 
                 <div class="form-group" style="margin: 5px 0">
-                    <label class="form-label">Nama Lengkap</label>
-                    <input type="text" id="inputFullName" class="form-input" disabled placeholder="Memuat...">
+                    <label class="form-label" data-i18n="full_name"></label>
+                    <input type="text" id="inputFullName" class="form-input" disabled data-i18n-placeholder="loading">
                 </div>
 
                 <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label">Role / Status</label>
-                    <input type="text" id="inputRole" class="form-input" disabled placeholder="Memuat...">
+                    <label class="form-label" data-i18n="role_status"></label>
+                    <input type="text" id="inputRole" class="form-input" disabled data-i18n-placeholder="loading">
                 </div>
-                <p style="color: rgb(255, 55, 0); margin-top: -10px; font-size: 14px;"><i>Hanya admin yang bisa mengedit
-                        data diatas! Merasa ada yang salah? Hubungi admin</i>
+                <p style="color: rgb(255, 55, 0); margin-top: -10px; font-size: 14px;"><i data-i18n="admin_edit_note"></i>
                 </p>
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
 
                 <div class="form-group">
-                    <label class="form-label" style="color:var(--accent, #00eaff);">Nama Panggilan (Tampilan)</label>
-                    <input type="text" id="inputShortName" class="form-input" placeholder="Mau dipanggil apa?">
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="nickname_display"></label>
+                    <input type="text" id="inputShortName" class="form-input" data-i18n-placeholder="nickname_placeholder">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" style="color:var(--accent, #00eaff);">Bio</label>
-                    <input type="text" id="inputBio" class="form-input" placeholder="Bio nya donk">
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="bio"></label>
+                    <input type="text" id="inputBio" class="form-input" data-i18n-placeholder="bio_placeholder">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" style="color:var(--accent, #00eaff);">Privasi</label>
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="privacy"></label>
                     <label class="privacy-toggle-row" for="togglePrivate">
                         <div class="privacy-toggle-info">
                             <span class="privacy-toggle-label">
-                                <i class="fa-solid fa-lock"></i> Akun Privat
+                                <i class="fa-solid fa-lock"></i> <span data-i18n="private_account"></span>
                             </span>
-                            <span class="privacy-toggle-desc">Postinganmu tidak akan muncul di Feed orang lain</span>
+                            <span class="privacy-toggle-desc" data-i18n="privacy_desc"></span>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="togglePrivate">
@@ -446,27 +445,27 @@
             <div id="accountWarning" class="warning-banner hidden"
                 style="background: rgb(255, 0, 21); border: 1px solid #ff4757; color: #ffffff; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 10px;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>Buat username dan password buat akunmu! Biar ga bisa di login in orang lain.</span>
+                <span data-i18n="warning_set_credentials"></span>
             </div>
             <div class="course-card" style="margin-top: 0;">
-                <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> Akun Login</h2>
+                <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="account_login"></span></h2>
 
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" id="inputUser" class="form-input" placeholder="Buat username unik">
+                    <label class="form-label" data-i18n="username_label"></label>
+                    <input type="text" id="inputUser" class="form-input" data-i18n-placeholder="username_placeholder">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Password</label>
+                    <label class="form-label" data-i18n="password_label"></label>
                     <div class="password-wrapper">
-                        <input type="password" id="inputPass" class="form-input" placeholder="Buat password">
+                        <input type="password" id="inputPass" class="form-input" data-i18n-placeholder="password_placeholder">
                         <i class="fa-solid fa-eye toggle-pw" onclick="togglePass()"></i>
                     </div>
                 </div>
             </div>
 
             <button class="btn-save" onclick="saveChanges()">
-                <i class="fa-solid fa-floppy-disk"></i> SIMPAN PERUBAHAN
+                <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_changes"></span>
             </button>
 
         </div>

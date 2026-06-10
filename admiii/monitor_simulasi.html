@@ -154,7 +154,7 @@
                     <p id="statTotalUsers">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3>Done</h3>
+                    <h3 data-i18n="done">Done</h3>
                     <p id="statCompleted">0</p>
                 </div>
                 <div class="stat-card">
@@ -166,29 +166,29 @@
             <div class="monitor-card">
                 <div class="filter-bar">
                     <select id="filterClass" class="form-control">
-                        <option value="all">Semua Kelas</option>
+                        <option value="all" data-i18n="all_classes">Semua Kelas</option>
                         <option value="1">Kelas 1</option>
                         <option value="2">Kelas 2</option>
                         <option value="3">Kelas 3</option>
                         <option value="4">Kelas 4</option>
                     </select>
                     <select id="filterSubject" class="form-control">
-                        <option value="all">Semua Mapel</option>
+                        <option value="all" data-i18n="all_subjects">Semua Mapel</option>
                     </select>
                     <button onclick="MonitorSim.loadData()" class="form-control"
                         style="cursor:pointer; background:var(--accent); color:black; font-weight:bold; border:none;">
-                        <i class="fa-solid fa-sync"></i> Refresh
+                        <i class="fa-solid fa-sync"></i> <span data-i18n="refresh">Refresh</span>
                     </button>
                 </div>
 
                 <table>
                     <thead>
                         <tr>
-                            <th>Siswa</th>
-                            <th>Kelas</th>
-                            <th>Mata Pelajaran</th>
+                            <th data-i18n="student_name">Siswa</th>
+                            <th data-i18n="class">Kelas</th>
+                            <th data-i18n="subject_lesson">Mata Pelajaran</th>
                             <th>Progres</th>
-                            <th>Status</th>
+                            <th data-i18n="status_label">Status</th>
                             <th>Terakhir Aktif</th>
                         </tr>
                     </thead>

@@ -85,7 +85,7 @@ window.refreshKisiData = function() {
         localStorage.removeItem(`dc_config_${USER_CLASS_ID}`);
         localStorage.removeItem(`dc_config_${MASTER_CLASS_ID}`);
     }
-    showToast("Membersihkan cache...", "info");
+    showToast(t('refreshing_cache'), "info");
     setTimeout(() => location.reload(), 500);
 };
 
@@ -135,13 +135,13 @@ window.renderKisiList = function () {
         if (s.hasKisi) {
             return `<option value="${s.norm}">${translatedDisplay}</option>`;
         } else {
-            return `<option value="${s.norm}" disabled style="color:rgba(255,255,255,0.3);">${translatedDisplay} (belum ada)</option>`;
+            return `<option value="${s.norm}" disabled style="color:rgba(255,255,255,0.3);">${translatedDisplay} ${t('not_yet_available')}</option>`;
         }
     }).join('');
 
     const simulasiBtn = kisiFilter !== 'all' 
         ? `<button onclick="window.location.href='quiz?id=${kisiFilter}'" style="background:linear-gradient(45deg, #00eaff, #0084ff); border:none; color:black; padding:8px 18px; border-radius:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; box-shadow:0 0 15px rgba(0,234,255,0.3);">
-            <i class="fa-solid fa-graduation-cap"></i> Simulasi
+            <i class="fa-solid fa-graduation-cap"></i> ${t('simulation')}
            </button>`
         : '';
 
@@ -300,7 +300,7 @@ function _renderKisiInfoList(items) {
     const simShortcutHTML = `
         <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz'" style="margin-right:8px;">
             <i class="fa-solid fa-graduation-cap"></i>
-            <span>SIMULASI UJIAN</span>
+            <span>${t('exam_simulation')}</span>
         </div>`;
 
     headerEl.innerHTML = `
@@ -313,7 +313,7 @@ function _renderKisiInfoList(items) {
             ${simShortcutHTML}
             <div class="task-shortcut-box" onclick="window.location.href='../'">
                 <i class="fa-solid fa-house"></i>
-                <span>HOME</span>
+                <span>${t('home')}</span>
             </div>
         </div>
     `;
@@ -378,7 +378,7 @@ function _renderKisiInfoList(items) {
         listHTML += '</div></div>';
     });
 
-    infoBox.innerHTML = listHTML || '<p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">Belum ada kisi-kisi.</p>';
+    infoBox.innerHTML = listHTML || '<p style="color:rgba(255,255,255,0.35); font-size:12px; font-style:italic; margin:0;">' + t('no_kisi') + '</p>';
 }
 
 // ── Init ─────────────────────────────────────────────────────
@@ -389,12 +389,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // 2. Override delete — fix string vs number id mismatch, then re-render + re-apply edit mode
     SubjectApp.deleteAnnouncement = async function (card) {
-        if (!await showPopup("Hapus materi ini?", "confirm")) return;
+        if (!await showPopup(t("confirm_delete_material"), "confirm")) return;
         const id = card.dataset.id;
         await supabase.from("subject_announcements").delete().eq("id", id);
         // Fix: paksa string comparison biar item beneran ke-filter dari state
         SubjectApp.state.announcements = SubjectApp.state.announcements.filter(a => String(a.id) !== String(id));
-        showToast("Terhapus!", "success");
+        showToast(t("item_deleted"), "success");
         window.renderKisiList();
         // Re-apply edit mode ke card-card baru kalau masih dalam mode edit
         if (SubjectApp.state.editMode) _reapplyEditMode();
@@ -477,8 +477,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 4. Init SubjectApp
     SubjectApp.init(
         'kisi-kisi',
-        '<h3><i class="fa-solid fa-clipboard-list"></i> Kisi-Kisi PSAT</h3>',
-        'Kisi-Kisi PSAT',
+        `<h3><i class="fa-solid fa-clipboard-list"></i> ${t('exam_topics')} PSAT</h3>`,
+        t('exam_topics') + ' PSAT',
         false  // isLessonMode = false -> no task/selesai button
     );
 

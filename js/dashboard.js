@@ -63,7 +63,7 @@ const DashboardApp = {
         // Update Header Elements
         const hName = document.getElementById('headerName');
         const hPP = document.getElementById('headerPP');
-        if (hName) hName.textContent = `Haii, ${displayName.split(' ')[0]}`;
+        if (hName) hName.textContent = `${t('hi')}, ${displayName.split(' ')[0]}`;
         if (hPP && hPP.getAttribute('src') !== displayAvatar) hPP.src = displayAvatar;
         
         // Update data asli
@@ -116,7 +116,7 @@ const DashboardApp = {
         if (this.state.posts.length === 0) {
             grid.innerHTML = `<div class="posts-empty" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #555;">
                 <i class="fa-regular fa-image" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block; color: rgba(0, 234, 255, 0.18);"></i>
-                <p style="font-size:.85rem;">Belum ada postingan.</p>
+                <p style="font-size:.85rem;">${t('no_posts')}</p>
             </div>`;
             return;
         }
@@ -284,11 +284,11 @@ const DashboardApp = {
                 caption: caption || null
             });
 
-            showToast('Berhasil!');
+            showToast(t('success_generic'));
             closeUploadModal();
             await this.loadStatsAndPosts();
         } catch (e) {
-            showToast('Gagal', 'error');
+            showToast(t('failed_generic'), 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Post';
@@ -339,7 +339,7 @@ const DashboardApp = {
         const post = this.state.posts[this.state.currentPostIndex];
         if (!post) return;
 
-        const confirmed = await showPopup('Hapus postingan ini?', 'confirm');
+        const confirmed = await showPopup(t('confirm_delete_post'), 'confirm');
         if (!confirmed) return;
 
         const btn = document.getElementById('btnDeletePost');
@@ -357,10 +357,10 @@ const DashboardApp = {
             await this.loadStatsAndPosts();
         } catch (err) {
             console.error(err);
-            showToast('Gagal hapus', 'error');
+            showToast(t('failed_generic'), 'error');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post';
+            btn.innerHTML = `<i class="fa-solid fa-trash"></i> ${t('delete_post')}`;
         }
     },
 

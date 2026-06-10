@@ -81,7 +81,7 @@ const UserProfile = {
                 document.getElementById('profilePageWrap').innerHTML =
                     `<div style="text-align:center;padding:4rem 1rem;color:#555;">
                         <i class="fa-solid fa-user-slash" style="font-size:2rem;display:block;margin-bottom:1rem;color:#333;"></i>
-                        Pengguna tidak ditemukan.
+                        ${t('user_not_found')}
                     </div>`;
                 return;
             }
@@ -111,7 +111,7 @@ const UserProfile = {
                 document.getElementById('profilePageWrap').innerHTML =
                     `<div style="text-align:center;padding:4rem 1rem;color:#555;">
                         <i class="fa-solid fa-user-slash" style="font-size:2rem;display:block;margin-bottom:1rem;color:#333;"></i>
-                        Pengguna tidak ditemukan.
+                        ${t('user_not_found')}
                     </div>`;
                 return;
             }
@@ -135,7 +135,7 @@ const UserProfile = {
         const username = t.username || t.short_name || t.full_name?.split(' ')[0];
         const avatar = t.avatar_url || 'icons/profpicture.png';
         const bio = t.bio || '';
-        const className = t.classes?.name || (t.class_id ? `Kelas ${t.class_id}` : '');
+        const className = t.classes?.name || (t.class_id ? `${window.t('class')} ${t.class_id}` : '');
 
         document.title = `@${username}`;
 
@@ -253,9 +253,9 @@ const UserProfile = {
         if (this.state.posts.length === 0) {
             const msg = this.state.isOwnProfile
                 ? `<i class="fa-regular fa-image"></i>
-                   <p style="font-size:.85rem;">Belum ada postingan.</p>
+                   <p style="font-size:.85rem;">${t('no_posts')}</p>
                    <p style="color:#444;font-size:.78rem;">Tekan <b style="color:var(--accent,#00eaff)">+ Posting</b> untuk mulai!</p>`
-                : `<i class="fa-regular fa-image"></i><p style="font-size:.85rem;">Belum ada postingan.</p>`;
+                : `<i class="fa-regular fa-image"></i><p style="font-size:.85rem;">${t('no_posts')}</p>`;
             grid.innerHTML = `<div class="posts-empty">${msg}</div>`;
             return;
         }
@@ -342,7 +342,7 @@ const UserProfile = {
 
         // Reset tombol hapus ke state normal (jaga-jaga dari delete sebelumnya)
         const btn = document.getElementById('btnDeletePost');
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> ' + window.t('delete_post'); }
 
         lockScroll();
     },
@@ -375,7 +375,7 @@ const UserProfile = {
 
         } catch (err) {
             console.error('Delete error:', err);
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Hapus Post'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> ' + window.t('delete_post'); }
             showPopup('Gagal menghapus: ' + (err?.message || 'Unknown error'), 'error');
         }
     },
@@ -573,7 +573,7 @@ const UserProfile = {
                 const file = this.state.selectedFile;
                 const isVid = this.isVideo(file);
 
-                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${isVid ? 'Upload video...' : 'Mengunggah...'}`;
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${t('uploading_text')}`;
 
                 if (isVid) {
                     // Video — upload as-is, no compress

@@ -1,63 +1,58 @@
--- Create nilai_config table for granular score settings
-CREATE TABLE IF NOT EXISTS nilai_config (
-    test_id TEXT NOT NULL,          -- psts, psasi, psat, etc
-    class_id BIGINT NOT NULL,       -- link ke classes.id
-    hidden_subjects JSONB DEFAULT '[]', -- array key mapel yang mau di-hide
-    PRIMARY KEY (test_id, class_id),
-    CONSTRAINT fk_nilai_config_class FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
-);
+-- Exclude all_classes (id=0) from everywhere
+UPDATE classes SET is_active = false WHERE id = 0;
 
--- Add is_private column to score tables
-ALTER TABLE nilai_psts ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
-ALTER TABLE nilai_psasi ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
-ALTER TABLE nilai_psat ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE;
+-- Kolom is_task di subject_announcements
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_task BOOLEAN DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_subject_announcements_is_task ON subject_announcements(is_task);
 
--- Create nilai_files table for storing original exam files (PDF, etc.)
-CREATE TABLE IF NOT EXISTS nilai_files (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    test_id TEXT NOT NULL,
-    class_id BIGINT NOT NULL,
-    file_name TEXT NOT NULL,
-    file_url TEXT NOT NULL,
-    label TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT fk_nilai_files_class FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
-);
-
--- Create subject_teachers table for storing teacher info per subject
-CREATE TABLE IF NOT EXISTS subject_teachers (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    subject_id TEXT NOT NULL,
+-- ============================================================
+-- task_submissions — buat halaman kirim-tugas
+-- ============================================================
+CREATE TABLE IF NOT EXISTS task_submissions (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     TEXT NOT NULL,
+    user_name   TEXT,
+    user_class  TEXT,
     teacher_name TEXT NOT NULL,
-    teacher_contact TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    file_url    TEXT,
+    file_name   TEXT,
+    link_url    TEXT,
+    message     TEXT DEFAULT '',
+    avatar_url  TEXT,
+    tugas_id    BIGINT,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE subject_teachers ENABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS idx_task_submissions_tugas_id ON task_submissions(tugas_id);
 
-CREATE POLICY "subject_teachers_select_all" ON subject_teachers FOR SELECT USING (true);
-CREATE POLICY "subject_teachers_insert_all" ON subject_teachers FOR INSERT WITH CHECK (true);
-CREATE POLICY "subject_teachers_update_all" ON subject_teachers FOR UPDATE USING (true);
-CREATE POLICY "subject_teachers_delete_all" ON subject_teachers FOR DELETE USING (true);
+ALTER TABLE task_submissions ENABLE ROW LEVEL SECURITY;
 
--- RLS policies for nilai_files
-ALTER TABLE nilai_files ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read" ON task_submissions
+    FOR SELECT USING (true);
+CREATE POLICY "auth_insert" ON task_submissions
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "auth_update" ON task_submissions
+    FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "auth_delete" ON task_submissions
+    FOR DELETE USING (auth.role() = 'authenticated');
 
-CREATE POLICY "nilai_files_select_all" ON nilai_files FOR SELECT USING (true);
-CREATE POLICY "nilai_files_insert_all" ON nilai_files FOR INSERT WITH CHECK (true);
-CREATE POLICY "nilai_files_delete_all" ON nilai_files FOR DELETE USING (true);
+-- Storage bucket untuk file tugas
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('transfer-files', 'transfer-files', false)
+ON CONFLICT (id) DO NOTHING;
 
--- FIX: Add missing foreign key relationship for Joins
--- Make avatars bucket public so getPublicUrl works without auth
-UPDATE storage.buckets SET public = true WHERE name = 'avatars';
-
-/*
-ALTER TABLE simulation_progress
-ADD CONSTRAINT fk_sim_progress_user
-FOREIGN KEY (user_id) REFERENCES users(id)
-ON DELETE CASCADE;
-
--- 5. Enable Realtime for Monitoring
-ALTER PUBLICATION supabase_realtime ADD TABLE simulation_progress;
-ALTER PUBLICATION supabase_realtime ADD TABLE daily_progress;
-*/
+CREATE POLICY "auth_insert_transfer" ON storage.objects
+    FOR INSERT WITH CHECK (
+        auth.role() = 'authenticated'
+        AND bucket_id = 'transfer-files'
+    );
+CREATE POLICY "auth_select_transfer" ON storage.objects
+    FOR SELECT USING (
+        auth.role() = 'authenticated'
+        AND bucket_id = 'transfer-files'
+    );
+CREATE POLICY "auth_delete_transfer" ON storage.objects
+    FOR DELETE USING (
+        auth.role() = 'authenticated'
+        AND bucket_id = 'transfer-files'
+    )

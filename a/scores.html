@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Nilai Ujian • E-Learning Nizam</title>
+    <title id="pageTitle"></title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -274,8 +274,19 @@
         }
 
         .leader-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             background: rgba(255, 255, 255, 0.06);
+        }
+
+        .leader-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .leader-item.drag-over {
+            border-color: var(--accent);
+            background: rgba(0, 234, 255, 0.08);
+            transform: translateX(6px);
         }
 
         .leader-item img {
@@ -590,7 +601,7 @@
     </div>
 
     <div class="fab-container">
-        <div id="viewAllFab" class="fab-admin secondary" onclick="toggleViewAll()" title="Lihat Semua Mapel"><i
+        <div id="viewAllFab" class="fab-admin secondary" onclick="toggleViewAll()"><i
                 class="fa-solid fa-eye"></i></div>
         <div id="adminFab" class="fab-admin" onclick="openAdminConfig()" title="Atur Mapel"><i
                 class="fa-solid fa-gear"></i></div>
@@ -600,16 +611,13 @@
         <div class="glass-card modal-content" onclick="event.stopPropagation()">
             <span class="close-modal" onclick="closeAdminModal()">&times;</span>
             <h2 style="margin-bottom: 5px;"><i class="fa-solid fa-sliders"></i> Atur Mapel</h2>
-            <p style="opacity: 0.6; font-size: 13px; margin-bottom: 20px;">Pilih mapel yang ingin <b>DISEMBUNYIKAN</b>.
-            </p>
+            <p style="opacity: 0.6; font-size: 13px; margin-bottom: 20px;" data-i18n="select_subject_hide"></p>
             <div id="adminConfigList" class="config-list"></div>
-            <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> Simpan
-                Konfigurasi</button>
+            <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> <span data-i18n="save">Simpan</span></button>
 
             <hr style="border-color:rgba(255,255,255,0.1);margin:25px 0;">
             <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> Kelola File Nilai</h3>
-            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;">Upload file asli (PDF/gambar) biar siswa bisa
-                verifikasi.</p>
+            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file"></p>
             <div id="adminFilesList" class="config-list" style="margin-bottom:15px;"></div>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <input type="text" id="fileLabelInput" placeholder="Label (mis: PSAT X RPL)"
@@ -618,8 +626,7 @@
                     onchange="document.getElementById('fileNameDisplay').textContent = this.files[0]?.name || ''">
                 <button class="fab-admin secondary"
                     style="display:flex; position:static; width:auto; height:auto; padding:10px 18px; border-radius:8px; font-size:13px;"
-                    onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-folder-open"></i> Pilih
-                    File</button>
+                    onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-folder-open"></i> <span data-i18n="select">Pilih</span></button>
                 <span id="fileNameDisplay"
                     style="font-size:12px; opacity:0.6; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
             </div>
@@ -630,7 +637,7 @@
 
     <div class="main-content">
         <div class="left-section">
-            <h1 id="headerTitle" class="glow">Nilai Ujian</h1>
+            <h1 id="headerTitle" class="glow" data-i18n="exam_scores">Nilai Ujian</h1>
             <p id="leaderboardDesc" style="opacity: 0.6; margin-top: 5px; margin-bottom: 20px;">Ranking Berdasarkan
                 Rata-Rata Nilai</p>
 
@@ -639,7 +646,7 @@
                     <img id="pp" src="">
                     <div class="hero-info">
                         <p id="uname" style="color:var(--accent); font-weight:600; font-size:14px;">@username</p>
-                        <h1 id="name">Loading...</h1>
+                        <h1 id="name" data-i18n="loading">Loading...</h1>
                         <p id="ucapanText"></p>
                     </div>
                 </div>
@@ -684,7 +691,7 @@
             </div>
 
             <div class="glass-card">
-                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> Nilai Kelas</h3>
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai Kelas</span></h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <!-- <div class="select-wrapper"><select id="classSelector" class="mapel-select"
                             onchange="loadData()"></select></div> -->
@@ -700,7 +707,7 @@
                     <thead>
                         <tr>
                             <th style="width: 40px;">#</th>
-                            <th>Nama Siswa</th>
+                            <th><span data-i18n="student_name">Nama Siswa</span></th>
                             <th style="text-align: right;">Nilai</th>
                         </tr>
                     </thead>
@@ -751,7 +758,7 @@
             const testId = urlParams.get('id');
             if (testId && TEST_CONFIG[testId]) currentTestId = testId;
             const config = TEST_CONFIG[currentTestId];
-            document.title = `${config.title} • E-Learning Nizam`;
+            document.title = `${config.title} • ${t('app_name')}`;
             document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
 
             supabase.from('classes').select('id, name').eq('is_active', true).order('id').then(({ data }) => {
@@ -782,6 +789,7 @@
             if (user.role === 'super_admin') {
                 document.getElementById('adminFab').style.display = 'flex';
                 document.getElementById('viewAllFab').style.display = 'flex';
+                document.getElementById('viewAllFab').title = t('view_all_subjects');
             }
         }
 
@@ -895,9 +903,58 @@
                     const key = globalData[i].nama_siswa.toLowerCase();
                     const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                     const gPrivIcon = globalData[i].is_private && i >= 10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
-                    rs.innerHTML += `<div class="leader-item" onclick="showStudentScores('${globalData[i].nama_siswa}')" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
+                    rs.innerHTML += `<div class="leader-item" draggable="true" onclick="showStudentScores('${globalData[i].nama_siswa}')" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
                 }
             }
+            initDragDrop();
+        }
+
+        let _dragSrc = null;
+        function initDragDrop() {
+            const container = document.getElementById('podiumRest');
+            container.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                _dragSrc = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            container.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                item.classList.remove('dragging');
+                document.querySelectorAll('.leader-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+                _dragSrc = null;
+            });
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            container.addEventListener('dragenter', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item || item === _dragSrc) return;
+                item.classList.add('drag-over');
+            });
+            container.addEventListener('dragleave', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                item.classList.remove('drag-over');
+            });
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.leader-item');
+                if (!target || !_dragSrc || target === _dragSrc) return;
+                target.classList.remove('drag-over');
+                const parent = _dragSrc.parentNode;
+                const items = [...parent.querySelectorAll('.leader-item')];
+                const srcIdx = items.indexOf(_dragSrc);
+                const tgtIdx = items.indexOf(target);
+                if (srcIdx < tgtIdx) {
+                    target.after(_dragSrc);
+                } else {
+                    target.before(_dragSrc);
+                }
+            });
         }
 
         function renderClassTable() {
@@ -958,7 +1015,7 @@
             const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             showToast('Menyimpan...', 'info');
             const { error } = await supabase.from('nilai_config').upsert({ test_id: currentTestId, class_id: classId, hidden_subjects: hidden }, { onConflict: 'test_id, class_id' });
-            if (error) showToast('Gagal: ' + error.message, 'error'); else { showToast('Berhasil!', 'success'); closeAdminModal(); loadData(); }
+            if (error) showToast(t('failed_generic') + ': ' + error.message, 'error'); else { showToast(t('success_generic'), 'success'); closeAdminModal(); loadData(); }
         }
 
         async function togglePrivacy(isP) {
@@ -974,7 +1031,7 @@
             showToast('Menyimpan...', 'info');
             const { error } = await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myIdentifier);
             if (error && myNickname) await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myNickname);
-            showToast('Selesai!', 'success'); loadData();
+            showToast(t('done') + '!', 'success'); loadData();
         }
 
         function getDynamicColor(n) { n = parseFloat(n); if (isNaN(n)) return "#888"; if (n >= 90) return "#00eafe"; if (n >= 80) return "#00cec9"; if (n >= 75) return "#1abc9c"; if (n >= 70) return "#e67e22"; return "#ff4757"; }
@@ -1049,13 +1106,13 @@
         async function uploadFile() {
             const input = document.getElementById('fileInput');
             const label = document.getElementById('fileLabelInput').value.trim();
-            if (!input.files.length) return showToast('Pilih file dulu', 'error');
+            if (!input.files.length) return showToast(t('select_file_first'), 'error');
             const file = input.files[0];
             const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const storagePath = `${currentTestId}/${classId}/${Date.now()}_${file.name}`;
-            showToast('Mengupload...', 'info');
+            showToast(t('uploading_text'), 'info');
             const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, file);
-            if (upErr) return showPopup('Gagal upload: ' + upErr.message, 'error');
+            if (upErr) return showPopup(t('failed_generic') + ' upload: ' + upErr.message, 'error');
             const { data: urlData } = supabase.storage.from('nilai-files').getPublicUrl(storagePath);
             const { error: dbErr } = await supabase.from('nilai_files').insert({
                 test_id: currentTestId, class_id: classId,
@@ -1064,9 +1121,9 @@
             });
             if (dbErr) {
                 await supabase.storage.from('nilai-files').remove([storagePath]);
-                return showToast('Gagal: ' + dbErr.message, 'error');
+                return showToast(t('failed_generic') + ': ' + dbErr.message, 'error');
             }
-            showToast('Berhasil upload!', 'success');
+            showToast(t('success_generic'), 'success');
             input.value = ''; document.getElementById('fileLabelInput').value = '';
             document.getElementById('fileNameDisplay').textContent = '';
             loadAndRenderFiles();
@@ -1080,20 +1137,20 @@
             const { data } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
                 .order('created_at', { ascending: false });
-            if (!data || !data.length) { list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">Belum ada file. Upload file asli biar siswa bisa verifikasi nilainya.</div>'; return; }
+            if (!data || !data.length) { list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">' + t('no_file_upload') + '</div>'; return; }
             list.innerHTML = data.map(f => `
                 <div class="config-item">
                     <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                         <i class="fa-solid fa-file-pdf" style="color:#e74c3c;"></i>
                         <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.label || f.file_name}</span>
                     </div>
-                    <button onclick="deleteFile(${f.id})" style="background:none; border:none; color:#e74c3c; cursor:pointer; padding:5px; font-size:16px;" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
+                    <button onclick="deleteFile(${f.id})" style="background:none; border:none; color:#e74c3c; cursor:pointer; padding:5px; font-size:16px;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `).join('');
         }
 
         async function deleteFile(id) {
-            if (!confirm('Hapus file ini?')) return;
+            if (!confirm(t('confirm_delete_file'))) return;
             const { data } = await supabase.from('nilai_files').select('file_url').eq('id', id).single();
             if (data) {
                 const path = data.file_url.split('/nilai-files/')[1];

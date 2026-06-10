@@ -117,7 +117,7 @@ const SubjectApp = {
                     </button>
                     <button id="toggleEditMode" class="fab-main state-edit">
                         <i class="fa-solid fa-pen-to-square fab-icon"></i>
-                        <span class="fab-label">Edit</span>
+                        <span class="fab-label">${t('edit_material')}</span>
                     </button>
                 </div>
             `;
@@ -338,6 +338,8 @@ const SubjectApp = {
             const taskBtn = e.target.closest(".task-btn");
             if (taskBtn) {
                 e.preventDefault(); e.stopPropagation();
+                // Task wajib kumpul → redirect, bukan toggle status
+                if (taskBtn.classList.contains('task-wajib') || taskBtn.classList.contains('done')) return;
                 self.toggleTaskStatus(taskBtn.closest(".course-card"), taskBtn);
             }
         });
@@ -417,9 +419,9 @@ const SubjectApp = {
                 btn.disabled = true;
                 btn.style.opacity = "0.6";
                 btn.style.cursor = "default";
-                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Selesai';
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${t('done')}`;
                 btn.classList.add("done");
-                if (typeof showToast === "function") showToast("Tugas ini diarsipkan — semua siswa sudah selesai! 🎉", "success");
+                if (typeof showToast === "function") showToast(t('confirm_archive_task'), "success");
             }
         } catch (e) { /* silent fail */ }
     },
@@ -577,13 +579,13 @@ const SubjectApp = {
                 emptyState.className = "empty-state success";
                 emptyState.innerHTML = `
                     <i class="fa-solid fa-circle-check"></i>
-                    <p>Semua tugas sudah selesai atau belum ada tugas baru.</p>
+                    <p>${t('empty_tasks')}</p>
                 `;
             } else {
                 emptyState.className = "empty-state";
                 emptyState.innerHTML = `
                     <i class="fa-solid fa-folder-open"></i>
-                    <p>Belum ada materi atau pengumuman untuk mata pelajaran ini.</p>
+                    <p>${t('empty_materials')}</p>
                 `;
             }
             container.replaceChildren(header, emptyState);
@@ -664,8 +666,18 @@ const SubjectApp = {
         let taskBtnHTML = "";
         // PERUBAHAN: Cek is_lesson per kartu, bukan per halaman
         const isLessonCard = data.is_lesson === true;
+        const isTaskCard = data.is_task === true;
 
-        if (isLessonCard) {
+        if (isTaskCard) {
+            const isDone = this.state.completedTasks.includes(String(data.id));
+            if (data.is_done === true) {
+                taskBtnHTML = `<button class="task-btn done" disabled><i class="fa-solid fa-circle-check"></i> ${t('done')}</button>`;
+            } else if (isDone) {
+                taskBtnHTML = `<button class="task-btn done" onclick="event.stopPropagation();window.location.href='kirim-tugas.html?tugas=${data.id}'"><i class="fa-solid fa-circle-check"></i> Sudah Dikumpul</button>`;
+            } else {
+                taskBtnHTML = `<button class="task-btn task-wajib" onclick="event.stopPropagation();window.location.href='kirim-tugas.html?tugas=${data.id}'"><i class="fa-solid fa-paper-plane"></i> ${t('collect_task')}</button>`;
+            }
+        } else if (isLessonCard) {
             const isDone = this.state.completedTasks.includes(String(data.id));
             if (data.is_done === true) {
                 // Diarsipkan — semua siswa selesai, tombol dikunci
@@ -691,12 +703,12 @@ const SubjectApp = {
     <button onclick="cardFormatText(event,'3')" class="fmt-btn" style="font-size:10px;">Sedang</button>
     <button onclick="cardFormatText(event,'2')" class="fmt-btn" style="font-size:10px;">Kecil</button>
     <span style="width:1px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
-    <button onclick="cardFormatLink(event)" class="fmt-btn" title="Tambah tautan"><i class="fa-solid fa-link" style="font-size:11px;"></i></button>
+    <button onclick="cardFormatLink(event)" class="fmt-btn" title="${t('add_link')}"><i class="fa-solid fa-link" style="font-size:11px;"></i></button>
 </div>`;
 
         const colorTools = `
 <div class="card-color-tools" style="display:none; gap:5px; align-items:center; background:rgba(0,0,0,0.3); padding:5px 8px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
-    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'default')" style="width:14px; height:14px; border-radius:50%; background:#333; border:1px solid white; cursor:pointer;" title="Default"></div>
+    <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'default')" style="width:14px; height:14px; border-radius:50%; background:#333; border:1px solid white; cursor:pointer;" title="${t('default')}"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'red')" style="width:14px; height:14px; border-radius:50%; background:#ff4757; cursor:pointer;" title="Merah"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'orange')" style="width:14px; height:14px; border-radius:50%; background:#ff9f43; cursor:pointer;" title="Jingga"></div>
     <div class="color-dot" onclick="SubjectApp.changeCardColor('${data.id}', 'yellow')" style="width:14px; height:14px; border-radius:50%; background:#ffd32a; cursor:pointer;" title="Kuning"></div>
@@ -735,6 +747,7 @@ const SubjectApp = {
         ${photoHTML}
         <div class="pending-photo-preview" style="display:none; margin-bottom:12px;"></div>
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
+        ${isTaskCard ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#ffd32a;background:rgba(255,211,42,0.12);padding:3px 10px;border-radius:20px;margin-bottom:8px;border:1px solid rgba(255,211,42,0.2);">📋 Wajib Dikumpul</span>` : ''}
         ${displayTitleHTML}
         <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${processCardLinks(content)}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
@@ -752,7 +765,7 @@ const SubjectApp = {
                 ${isAdmin ? formatTools : ''}
                 ${isAdmin ? colorTools : ''}
 
-                <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;" onclick="SubjectApp.deleteAnnouncement(this.closest('.course-card'))">
+                <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;">
                     <i class="fa-solid fa-trash" style="margin-right:0;"></i>
                 </button>
             </div>
@@ -816,11 +829,11 @@ const SubjectApp = {
             if (this.state.editMode) {
                 container.classList.add("active");
                 toggleBtn.className = "fab-main state-done";
-                toggleBtn.innerHTML = '<i class="fa-solid fa-check fab-icon"></i><span class="fab-label">Simpan</span>';
+                toggleBtn.innerHTML = `<i class="fa-solid fa-check fab-icon"></i><span class="fab-label">${t('save')}</span>`;
             } else {
                 container.classList.remove("active");
                 toggleBtn.className = "fab-main state-edit";
-                toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">Edit</span>';
+                toggleBtn.innerHTML = `<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">${t('edit_material')}</span>`;
             }
         }
 
@@ -1010,12 +1023,12 @@ const SubjectApp = {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify({ ts: Date.now(), data: this.state.announcements }));
             } catch (e) { }
 
-            if (typeof showPopup === 'function') showToast("Semua perubahan tersimpan!", "success");
+            if (typeof showPopup === 'function') showToast(t('all_changes_saved'), "success");
         } catch (err) {
             console.error("Save failed:", err);
-            showPopup("Gagal simpan data!", "error");
+            showPopup(t('failed_save_data'), "error");
         } finally {
-            toggleBtn.innerHTML = '<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">Edit</span>';
+            toggleBtn.innerHTML = `<i class="fa-solid fa-pen-to-square fab-icon"></i><span class="fab-label">${t('edit_material')}</span>`;
             toggleBtn.disabled = false;
         }
     },
@@ -1479,7 +1492,7 @@ const SubjectApp = {
     },
 
     async deletePhoto(card, urlToDelete) {
-        if (!await showPopup("Hapus foto ini?", "confirm")) return;
+        if (!await showPopup(t('confirm_delete_photo'), "confirm")) return;
         const id = card.dataset.id;
         const ann = this.state.announcements.find(a => String(a.id) === String(id));
 
@@ -1525,10 +1538,10 @@ const SubjectApp = {
                 card.style.cursor = 'default';
             }
 
-            showToast("Foto dihapus dari cloud!", "success");
+            showToast(t('photo_deleted_cloud'), "success");
         } catch (err) {
             console.error(err);
-            showPopup("Gagal hapus foto dari cloud", "error");
+            showPopup(t('failed_delete_photo_cloud'), "error");
         }
     },
 
@@ -1551,7 +1564,7 @@ const SubjectApp = {
     },
 
     async deleteAnnouncement(card) {
-        if (!await showPopup("Hapus materi ini?", "confirm")) return;
+        if (!await showPopup(t('confirm_delete_material'), "confirm")) return;
         const id = card.dataset.id;
 
         // Ambil data untuk hapus foto di storage
@@ -1593,10 +1606,10 @@ const SubjectApp = {
             }
 
             this.renderAnnouncements();
-            showToast("Berhasil dihapus!", "success");
+            showToast(t('deleted_success'), "success");
         } catch (err) {
             console.error("Delete failed:", err);
-            showPopup("Gagal menghapus data", "error");
+            showPopup(t('failed_save_data'), "error");
         }
     },
 
@@ -1775,6 +1788,7 @@ const SubjectApp = {
                 const data = {
                     dest: destSelect.value,
                     isLesson: isLessonToggle.checked,
+                    isTask: document.getElementById('addIsTask')?.checked || false,
                     big: document.getElementById('addJudul').value,
                     tit: document.getElementById('addSubjudul').value,
                     con: document.getElementById('addIsi').innerHTML,
@@ -1849,7 +1863,7 @@ const SubjectApp = {
         if (isLessonToggle.checked) {
             const opt = destSelect.options[destSelect.selectedIndex];
             const nama = opt ? opt.text.trim() : '';
-            if (nama) judulEl.value = `Tugas ${nama}`;
+            if (nama) judulEl.value = `${t('task')} ${nama}`;
         } else {
             // Jika dimatikan toggle tugasnya, dan judulnya "Tugas X", hapus
             if (judulEl.value.startsWith('Tugas ')) judulEl.value = '';
@@ -1874,7 +1888,8 @@ const SubjectApp = {
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,
             is_done: false, // default
-            is_lesson: d.isLesson, // NEW FIELD
+            is_lesson: d.isLesson,
+            is_task: d.isTask || false,
             display_order: 0
         });
 
@@ -1884,7 +1899,7 @@ const SubjectApp = {
             if (d.dest === this.state.subjectId || (this.state.subjectId === 'tugas' && d.isLesson)) {
                 location.reload();
             } else {
-                showToast(`Berhasil dikirim ke ${d.dest}!`, 'success');
+                showToast(t('task_sent_success'), 'success');
             }
         } else {
             showPopup('Gagal simpan: ' + error.message, 'error');

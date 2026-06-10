@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — Progress Tugas • E-Learning Nizam</title>
+    <title>E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -542,31 +542,31 @@
         <!-- LEFT -->
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-clipboard-check" style="font-size:20px;"></i> Progress Tugas</h1>
+                <h1><i class="fa-solid fa-clipboard-check" style="font-size:20px;"></i> <span data-i18n="progress_tasks"></span></h1>
             </div>
 
             <div class="stat-grid">
                 <div class="stat-card">
                     <span class="stat-val" id="statSiswa">—</span>
-                    <div class="stat-lbl">Siswa</div>
+                    <div class="stat-lbl" data-i18n="students"></div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-val" id="statTugas">—</span>
-                    <div class="stat-lbl">Total Tugas</div>
+                    <div class="stat-lbl" data-i18n="total_tasks"></div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-val" id="statRata">—</span>
-                    <div class="stat-lbl">Rata-rata</div>
+                    <div class="stat-lbl" data-i18n="average"></div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-val" id="statLulus">—</span>
-                    <div class="stat-lbl">100% Selesai</div>
+                    <div class="stat-lbl" data-i18n="completed_100"></div>
                 </div>
             </div>
 
             <div class="global-bar-card">
                 <div class="global-bar-label">
-                    <span>Progress Kelas</span>
+                    <span data-i18n="class_progress"></span>
                     <span id="gPct">0%</span>
                 </div>
                 <div class="gbar-wrap">
@@ -576,26 +576,26 @@
 
             <div class="view-tabs">
                 <button class="view-tab active" id="tabTask" onclick="switchView('task')">
-                    <i class="fa-solid fa-list-check" style="font-size:11px;margin:0;"></i> Per Tugas
+                    <i class="fa-solid fa-list-check" style="font-size:11px;margin:0;"></i> <span data-i18n="per_task"></span>
                 </button>
                 <button class="view-tab" id="tabStudent" onclick="switchView('student')">
-                    <i class="fa-solid fa-users" style="font-size:11px;margin:0;"></i> Per Orang
+                    <i class="fa-solid fa-users" style="font-size:11px;margin:0;"></i> <span data-i18n="per_student"></span>
                 </button>
             </div>
 
-            <input class="ctrl-input" id="searchInput" placeholder="🔍 Cari..." oninput="debounceRender()">
+            <input class="ctrl-input" id="searchInput" data-i18n-placeholder="search_placeholder" oninput="debounceRender()">
 
             <select class="ctrl-select" id="sortSelect" onchange="renderCurrent()">
-                <option value="default">Terbaru dulu</option>
-                <option value="pct_desc">Paling banyak selesai ↓</option>
-                <option value="pct_asc">Paling sedikit selesai ↑</option>
-                <option value="name">A–Z Judul</option>
+                <option value="default" data-i18n="newest_first"></option>
+                <option value="pct_desc" data-i18n="most_completed"></option>
+                <option value="pct_asc" data-i18n="least_completed"></option>
+                <option value="name" data-i18n="a_z_title"></option>
             </select>
 
             <div class="mapel-filter" id="mapelFilter"></div>
 
             <button class="btn-bulk-all" id="btnBulkAll" onclick="bulkAllConfirm()">
-                <i class="fa-solid fa-check-double"></i> Arsipkan SEMUA Tugas
+                <i class="fa-solid fa-check-double"></i> <span data-i18n="archive_all_tasks"></span>
             </button>
         </div>
 
@@ -631,6 +631,7 @@
         let renderTimer = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            document.title = t('progress_tasks') + ' • ' + t('app_name');
             const me = getUser();
             if (!me) { window.location.href = '../login'; return; }
             if (me.role !== 'super_admin' && me.role !== 'class_admin') {
@@ -686,7 +687,7 @@
         function buildMapelFilter() {
             const mapels = [...new Set(allTasks.map(t => t.subject_id))].sort();
             document.getElementById('mapelFilter').innerHTML =
-                `<div class="mapel-chip active" onclick="setMapel('all',this)">Semua</div>` +
+                `<div class="mapel-chip active" onclick="setMapel('all',this)">${t('all')}</div>` +
                 mapels.map(m => `<div class="mapel-chip" onclick="setMapel(${JSON.stringify(m)},this)">${esc(m)}</div>`).join('');
         }
 
@@ -740,21 +741,21 @@
             const sortEl = document.getElementById('sortSelect');
             if (mode === 'task') {
                 sortEl.innerHTML = `
-                    <option value="default">Terbaru dulu</option>
-                    <option value="pct_desc">Paling banyak selesai ↓</option>
-                    <option value="pct_asc">Paling sedikit selesai ↑</option>
-                    <option value="name">A–Z Judul</option>`;
+                    <option value="default">${t('newest_first')}</option>
+                    <option value="pct_desc">${t('most_completed')}</option>
+                    <option value="pct_asc">${t('least_completed')}</option>
+                    <option value="name">${t('a_z_title')}</option>`;
                 document.getElementById('mapelFilter').style.display = 'flex';
                 document.getElementById('btnBulkAll').style.display = 'flex';
-                document.getElementById('searchInput').placeholder = '🔍 Cari judul / mapel...';
+                document.getElementById('searchInput').placeholder = t('search_title_subject');
             } else {
                 sortEl.innerHTML = `
-                    <option value="name">A–Z Nama</option>
-                    <option value="pct_desc">Progress ↓</option>
-                    <option value="pct_asc">Progress ↑</option>`;
+                    <option value="name">${t('a_z_name')}</option>
+                    <option value="pct_desc">${t('progress_desc')}</option>
+                    <option value="pct_asc">${t('progress_asc')}</option>`;
                 document.getElementById('mapelFilter').style.display = 'none';
                 document.getElementById('btnBulkAll').style.display = 'flex';
-                document.getElementById('searchInput').placeholder = '🔍 Cari nama siswa...';
+                document.getElementById('searchInput').placeholder = t('search_student_name');
             }
             renderCurrent();
         }
@@ -791,7 +792,7 @@
 
             const container = document.getElementById('taskList');
             if (sorted.length === 0) {
-                container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-inbox"></i><p>Tidak ada tugas ditemukan.</p></div>`;
+                container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-inbox"></i><p>${t('no_task_found')}</p></div>`;
                 return;
             }
 
@@ -800,7 +801,7 @@
                 // Divider antara aktif dan arsip
                 const divider = document.createElement('div');
                 divider.style.cssText = 'text-align:center;color:#444;font-size:11px;letter-spacing:1px;padding:8px 0;margin:4px 0;border-top:1px solid rgba(255,255,255,0.05);';
-                divider.innerHTML = `<i class="fa-solid fa-archive" style="margin-right:6px;"></i>DIARSIPKAN (${archived.length})`;
+                divider.innerHTML = `<i class="fa-solid fa-archive" style="margin-right:6px;"></i>${t('archived_label')} (${archived.length})`;
                 active.forEach(t => container.appendChild(buildCard(t)));
                 container.appendChild(divider);
                 archived.forEach(t => container.appendChild(buildCard(t)));
@@ -836,7 +837,7 @@
 
             const container = document.getElementById('taskList');
             if (list.length === 0) {
-                container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-users-slash"></i><p>Tidak ada siswa ditemukan.</p></div>`;
+                container.innerHTML = `<div class="list-empty"><i class="fa-solid fa-users-slash"></i><p>${t('no_student_found')}</p></div>`;
                 return;
             }
 
@@ -845,7 +846,7 @@
         }
 
         function sName(s) {
-            return s.short_name || s.nickname || s.full_name?.split(' ')[0] || 'Tanpa Nama';
+            return s.short_name || s.nickname || s.full_name?.split(' ')[0] || t('no_name');
         }
 
         function buildStudentCard(student) {
@@ -862,7 +863,7 @@
                 <img class="student-avatar" src="${avatar}" onerror="this.src='../icons/profpicture.png'">
                 <div class="student-info">
                     <div class="student-name">${esc(sName(student))}</div>
-                    <div class="student-sub" id="ssub-${id}">${done}/${total} selesai</div>
+                    <div class="student-sub" id="ssub-${id}">${t('done_slash_total', {done, total})}</div>
                 </div>
                 <div class="s-progress-wrap">
                     <div class="s-mini-bar-wrap">
@@ -875,10 +876,10 @@
             <div class="s-task-panel" id="stp-${id}">
                 <div class="s-bulk-btns">
                     <button class="btn-bulk-done" onclick="bulkStudent('${id}', true)">
-                        <i class="fa-solid fa-check-double" style="margin:0;"></i> Selesaikan Semua
+                        <i class="fa-solid fa-check-double" style="margin:0;"></i> ${t('complete_all')}
                     </button>
                     <button class="btn-bulk-reset" onclick="bulkStudent('${id}', false)">
-                        <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Reset
+                        <i class="fa-solid fa-rotate-left" style="margin:0;"></i> ${t('reset')}
                     </button>
                 </div>
                 <div id="strows-${id}">${buildStudentTaskRows(id)}</div>
@@ -887,7 +888,7 @@
         }
 
         function buildStudentTaskRows(studentId) {
-            if (allTasks.length === 0) return `<p style="color:#444;font-size:12px;padding:6px 0;">Belum ada tugas.</p>`;
+            if (allTasks.length === 0) return `<p style="color:#444;font-size:12px;padding:6px 0;">${t('no_tasks')}</p>`;
             const doneSet = progressMap[studentId] || new Set();
 
             // Pisahkan: active tasks dulu, arsip di bawah dengan divider
@@ -899,7 +900,7 @@
                     // Task diarsipkan — terkunci, selalu tampil selesai, tidak bisa diubah
                     return `
                     <div class="s-task-row" style="opacity:0.5;">
-                        <button class="task-toggle done" disabled title="Diarsipkan — semua siswa selesai" style="cursor:default;">
+                        <button class="task-toggle done" disabled title="${t('all_students_complete').replace(/<[^>]*>/g,'')}" style="cursor:default;">
                             <i class="fa-solid fa-check" style="margin:0;"></i>
                         </button>
                         <div class="t-label">
@@ -928,7 +929,7 @@
             let html = active.map(buildRow).join('');
             if (archived.length > 0) {
                 html += `<div style="text-align:center;color:#333;font-size:10px;letter-spacing:0.8px;padding:6px 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);">
-                    <i class="fa-solid fa-archive" style="margin-right:4px;"></i>DIARSIPKAN (${archived.length})
+                    <i class="fa-solid fa-archive" style="margin-right:4px;"></i>${t('archived_label')} (${archived.length})
                 </div>`;
                 html += archived.map(buildRow).join('');
             }
@@ -975,7 +976,7 @@
             } catch (err) {
                 btn.className = `task-toggle ${wasDone ? 'done' : ''}`;
                 btn.innerHTML = wasDone ? '<i class="fa-solid fa-check" style="margin:0;"></i>' : '';
-                showToast('Gagal update', 'error');
+                showToast(t('failed_update'), 'error');
             }
         }
 
@@ -987,7 +988,7 @@
                     // Hanya proses task yang AKTIF (belum diarsipkan)
                     const activeTasks = allTasks.filter(t => !t.is_done);
                     if (activeTasks.length === 0) {
-                        showToast('Semua tugas sudah diarsipkan.', 'info');
+                        showToast(t('all_tasks_archived'), 'info');
                     } else {
                         // Fetch yang sudah ada di DB beneran untuk siswa ini
                         const { data: existing } = await supabase
@@ -1008,7 +1009,7 @@
 
                         if (!progressMap[studentId]) progressMap[studentId] = new Set();
                         activeTasks.forEach(t => progressMap[studentId].add(String(t.id)));
-                        showToast('Semua tugas aktif diselesaikan!', 'success');
+                        showToast(t('all_active_completed'), 'success');
 
                         // Auto-cek: ada task yang sekarang semua siswa sudah done? → arsipkan
                         await _checkAndArchiveAll(activeTasks.map(t => t.id));
@@ -1023,13 +1024,13 @@
                         if (error) throw error;
                     }
                     allTasks.filter(t => !t.is_done).forEach(t => progressMap[studentId]?.delete(String(t.id)));
-                    showToast('Progress direset.', 'info');
+                    showToast(t('progress_reset'), 'info');
                 }
                 document.getElementById(`strows-${studentId}`).innerHTML = buildStudentTaskRows(studentId);
                 refreshStudentBar(studentId);
                 updateStats();
             } catch (err) {
-                showToast('Gagal: ' + err.message, 'error');
+                showToast(t('failed_generic') + ': ' + err.message, 'error');
             } finally {
                 panel?.querySelectorAll('button').forEach(b => b.disabled = false);
             }
@@ -1059,7 +1060,7 @@
 
                     task.is_done = true;
                     allStudents.forEach(s => progressMap[s.id]?.delete(taskIdStr));
-                    showToast(`"${task.big_title}" diarsipkan otomatis 🎉`, 'success');
+                    showToast(`"${task.big_title}" ` + t('task_archived'), 'success');
                 }
             }
             // Re-render task list kalau ada yang berubah
@@ -1081,7 +1082,7 @@
             const sub = document.getElementById(`ssub-${studentId}`);
             if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
             if (pctEl) { pctEl.innerText = pct + '%'; pctEl.style.color = color; }
-            if (sub) sub.innerText = `${done}/${total} selesai`;
+            if (sub) sub.innerText = t('done_slash_total', {done, total});
         }
 
         function buildCard(task) {
@@ -1095,17 +1096,17 @@
             el.style.opacity = is_done ? '0.65' : '1';
 
             const archivedBadge = is_done
-                ? `<span style="display:inline-block;background:rgba(11,232,129,0.15);color:#0be881;border:1px solid rgba(11,232,129,0.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:8px;letter-spacing:0.5px;">✓ DIARSIPKAN</span><br>`
+                ? `<span style="display:inline-block;background:rgba(11,232,129,0.15);color:#0be881;border:1px solid rgba(11,232,129,0.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:8px;letter-spacing:0.5px;">✓ ${t('archived_label')}</span><br>`
                 : '';
 
             const bulkBanner = is_done
                 ? `<div class="bulk-banner">
                     <div class="bulk-progress">
-                        <small style="color:#0be881;font-size:12px;"><i class="fa-solid fa-circle-check"></i> Semua siswa selesai — progress dihapus dari DB</small>
+                        <small style="color:#0be881;font-size:12px;"><i class="fa-solid fa-circle-check"></i> ${t('all_students_complete')}</small>
                     </div>
                     <div class="bulk-actions">
                         <button class="btn-bulk-reset" id="breset-${id}" onclick="bulkTask('${id}', false)">
-                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Un-arsip
+                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> ${t('unarchive')}
                         </button>
                     </div>
                 </div>`
@@ -1114,14 +1115,14 @@
                         <div class="bulk-bar-wrap">
                             <div class="bulk-bar" id="bar-${id}" style="width:${pct}%;background:${color};"></div>
                         </div>
-                        <div class="bulk-count" id="cnt-${id}" style="color:${color};">${done}/${n} selesai</div>
+                        <div class="bulk-count" id="cnt-${id}" style="color:${color};">${t('done_slash_total', {done, total: n})}</div>
                     </div>
                     <div class="bulk-actions">
                         <button class="btn-bulk-done" id="bdone-${id}" onclick="bulkTask('${id}', true)">
-                            <i class="fa-solid fa-check-double" style="margin:0;"></i> Arsipkan Semua
+                            <i class="fa-solid fa-check-double" style="margin:0;"></i> ${t('archive_all')}
                         </button>
                         <button class="btn-bulk-reset" id="breset-${id}" onclick="bulkTask('${id}', false)">
-                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> Reset
+                            <i class="fa-solid fa-rotate-left" style="margin:0;"></i> ${t('reset')}
                         </button>
                     </div>
                 </div>`;
@@ -1150,7 +1151,7 @@
                     // Tidak perlu insert user_progress dulu — langsung arsip saja.
                     // Data progress row = 0 untuk task ini, UI admin tetap bisa lihat (is_done=true).
                     const confirmed = await showPopup(
-                        `Arsipkan tugas ini? <br><small style="opacity:0.7">Progress semua siswa akan dianggap selesai dan dihapus dari tabel (hemat kuota). Task tetap terlihat di panel ini sebagai arsip.</small>`,
+                        t('task_archived') + ` <br><small style="opacity:0.7">${t('all_students_complete')}</small>`,
                         'confirm'
                     );
                     if (!confirmed) { [btnDone, btnReset].forEach(b => { if (b) b.disabled = false; }); return; }
@@ -1174,7 +1175,7 @@
                     allStudents.forEach(s => progressMap[s.id]?.delete(String(taskId)));
                     sessionStorage.setItem('task_badge_dirty', '1'); // invalidate badge cache siswa
 
-                    showToast('Tugas diarsipkan! Progress dihapus dari DB 🎉', 'success');
+                    showToast(t('task_archived_progress'), 'success');
                 } else {
                     // ── UN-ARSIP: kembalikan is_done = false ──
                     const { error: upErr } = await supabase
@@ -1189,18 +1190,18 @@
                     // Rebuild card itu langsung in-place (tanpa re-render seluruh list)
                     _rebuildCard(taskId);
                     updateStats();
-                    showToast('Tugas di-unarsip. Siswa perlu centang ulang.', 'info');
+                    showToast(t('task_unarchived_detail'), 'info');
                     return; // skip refreshCard + updateStats di bawah (sudah done di atas)
                 }
 
                 refreshCard(taskId);
                 updateStats();
             } catch (err) {
-                showToast('Gagal: ' + err.message, 'error');
+                showToast(t('failed_generic') + ': ' + err.message, 'error');
             } finally {
                 if (btnDone) {
                     btnDone.disabled = false;
-                    btnDone.innerHTML = '<i class="fa-solid fa-check-double" style="margin:0;"></i> Arsipkan Semua';
+                    btnDone.innerHTML = '<i class="fa-solid fa-check-double" style="margin:0;"></i> ' + t('archive_all');
                 }
                 if (btnReset) btnReset.disabled = false;
             }
@@ -1209,18 +1210,18 @@
         async function bulkAllConfirm() {
             const activeTasks = allTasks.filter(t => !t.is_done);
             if (activeTasks.length === 0) {
-                showToast('Semua tugas sudah diarsipkan.', 'info');
+                showToast(t('all_tasks_archived'), 'info');
                 return;
             }
 
             const confirmed = await showPopup(
-                `Arsipkan SEMUA ${activeTasks.length} tugas aktif? <br><small style="opacity:0.7">Semua progress row akan dihapus dari DB. Siswa dianggap selesai semua.</small>`, 'confirm'
+                t('archive_all_tasks') + `? <br><small style="opacity:0.7">${t('all_students_complete')}</small>`, 'confirm'
             );
             if (!confirmed) return;
 
             const btn = document.getElementById('btnBulkAll');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengarsipkan...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('archiving');
 
             try {
                 const activeIds = activeTasks.map(t => t.id);
@@ -1249,12 +1250,12 @@
 
                 renderTasks();
                 updateStats();
-                showToast(`${activeTasks.length} tugas berhasil diarsipkan! 🎉`, 'success');
+                showToast(t('tasks_archived_count', {n: activeTasks.length}), 'success');
             } catch (err) {
-                showToast('Gagal: ' + err.message, 'error');
+                showToast(t('failed_generic') + ': ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Arsipkan SEMUA Tugas';
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> ' + t('archive_all_tasks');
             }
         }
 
@@ -1308,7 +1309,7 @@
             const bar = document.getElementById(`bar-${taskId}`);
             const cnt = document.getElementById(`cnt-${taskId}`);
             if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
-            if (cnt) { cnt.innerText = `${done}/${n} selesai`; cnt.style.color = color; }
+            if (cnt) { cnt.innerText = t('done_slash_total', {done, total: n}); cnt.style.color = color; }
         }
 
         function esc(str) {

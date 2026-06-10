@@ -24,10 +24,13 @@ document.addEventListener("DOMContentLoaded", async () => {
  * Kecuali super_admin (miz).
  */
 async function checkPathAccess(user) {
-    if (!user || user.role === 'super_admin') return;
+    if (!user || user.role === 'super_admin' || user.role === 'teacher') return;
+
+    // class_admin boleh akses semua halaman di /admiii/
+    if (user.role === 'class_admin' && window.location.pathname.includes('/admiii/')) return;
 
     const currentId = getPathIdentifier();
-    const whitelist = ['login', '404', 'index', 'theme', 'settingacc', 'user'];
+    const whitelist = ['login', '404', 'index', 'theme', 'settingacc', 'user', 'kirim-tugas'];
     
     // 1. Cek Whitelist Dasar
     if (whitelist.includes(currentId) || !currentId) return;
@@ -105,7 +108,7 @@ function renderAccessDenied() {
             </p>
             <div style="margin-top:25px; display:flex; justify-content:center; gap:12px;">
                 <a href="${homeUrl}" class="uni-btn" style="text-decoration: none; background:#ff4757; color:#fff; padding:10px 24px; border-radius:12px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-house"></i> Beranda
+                    <i class="fa-solid fa-house"></i> ${t('home')}
                 </a>
             </div>
         </div>
@@ -162,90 +165,39 @@ async function autoFetchUser() {
 }
 
 async function logout() {
-    // 1. Ambil data user untuk cek role & class_id
     const user = getUser();
-    const isSuperAdmin = user && user.role === 'super_admin';
-    const classId = user ? user.class_id : null;
 
-    // 2. Inisialisasi Tanggal & Tracker
-    const today = new Date().toISOString().split('T')[0];
-    let tracker = JSON.parse(localStorage.getItem("logout_tracker")) || { date: today, count: 0 };
+    const yakin = await showPopup("Yakin mau logout?", "confirm");
+    if (!yakin) return;
 
-    // Reset hitungan kalau ganti hari
-    if (tracker.date !== today) {
-        tracker = { date: today, count: 0 };
-    }
+    try {
+        const isInAdmin = window.location.pathname.includes('/admiii/');
+        const isInA_logout = window.location.pathname.includes('/a/');
+        const prefix = (isInAdmin || isInA_logout) ? '../' : '';
 
-    // 3. Hitung Sisa Kuota (Flow: 0 logout -> 2 kali sisa)
-    const remaining = Math.max(0, 2 - tracker.count);
-
-    // 4. Tentukan Pesan Popup berdasarkan Role
-    let pesan = "";
-    if (isSuperAdmin) {
-        pesan = "Yakin mau logout, Super Admin? <br><small style='opacity:0.7'>Kamu punya akses tak terbatas.</small>";
-    } else {
-        pesan = `
-            Yakin mau logout? <br>
-            Kamu hanya bisa logout <b>${remaining} kali lagi</b>.
-        `;
-    }
-
-    const yakin = await showPopup(pesan, "confirm");
-
-    if (yakin) {
-        // 5. CEK APAKAH BOLEH LOGOUT? (Super Admin selalu boleh)
-        if (isSuperAdmin || remaining > 0) {
+        // Catat ke DB siapa yang logout
+        if (user && typeof supabase !== 'undefined') {
             try {
-                // Deteksi folder untuk redirect yang bener (Path Guard)
-                const isInAdmin = window.location.pathname.includes('/admiii/');
-                const isInA_logout = window.location.pathname.includes('/a/');
-                const prefix = (isInAdmin || isInA_logout) ? '../' : '';
-
-                // Update hitungan tracker HANYA jika bukan Super Admin
-                if (!isSuperAdmin) {
-                    tracker.count += 1;
-                    localStorage.setItem("logout_tracker", JSON.stringify(tracker));
-                }
-
-                // ── TRACKING LOGOUT ─────────────────────────────────────
-                // Catat ke DB siapa yang logout (biar admin tau wkwk)
-                if (user && typeof supabase !== 'undefined') {
-                    try {
-                        await supabase.from("activity_logs").insert({
-                            user_id: user.id,
-                            action_text: "Melakukan Logout",
-                            page_name: "Auth System",
-                            points: 0,
-                            class_id: classId || "unknown"
-                        });
-                    } catch (err) { console.warn("Gagal catat logout ke DB:", err); }
-                }
-
-                // Hapus data login
-                localStorage.removeItem("user");
-
-                // Redirect balik ke login dengan ID kelas (Pastikan bukan "nan")
-                const targetId = (classId && classId !== "undefined" && !isNaN(classId)) ? classId : "";
-                const finalUrl = targetId ? `login?id=${targetId}` : "login";
-
-                window.location.href = prefix + finalUrl;
-            } catch (e) {
-                console.error("Logout Error:", e);
-                // Fallback jika terjadi error
-                const isInAdmin = window.location.pathname.includes('/admiii/');
-                const isInA_fb  = window.location.pathname.includes('/a/');
-                window.location.href = (isInAdmin || isInA_fb ? "../" : "") + "login";
-            }
-        } else {
-            // Jika kuota habis (hanya user biasa)
-            const batas = `Kamu udah gabisa logout lagi hari ini.
-                <br><br>
-                <a href="https://wa.me/6283851088843" target="_blank" style="color: var(--accent, #00eaff); text-decoration: none; font-size: 12px;">
-                    <i class="fa-solid fa-circle-question"></i> Butuh bantuan?
-                </a>`;
-            setTimeout(() => {
-                showPopup(batas, "error");
-            }, 300);
+                await supabase.from("activity_logs").insert({
+                    user_id: user.id,
+                    action_text: "Melakukan Logout",
+                    page_name: "Auth System",
+                    points: 0,
+                    class_id: (user.class_id || "unknown")
+                });
+            } catch (err) { console.warn("Gagal catat logout ke DB:", err); }
         }
+
+        localStorage.removeItem("user");
+
+        const classId = user?.class_id;
+        const targetId = (classId && classId !== "undefined" && !isNaN(classId)) ? classId : "";
+        const finalUrl = targetId ? `login?id=${targetId}` : "login";
+        window.location.href = prefix + finalUrl;
+    } catch (e) {
+        console.error("Logout Error:", e);
+        const isInAdmin = window.location.pathname.includes('/admiii/');
+        const isInA_fb  = window.location.pathname.includes('/a/');
+        window.location.href = (isInAdmin || isInA_fb ? "../" : "") + "login";
     }
 }

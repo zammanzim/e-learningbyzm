@@ -151,7 +151,7 @@
         .pwa-close:hover { color: rgba(255,255,255,0.6); }
       </style>
 
-      <button class="pwa-close" id="pwaCloseBtn" title="Tutup">
+      <button class="pwa-close" id="pwaCloseBtn" title="${t('close')}">
         <i class="fa-solid fa-xmark"></i>
       </button>
 

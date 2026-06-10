@@ -364,18 +364,18 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-inbox" style="font-size:26px;"></i> File Masuk</h1>
+                <h1><i class="fa-solid fa-inbox" style="font-size:26px;"></i> <span data-i18n="all_files">File Masuk</span></h1>
             </div>
         </div>
         <div class="right-section">
             <div class="toolbar">
                 <h2>
                     <i class="fa-solid fa-inbox"></i>
-                    Semua File
+                    <span data-i18n="all_files">Semua File</span>
                     <span class="badge-count" id="countBadge">—</span>
                 </h2>
                 <button class="btn-refresh" onclick="loadFiles()">
-                    <i class="fa-solid fa-rotate-right"></i> Refresh
+                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="refresh">Refresh</span>
                 </button>
             </div>
 
@@ -453,7 +453,7 @@
             const classMap = Object.fromEntries((clsData || []).map(c => [String(c.id), c.name]));
 
             if (error) {
-                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat.</div>`;
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>${t('failed_generic')}.</div>`;
                 return;
             }
 
@@ -465,7 +465,7 @@
             document.getElementById('countBadge').textContent = data.length || '0';
 
             if (!data.length) {
-                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada file masuk.</div>`;
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>${t('no_files')}</div>`;
                 return;
             }
 
@@ -490,11 +490,11 @@
                                     </div>
                                 </div>
                                 <div class="fi-actions">
-                                    <button class="btn-dl-single" title="Download"
+                                    <button class="btn-dl-single" title="${t('download_file')}"
                                         onclick="downloadSingle(${f.id}, '${f.file_path}', '${f.file_name}', this)">
                                         <i class="fa-solid fa-download"></i>
                                     </button>
-                                    <button class="btn-del-single" title="Hapus"
+                                    <button class="btn-del-single" title="${t('delete')}"
                                         onclick="deleteSingle(${f.id}, '${f.file_path}')">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
@@ -514,9 +514,9 @@
                             <button class="btn-dl-all" id="dlall-${gi}"
                                 onclick="downloadAllFromGroup(${gi})">
                                 <i class="fa-solid fa-download"></i>
-                                <span>Download Semua</span>
+                                <span>${t('download_all')}</span>
                             </button>
-                            <button class="btn-del-group" title="Hapus semua"
+                            <button class="btn-del-group" title="${t('delete_all')}"
                                 onclick="deleteGroupOnly(${gi})">
                                 <i class="fa-solid fa-trash" style="font-size:.72rem;"></i>
                             </button>
@@ -554,7 +554,7 @@
             document.getElementById('countBadge').textContent = remaining;
             if (!remaining) {
                 document.getElementById('groupList').innerHTML =
-                    `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada file masuk.</div>`;
+                    `<div class="empty-state"><i class="fa-solid fa-inbox"></i>${t('no_files')}</div>`;
             }
         }
 
@@ -565,13 +565,13 @@
             if (!g) return;
 
             const shouldDelete = await showPopup(
-                `Download ${g.files.length} file dari <b>${g.name}</b>?<br><br>Setelah diunduh, hapus file dari server?`,
+                t('confirm_download_group', {n: g.files.length, name: g.name}) + '<br><br>Setelah diunduh, hapus file dari server?',
                 'confirm'
             );
 
             const btn = document.getElementById(`dlall-${gi}`);
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Mengunduh...</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>${t('loading')}</span>`;
 
             let successCount = 0;
             for (const f of g.files) {
@@ -590,7 +590,7 @@
                         await supabase.from('file_transfers').delete().eq('id', f.id);
                     }
                 } catch (err) {
-                    showToast(`Gagal: ${f.file_name} — ${err.message || err}`, 'error');
+                    showToast(t('failed_generic') + `: ${f.file_name} — ${err.message || err}`, 'error');
                 }
             }
 
@@ -599,7 +599,7 @@
                 showToast(`${successCount} file diunduh & dihapus ✓`);
             } else {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-download"></i><span>Download Semua</span>`;
+                btn.innerHTML = `<i class="fa-solid fa-download"></i><span>${t('download_all')}</span>`;
                 showToast(`${successCount} file diunduh ✓`);
             }
         }
@@ -607,7 +607,7 @@
         /* ─── Download satu file ─── */
         async function downloadSingle(id, filePath, fileName, btnEl) {
             const shouldDelete = await showPopup(
-                `Download <b>${fileName}</b>?<br><br>Setelah diunduh, hapus file dari server?`,
+                t('confirm_download_file', {name: fileName}) + '<br><br>Setelah diunduh, hapus file dari server?',
                 'confirm'
             );
 
@@ -634,7 +634,7 @@
                     showToast(`"${fileName}" diunduh ✓`);
                 }
             } catch (err) {
-                showToast('Gagal: ' + (err.message || err), 'error');
+                showToast(t('failed_generic') + ': ' + (err.message || err), 'error');
                 btnEl.disabled = false;
                 btnEl.innerHTML = `<i class="fa-solid fa-download"></i>`;
             }
@@ -647,7 +647,7 @@
             if (!g) return;
 
             const ok = await showPopup(
-                `Hapus semua <b>${g.files.length} file</b> dari <b>${g.name}</b> tanpa didownload?`,
+                t('confirm_delete_file_group', {n: g.files.length, name: g.name}),
                 'confirm'
             );
             if (!ok) return;
@@ -663,7 +663,7 @@
 
         /* ─── Hapus satu file tanpa download ─── */
         async function deleteSingle(id, filePath) {
-            const ok = await showPopup('Hapus file ini tanpa download?', 'confirm');
+            const ok = await showPopup(t('confirm_delete_file_single'), 'confirm');
             if (!ok) return;
             await supabase.storage.from('transfers').remove([filePath]);
             await supabase.from('file_transfers').delete().eq('id', id);
@@ -673,6 +673,7 @@
 
         /* ─── Init ─── */
         document.addEventListener('DOMContentLoaded', () => {
+            document.title = t('all_files');
             loadFiles();
             supabase.channel('ft_realtime')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'file_transfers' }, () => {

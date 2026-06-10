@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Ujian • E-Learning Nizam</title>
+    <title id="pageTitle">Simulasi Ujian • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -438,14 +438,14 @@
                 </button>
 
                 <div style="flex: 1;">
-                    <h1 id="headerTitle"><i class="fa-solid fa-graduation-cap"></i>Soal Simulasi Ujian</h1>
+                    <h1 id="headerTitle" data-i18n="simulation_questions_title"><i class="fa-solid fa-graduation-cap"></i></h1>
                 </div>
             </div>
 
             <!-- Selection Hub View -->
             <div id="selectionView" class="selection-view">
                 <div class="question-card" style="text-align: center; margin-bottom: 20px;">
-                    <h3>Pilih Pelajaran</h3>
+                    <h3 data-i18n="choose_lesson"></h3>
                     <p style="opacity: 0.7;">Pencet salah satu mata pelajarannya buat nyoba simulasinya</p>
                 </div>
                 
@@ -455,12 +455,12 @@
                 </div>
 
                 <div id="sectionNew" style="display: none; margin-bottom: 30px;">
-                    <h4 style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; color: var(--accent);"><i class="fa-solid fa-star"></i> Belum Dicoba</h4>
+                    <h4 style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; color: var(--accent);" data-i18n="not_attempted"><i class="fa-solid fa-star"></i></h4>
                     <div id="gridNew" class="quiz-menu-grid"></div>
                 </div>
 
                 <div id="sectionDone" style="display: none; margin-bottom: 30px;">
-                    <h4 style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; color: #2ed573;"><i class="fa-solid fa-circle-check"></i> Sudah Selesai</h4>
+                    <h4 style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; color: #2ed573;" data-i18n="already_completed"><i class="fa-solid fa-circle-check"></i></h4>
                     <div id="gridDone" class="quiz-menu-grid"></div>
                 </div>
             </div>
@@ -469,7 +469,7 @@
             <div id="infoView" class="info-view">
                 <div class="question-card">
                     <div style="font-size: 4rem; margin-bottom: 20px;">📝</div>
-                    <h2 id="infoTitle">Simulasi Ujian</h2>
+                    <h2 id="infoTitle" data-i18n="exam_simulation"></h2>
                     <p id="infoSubject"
                         style="font-size: 1.2rem; color: var(--accent); font-weight: 700; margin: 10px 0;"></p>
                     <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
@@ -495,7 +495,7 @@
                     <div id="cardProgress"
                         style="font-size: 0.8rem; font-weight: 800; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase;">
                         SOAL 1/0</div>
-                    <div id="questionText" class="question-text">Loading pertanyaan...</div>
+                    <div id="questionText" class="question-text" data-i18n="loading_questions"></div>
                     <div id="optionsGrid" class="options-grid">
                         <!-- Options will be injected here -->
                     </div>
@@ -521,7 +521,7 @@
         <div id="resultView" class="result-view">
             <div class="question-card">
                 <i class="fa-solid fa-circle-check result-icon"></i>
-                <h2>Simulasi Selesai!</h2>
+                <h2 data-i18n="simulation_complete"></h2>
                 <p style="opacity: 0.8; margin: 15px 0;">Kamu telah menyelesaikan simulasi, coba pelajaran lain yok! Btw sekali lagi ini soalnya bikinan AI, Bukan soal resmi.</p>
                 <button onclick="window.location.href='quiz'" class="btn-back">
                     <i class="fa-solid fa-arrow-left"></i>Balik
@@ -532,6 +532,7 @@
     </div>
 
     <script src="../js/quiz.js" defer></script>
+    <script>document.title = t('exam_simulation') + ' • E-Learning Nizam';</script>
 
 </body>
 

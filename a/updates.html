@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updates • E-Learning Nizam</title>
+    <title id="pageTitle">Updates • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js" defer></script>
     <script src="../js/ctx-menu.js"></script>
@@ -21,6 +21,7 @@
     <script src="../js/bottom-nav.js"></script>
     <script src="../js/system-notice.js"></script>
     <script src="../js/toast.js"></script>
+    <script>document.title = t('updates') + ' • E-Learning Nizam';</script>
     <link rel="stylesheet" href="../css/styleasli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" href="icons/announcements.png" type="image/png">
@@ -445,9 +446,8 @@
     <div class="main-content">
         <div class="left-section">
             <div class="glow">
-                <h1><i class="fa-solid fa-rocket" style="font-size:22px;"></i> Updates</h1>
-                <p style="color:rgba(255,255,255,0.35); font-size:12px; margin-top:4px;">
-                    Catatan perubahan & fitur baru yang udah ditambahin
+                <h1 data-i18n="updates"><i class="fa-solid fa-rocket" style="font-size:22px;"></i></h1>
+                <p style="color:rgba(255,255,255,0.35); font-size:12px; margin-top:4px;" data-i18n="update_desc">
                 </p>
             </div>
 
@@ -468,8 +468,7 @@
                     <div
                         style="background:rgba(0,234,255,0.05); border:1px solid rgba(0,234,255,0.1); border-radius:12px; padding:12px; text-align:center;">
                         <div id="statTotal" style="font-size:24px; font-weight:800; color:#fff; line-height:1;">—</div>
-                        <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; font-weight:600;">
-                            Total Update</div>
+                        <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; font-weight:600;" data-i18n="total_update"></div>
                     </div>
                     <div
                         style="background:rgba(0,234,255,0.05); border:1px solid rgba(0,234,255,0.1); border-radius:12px; padding:12px; text-align:center;">
@@ -493,8 +492,8 @@
                     <i class="fa-solid fa-filter" style="margin-right:6px;"></i>Filter
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                    <button class="filter-pill active" data-filter="all" onclick="applyFilter('all', this)">
-                        <i class="fa-solid fa-border-all"></i> Semua
+                    <button class="filter-pill active" data-filter="all" onclick="applyFilter('all', this)" data-i18n="all">
+                        <i class="fa-solid fa-border-all"></i>
                     </button>
                     <button class="filter-pill" data-filter="new" onclick="applyFilter('new', this)"
                         style="--pill-color: rgba(46,213,115,0.7);">
@@ -552,9 +551,9 @@
     <!-- Modal tambah update -->
     <div id="updatesModal" class="modal-overlay hidden" style="z-index:3000;">
         <div class="glass-modal-box">
-            <h3 style="margin-bottom:18px;"><i class="fa-solid fa-rocket"></i> Update Baru</h3>
+            <h3 style="margin-bottom:18px;" data-i18n="new_update"><i class="fa-solid fa-rocket"></i></h3>
 
-            <input type="text" id="um_title" class="glass-input" placeholder="Judul update  (cth: Update 31 Maret)"
+            <input type="text" id="um_title" class="glass-input" data-i18n-placeholder="update_title_placeholder"
                 spellcheck="false">
             <input type="text" id="um_version" class="glass-input" placeholder="Versi  (opsional, cth: v2.3)"
                 spellcheck="false" style="font-size:12px;">
@@ -568,9 +567,9 @@
             </button>
 
             <div class="action-buttons" style="margin-top:20px;">
-                <button class="btn-glass-cancel" onclick="closeUpdatesModal()">Batal</button>
-                <button class="btn-glass-save" id="um_btnSave" onclick="saveUpdate()">
-                    <i class="fa-solid fa-paper-plane"></i> Post
+                <button class="btn-glass-cancel" onclick="closeUpdatesModal()" data-i18n="cancel"></button>
+                <button class="btn-glass-save" id="um_btnSave" onclick="saveUpdate()" data-i18n="save">
+                    <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>
         </div>
@@ -609,7 +608,7 @@
                     container.innerHTML = `
                         <div class="updates-empty">
                             <i class="fa-solid fa-rocket"></i>
-                            <p>Belum ada update yang dicatat.</p>
+                            <p>${t('no_update_recorded')}</p>
                         </div>`;
                     return;
                 }
@@ -617,7 +616,7 @@
                 renderUpdates(data);
             } catch (err) {
                 console.error('Load updates gagal:', err);
-                container.innerHTML = `<p style="color:#ff4757; padding:20px; text-align:center;">Gagal memuat data.</p>`;
+                container.innerHTML = `<p style="color:#ff4757; padding:20px; text-align:center;">${t('failed_generic')} memuat data.</p>`;
             }
         }
 
@@ -719,7 +718,7 @@
 
             const btn = document.getElementById('um_btnSave');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('loading');
 
             try {
                 const { error } = await supabase.from('app_updates').insert({
@@ -732,20 +731,20 @@
 
                 closeUpdatesModal();
                 await loadUpdates();
-                if (typeof showToast === 'function') showToast('Update berhasil dipost!', 'success');
+                if (typeof showToast === 'function') showToast(t('update_posted'), 'success');
             } catch (err) {
                 console.error(err);
-                if (typeof showPopup === 'function') showPopup('Gagal: ' + err.message, 'error');
+                if (typeof showPopup === 'function') showPopup(t('failed_generic') + ': ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Post';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + t('save');
             }
         }
 
         // ── DELETE ────────────────────────────────────────────────────
         async function deleteUpdate(e, id) {
             e.stopPropagation();
-            const yakin = await showPopup('Hapus update ini?', 'confirm');
+            const yakin = await showPopup(t('confirm_delete_update'), 'confirm');
             if (!yakin) return;
 
             try {
@@ -753,7 +752,7 @@
                 if (error) throw error;
 
                 document.querySelector(`.update-entry[data-id="${id}"]`)?.remove();
-                if (typeof showToast === 'function') showToast('Update dihapus', 'success');
+                if (typeof showToast === 'function') showToast(t('update_deleted'), 'success');
 
                 // Kalau timeline kosong, tampilkan empty state
                 const timeline = document.querySelector('.updates-timeline');
@@ -761,11 +760,11 @@
                     document.getElementById('updatesContainer').innerHTML = `
                         <div class="updates-empty">
                             <i class="fa-solid fa-rocket"></i>
-                            <p>Belum ada update yang dicatat.</p>
+                            <p>${t('no_update_recorded')}</p>
                         </div>`;
                 }
             } catch (err) {
-                if (typeof showPopup === 'function') showPopup('Gagal hapus: ' + err.message, 'error');
+                if (typeof showPopup === 'function') showPopup(t('failed_generic') + ' hapus: ' + err.message, 'error');
             }
         }
 

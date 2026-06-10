@@ -228,7 +228,7 @@ async function renderVisitorStats() {
         if (!listEl2) return;
 
         listEl2.innerHTML = uniqueMap.size === 0
-            ? '<p style="color:#aaa; font-size:12px;">Belum ada yang mampir.</p>'
+            ? `<p style="color:#aaa; font-size:12px;">${t('no_visitors')}</p>`
             : '';
 
         uniqueMap.forEach(v => {
@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Reset Error:", err);
                 showPopup("Gagal reset data", "error");
             } finally {
-                resetBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Reset Today (Admin)';
+                resetBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> ' + t('resetvist');
             }
         };
     }
@@ -370,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (card && card.classList.contains('clickable-card')) {
             // Jangan catat kalau yang diklik tombol action (delete/bookmark)
             if (!e.target.closest('button') && !e.target.closest('input')) {
-                const title = card.querySelector('h3')?.innerText || 'Materi';
+                const title = card.querySelector('h3')?.innerText || t('materi_title');
                 const id = card.dataset.id || "";
                 logActivity(`Membaca Materi: ${title}`, "Subject", 5, id);
             }

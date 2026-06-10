@@ -95,7 +95,7 @@ async function _navigateToSubject(name, classId) {
 
     // Guest mode → popup login
     if (!localStorage.getItem('user')) {
-        const result = await showPopup('Login dulu untuk akses fitur ini', 'confirm');
+        const result = await showPopup(t('login_first'), 'confirm');
         if (result) window.location.href = 'login';
         return;
     }
@@ -239,7 +239,7 @@ async function initDailyCard(guestClassId) {
         user = { role: '', class_id: USER_CLASS_ID };
     } else {
         user = _getDailyUser();
-        if (!user || !user.class_id) return;
+        if (!user || user.class_id === undefined || user.class_id === null) return;
         USER_CLASS_ID = getEffectiveClassId() || user.class_id;
     }
 
@@ -428,7 +428,7 @@ async function initDailyCard(guestClassId) {
         } else if (config.mode === 'custom') {
             displayDay = 'CUSTOM';
             labelWaktu = `${t('special_event')}`;
-            fullDate = 'Jadwal Khusus';
+            fullDate = t('custom_schedule');
         } else if (config.mode === 'exam') {
             if (config.is_auto) {
                 displayDay = autoDay;
@@ -464,7 +464,7 @@ async function initDailyCard(guestClassId) {
         const simShortcutHTML = isExamMode ? `
             <div class="task-shortcut-box sim-shortcut-glow" onclick="window.location.href='quiz'" style="margin-right:8px;">
                 <i class="fa-solid fa-graduation-cap"></i>
-                <span>SIMULASI UJIAN</span>
+                <span>${t('exam_simulation')}</span>
             </div>` : '';
 
         headerEl.innerHTML = `
@@ -595,7 +595,7 @@ async function initDailyCard(guestClassId) {
 
         const contentEl = document.getElementById('dcContentFinal');
         if (!scheduleData) {
-            contentEl.innerHTML = `<div class="dc-empty-state">${displayDay === 'CUSTOM' ? 'Mode Custom Aktif.<br>Klik Edit untuk mengisi detail event.' : 'Data Kosong.'}</div>`;
+            contentEl.innerHTML = `<div class="dc-empty-state">${displayDay === 'CUSTOM' ? t('custom_active') + '.<br>' + t('click_edit') : t('data_empty') + '.'}</div>`;
             if (window.isDailyEditing) applyEditMode(true);
             return;
         }
@@ -1147,7 +1147,7 @@ document.addEventListener('dragend', handleDcDragEnd);
     const container = document.querySelector('.left-section');
     if (!container) return;
     const user = _getDailyUser();
-    if (!user || !user.class_id) return;
+    if (!user || user.class_id === undefined || user.class_id === null) return;
     if (document.getElementById('dailyInfoCard')) return;
 
     const cardHTML = `
@@ -1221,7 +1221,7 @@ window.importScheduleFromText = async function() {
         const file = input.files[0];
         if (!file) return;
 
-        showToast('Sedang membaca PDF...', 'info');
+        showToast(t('reading_pdf'), 'info');
 
         try {
             if (!window.pdfjsLib) {
@@ -1254,7 +1254,7 @@ window.importScheduleFromText = async function() {
             window.processScheduleText(fullText);
         } catch (err) {
             console.error('PDF Error:', err);
-            showPopup('Gagal membaca PDF. Pastikan file tidak rusak.', 'error');
+            showPopup(t('failed_load_data'), 'error');
         }
     };
     input.click();
@@ -1273,7 +1273,7 @@ window.processScheduleText = async function(rawText) {
     let target = classOptions.find(c => c.id == userId);
 
     if (!target) {
-        const choice = await showPopup('Pilih Kelas', 'choice', {
+        const choice = await showPopup(t('select_class'), 'choice', {
             options: classOptions
         });
         if (!choice) return;
@@ -1348,7 +1348,7 @@ window.processScheduleText = async function(rawText) {
         }
     });
 
-    if (typeof showToast === 'function') showToast('Jadwal PDF berhasil di-impor! Geser-geser urutannya kalo perlu, lalu klik Simpan.', 'success');
+    if (typeof showToast === 'function') showToast(t('import_success'), 'success');
 
     // Auto masuk edit mode & tampilkan hari pertama yang terisi
     const firstDay = Object.keys(result)[0];

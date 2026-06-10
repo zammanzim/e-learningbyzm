@@ -42,7 +42,7 @@ const AdminSoal = {
             });
 
             inputSel.innerHTML = html;
-            filterSel.innerHTML = '<option value="all">Semua Mapel</option>' + html;
+            filterSel.innerHTML = '<option value="all">' + t('all_subjects') + '</option>' + html;
         } catch (err) {
             console.error('Load subjects failed:', err);
         }
@@ -73,12 +73,12 @@ const AdminSoal = {
         container.innerHTML = '';
 
         if (this.state.questions.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 20px; opacity: 0.5;">Belum ada soal.</p>';
-            countInfo.innerText = '0 Soal ditemukan';
+            container.innerHTML = '<p style="text-align: center; padding: 20px; opacity: 0.5;">' + t('no_questions') + '</p>';
+            countInfo.innerText = t('questions_found', { n: 0 });
             return;
         }
 
-        countInfo.innerText = `${this.state.questions.length} Soal ditemukan`;
+        countInfo.innerText = t('questions_found', { n: this.state.questions.length });
 
         this.state.questions.forEach(q => {
             const subject = this.state.subjects.find(s => s.subject_id === q.subject_id);
@@ -91,8 +91,8 @@ const AdminSoal = {
                     <div class="q-text">${q.question}</div>
                     <div class="q-meta">
                         <span class="badge-subject">${subjectName}</span>
-                        <span> • ${q.class_id === 0 ? 'Semua Kelas (Global)' : (q.class_id === 2 ? 'Master Class' : 'Kelas 10')}</span>
-                        <span> • ${q.options.length} Pilihan</span>
+                        <span> • ${q.class_id === 0 ? t('all_classes_global') : (q.class_id === 2 ? t('master_class') : t('class') + ' 10')}</span>
+                        <span> • ${t('n_choices', { n: q.options.length })}</span>
                     </div>
                 </div>
                 <div class="q-actions">
@@ -120,12 +120,12 @@ const AdminSoal = {
         const options = Array.from(optionInputs).map(input => input.value.trim()).filter(Boolean);
 
         if (!question || options.length < 2) {
-            showPopup('Pertanyaan dan minimal 2 pilihan wajib diisi!', 'error');
+            showPopup(t('question_min_required'), 'error');
             return;
         }
 
         const btn = document.getElementById('btnSave');
-        btn.innerText = 'Menyimpan...';
+        btn.innerText = t('loading');
         btn.disabled = true;
 
         const payload = { subject_id, class_id, question, options, answer, explanation };
@@ -140,14 +140,14 @@ const AdminSoal = {
 
             if (res.error) throw res.error;
 
-            showToast('Soal berhasil disimpan!', 'success');
+            showToast(t('question_saved'), 'success');
             this.resetForm();
             await this.loadQuestions();
         } catch (err) {
             console.error('Save failed:', err);
-            showPopup('Gagal menyimpan soal.', 'error');
+            showPopup(t('failed_save_question'), 'error');
         } finally {
-            btn.innerText = 'Simpan Soal';
+            btn.innerText = t('save_question');
             btn.disabled = false;
         }
     },
@@ -157,7 +157,7 @@ const AdminSoal = {
         if (!q) return;
 
         this.state.isEditing = true;
-        document.getElementById('formTitle').innerText = 'Edit Soal';
+        document.getElementById('formTitle').innerText = t('edit_question');
         document.getElementById('editId').value = q.id;
         document.getElementById('inputSubject').value = q.subject_id;
         document.getElementById('inputClass').value = q.class_id;
@@ -177,23 +177,23 @@ const AdminSoal = {
     },
 
     async deleteSoal(id) {
-        if (!await showPopup('Hapus soal ini?', 'confirm')) return;
+        if (!await showPopup(t('confirm_delete_question'), 'confirm')) return;
 
         try {
             const { error } = await supabase.from('simulation_questions').delete().eq('id', id);
             if (error) throw error;
 
-            showToast('Soal dihapus!', 'success');
+            showToast(t('question_deleted'), 'success');
             await this.loadQuestions();
         } catch (err) {
             console.error('Delete failed:', err);
-            showPopup('Gagal menghapus soal.', 'error');
+            showPopup(t('failed_delete_question'), 'error');
         }
     },
 
     resetForm() {
         this.state.isEditing = false;
-        document.getElementById('formTitle').innerText = 'Tambah Soal Baru';
+        document.getElementById('formTitle').innerText = t('add_new_question');
         document.getElementById('editId').value = '';
         document.getElementById('inputQuestion').value = '';
         document.getElementById('inputExplanation').value = '';

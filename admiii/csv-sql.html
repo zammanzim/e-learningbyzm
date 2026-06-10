@@ -337,7 +337,7 @@
                 <div class="cs-divider"></div>
 
                 <div class="card-title" style="margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-file-csv"></i> Upload File CSV
+                    <i class="fa-solid fa-file-csv"></i> <span data-i18n="upload_csv">Upload File CSV</span>
                 </div>
                 <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-bottom:0.75rem;">
                     Bisa upload banyak sekaligus. Tiap file isi nama kolom mapelnya masing-masing.
@@ -373,7 +373,7 @@
                                 <i class="fa-regular fa-copy"></i> Copy
                             </button>
                             <button class="btn-tool" onclick="downloadSql()">
-                                <i class="fa-solid fa-download"></i> Download
+                                <i class="fa-solid fa-download"></i> <span data-i18n="download_file">Download</span>
                             </button>
                         </div>
                     </div>
@@ -545,7 +545,7 @@
         function convertCsv() {
             const classId = document.getElementById('classId').value.trim();
             if (!classId)          return notify('Isi Class ID dulu ya!', 'error');
-            if (fileStore.size === 0) return notify('Upload file CSV dulu!', 'error');
+            if (fileStore.size === 0) return notify(t('upload_csv_first'), 'error');
 
             // Validasi semua file sudah ada nama mapelnya
             for (const [name, data] of fileStore) {

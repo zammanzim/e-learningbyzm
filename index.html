@@ -173,7 +173,7 @@
 
             // ── GUEST MODE ──
             document.getElementById('guestContent').style.display = '';
-            document.getElementById('welcomeText').innerText = 'Jadwal Pelajaran';
+            document.getElementById('welcomeText').innerText = t('lesson_sch');
             initDailyCard(2);
 
             // Pindahin daily card ke right-section
@@ -233,7 +233,7 @@
             const container = document.getElementById('guestAnnouncements');
             if (!container) return;
             if (!_guestAnnouncements.length) {
-                container.innerHTML = '<p style="opacity:.4;font-size:13px;text-align:center;">Belum ada informasi.</p>';
+                container.innerHTML = '<p style="opacity:.4;font-size:13px;text-align:center;">' + t('no_info') + '</p>';
                 return;
             }
             container.innerHTML = _guestAnnouncements.map((item, i) => `
@@ -243,8 +243,8 @@
                     <div class="guest-meta">${item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : ''}</div>
                     ${isAuth ? `
                     <div class="guest-actions">
-                        <button class="btn-save" data-id="${item.id}" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;font-weight:600;">Simpan</button>
-                        <button class="btn-del" data-id="${item.id}" style="background:rgba(255,71,87,0.15);color:#ff4757;border:1px solid rgba(255,71,87,0.2);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;">Hapus</button>
+                        <button class="btn-save" data-id="${item.id}" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;font-weight:600;" data-i18n="save">Simpan</button>
+                        <button class="btn-del" data-id="${item.id}" style="background:rgba(255,71,87,0.15);color:#ff4757;border:1px solid rgba(255,71,87,0.2);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;" data-i18n="delete">Hapus</button>
                     </div>` : ''}
                 </div>
             `).join('');
@@ -286,12 +286,12 @@
             overlay.className = 'guest-modal-overlay';
             overlay.innerHTML = `
                 <div class="guest-modal-box">
-                    <h3>Tambah Informasi</h3>
+                    <h3 data-i18n="add_info">Tambah Informasi</h3>
                     <input id="addTitle" placeholder="Judul" maxlength="100">
                     <textarea id="addContent" placeholder="Isi informasi..."></textarea>
                     <div class="modal-actions">
-                        <button class="btn-cancel" id="addCancel">Batal</button>
-                        <button class="btn-primary" id="addSave">Simpan</button>
+                        <button class="btn-cancel" id="addCancel" data-i18n="cancel">Batal</button>
+                        <button class="btn-primary" id="addSave" data-i18n="save">Simpan</button>
                     </div>
                 </div>
             `;

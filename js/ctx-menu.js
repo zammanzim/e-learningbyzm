@@ -1,6 +1,7 @@
 const ContextMenu = {
     providers: [],
     activeContext: null,
+    _hideTimer: null,
 
     init() {
         if (!document.getElementById('customContextMenu')) {
@@ -17,7 +18,50 @@ const ContextMenu = {
         document.addEventListener('click', () => this.hide());
         window.addEventListener('scroll', () => this.hide());
         window.addEventListener('resize', () => this.hide());
+        this.initHoverIntent();
         this.initTouchEvents();
+    },
+
+    initHoverIntent() {
+        const menu = document.getElementById('customContextMenu');
+        if (!menu) return;
+
+        menu.addEventListener('mouseleave', () => {
+            this._hideTimer = setTimeout(() => this.hide(), 350);
+        });
+
+        menu.addEventListener('mouseenter', () => {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        });
+    },
+
+    _attachSubmenuHandlers(menu) {
+        menu.querySelectorAll('.has-submenu').forEach(li => {
+            li.addEventListener('mouseenter', () => {
+                clearTimeout(li._subTimer);
+                li.classList.add('open');
+            });
+            li.addEventListener('mouseleave', (e) => {
+                const sub = li.querySelector('.context-submenu');
+                const delay = sub ? 350 : 0;
+                li._subTimer = setTimeout(() => {
+                    li.classList.remove('open');
+                }, delay);
+            });
+            const sub = li.querySelector('.context-submenu');
+            if (sub) {
+                sub.addEventListener('mouseenter', () => {
+                    clearTimeout(li._subTimer);
+                    li.classList.add('open');
+                });
+                sub.addEventListener('mouseleave', () => {
+                    li._subTimer = setTimeout(() => {
+                        li.classList.remove('open');
+                    }, 350);
+                });
+            }
+        });
     },
 
     registerProvider(id, handler, priority = 0, handlerLongPress = null) {
@@ -75,6 +119,7 @@ const ContextMenu = {
 
         this.activeContext = context;
         menu.innerHTML = html;
+        this._attachSubmenuHandlers(menu);
         this.show(x, y);
     },
 
@@ -101,8 +146,16 @@ const ContextMenu = {
     },
 
     hide() {
+        clearTimeout(this._hideTimer);
+        this._hideTimer = null;
+
         const menu = document.getElementById('customContextMenu');
         if (!menu) return;
+
+        menu.querySelectorAll('.has-submenu').forEach(li => {
+            clearTimeout(li._subTimer);
+            li.classList.remove('open');
+        });
 
         menu.classList.remove('active');
         setTimeout(() => {
