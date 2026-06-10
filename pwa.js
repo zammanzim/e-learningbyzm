@@ -8,11 +8,6 @@
   let _deferredPrompt = null;
   const STORAGE_KEY = 'pwa_installed';
 
-  // Daftarin service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => { /* sw gagal, gapapa */ });
-  }
-
   // Tangkap event beforeinstallprompt sebelum browser nembak sendiri
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();

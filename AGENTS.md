@@ -89,7 +89,6 @@ CREATE POLICY "auth_delete" ON nama_table FOR DELETE USING (auth.role() = 'authe
 | SubjectApp | `subject-manager.js` — singleton `const SubjectApp = {}` (global). Cards rendered via `createCardElement()`. ContentEditable-based editing. Format buttons must be on `window`. |
 | Icons | Font Awesome 6.5 via CDN. |
 | CSS | Single file `styleasli.css`. |
-| Service Worker | `sw.js` caches static assets. |
 
 ## Path Structure
 
