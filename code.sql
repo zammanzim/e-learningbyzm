@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS task_submissions (
 
 CREATE INDEX IF NOT EXISTS idx_task_submissions_tugas_id ON task_submissions(tugas_id);
 
+-- Fix: existing table mungkin belum punya kolom tugas_id
+ALTER TABLE task_submissions ADD COLUMN IF NOT EXISTS tugas_id BIGINT;
+ALTER TABLE task_submissions ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
 ALTER TABLE task_submissions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "public_read" ON task_submissions
@@ -41,18 +45,14 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('transfer-files', 'transfer-files', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
-CREATE POLICY "auth_insert_transfer" ON storage.objects
-    FOR INSERT WITH CHECK (
-        auth.role() = 'authenticated'
-        AND bucket_id = 'transfer-files'
-    );
-CREATE POLICY "auth_select_transfer" ON storage.objects
-    FOR SELECT USING (
-        auth.role() = 'authenticated'
-        AND bucket_id = 'transfer-files'
-    );
-CREATE POLICY "auth_delete_transfer" ON storage.objects
-    FOR DELETE USING (
-        auth.role() = 'authenticated'
-        AND bucket_id = 'transfer-files'
-    )
+-- RLS policy tanpa auth.role() — project pake localStorage custom auth
+DROP POLICY IF EXISTS "auth_insert_transfer" ON storage.objects;
+DROP POLICY IF EXISTS "auth_select_transfer" ON storage.objects;
+DROP POLICY IF EXISTS "auth_delete_transfer" ON storage.objects;
+
+CREATE POLICY "public_insert_transfer" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'transfer-files');
+CREATE POLICY "public_select_transfer" ON storage.objects
+    FOR SELECT USING (bucket_id = 'transfer-files');
+CREATE POLICY "public_delete_transfer" ON storage.objects
+    FOR DELETE USING (bucket_id = 'transfer-files');

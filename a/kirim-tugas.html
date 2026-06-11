@@ -767,10 +767,12 @@
 
                 // Kalo ada tugas_id, tandai selesai di user_progress juga
                 if (tugasId) {
-                    await supabase.from('user_progress').insert({
-                        user_id: String(user.id),
-                        announcement_id: Number(tugasId)
-                    }).catch(() => {});
+                    try {
+                        await supabase.from('user_progress').insert({
+                            user_id: String(user.id),
+                            announcement_id: Number(tugasId)
+                        });
+                    } catch (_) {}
                 }
 
                 showToast(t('task_sent_success'), 'success');
