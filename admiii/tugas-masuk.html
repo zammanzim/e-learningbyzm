@@ -246,10 +246,9 @@
         <div class="left-section">
             <div class="glow">
                 <h1><i class="fa-solid fa-inbox" style="font-size:22px;"></i> <span data-i18n="incoming_tasks"></span></h1>
-                <p style="color:#888;font-size:.85rem;margin-top:4px;" data-i18n="view_submissions_desc"></p>
             </div>
 
-            <div class="filter-bar">
+            <div class="filter-bar" style="margin-top: 30px;">
                 <select class="filter-select" id="filterTeacher" onchange="applyFilter()">
                     <option value="" data-i18n="all_teachers"></option>
                 </select>
@@ -289,23 +288,22 @@
             });
         }
 
-        // ── Generate signed URL ──
-        async function getFileUrl(filePath) {
+        // ── Generate public URL ──
+        function getFileUrl(filePath) {
             try {
-                const { data, error } = await supabase.storage
+                const { data } = supabase.storage
                     .from('transfer-files')
-                    .createSignedUrl(filePath, 300);
-                if (error) throw error;
-                return data.signedUrl;
+                    .getPublicUrl(filePath);
+                return data?.publicUrl || null;
             } catch (err) {
-                console.warn('Gagal buat signed URL:', err);
+                console.warn('Gagal buat public URL:', err);
                 return null;
             }
         }
 
         // ── Open file ──
-        async function openFile(filePath, fileName) {
-            const url = await getFileUrl(filePath);
+        function openFile(filePath, fileName) {
+            const url = getFileUrl(filePath);
             if (url) {
                 window.open(url, '_blank');
             } else {

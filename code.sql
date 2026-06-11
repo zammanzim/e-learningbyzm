@@ -36,10 +36,10 @@ CREATE POLICY "auth_update" ON task_submissions
 CREATE POLICY "auth_delete" ON task_submissions
     FOR DELETE USING (auth.role() = 'authenticated');
 
--- Storage bucket untuk file tugas
+-- Storage bucket untuk file tugas (public — ga pake Supabase Auth session)
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('transfer-files', 'transfer-files', false)
-ON CONFLICT (id) DO NOTHING;
+VALUES ('transfer-files', 'transfer-files', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 CREATE POLICY "auth_insert_transfer" ON storage.objects
     FOR INSERT WITH CHECK (
