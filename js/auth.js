@@ -35,33 +35,20 @@ async function checkPathAccess(user) {
     // 1. Cek Whitelist Dasar
     if (whitelist.includes(currentId) || !currentId) return;
 
-    // 2. Ambil allowed items (pake cache sidebar biar cepet)
+    // Langsung query DB aja — ga pake cache biar selalu fresh
     const classId = user.class_id;
-    const cacheKey = `sidebar_cache_${classId}`;
-    let items = [];
 
     try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            const parsed = JSON.parse(cached);
-            items = parsed.items || [];
-        }
+        if (typeof supabase === 'undefined') return;
 
-        // Kalau cache kosong atau item ga ketemu, coba fetch tipis-tipis ke DB
-        const isAllowedInCache = items.some(it => it.subject_id?.toLowerCase() === currentId);
-        
-        if (!isAllowedInCache) {
-            if (typeof supabase === 'undefined') return; // Safety
+        const { data } = await supabase
+            .from('subjects_config')
+            .select('subject_id')
+            .or(`class_id.eq.${classId},class_id.eq.2`)
+            .eq('subject_id', currentId);
 
-            const { data } = await supabase
-                .from('subjects_config')
-                .select('subject_id')
-                .or(`class_id.eq.${classId},class_id.eq.2`)
-                .eq('subject_id', currentId);
-
-            if (!data || data.length === 0) {
-                renderAccessDenied();
-            }
+        if (!data || data.length === 0) {
+            renderAccessDenied();
         }
     } catch (e) {
         console.warn("[PathGuard] Error:", e);
