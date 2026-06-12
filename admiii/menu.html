@@ -684,6 +684,7 @@
                             <option value="lessons">Lessons</option>
                             <option value="custom" data-i18n="additional_menu">Menu Tambahan</option>
                             <option value="admin" data-i18n="admin_panel_type">Admin Panel</option>
+                            <option value="teacher">Teacher Menu</option>
                             <option value="system">System (Super Admin)</option>
                         </select>
                     </div>
@@ -970,8 +971,8 @@
                 return;
             }
 
-            const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-            const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), main: t('sidebar_main'), lessons: t('sidebar_lessons') };
+            const TYPE_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+            const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), teacher: 'Teacher', main: t('sidebar_main'), lessons: t('sidebar_lessons') };
 
             // Prioritas: dari menu_groups table
             let groups = allMenuGroups
@@ -1053,8 +1054,8 @@
             // Fallback: kalau menu_groups kosong, generate dari subjects_config
             let displayGroups = filtered;
             if (!displayGroups.length) {
-                const TYPE_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-                const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), main: t('sidebar_main'), lessons: t('sidebar_lessons') };
+                const TYPE_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+                const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), teacher: 'Teacher', main: t('sidebar_main'), lessons: t('sidebar_lessons') };
                 const seen = new Set();
                 displayGroups = allMenuData
                     .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
@@ -1079,8 +1080,8 @@
         }
 
         function renderGroupList(groups, el) {
-            const TYPE_COLOR = { system: '#00eaff', admin: '#ffd700', main: '#a0a0a0', lessons: '#0be881', custom: '#c084fc' };
-            const TYPE_LABEL = { system: 'System', admin: 'Admin', main: 'Main', lessons: 'Lessons', custom: 'Custom' };
+            const TYPE_COLOR = { system: '#00eaff', admin: '#ffd700', teacher: '#0be881', main: '#a0a0a0', lessons: '#0be881', custom: '#c084fc' };
+            const TYPE_LABEL = { system: 'System', admin: 'Admin', teacher: 'Teacher', main: 'Main', lessons: 'Lessons', custom: 'Custom' };
             if (!groups.length) {
                 el.innerHTML = '<div style="color:#555;font-size:12px;">— belum ada grup —</div>';
                 return;
@@ -1236,9 +1237,9 @@
             container.innerHTML = '';
 
             // Helper: ambil label & color dari allMenuGroups
-            const TYPE_COLOR = { system: 'var(--accent,#00eaff)', admin: '#ff4757', main: '#ffd700', lessons: '#0be881', custom: '#c084fc' };
-            const FALLBACK_ORDER = { system: 0, admin: 1, main: 2, lessons: 3 };
-            const FALLBACK_LABEL = { system: 'System Menu', admin: 'Admin Panel', main: 'Main Menu', lessons: 'Lessons' };
+            const TYPE_COLOR = { system: 'var(--accent,#00eaff)', admin: '#ff4757', teacher: '#0be881', main: '#ffd700', lessons: '#0be881', custom: '#c084fc' };
+            const FALLBACK_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+            const FALLBACK_LABEL = { system: 'System Menu', admin: 'Admin Panel', teacher: 'Teacher', main: 'Main Menu', lessons: 'Lessons' };
             function groupMeta(key) {
                 const g = allMenuGroups.find(x => x.group_key === key);
                 return {

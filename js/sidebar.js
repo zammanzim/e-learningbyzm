@@ -368,9 +368,10 @@ function processAndRenderSidebar(groups, items, user) {
     const visibleGroups = groups.filter(g => {
         if (g.group_type === 'bottomnav' || g.group_key === 'bottomnav') return false;
         switch(g.group_type) {
-            case 'system': return role === 'super_admin';
-            case 'admin':  return role === 'super_admin' || role === 'class_admin';
-            default:       return true; // main, lessons, custom → semua user
+            case 'system':  return role === 'super_admin';
+            case 'admin':   return role === 'super_admin' || role === 'class_admin';
+            case 'teacher': return role === 'super_admin' || role === 'class_admin' || role === 'teacher';
+            default:        return true; // main, lessons, custom → semua user
         }
     });
 
@@ -384,6 +385,7 @@ function processAndRenderSidebar(groups, items, user) {
         const COLOR = {
             system:  'var(--accent, #00eaff)',
             admin:   '#ffd700',
+            teacher: '#0be881',
             main:    '',
             lessons: '',
             custom:  ''
@@ -404,6 +406,7 @@ function processAndRenderSidebar(groups, items, user) {
             switch(group.group_type) {
                 case 'system':
                 case 'admin':
+                case 'teacher':
                     url = adminPrefix + item.subject_id;
                     break;
                 case 'lessons':
