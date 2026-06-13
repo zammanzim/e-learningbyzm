@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakura Portfolio — Beranda</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="../../js/magic-pill.js?v=20260610" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+</head>
+<body>
+
+<div class="petals-bg" id="petals"></div>
+
+<nav>
+  <a class="nav-brand" href="index.html">🌸 Debby</a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Beranda</a></li>
+    <li><a href="profil.html">Profil</a></li>
+    <li><a href="galeri.html">Galeri</a></li>
+    <li><a href="kontak.html">Kontak</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <section class="hero">
+    <p class="hero-eyebrow">✦ Selamat Datang ✦</p>
+    <h1>Halo, Saya<br><em>Debby</em></h1>
+    <p class="hero-sub">
+      Pelajar
+    </p>
+    <div>
+      <a href="profil.html" class="btn btn-primary">Lihat Profil</a>
+      <a href="kontak.html" class="btn btn-outline">Hubungi Saya</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <span class="section-tag">Tentang Saya</span>
+      <h2 class="section-title">Sedikit tentang <span>diriku</span></h2>
+      <div class="divider divider-center"></div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card card-center">
+        <div class="card-icon">🎨</div>
+        <h3 class="card-title">Seni &amp; Desain</h3>
+        <p class="card-text">Mengekspresikan diri lewat warna, sketsa, dan ilustrasi digital yang penuh warna.</p>
+      </div>
+      <div class="card card-center">
+        <div class="card-icon">📚</div>
+        <h3 class="card-title">Belajar &amp; Membaca</h3>
+        <p class="card-text">Selalu ingin tahu dan suka menjelajahi pengetahuan baru — dari sains hingga sastra.</p>
+      </div>
+      <div class="card card-center">
+        <div class="card-icon">🌸</div>
+        <h3 class="card-title">Alam &amp; Fotografi</h3>
+        <p class="card-text">Mengabadikan keindahan alam sekitar — bunga, langit, dan momen yang tak terduga.</p>
+      </div>
+    </div>
+
+    <div class="sakura-ornament">🌸 ✦ 🌸 ✦ 🌸</div>
+
+    <div class="cta-banner">
+      <h3 class="cta-title">Lihat Karyaku</h3>
+      <p class="cta-text">Kunjungi galeri untuk melihat foto dan momen-momen spesial yang kuabadikan.</p>
+      <a href="galeri.html" class="btn btn-white">🌸 Buka Galeri</a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <p>© 2025 <span>Debby</span> · Dibuat oleh debby</p>
+</footer>
+
+<script>
+  const container = document.getElementById('petals');
+  const petalSVG = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 2C10 2 14 6 14 10C14 14 10 18 10 18C10 18 6 14 6 10C6 6 10 2 10 2Z" fill="#FFB7C5"/>
+    <path d="M10 2C10 2 14 6 14 10C14 14 10 18 10 18C10 18 6 14 6 10C6 6 10 2 10 2Z" fill="url(#pg)" opacity="0.6"/>
+    <defs><linearGradient id="pg" x1="6" y1="2" x2="14" y2="18"><stop offset="0%" stop-color="#FFB7C5"/><stop offset="100%" stop-color="#E8264A"/></linearGradient></defs>
+  </svg>`;
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.innerHTML = petalSVG;
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (6 + Math.random() * 10) + 's';
+    p.style.animationDelay = (Math.random() * 12) + 's';
+    p.style.width = (12 + Math.random() * 16) + 'px';
+    container.appendChild(p);
+  }
+</script>
+</body>
+</html>

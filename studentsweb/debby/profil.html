@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakura Portfolio — Profil</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="../../js/magic-pill.js?v=20260610" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+
+</head>
+
+<body>
+
+  <div class="petals-bg" id="petals"></div>
+
+  <nav>
+    <a class="nav-brand" href="index.html">🌸 Debby</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Beranda</a></li>
+      <li><a href="profil.html" class="active">Profil</a></li>
+      <li><a href="galeri.html">Galeri</a></li>
+      <li><a href="kontak.html">Kontak</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+    <section class="section">
+      <span class="section-tag">Tentang Saya</span>
+      <h1 class="section-title">Profil <span>Lengkap</span></h1>
+      <div class="divider"></div>
+
+      <div class="profil-grid">
+        <!-- FOTO -->
+        <div class="profil-photo-wrap">
+          <div class="photo-placeholder">
+            <img src="img/Screenshot_20260612-184547_Google.jpg" alt="Foto Anisa" class="profil-photo">
+          </div>
+        </div>
+
+        <!-- BIODATA -->
+        <div class="profil-bio">
+          <h2 class="profil-name">
+            Debby Nur <span class="profil-name-grad">Anisa</span>
+          </h2>
+          <p class="profil-role">Pelajar</p>
+
+          <p class="profil-desc">
+            Halo! Nama saya Debby, siswa X - RPL 2 dari sekolah SMK Taruna Harapan 1 Cipatat
+          </p>
+
+          <h3 class="sub-heading">📋 Biodata Singkat</h3>
+
+          <div class="badge-grid">
+            <div class="badge">
+              <div class="badge-label">Nama Lengkap</div>
+              <div class="badge-value">Debby Nur Anisa</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Tanggal Lahir</div>
+              <div class="badge-value">21 Februari 2010</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Asal</div>
+              <div class="badge-value">Bandung, Jawa Barat</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Sekolah</div>
+              <div class="badge-value">SMK Taruna Harapan 1 Cipatat</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Kelas</div>
+              <div class="badge-value">X - RPL 2</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Cita-cita</div>
+              <div class="badge-value">Dokter</div>
+            </div>
+          </div>
+
+          <div class="profil-section-block">
+            <h3 class="sub-heading">🎯 Hobi &amp; Minat</h3>
+            <div class="hobi-list">
+              <span class="tag">📚 Membaca</span>
+              <span class="tag">✍️ Menulis</span>
+            </div>
+          </div>
+        </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2025 <span>Debby </span> · Dibuat dengan 🌸 dan semangat</p>
+  </footer>
+
+  <script>
+    const container = document.getElementById('petals');
+    const petalSVG = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C10 2 14 6 14 10C14 14 10 18 10 18C10 18 6 14 6 10C6 6 10 2 10 2Z" fill="url(#pg)"/><defs><linearGradient id="pg" x1="6" y1="2" x2="14" y2="18"><stop offset="0%" stop-color="#FFB7C5"/><stop offset="100%" stop-color="#E8264A"/></linearGradient></defs></svg>`;
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.innerHTML = petalSVG;
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (6 + Math.random() * 10) + 's';
+      p.style.animationDelay = (Math.random() * 12) + 's';
+      p.style.width = (12 + Math.random() * 14) + 'px';
+      container.appendChild(p);
+    }
+  </script>
+</body>
+
+</html>

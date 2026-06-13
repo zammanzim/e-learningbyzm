@@ -739,7 +739,7 @@
                 let fileName = null;
 
                 if (selectedFile) {
-                    const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const safeName = selectedFile.name.replace(/[^a-zA-Z 0-9._-]/g, '_');
                     const filePath = `task-submissions/${user.id}/${Date.now()}_${safeName}`;
 
                     const { error: se } = await supabase.storage

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakura Portfolio — Kontak</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="../../js/magic-pill.js?v=20260610" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+
+</head>
+
+<body>
+
+  <div class="petals-bg" id="petals"></div>
+
+  <nav>
+    <a class="nav-brand" href="index.html">🌸 Debby</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Beranda</a></li>
+      <li><a href="profil.html">Profil</a></li>
+      <li><a href="galeri.html">Galeri</a></li>
+      <li><a href="kontak.html" class="active">Kontak</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+    <section class="section">
+      <span class="section-tag">Hubungi Saya</span>
+      <h1 class="section-title">Kirim <span>Pesan</span></h1>
+      <div class="divider"></div>
+
+      <div class="kontak-layout">
+        <!-- INFO KONTAK -->
+        <div class="kontak-info">
+          <h3 class="kontak-info-title">Ayo Berkenalan! 🌸</h3>
+          <p class="kontak-info-text">
+            Ada yang ingin kamu tanyakan, berkolaborasi, atau sekadar menyapa?
+            Aku senang mendengar dari kamu. Isi form di samping atau hubungi melalui kontak berikut.
+          </p>
+
+          <div class="contact-item">
+            <span class="contact-icon">📧</span>
+            <span>debby@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">📱</span>
+            <span>+62 815-7291-7275</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">📍</span>
+            <span>Bandung, Jawa Barat, Indonesia</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">🏫</span>
+            <span>SMK Taruna Harapan 1 Cipatat, X - RPL 2</span>
+          </div>
+
+          <div class="sosmed-block">
+            <p class="sosmed-label">Media Sosial</p>
+            <div class="sosmed-links">
+              <a href="#" class="sosmed-btn">📸 Instagram</a>
+              <a href="#" class="sosmed-btn">🐦 Twitter</a>
+              <a href="#" class="sosmed-btn">🎨 Behance</a>
+            </div>
+          </div>
+
+          <div class="kontak-quote">
+            <div class="quote-mark">❝</div>
+            <p class="quote-text">
+              Setiap pesan yang kamu kirim adalah benih persahabatan yang baru.
+            </p>
+            <p class="quote-author">- Debby</p>
+          </div>
+        </div>
+
+        <!-- FORM KONTAK -->
+        <div class="form-card">
+          <h3 class="form-heading">Tulis Pesanmu 💌</h3>
+
+          <div class="form-group">
+            <label for="nama">Nama Lengkap</label>
+            <input type="text" id="nama" name="nama" placeholder="Masukkan nama kamu..." required />
+          </div>
+          <div class="form-group">
+            <label for="email">Alamat Email</label>
+            <input type="email" id="email" name="email" placeholder="nama@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="subjek">Subjek</label>
+            <input type="text" id="subjek" name="subjek" placeholder="Perihal pesan kamu..." />
+          </div>
+          <div class="form-group">
+            <label for="pesan">Pesan</label>
+            <textarea id="pesan" name="pesan" placeholder="Ceritakan apa yang ingin kamu sampaikan... 🌸"
+              required></textarea>
+          </div>
+
+          <button type="button" class="form-submit" onclick="kirimPesan()">
+            🌸 Kirim Pesan
+          </button>
+
+          <div class="success-msg" id="successMsg">
+            ✅ Pesan berhasil terkirim! Terima kasih, aku akan segera membalas. 🌸
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2025 <span>Debby </span> · Dibuat dengan 🌸 dan semangat</p>
+  </footer>
+
+  <script>
+    function kirimPesan() {
+      const nama = document.getElementById('nama').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const pesan = document.getElementById('pesan').value.trim();
+      if (!nama || !email || !pesan) {
+        alert('Harap lengkapi nama, email, dan pesan terlebih dahulu. 🌸');
+        return;
+      }
+      const btn = document.querySelector('.form-submit');
+      btn.textContent = '⏳ Mengirim...';
+      btn.disabled = true;
+      setTimeout(() => {
+        document.getElementById('successMsg').classList.add('show');
+        btn.textContent = '✅ Terkirim!';
+        btn.classList.add('sent');
+        document.getElementById('nama').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('subjek').value = '';
+        document.getElementById('pesan').value = '';
+      }, 1200);
+    }
+
+    const container = document.getElementById('petals');
+    const petalSVG = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C10 2 14 6 14 10C14 14 10 18 10 18C10 18 6 14 6 10C6 6 10 2 10 2Z" fill="url(#pg)"/><defs><linearGradient id="pg" x1="6" y1="2" x2="14" y2="18"><stop offset="0%" stop-color="#FFB7C5"/><stop offset="100%" stop-color="#E8264A"/></linearGradient></defs></svg>`;
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.innerHTML = petalSVG;
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (6 + Math.random() * 10) + 's';
+      p.style.animationDelay = (Math.random() * 12) + 's';
+      p.style.width = (12 + Math.random() * 14) + 'px';
+      container.appendChild(p);
+    }
+  </script>
+</body>
+
+</html>

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Masuk • Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="../js/supabase-clients.js?v=20260610"></script>
     <script src="../js/ctx-menu.js?v=20260610"></script>
     <script src="../js/ui-components.js?v=20260610"></script>
@@ -558,7 +559,7 @@
             }
         }
 
-        /* ─── Download semua dari group ─── */
+        /* ─── Download semua dari group → ZIP ─── */
         async function downloadAllFromGroup(gi) {
             const groupEl = document.getElementById(`group-${gi}`);
             const g = groupEl.__groupData;
@@ -573,16 +574,14 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>${t('loading')}</span>`;
 
+            const zip = new JSZip();
             let successCount = 0;
+
             for (const f of g.files) {
                 try {
                     const { data: blob, error } = await supabase.storage.from('transfers').download(f.file_path);
                     if (error) throw error;
-
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = f.file_name; a.click();
-                    URL.revokeObjectURL(url);
+                    zip.file(f.file_name, blob);
                     successCount++;
 
                     if (shouldDelete) {
@@ -592,6 +591,14 @@
                 } catch (err) {
                     showToast(t('failed_generic') + `: ${f.file_name} — ${err.message || err}`, 'error');
                 }
+            }
+
+            if (successCount) {
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `files_from_${g.name}.zip`; a.click();
+                URL.revokeObjectURL(url);
             }
 
             if (shouldDelete) {

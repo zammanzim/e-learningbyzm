@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>debby Portfolio — Galeri</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="../../js/magic-pill.js?v=20260610" data-position="top-left" data-offset-x="20" data-offset-y="80"></script>
+
+</head>
+
+<body>
+
+  <div class="petals-bg" id="petals"></div>
+
+  <nav>
+    <a class="nav-brand" href="index.html">🌸 Debby</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Beranda</a></li>
+      <li><a href="profil.html">Profil</a></li>
+      <li><a href="galeri.html" class="active">Galeri</a></li>
+      <li><a href="kontak.html">Kontak</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+    <section class="section">
+      <span class="section-tag">Karyaku</span>
+      <h1 class="section-title">Galeri <span>Foto &amp; Karya</span></h1>
+      <div class="divider"></div>
+      <p class="galeri-intro">
+        Kumpulan momen, karya seni, dan eksplorasi visual yang kuabadikan sepanjang perjalanan.
+      </p>
+
+      <div class="filter-tabs">
+        <button class="filter-tab active">Semua</button>
+        <button class="filter-tab">Alam</button>
+        <button class="filter-tab">Seni</button>
+        <button class="filter-tab">Kegiatan</button>
+      </div>
+
+      <div class="galeri-grid">
+        <div class="galeri-item"
+          onclick="openLightbox('Taman Bunga Sakura','Momen indah saat mengunjungi taman bunga di musim semi.')">
+          <div class="galeri-placeholder">
+            <img src="img/Screenshot_20260612-184425_Google.jpg" alt="Taman Bunga Sakura">
+          </div>
+        </div>
+
+        <div class="galeri-item" onclick="openLightbox('Lukisan Alam','Hasil lukisan cat air dengan tema pegunungan.')">
+          <div class="galeri-placeholder">
+            <img src="img/Screenshot_20260612-184523_Google.jpg" alt="">
+          </div>
+          <!-- <img src="img/foto2.jpg" alt="Lukisan Alam"> -->
+          <div class="galeri-overlay"><span class="galeri-caption">🎨 Lukisan Alam</span></div>
+        </div>
+
+        <div class="galeri-item"
+          onclick="openLightbox('Petualangan Alam','Pendakian ke bukit belakang kota bersama teman-teman.')">
+          <div class="galeri-placeholder">
+            <img src="img/Screenshot_20260612-184547_Google.jpg" alt="">
+          </div>
+          <!-- <img src="img/foto3.jpg" alt="Petualangan Alam"> -->
+          <div class="galeri-overlay"><span class="galeri-caption">🌿 Petualangan Alam</span></div>
+        </div>
+      </div>
+
+      <div class="sakura-ornament">🌸 ✦ 🌸 ✦ 🌸</div>
+    </section>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open')">✕</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-box">
+        <span class="lightbox-ph-icon">🌸</span>
+        <span>Pratinjau Foto</span>
+      </div>
+      <div class="lightbox-title" id="lb-title"></div>
+      <div class="lightbox-desc" id="lb-desc"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 <span>Debby </span> · Dibuat dengan 🌸 dan semangat</p>
+  </footer>
+
+  <script>
+    function openLightbox(title, desc) {
+      document.getElementById('lb-title').textContent = title;
+      document.getElementById('lb-desc').textContent = desc;
+      document.getElementById('lightbox').classList.add('open');
+    }
+    function closeLightbox(e) {
+      if (e.target === document.getElementById('lightbox'))
+        document.getElementById('lightbox').classList.remove('open');
+    }
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    const container = document.getElementById('petals');
+    const petalSVG = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C10 2 14 6 14 10C14 14 10 18 10 18C10 18 6 14 6 10C6 6 10 2 10 2Z" fill="url(#pg)"/><defs><linearGradient id="pg" x1="6" y1="2" x2="14" y2="18"><stop offset="0%" stop-color="#FFB7C5"/><stop offset="100%" stop-color="#E8264A"/></linearGradient></defs></svg>`;
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.innerHTML = petalSVG;
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (6 + Math.random() * 10) + 's';
+      p.style.animationDelay = (Math.random() * 12) + 's';
+      p.style.width = (12 + Math.random() * 14) + 'px';
+      container.appendChild(p);
+    }
+  </script>
+</body>
+
+</html>
