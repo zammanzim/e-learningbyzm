@@ -102,6 +102,7 @@
         .modern-table {
             width: 100%;
             border-collapse: separate;
+            border-radius: 80px;
             border-spacing: 0 8px;
         }
 
@@ -588,57 +589,154 @@
         }
 
         .drop-zone-file {
-            border: 2px dashed rgba(0,234,255,0.3);
+            border: 2px dashed rgba(0, 234, 255, 0.3);
             border-radius: 12px;
             padding: 28px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(0,234,255,0.03);
+            background: rgba(0, 234, 255, 0.03);
             margin-top: 12px;
         }
+
         .drop-zone-file:hover,
         .drop-zone-file.dragover {
             border-color: #00eaff;
-            background: rgba(0,234,255,0.08);
+            background: rgba(0, 234, 255, 0.08);
         }
-        .drop-zone-file .dz-icon { font-size: 32px; color: rgba(0,234,255,0.5); margin-bottom: 8px; }
-        .drop-zone-file .dz-text { font-size: 13px; color: rgba(255,255,255,0.5); }
-        .drop-zone-file .dz-file { font-size: 12px; color: #2ed573; margin-top: 6px; font-weight:600; }
+
+        .drop-zone-file .dz-icon {
+            font-size: 32px;
+            color: rgba(0, 234, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-file .dz-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .drop-zone-file .dz-file {
+            font-size: 12px;
+            color: #2ed573;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
         .file-row {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 10px; margin-top: 8px;
-            background: rgba(0,0,0,0.2); border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-top: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .file-row .fr-icon { font-size: 20px; color: #e74c3c; }
-        .file-row .fr-name { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .file-row input { width: 120px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: white; font-size: 12px; outline: none; flex-shrink: 0; }
-        .file-row input:focus { border-color: #00eaff; }
-        .file-row .fr-remove { cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; }
-        .file-row .fr-remove:hover { color: #ff6b81; }
+
+        .file-row .fr-icon {
+            font-size: 20px;
+            color: #e74c3c;
+        }
+
+        .file-row .fr-name {
+            flex: 1;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-row input {
+            width: 120px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 12px;
+            outline: none;
+            flex-shrink: 0;
+        }
+
+        .file-row input:focus {
+            border-color: #00eaff;
+        }
+
+        .file-row .fr-remove {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 4px;
+        }
+
+        .file-row .fr-remove:hover {
+            color: #ff6b81;
+        }
+
         .file-order-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 10px; margin-top: 6px;
-            background: rgba(0,0,0,0.25); border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-            cursor: grab; transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            margin-top: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: grab;
+            transition: opacity 0.2s, transform 0.2s;
             user-select: none;
         }
-        .file-order-item:active { cursor: grabbing; }
-        .file-order-item.drag-over { border-color: #00eaff; background: rgba(0,234,255,0.1); }
-        .file-order-item .fo-handle { color: rgba(255,255,255,0.25); font-size: 14px; }
-        .file-order-item .fo-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .file-order-item .fo-delete { cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; font-size: 14px; }
-        .file-order-item .fo-delete:hover { color: #ff6b81; }
-        .btn-save-order {
-            display: none; margin-top: 12px;
-            width: 100%; padding: 10px;
-            border: 1px solid #00eaff33; border-radius: 8px;
-            background: rgba(0,234,255,0.1); color: #00eaff;
-            font-size: 14px; cursor: pointer; text-align: center;
+
+        .file-order-item:active {
+            cursor: grabbing;
         }
-        .btn-save-order:hover { background: rgba(0,234,255,0.2); }
+
+        .file-order-item.drag-over {
+            border-color: #00eaff;
+            background: rgba(0, 234, 255, 0.1);
+        }
+
+        .file-order-item .fo-handle {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 14px;
+        }
+
+        .file-order-item .fo-name {
+            flex: 1;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-order-item .fo-delete {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        .file-order-item .fo-delete:hover {
+            color: #ff6b81;
+        }
+
+        .btn-save-order {
+            display: none;
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #00eaff33;
+            border-radius: 8px;
+            background: rgba(0, 234, 255, 0.1);
+            color: #00eaff;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-save-order:hover {
+            background: rgba(0, 234, 255, 0.2);
+        }
     </style>
 </head>
 
@@ -654,8 +752,7 @@
     </div>
 
     <div class="fab-container">
-        <div id="viewAllFab" class="fab-admin secondary" onclick="toggleViewAll()"><i
-                class="fa-solid fa-eye"></i></div>
+        <div id="viewAllFab" class="fab-admin secondary" onclick="toggleViewAll()"><i class="fa-solid fa-eye"></i></div>
         <div id="adminFab" class="fab-admin" onclick="openAdminConfig()" title="Atur Mapel"><i
                 class="fa-solid fa-gear"></i></div>
     </div>
@@ -666,13 +763,16 @@
             <h2 style="margin-bottom: 5px;"><i class="fa-solid fa-sliders"></i> Atur Mapel</h2>
             <p style="opacity: 0.6; font-size: 13px; margin-bottom: 20px;" data-i18n="select_subject_hide"></p>
             <div id="adminConfigList" class="config-list"></div>
-            <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> <span data-i18n="save">Simpan</span></button>
+            <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> <span
+                    data-i18n="save">Simpan</span></button>
 
             <hr style="border-color:rgba(255,255,255,0.1);margin:25px 0;">
             <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> Kelola File Nilai</h3>
-            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file">Upload file PDF/gambar nilai asli</p>
+            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file">Upload file
+                PDF/gambar nilai asli</p>
             <div id="adminFilesList" class="config-list" style="margin-bottom:15px;"></div>
-            <div class="btn-save-order" id="saveOrderBtn" onclick="saveFileOrder()"><i class="fa-solid fa-floppy-disk"></i> Simpan Urutan</div>
+            <div class="btn-save-order" id="saveOrderBtn" onclick="saveFileOrder()"><i
+                    class="fa-solid fa-floppy-disk"></i> Simpan Urutan</div>
             <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;" multiple>
             <div class="drop-zone-file" id="fileDropZone">
                 <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -680,7 +780,8 @@
                 <div class="dz-file" id="fileNameDisplay"></div>
             </div>
             <div id="fileList" style="margin-top:10px;"></div>
-            <button class="btn-save-config" onclick="uploadAllFiles()" style="margin-top:12px; display:none;" id="uploadBtn">
+            <button class="btn-save-config" onclick="uploadAllFiles()" style="margin-top:12px; display:none;"
+                id="uploadBtn">
                 <i class="fa-solid fa-upload"></i> Upload Semua</button>
         </div>
     </div>
@@ -708,14 +809,22 @@
                 </div>
 
                 <div class="privacy-box">
-                    <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-eye-slash" style="opacity: 0.7;"></i><div><div style="font-size: 13px; font-weight: 700;">Privasi Nilai</div><div style="font-size: 11px; opacity: 0.6;">Sembunyikan rincian nilai dari orang lain</div></div></div>
-                    <label class="toggle-switch"><input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)"><span class="toggle-slider"></span></label>
+                    <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-eye-slash"
+                            style="opacity: 0.7;"></i>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700;">Privasi Nilai</div>
+                            <div style="font-size: 11px; opacity: 0.6;">Sembunyikan rincian nilai dari orang lain</div>
+                        </div>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" id="privacyToggle"
+                            onchange="togglePrivacy(this.checked)"><span class="toggle-slider"></span></label>
                 </div>
             </div>
 
             <div class="glass-card">
                 <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-list-ol"></i> Rincian Nilai Pribadi</h3>
-                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Note: Nilai yang atmin input tidak 100% bener, siapa tau ada yang salah, jadi cek nilai asli di dokumen yang dikasih guru.</p>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Note: Nilai yang atmin input tidak 100% bener,
+                    siapa tau ada yang salah, jadi cek nilai asli di dokumen yang dikasih guru.</p>
                 <table class="modern-table">
                     <thead>
                         <tr>
@@ -726,16 +835,28 @@
                     </thead>
                     <tbody id="personalTableBody"></tbody>
                 </table>
-                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Jangan putus asa kalo nilai kecil. Yang penting udah belajar, berusaha buat ulangan. Jangan hiraukan juga yang nilainya lebih gede tapi "tidak sesuai" dengan keseharian. <br> Semua guru pasti tau, siapa yang pantas mendapat nilai besar, dan mendapat nilai kecil. Karena penilaian guru bukan cuma dari nilai ulangan aja, tapi dari keseharian, sikap, dan tugas. Jadi kalo ada siswa yang ke 3 itu jelek tapi nilai PSAT nya gede itu anomali itu, pasti guru akan menurunkan nilai akhirnya.</p>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Jangan putus asa kalo nilai kecil. Yang penting
+                    udah belajar, berusaha buat ulangan. Jangan hiraukan juga yang nilainya lebih gede tapi "tidak
+                    sesuai" dengan keseharian. <br> Semua guru pasti tau, siapa yang pantas mendapat nilai besar, dan
+                    mendapat nilai kecil. Karena penilaian guru bukan cuma dari nilai ulangan aja, tapi dari keseharian,
+                    sikap, dan tugas. Jadi kalo ada siswa yang ke 3 itu jelek tapi nilai PSAT nya gede itu anomali itu,
+                    pasti guru akan menurunkan nilai akhirnya.</p>
 
             </div>
         </div>
 
         <div class="right-section">
             <div class="glass-card">
-                <h3 style="margin-bottom: 10px; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15
-                    Leaderboard</h3>
-                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Ranking 15 besar berdasarkan <strong>NILAI PSAT</strong></p>
+                <div
+                    style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                    <h3 style="margin:0; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15 Leaderboard
+                    </h3>
+                    <select id="rightClassSelector" class="mapel-select"
+                        style="width:auto; min-width:100px; font-size:12px;"
+                        onchange="switchClass(this.value)"></select>
+                </div>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Ranking 15 besar berdasarkan <strong>NILAI
+                        PSAT</strong></p>
                 <div class="podium-section" id="podiumTop3"></div>
                 <div class="leaderboard-list" id="podiumRest"></div>
             </div>
@@ -760,18 +881,16 @@
             </div>
 
             <div class="glass-card">
-                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai Kelas</span></h3>
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai
+                        Kelas</span></h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <!-- <div class="select-wrapper"><select id="classSelector" class="mapel-select"
-                            onchange="loadData()"></select></div> -->
                     <div class="select-wrapper"><select id="mapelSelector" class="mapel-select"
                             onchange="renderClassTable()"></select></div>
-                </div>
                 <div class="select-wrapper"><select id="sortSelector" class="mapel-select"
                         onchange="renderClassTable()">
                         <option value="nilai">Urutkan: Nilai Tertinggi</option>
                         <option value="nama">Urutkan: Nama (A-Z)</option>
-                    </select></div>
+                    </select></div></div>
                 <table class="modern-table">
                     <thead>
                         <tr>
@@ -818,8 +937,32 @@
         function _scoresCacheSet(key, data) {
             try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), ...data })); } catch (e) { }
         }
-        let globalData = [], myGlobalData = [], avatarMap = {}, avatarUrlMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
+        let _selectedClassId = null, globalData = [], myGlobalData = [], avatarMap = {}, avatarUrlMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
         const localUser = JSON.parse(localStorage.getItem("user"));
+        function getCurrentClassId() { return _selectedClassId || getEffectiveClassId(); }
+        function switchClass(classId) {
+            _selectedClassId = classId || null;
+            const ecId = getCurrentClassId();
+            Promise.all([
+                supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', ecId).eq('scores_type', currentTestId),
+                supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', ecId),
+            ]).then(([nRes, uRes]) => {
+                if (nRes.error) return;
+                const nm = {}, nn = {}, nu = {};
+                uRes.data?.forEach(u => {
+                    if (u.full_name) { nm[u.full_name.toLowerCase()] = u.id; if (u.avatar_url) nu[u.full_name.toLowerCase()] = u.avatar_url; nn[u.full_name.toLowerCase()] = u.nickname; }
+                    if (u.nickname) { nm[u.nickname.toLowerCase()] = u.id; if (u.avatar_url) nu[u.nickname.toLowerCase()] = u.avatar_url; nn[u.nickname.toLowerCase()] = u.nickname; }
+                });
+                const process = s => {
+                    let t = 0, c = 0;
+                    for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                    return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
+                };
+                globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+                avatarMap = nm; avatarUrlMap = nu; nicknameMap = nn;
+                renderAvgCard(); renderPodium(); renderClassTable(); loadAndRenderFiles();
+            }).catch(console.error);
+        }
 
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -834,6 +977,17 @@
             updateProfileUI(localUser);
             if (typeof SkeletonUI !== 'undefined') SkeletonUI.injectCSS();
             showSkeletons();
+
+            // ── Populate class dropdown ──
+            const sel = document.getElementById('rightClassSelector');
+            const { data: classes } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (classes) {
+                sel.innerHTML = classes.map(c =>
+                    `<option value="${c.id}">${c.name}</option>`
+                ).join('');
+                sel.value = getEffectiveClassId();
+            }
+
             await loadData();
 
             setupMultiDrop();
@@ -858,7 +1012,7 @@
 
         async function loadData() {
             if (!localUser) return;
-            const effectiveClassId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
+            const effectiveClassId = getCurrentClassId();
             const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
 
             // Cache-first (TTL 5 menit)
@@ -1116,7 +1270,7 @@
 
         async function saveAdminConfig() {
             const hidden = Array.from(document.querySelectorAll('.admin-subject-toggle:checked')).map(cb => cb.value);
-            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
+            const classId = getCurrentClassId();
             showToast('Menyimpan...', 'info');
             const { error } = await supabase.from('nilai_config').upsert({ test_id: currentTestId, class_id: classId, hidden_subjects: hidden }, { onConflict: 'test_id, class_id' });
             if (error) showToast(t('failed_generic') + ': ' + error.message, 'error'); else { showToast(t('success_generic'), 'success'); closeAdminModal(); loadData(); }
@@ -1166,7 +1320,7 @@
             document.getElementById('classTableBody').innerHTML = ct;
 
             // Personal table skeleton — skip hidden biar ga bocor
-            const _skCacheKey = `scores_cache_${currentTestId}_${/*document.getElementById('classSelector').value ||*/ getEffectiveClassId()}`;
+            const _skCacheKey = `scores_cache_${currentTestId}_${getCurrentClassId()}`;
             const _skCached = _scoresCacheGet(_skCacheKey);
             const _skHidden = (_skCached && _skCached.currentHiddenSubjects) || [];
             let pt = '';
@@ -1185,7 +1339,7 @@
 
         // ── File Nilai Asli ──
         async function loadAndRenderFiles() {
-            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
+            const classId = getCurrentClassId();
             const { data, error } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
                 .order('display_order', { ascending: true, nullsFirst: false });
@@ -1251,7 +1405,7 @@
         }
         async function uploadAllFiles() {
             if (!_nilaiFileStore.length) return showToast(t('select_file_first'), 'error');
-            const classId = getEffectiveClassId();
+            const classId = getCurrentClassId();
             showToast(t('uploading_text'), 'info');
             const { data: maxRow } = await supabase.from('nilai_files')
                 .select('display_order').eq('test_id', currentTestId).eq('class_id', classId)
@@ -1286,7 +1440,7 @@
         async function renderAdminFiles() {
             const list = document.getElementById('adminFilesList');
             if (!list) return;
-            const classId = getEffectiveClassId();
+            const classId = getCurrentClassId();
             const { data } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
                 .order('display_order', { ascending: true, nullsFirst: false });

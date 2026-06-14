@@ -140,7 +140,7 @@ SET is_private = old.is_private
 FROM (
     SELECT DISTINCT ON (u.id) u.id, n.is_private
     FROM nilai_psat n
-    JOIN users u ON LOWER(TRIM(n.nama_siswa)) = LOWER(TRIM(u.nickname))
+    JOIN users u ON LOWER(TRIM(n.nama_siswa)) = LOWER(TRIM(u.full_name))
 ) old
 WHERE ns.user_id = old.id::text AND ns.scores_type = 'psat';
 
@@ -154,5 +154,5 @@ SELECT 'psasi', n.nama_siswa FROM nilai_psasi n
     WHERE u.id IS NULL
 UNION ALL
 SELECT 'psat', n.nama_siswa FROM nilai_psat n
-    LEFT JOIN users u ON LOWER(TRIM(n.nama_siswa)) = LOWER(TRIM(u.nickname))
+    LEFT JOIN users u ON LOWER(TRIM(n.nama_siswa)) = LOWER(TRIM(u.full_name))
     WHERE u.id IS NULL;
