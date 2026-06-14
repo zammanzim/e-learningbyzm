@@ -41,7 +41,7 @@ const i18n = {
             // Sidebar Groups
             "sidebar_system": "Menu Sistem",
             "sidebar_admin": "Panel Admin",
-            "sidebar_main": "Menu Utama",g
+            "sidebar_main": "Menu Utama",
             "sidebar_lessons": "Mata Pelajaran",
             "sidebar_custom": "Menu Lainnya",
             "sidebar_Web Siswa": "Web Siswa",
