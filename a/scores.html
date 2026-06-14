@@ -690,6 +690,25 @@
                 <div class="leaderboard-list" id="podiumRest"></div>
             </div>
 
+            <div class="glass-card" id="avgCard">
+                <h3 style="margin-bottom:12px;"><i class="fa-solid fa-calculator"></i> Rata-rata Kelas</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                        <div style="font-size:20px; font-weight:800; color:#00eaff;" id="avgOverall">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Rata-rata</div>
+                    </div>
+                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                        <div style="font-size:20px; font-weight:800; color:#2ed573;" id="avgPassRate">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Lulus ≥75</div>
+                    </div>
+                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                        <div style="font-size:20px; font-weight:800; color:#ffd700;" id="avgTop">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Tertinggi</div>
+                    </div>
+                </div>
+                <div id="avgSubjectList" style="font-size:12px;"></div>
+            </div>
+
             <div class="glass-card">
                 <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai Kelas</span></h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -729,10 +748,11 @@
 
     <script>
         const TEST_CONFIG = {
-            'psts': { title: 'Nilai PSTS', table: 'nilai_psts', icon: 'fa-clipboard-check' },
-            'psasi': { title: 'Nilai PSASI', table: 'nilai_psasi', icon: 'fa-file-invoice' },
-            'psat': { title: 'Nilai PSAT', table: 'nilai_psat', icon: 'fa-file-invoice' }
+            'psts': { title: 'Nilai PSTS', icon: 'fa-clipboard-check' },
+            'psasi': { title: 'Nilai PSASI', icon: 'fa-file-invoice' },
+            'psat': { title: 'Nilai PSAT', icon: 'fa-file-invoice' }
         };
+        const SCORES_TABLE = 'nilai_scores';
         const MAPEL_CONFIG = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda', senibudaya: 'Seni Budaya', informatika: 'Informatika', pjok: 'PJOK', proipas: 'Proipas', dasprog1: 'DASPROGRPL 1', dasprog2: 'DASPROGRPL 2', dasprog3: 'DASPROGRPL 3' };
         const KKM = 75;
         const SCORES_CACHE_TTL = 5 * 60 * 1000; // 5 menit
@@ -750,8 +770,6 @@
         }
         let globalData = [], myGlobalData = [], avatarMap = {}, avatarUrlMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
         const localUser = JSON.parse(localStorage.getItem("user"));
-        const myIdentifier = localUser ? (localUser.full_name || localUser.nickname) : null;
-        const myNickname = localUser ? localUser.nickname : null;
 
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -761,14 +779,7 @@
             document.title = `${config.title} • ${t('app_name')}`;
             document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
 
-            supabase.from('classes').select('id, name').eq('is_active', true).order('id').then(({ data }) => {
-                if (data) {
-                    // const sel = document.getElementById('classSelector');
-                    let html = '';
-                    data.forEach(c => html += `<option value="${c.id}" ${c.id == getEffectiveClassId() ? 'selected' : ''}>${c.name}</option>`);
-                    sel.innerHTML = html;
-                }
-            });
+
 
             updateProfileUI(localUser);
             if (typeof SkeletonUI !== 'undefined') SkeletonUI.injectCSS();
@@ -796,7 +807,6 @@
         async function loadData() {
             if (!localUser) return;
             const effectiveClassId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
-            const tableName = TEST_CONFIG[currentTestId].table;
             const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
 
             // Cache-first (TTL 5 menit)
@@ -805,20 +815,20 @@
                 globalData = cached.globalData; myGlobalData = cached.myGlobalData; avatarMap = cached.avatarMap; avatarUrlMap = cached.avatarUrlMap || {}; nicknameMap = cached.nicknameMap || {}; currentHiddenSubjects = cached.currentHiddenSubjects || [];
                 renderAll(); loadAndRenderFiles();
                 // Background refresh
-                _scoresFetchFresh({ effectiveClassId, tableName, cacheKey }).catch(err => console.error(err));
+                _scoresFetchFresh({ effectiveClassId, cacheKey }).catch(err => console.error(err));
                 return;
             }
 
             // No cache → blocking fetch
-            await _scoresFetchFresh({ effectiveClassId, tableName, cacheKey, render: true });
+            await _scoresFetchFresh({ effectiveClassId, cacheKey, render: true });
         }
 
-        async function _scoresFetchFresh({ effectiveClassId, tableName, cacheKey, render }) {
+        async function _scoresFetchFresh({ effectiveClassId, cacheKey, render }) {
             try {
                 const [nRes, uRes, mRes, cRes] = await Promise.all([
-                    supabase.from(tableName).select('*, is_private').eq('class_id', effectiveClassId),
+                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', effectiveClassId).eq('scores_type', currentTestId),
                     supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', effectiveClassId),
-                    supabase.from(tableName).select('*, is_private').eq('class_id', localUser.class_id),
+                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', localUser.class_id).eq('scores_type', currentTestId),
                     supabase.from('nilai_config').select('hidden_subjects').eq('test_id', currentTestId).eq('class_id', effectiveClassId).maybeSingle()
                 ]);
                 if (nRes.error) throw nRes.error;
@@ -837,15 +847,15 @@
                     }
                     return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
                 };
-                globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
-                myGlobalData = (mRes.data || []).map(process).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
+                globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+                myGlobalData = (mRes.data || []).map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
                 avatarMap = newAvatarMap; avatarUrlMap = newAvatarUrlMap; nicknameMap = newNicknameMap;
                 _scoresCacheSet(cacheKey, { globalData, myGlobalData, avatarMap, avatarUrlMap, nicknameMap, currentHiddenSubjects });
                 renderAll(); loadAndRenderFiles();
             } catch (err) { if (render) console.error(err); }
         }
 
-        function renderAll() { renderMapelSelector(); renderPersonal(); renderPodium(); renderClassTable(); }
+        function renderAll() { renderMapelSelector(); renderPersonal(); renderAvgCard(); renderPodium(); renderClassTable(); }
 
         function renderMapelSelector() {
             const sel = document.getElementById('mapelSelector');
@@ -855,12 +865,54 @@
             if (prevVal && sel.querySelector(`option[value="${prevVal}"]`)) sel.value = prevVal;
         }
 
+        function renderAvgCard() {
+            const card = document.getElementById('avgCard');
+            if (!globalData.length) { card.style.display = 'none'; return; }
+            card.style.display = '';
+
+            const totals = {};
+            let totalAll = 0, countAll = 0;
+            for (const k in MAPEL_CONFIG) {
+                if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                let sum = 0, n = 0, top = -Infinity;
+                for (const s of globalData) {
+                    const v = parseFloat(s[k]);
+                    if (!isNaN(v)) { sum += v; n++; if (v > top) top = v; }
+                }
+                totals[k] = { avg: n ? sum / n : 0, top, n };
+                totalAll += sum;
+                countAll += n;
+            }
+
+            const overallAvg = countAll ? (totalAll / countAll) : 0;
+            const lulus = globalData.filter(s => s.average >= KKM).length;
+            const pct = globalData.length ? Math.round(lulus / globalData.length * 100) : 0;
+            const topAvg = Math.max(...globalData.map(s => s.average));
+
+            document.getElementById('avgOverall').textContent = overallAvg.toFixed(1);
+            document.getElementById('avgPassRate').textContent = `${lulus}/${globalData.length} (${pct}%)`;
+            document.getElementById('avgTop').textContent = topAvg.toFixed(1);
+
+            let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 12px;">';
+            for (const k in totals) {
+                if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                const t = totals[k];
+                const avg = t.avg.toFixed(1);
+                const color = t.avg >= KKM ? '#2ed573' : '#ff6b81';
+                html += `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="opacity:0.7;">${MAPEL_CONFIG[k]}</span>
+                    <span style="color:${color}; font-weight:600;">${avg}</span>
+                </div>`;
+            }
+            html += '</div>';
+            document.getElementById('avgSubjectList').innerHTML = html;
+        }
+
         function renderPersonal() {
-            if (!myIdentifier) return;
-            let idx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase());
-            if (idx === -1 && myNickname) idx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
+            if (!localUser) return;
+            const idx = myGlobalData.findIndex(s => String(s.user_id) === String(localUser.id));
             const data = myGlobalData[idx]; if (!data) return;
-            document.getElementById('name').innerText = getDisplayName(data.nama_siswa);
+            document.getElementById('name').innerText = localUser.nickname || localUser.full_name || getDisplayName(data.nama_siswa);
             if (idx >= 0 && idx < 10) data.is_private = false;
             document.getElementById('privacyToggle').checked = !!data.is_private;
             const color = getDynamicColor(data.average);
@@ -889,21 +941,21 @@
             const t3 = document.getElementById('podiumTop3'), rs = document.getElementById('podiumRest');
             t3.innerHTML = ""; rs.innerHTML = "";
             const mkP = (s, r, c) => {
-                const key = s.nama_siswa.toLowerCase();
+                const key = s.nama_siswa ? s.nama_siswa.toLowerCase() : '';
                 const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                 const isT10 = globalData.indexOf(s) < 10;
                 const privIcon = s.is_private && !isT10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
-                return `<div class="podium-box ${c}" onclick="showStudentScores('${s.nama_siswa}')" style="cursor:pointer;"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
+                return `<div class="podium-box ${c}" onclick="showStudentScores(${s.user_id})" style="cursor:pointer;"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
             };
             if (globalData[1]) t3.innerHTML += mkP(globalData[1], 2, 'p2');
             if (globalData[0]) t3.innerHTML += mkP(globalData[0], 1, 'p1');
             if (globalData[2]) t3.innerHTML += mkP(globalData[2], 3, 'p3');
             for (let i = 3; i < 15; i++) {
                 if (globalData[i]) {
-                    const key = globalData[i].nama_siswa.toLowerCase();
+                    const key = globalData[i].nama_siswa ? globalData[i].nama_siswa.toLowerCase() : '';
                     const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                     const gPrivIcon = globalData[i].is_private && i >= 10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
-                    rs.innerHTML += `<div class="leader-item" draggable="true" onclick="showStudentScores('${globalData[i].nama_siswa}')" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
+                    rs.innerHTML += `<div class="leader-item" draggable="true" onclick="showStudentScores(${globalData[i].user_id})" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
                 }
             }
             initDragDrop();
@@ -961,21 +1013,21 @@
             const k = document.getElementById('mapelSelector').value, sort = document.getElementById('sortSelector').value, tbody = document.getElementById('classTableBody');
             if (!tbody) return;
             tbody.innerHTML = ''; let sorted = [...globalData];
-            if (sort === 'nama') sorted.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
-            else sorted.sort((a, b) => (parseFloat(b[k]) || 0) - (parseFloat(a[k]) || 0) || a.nama_siswa.localeCompare(b.nama_siswa));
+            if (sort === 'nama') sorted.sort((a, b) => (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            else sorted.sort((a, b) => (parseFloat(b[k]) || 0) - (parseFloat(a[k]) || 0) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
             sorted.forEach((s, i) => {
                 const v = parseFloat(s[k]); const dV = !isNaN(v) ? v.toFixed(2) : "-"; const cV = !isNaN(v) ? getDynamicColor(v) : "#fff";
-                const tr = document.createElement('tr'); tr.style.cursor = "pointer"; tr.onclick = () => showStudentScores(s.nama_siswa);
-                if (myIdentifier && (s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase() || (myNickname && s.nama_siswa.toLowerCase() === myNickname.toLowerCase()))) { tr.style.background = "rgba(0, 234, 255, 0.15)"; tr.style.boxShadow = "inset 4px 0 0 var(--accent)"; }
+                const tr = document.createElement('tr'); tr.style.cursor = "pointer"; tr.onclick = () => showStudentScores(s.user_id);
+                if (localUser && String(s.user_id) === String(localUser.id)) { tr.style.background = "rgba(0, 234, 255, 0.15)"; tr.style.boxShadow = "inset 4px 0 0 var(--accent)"; }
                 tr.innerHTML = `<td style="font-weight:bold; opacity:0.5;">${sort === 'nama' ? '-' : i + 1}</td><td style="font-weight:600; display:flex; align-items:center; gap:8px;">${getDisplayName(s.nama_siswa)}${s.is_private ? '<i class="fa-solid fa-eye-slash" style="font-size:10px; opacity:0.3;"></i>' : ''}</td><td style="text-align:right;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${dV}</span></td>`;
                 tbody.appendChild(tr);
             });
         }
 
-        function showStudentScores(nama) {
-            const s = globalData.find(x => x.nama_siswa.toLowerCase() === nama.toLowerCase()); if (!s) return;
-            const isMe = (myIdentifier && nama.toLowerCase() === myIdentifier.toLowerCase()) || (myNickname && nama.toLowerCase() === myNickname.toLowerCase());
-            const top10Idx = globalData.findIndex(x => x.nama_siswa.toLowerCase() === nama.toLowerCase());
+        function showStudentScores(userId) {
+            const s = globalData.find(x => String(x.user_id) === String(userId)); if (!s) return;
+            const isMe = localUser && String(userId) === String(localUser.id);
+            const top10Idx = globalData.findIndex(x => String(x.user_id) === String(userId));
             const isTop10 = top10Idx >= 0 && top10Idx < 10;
             let html = ""; const color = getDynamicColor(s.average);
             if (s.is_private && !isMe && !isAdminViewAll && localUser?.role !== 'super_admin' && !isTop10) html = `<div style="text-align:center; padding: 30px 10px;"><i class="fa-solid fa-eye-slash" style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;"></i><h2 style="margin-bottom: 10px;">Nilai Tersembunyi</h2><p style="opacity:0.6;">Siswa ini mengaktifkan mode privasi.</p></div>`;
@@ -997,8 +1049,8 @@
                 for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
                 return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
             };
-            globalData = globalData.map(proc).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
-            myGlobalData = myGlobalData.map(proc).sort((a, b) => (b.average - a.average) || a.nama_siswa.localeCompare(b.nama_siswa));
+            globalData = globalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            myGlobalData = myGlobalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
         }
 
         function openAdminConfig() {
@@ -1019,18 +1071,17 @@
         }
 
         async function togglePrivacy(isP) {
-            if (isP) {
-                let myIdx = myGlobalData.findIndex(s => myIdentifier && s.nama_siswa.toLowerCase() === myIdentifier.toLowerCase());
-                if (myIdx === -1 && myNickname) myIdx = myGlobalData.findIndex(s => s.nama_siswa.toLowerCase() === myNickname.toLowerCase());
+            if (isP && localUser) {
+                const myIdx = myGlobalData.findIndex(s => String(s.user_id) === String(localUser.id));
                 if (myIdx >= 0 && myIdx < 10) {
                     document.getElementById('privacyToggle').checked = false;
                     showPopup(`Kamu ada di peringkat #${myIdx + 1}, jadi gabisa privasi nilai.`, 'error');
                     return;
                 }
             }
+            if (!localUser) return;
             showToast('Menyimpan...', 'info');
-            const { error } = await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myIdentifier);
-            if (error && myNickname) await supabase.from(TEST_CONFIG[currentTestId].table).update({ is_private: isP }).eq('nama_siswa', myNickname);
+            const { error } = await supabase.from(SCORES_TABLE).update({ is_private: isP }).eq('user_id', localUser.id).eq('scores_type', currentTestId);
             showToast(t('done') + '!', 'success'); loadData();
         }
 

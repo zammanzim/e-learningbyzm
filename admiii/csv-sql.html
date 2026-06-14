@@ -4,21 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV → SQL Converter • E-Learning Nizam</title>
+    <title>Import Nilai • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js?v=20260610" defer></script>
     <script src="../js/ctx-menu.js?v=20260610"></script>
     <script src="../js/ui-components.js?v=20260610" defer></script>
     <script src="../js/sidebar.js?v=20260610"></script>
-<script src="../js/lang.js?v=20260610"></script>
-<script src="../js/basicfeat.js?v=20260610"></script>
-<script src="../js/show-popup.js?v=20260610"></script>
+    <script src="../js/lang.js?v=20260610"></script>
+    <script src="../js/basicfeat.js?v=20260610"></script>
+    <script src="../js/show-popup.js?v=20260610"></script>
     <script src="../js/auth.js?v=20260610" defer></script>
     <script src="../js/activity.js?v=20260610" defer></script>
     <script src="../js/visitor.js?v=20260610" defer></script>
     <script src="../js/theme.js?v=20260610"></script>
-<script src="../js/toast.js?v=20260610"></script>
-<link rel="stylesheet" href="../css/styleasli.css?v=20260610">
+    <script src="../js/toast.js?v=20260610"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260610">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css?v=20260610">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0c">
@@ -26,11 +26,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Class App">
-    <link rel="apple-touch-icon" href="icons/csv-sql.png">
 
     <style>
-        /* ── PAGE-SPECIFIC ─────────────────────────────────── */
-
         .card-title {
             font-size: 0.75rem;
             font-weight: 800;
@@ -52,13 +49,14 @@
 
         .form-group label {
             font-size: 0.8125rem;
-            color: rgba(255,255,255,0.75);
+            color: rgba(255, 255, 255, 0.75);
             font-weight: 600;
         }
 
+        .form-group select,
         .form-group input {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 0.5rem;
             color: #fff;
             padding: 0.65rem 0.875rem;
@@ -67,30 +65,36 @@
             transition: border-color 0.2s, background 0.2s;
             width: 100%;
             font-family: Arial, sans-serif;
+            appearance: auto;
         }
 
+        .form-group select:focus,
         .form-group input:focus {
             border-color: #00eaff;
-            background: rgba(0,234,255,0.05);
+            background: rgba(0, 234, 255, 0.05);
         }
 
-        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+        .form-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
 
         .drop-zone {
-            border: 2px dashed rgba(0,234,255,0.35);
+            border: 2px dashed rgba(0, 234, 255, 0.35);
             border-radius: 0.75rem;
             padding: 2rem 1rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: rgba(0,234,255,0.03);
+            background: rgba(0, 234, 255, 0.03);
             position: relative;
             margin-top: 0.5rem;
         }
 
-        .drop-zone:hover, .drop-zone.dragover {
+        .drop-zone:hover,
+        .drop-zone.dragover {
             border-color: #00eaff;
-            background: rgba(0,234,255,0.07);
+            background: rgba(0, 234, 255, 0.07);
         }
 
         .drop-zone input[type="file"] {
@@ -102,12 +106,22 @@
             height: 100%;
         }
 
-        .drop-zone-icon { font-size: 2.2rem; color: #00eaff; margin-bottom: 0.5rem; opacity: 0.7; }
-        .drop-zone-text { font-size: 0.9rem; color: rgba(255,255,255,0.6); }
-        .drop-zone-text strong { color: #00eaff; }
-        .drop-zone-hint { font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.3rem; }
+        .drop-zone-icon {
+            font-size: 2.2rem;
+            color: #00eaff;
+            margin-bottom: 0.5rem;
+            opacity: 0.7;
+        }
 
-        /* ── FILE LIST ── */
+        .drop-zone-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .drop-zone-text strong {
+            color: #00eaff;
+        }
+
         .file-list {
             display: none;
             flex-direction: column;
@@ -115,23 +129,29 @@
             margin-top: 0.875rem;
         }
 
-        .file-list.show { display: flex; }
+        .file-list.show {
+            display: flex;
+        }
 
         .file-row {
             display: flex;
             align-items: center;
             gap: 0.625rem;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 0.5rem;
             padding: 0.5rem 0.75rem;
         }
 
-        .file-row-icon { color: #00eaff; font-size: 0.9rem; flex-shrink: 0; }
+        .file-row-icon {
+            color: #00eaff;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
 
         .file-row-name {
             font-size: 0.8rem;
-            color: rgba(255,255,255,0.65);
+            color: rgba(255, 255, 255, 0.65);
             flex: 1;
             white-space: nowrap;
             overflow: hidden;
@@ -140,26 +160,31 @@
         }
 
         .file-row input {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 0.375rem;
             color: #fff;
             padding: 0.35rem 0.6rem;
             font-size: 0.8rem;
             outline: none;
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', monospace;
             transition: border-color 0.2s;
-            width: 11rem;
+            width: 9rem;
             flex-shrink: 0;
         }
 
-        .file-row input:focus { border-color: #00eaff; }
-        .file-row input::placeholder { color: rgba(255,255,255,0.25); }
+        .file-row input:focus {
+            border-color: #00eaff;
+        }
+
+        .file-row input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
 
         .file-row-remove {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255, 255, 255, 0.3);
             cursor: pointer;
             font-size: 0.85rem;
             padding: 0.2rem;
@@ -167,9 +192,11 @@
             flex-shrink: 0;
         }
 
-        .file-row-remove:hover { color: #ff4757; }
+        .file-row-remove:hover {
+            color: #ff4757;
+        }
 
-        .btn-convert {
+        .btn-import {
             width: 100%;
             padding: 0.875rem;
             background: linear-gradient(135deg, #00b4d8, #00eaff);
@@ -188,28 +215,40 @@
             letter-spacing: 0.02em;
         }
 
-        .btn-convert:hover {
+        .btn-import:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(0,234,255,0.35);
+            box-shadow: 0 8px 25px rgba(0, 234, 255, 0.35);
         }
 
-        .btn-convert:active { transform: translateY(0); }
+        .btn-import:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-        .output-section { display: none; }
-        .output-section.show { display: block; }
+        .btn-import.loading {
+            background: linear-gradient(135deg, #555, #777);
+            pointer-events: none;
+        }
 
-        .output-header {
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.875rem;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
             flex-wrap: wrap;
-            gap: 0.5rem;
         }
 
         .stat-chip {
-            background: rgba(0,234,255,0.1);
-            border: 1px solid rgba(0,234,255,0.25);
+            background: rgba(0, 234, 255, 0.1);
+            border: 1px solid rgba(0, 234, 255, 0.25);
             border-radius: 2rem;
             padding: 0.25rem 0.75rem;
             font-size: 0.75rem;
@@ -217,92 +256,88 @@
             font-weight: 700;
         }
 
+        .stat-chip.success {
+            background: rgba(46, 213, 115, 0.12);
+            border-color: rgba(46, 213, 115, 0.3);
+            color: #2ed573;
+        }
+
         .stat-chip.warn {
-            background: rgba(255,159,67,0.12);
-            border-color: rgba(255,159,67,0.3);
+            background: rgba(255, 159, 67, 0.12);
+            border-color: rgba(255, 159, 67, 0.3);
             color: #ff9f43;
         }
 
-        .output-actions { display: flex; gap: 0.5rem; }
-
-        /* ── SQL OUTPUT: per-file blocks ── */
-        .sql-file-block { margin-bottom: 0.875rem; }
-
-        .sql-file-block:last-child { margin-bottom: 0; }
-
-        .sql-file-label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 0.3rem;
-        }
-
-        .sql-file-label span {
-            color: #00eaff;
-            font-size: 0.75rem;
-        }
-
-        .sql-output {
-            background: rgba(0,0,0,0.45);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 0.6rem;
-            padding: 1rem 1.125rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8125rem;
-            line-height: 1.75;
-            color: #e2e8f0;
-            overflow-x: auto;
-            white-space: pre;
-            max-height: 22rem;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0,234,255,0.3) transparent;
-        }
-
-        .sql-output::-webkit-scrollbar { width: 5px; height: 5px; }
-        .sql-output::-webkit-scrollbar-thumb { background: rgba(0,234,255,0.3); border-radius: 5px; }
-
-        .sql-keyword { color: #00eaff; font-weight: bold; }
-        .sql-table   { color: #ffd32a; }
-        .sql-string  { color: #2ed573; }
-        .sql-number  { color: #ff9f43; }
-
-        .skipped-section { display: none; }
-        .skipped-section.show { display: block; }
-
-        .skipped-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-
-        .skip-chip {
-            background: rgba(255,71,87,0.1);
-            border: 1px solid rgba(255,71,87,0.25);
-            border-radius: 2rem;
-            padding: 0.2rem 0.65rem;
-            font-size: 0.75rem;
+        .stat-chip.danger {
+            background: rgba(255, 71, 87, 0.12);
+            border-color: rgba(255, 71, 87, 0.3);
             color: #ff6b81;
         }
 
-        .cs-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0,234,255,0.15), transparent);
-            margin: 1.25rem 0;
+        .progress-bar-wrap {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 1rem;
+            height: 0.5rem;
+            overflow: hidden;
+            margin: 0.75rem 0;
         }
 
-        .tool-badge {
-            background: linear-gradient(135deg, #00cfe8, #1dd1ff);
-            color: black;
-            font-size: 0.5rem;
-            font-weight: 800;
-            padding: 0.2rem 0.45rem;
-            border-radius: 0.3rem;
-            letter-spacing: 0.1em;
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00b4d8, #00eaff);
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.6rem;
+            padding: 0.75rem;
+        }
+
+        .detail-card .label {
+            font-size: 0.65rem;
             text-transform: uppercase;
-            vertical-align: middle;
-            margin-left: 0.4rem;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.35);
+            font-weight: 700;
+        }
+
+        .detail-card .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 0.2rem;
+        }
+
+        .unmatched-section {
+            margin-top: 1rem;
+        }
+
+        .unmatched-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.65rem;
+            background: rgba(255, 71, 87, 0.06);
+            border: 1px solid rgba(255, 71, 87, 0.15);
+            border-radius: 0.4rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.8rem;
+            color: #ff6b81;
+        }
+
+        .unmatched-item .fa-xmark {
+            font-size: 0.65rem;
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -315,81 +350,100 @@
     <div class="main-content">
         <div class="right-section">
 
-            <!-- PAGE HEADING -->
+            <!-- HEADER -->
             <h3 style="margin-bottom: 0.3rem;">
                 <i class="fa-solid fa-database"></i>
-                CSV → SQL Converter
-                <span class="tool-badge">Tool</span>
+                Import Nilai ke Database
+                <span class="tool-badge" style="background:linear-gradient(135deg,#00cfe8,#1dd1ff);color:black;font-size:0.5rem;font-weight:800;padding:0.2rem 0.45rem;border-radius:0.3rem;letter-spacing:0.1em;text-transform:uppercase;vertical-align:middle;margin-left:0.4rem;">Tool</span>
             </h3>
             <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 1.25rem;">
-                Konversi nilai export Moodle ke query SQL siap pakai
+                Upload CSV export Moodle & import langsung ke database <code>nilai_scores</code>
             </p>
 
-            <!-- INPUT CARD -->
+            <!-- CONFIG CARD -->
             <div class="course-card" style="border: 1px solid rgba(0,234,255,0.15);">
                 <div class="card-title"><i class="fa-solid fa-sliders"></i> Konfigurasi</div>
 
-                <div class="form-group">
-                    <label><i class="fa-solid fa-id-badge"></i> Class ID</label>
-                    <input type="text" id="classId" placeholder="contoh: X-TKJ-1, XI-AK-2..." />
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-file-invoice"></i> Tipe Nilai</label>
+                        <select id="scoresType">
+                            <option value="psts">PSTS</option>
+                            <option value="psasi">PSASI</option>
+                            <option value="psat" selected>PSAT</option>
+                        </select>
+                    </div>
                 </div>
+            </div>
 
-                <div class="cs-divider"></div>
-
+            <!-- UPLOAD CARD -->
+            <div class="course-card" style="border: 1px solid rgba(0,234,255,0.15);">
                 <div class="card-title" style="margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-file-csv"></i> <span data-i18n="upload_csv">Upload File CSV</span>
+                    <i class="fa-solid fa-file-csv"></i> Upload File CSV
                 </div>
                 <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-bottom:0.75rem;">
-                    Bisa upload banyak sekaligus. Tiap file isi nama kolom mapelnya masing-masing.
+                    Tiap file = 1 mapel. Upload banyak file sekaligus, isi nama kolom database nya.
                 </p>
 
                 <div class="drop-zone" id="dropZone">
                     <input type="file" id="csvFile" accept=".csv" multiple />
                     <div class="drop-zone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                    <div class="drop-zone-text"><strong>Klik atau drag & drop</strong> satu atau banyak file CSV</div>
-                    <div class="drop-zone-hint">Format: export nilai dari Moodle (.csv)</div>
+                    <div class="drop-zone-text"><strong>Klik atau drag & drop</strong> file CSV</div>
                 </div>
 
-                <!-- FILE LIST -->
                 <div class="file-list" id="fileList"></div>
 
-                <button class="btn-convert" onclick="convertCsv()">
-                    <i class="fa-solid fa-bolt"></i> Generate SQL
-                </button>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-import" id="importBtn" onclick="startImport()" style="flex:1;">
+                        <i class="fa-solid fa-bolt"></i> Import ke Database
+                    </button>
+                    <button class="btn-import" onclick="testMatch()" style="flex:0.5; background:linear-gradient(135deg,rgba(255,193,7,0.6),rgba(255,152,0,0.6));">
+                        <i class="fa-solid fa-magnifying-glass"></i> Test Cocokin
+                    </button>
+                </div>
             </div>
 
-            <!-- OUTPUT CARD -->
-            <div class="course-card output-section" id="outputSection" style="border: 1px solid rgba(0,234,255,0.15);">
-                <div class="output-header">
+            <!-- PROGRESS -->
+            <div class="course-card" id="progressCard" style="display:none; border:1px solid rgba(0,234,255,0.15);">
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+                <p id="progressText" style="font-size:0.85rem; color:rgba(255,255,255,0.6); text-align:center;">Memproses...</p>
+            </div>
+
+            <!-- RESULT CARD -->
+            <div class="course-card result-section" id="resultSection" style="border: 1px solid rgba(0,234,255,0.15);">
+                <div class="result-header">
                     <div class="card-title" style="margin-bottom:0;">
-                        <i class="fa-solid fa-code"></i> Output SQL
+                        <i class="fa-solid fa-circle-check" style="color:#2ed573;"></i> Hasil Import
                     </div>
-                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-                        <span class="stat-chip" id="statRows">—</span>
-                        <span class="stat-chip" id="statFiles" style="background:rgba(46,213,115,0.1);border-color:rgba(46,213,115,0.25);color:#2ed573;">—</span>
-                        <span class="stat-chip warn" id="statSkipped" style="display:none;">—</span>
-                        <div class="output-actions">
-                            <button class="btn-tool" onclick="copySql()">
-                                <i class="fa-regular fa-copy"></i> Copy
-                            </button>
-                            <button class="btn-tool" onclick="downloadSql()">
-                                <i class="fa-solid fa-download"></i> <span data-i18n="download_file">Download</span>
-                            </button>
-                        </div>
-                    </div>
+                    <span class="stat-chip success" id="statImported">0 tersimpan</span>
+                    <span class="stat-chip warn" id="statSkipped" style="display:none;">0 dilewati</span>
+                    <span class="stat-chip danger" id="statUnmatched" style="display:none;">0 gagal</span>
                 </div>
-                <div class="sql-output" id="sqlOutput"></div>
-            </div>
 
-            <!-- SKIPPED CARD -->
-            <div class="course-card skipped-section" id="skippedSection" style="border: 1px solid rgba(255,159,67,0.2);">
-                <div class="card-title" style="color: #ff9f43; margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Siswa Dilewati
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="label">Tipe</div>
+                        <div class="value" id="resultType" style="text-transform:uppercase;">—</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Siswa Tersimpan</div>
+                        <div class="value" id="resultSaved" style="color:#2ed573;">0</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Mapel Diimport</div>
+                        <div class="value" id="resultSubjects" style="color:#00eaff;">0</div>
+                    </div>
                 </div>
-                <p style="font-size: 0.8125rem; color: rgba(255,255,255,0.5); margin-bottom: 0.75rem;">
-                    Siswa berikut tidak diikutsertakan karena status <em>In progress</em> atau nilai tidak tersedia.
-                </p>
-                <div class="skipped-list" id="skippedList"></div>
+
+                <div class="unmatched-section" id="unmatchedSection" style="display:none;">
+                    <div class="card-title" style="color:#ff6b81;margin-bottom:0.5rem;margin-top:0.75rem;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Siswa Gagal Di-cocokin
+                    </div>
+                    <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-bottom:0.5rem;">
+                        Nama di CSV gak ketemu di tabel <code>users</code>. Cek manual atau import manual lewat halaman admin.
+                    </p>
+                    <div id="unmatchedList"></div>
+                </div>
             </div>
 
         </div>
@@ -397,16 +451,17 @@
 
     <script>
         // ── FILE STORE ────────────────────────────────────────────────
-        // Map: fileName -> { file: File, mapel: string }
         let fileStore = new Map();
+        let usersCache = [];
 
         const csvFileInput = document.getElementById('csvFile');
-        const dropZone     = document.getElementById('dropZone');
+        const dropZone = document.getElementById('dropZone');
 
         csvFileInput.addEventListener('change', () => addFiles(csvFileInput.files));
 
-        dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-        dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('dragover', e => { e.preventDefault();
+            dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
         dropZone.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
@@ -414,18 +469,58 @@
         });
 
         function addFiles(fileList) {
+            const reads = [];
             for (const f of fileList) {
                 if (!f.name.endsWith('.csv')) continue;
-                if (!fileStore.has(f.name)) {
-                    fileStore.set(f.name, { file: f, mapel: '' });
-                }
+                if (fileStore.has(f.name)) continue;
+                reads.push(
+                    new Promise(resolve => {
+                        const r = new FileReader();
+                        r.onload = () => {
+                            fileStore.set(f.name, { content: r.result, mapel: '' });
+                            resolve();
+                        };
+                        r.readAsText(f);
+                    })
+                );
             }
-            renderFileList();
+            Promise.all(reads).then(() => { renderFileList(); saveFileStore(); });
         }
 
         function removeFile(name) {
             fileStore.delete(name);
             renderFileList();
+            saveFileStore();
+        }
+
+        function updateMapel(name, val) {
+            if (fileStore.has(name)) {
+                fileStore.get(name).mapel = val;
+                saveFileStore();
+            }
+        }
+
+        function saveFileStore() {
+            try {
+                const obj = {};
+                for (const [k, v] of fileStore) {
+                    obj[k] = { content: v.content, mapel: v.mapel };
+                }
+                sessionStorage.setItem('csvImportFiles', JSON.stringify(obj));
+            } catch (e) { /* quota exceeded, abaikan */ }
+        }
+
+        function restoreFileStore() {
+            try {
+                const raw = sessionStorage.getItem('csvImportFiles');
+                if (!raw) return;
+                const obj = JSON.parse(raw);
+                fileStore.clear();
+                for (const k in obj) {
+                    fileStore.set(k, { content: obj[k].content, mapel: obj[k].mapel || '' });
+                }
+                renderFileList();
+            } catch (e) { /* corrupt, abaikan */ }
         }
 
         function renderFileList() {
@@ -437,15 +532,12 @@
             }
             listEl.classList.add('show');
             listEl.innerHTML = [...fileStore.entries()].map(([name]) => `
-                <div class="file-row" id="row-${CSS.escape(name)}">
+                <div class="file-row">
                     <i class="fa-solid fa-file-csv file-row-icon"></i>
                     <span class="file-row-name" title="${name}">${name}</span>
-                    <input
-                        type="text"
-                        placeholder="nama kolom mapel..."
+                    <input type="text" placeholder="kolom DB (bing, mtk...)"
                         value="${fileStore.get(name).mapel}"
-                        oninput="fileStore.get('${name.replace(/'/g,"\\'")}').mapel = this.value.trim()"
-                    />
+                        oninput="updateMapel('${name.replace(/'/g,"\\'")}', this.value)" />
                     <button class="file-row-remove" onclick="removeFile('${name.replace(/'/g,"\\'")}')">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -453,14 +545,37 @@
             `).join('');
         }
 
-        // ── NAME NORMALIZATION ────────────────────────────────────────
-        const muhVariants = /^(muhammad|muhamad|moch|muh|mhd|mohamad|mohammad|m\.)$/i;
+        // ── LOAD USERS ────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || (user.role !== 'super_admin' && user.role !== 'class_admin')) {
+                showPopup('Akses ditolak', 'error');
+                return;
+            }
+            restoreFileStore();
+            await loadUsers();
+        });
 
-        function normalizeName(firstName, lastName) {
-            const fn = firstName.trim();
-            const ln = lastName.trim();
-            if (muhVariants.test(fn)) return 'M. ' + ln.split(/\s+/)[0];
-            return fn;
+        async function loadUsers() {
+            const { data } = await supabase.from('users')
+                .select('id, nickname, full_name, class_id');
+            usersCache = data || [];
+        }
+
+        // ── NAME MATCHING ─────────────────────────────────────────────
+        function matchUser(firstName, lastName) {
+            const combined = ((firstName || '') + ' ' + (lastName || '')).trim().toLowerCase();
+            let m = usersCache.find(u => (u.full_name || '').toLowerCase() === combined);
+            if (m) return m;
+
+            // Kalo first name diawali Muhammad/Moch/M., coba tanpa awalan itu
+            const stripped = combined.replace(/^(muhammad|muhamad|moch|muh|mhd|mohamad|mohammad|m\.)\s+/i, '');
+            if (stripped !== combined) {
+                m = usersCache.find(u => (u.full_name || '').toLowerCase() === stripped);
+                if (m) return m;
+            }
+
+            return null;
         }
 
         // ── CSV PARSER ────────────────────────────────────────────────
@@ -482,175 +597,226 @@
 
         function parseCsvRow(row) {
             const result = [];
-            let cur = '', inQuote = false;
+            let cur = '',
+                inQuote = false;
             for (let i = 0; i < row.length; i++) {
                 const ch = row[i];
                 if (ch === '"') {
-                    if (inQuote && row[i+1] === '"') { cur += '"'; i++; }
-                    else inQuote = !inQuote;
-                } else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
-                else cur += ch;
+                    if (inQuote && row[i + 1] === '"') { cur += '"';
+                        i++; } else inQuote = !inQuote;
+                } else if (ch === ',' && !inQuote) { result.push(cur);
+                    cur = ''; } else cur += ch;
             }
             result.push(cur);
             return result;
         }
 
-        // ── PROCESS ONE FILE ──────────────────────────────────────────
-        function processFile(text, namaMapel, classId) {
-            const rows = parseCsv(text);
-            const sqlLines = [], skipped = [];
-
-            // Deteksi kolom grade secara dinamis (Grade/100.00, Grade/10.00, dst)
-            const gradeKey = rows.length > 0
-                ? Object.keys(rows[0]).find(k => k.startsWith('Grade/'))
-                : null;
-            const gradeMax = gradeKey ? parseFloat(gradeKey.split('/')[1]) : 100;
-            const gradeMultiplier = gradeMax < 100 ? (100 / gradeMax) : 1;
-
-            for (const row of rows) {
-                const lastN  = row['Last name']  || '';
-                const firstN = row['First name'] || '';
-                const status = row['Status']     || '';
-                const grade  = gradeKey ? row[gradeKey] : null;
-
-                if (!firstN || !lastN) continue;
-                if (lastN.toLowerCase().includes('average')) continue;
-
-                if (status.toLowerCase() !== 'finished' || !grade || grade === '-') {
-                    skipped.push(firstN + ' ' + lastN);
-                    continue;
-                }
-
-                const displayName = normalizeName(firstN, lastN);
-                const nilai       = (parseFloat(grade) * gradeMultiplier).toFixed(2);
-                sqlLines.push(
-                    `UPDATE nilai_psts SET ${namaMapel} = ${nilai} WHERE nama_siswa = '${displayName}' AND class_id = '${classId}';`
-                );
-            }
-            return { sqlLines, skipped };
-        }
-
-        // ── SYNTAX HIGHLIGHT ──────────────────────────────────────────
-        function highlightSql(sql) {
-            return sql
-                .replace(/\b(UPDATE|SET|WHERE|AND)\b/g, '<span class="sql-keyword">$1</span>')
-                .replace(/\b(nilai_psts)\b/g,           '<span class="sql-table">$1</span>')
-                .replace(/'([^']*)'/g,                  '<span class="sql-string">\'$1\'</span>')
-                .replace(/= (\d+(\.\d+)?)/g,            '= <span class="sql-number">$1</span>');
-        }
-
-        // ── MAIN CONVERT ──────────────────────────────────────────────
-        let lastSqlRaw = '';
-
-        function convertCsv() {
-            const classId = document.getElementById('classId').value.trim();
-            if (!classId)          return notify('Isi Class ID dulu ya!', 'error');
-            if (fileStore.size === 0) return notify(t('upload_csv_first'), 'error');
-
-            // Validasi semua file sudah ada nama mapelnya
-            for (const [name, data] of fileStore) {
-                if (!data.mapel) return notify(`Isi nama kolom mapel untuk: ${name}`, 'error');
+        // ── TEST MATCH (preview tanpa upsert) ──────────────────────────
+        async function testMatch() {
+            if (fileStore.size === 0) return showToast('Upload file CSV dulu!', 'error');
+            if (!usersCache.length) {
+                await loadUsers();
+                if (!usersCache.length) return showToast('Tidak ada data user!', 'error');
             }
 
-            const entries   = [...fileStore.entries()];
-            let   processed = 0;
-            const allBlocks = [];   // { namaMapel, fileName, sqlLines }
-            const allSkipped = [];  // { fileName, namaMapel, names[] }
+            const entries = [...fileStore.entries()];
+            const matched = [];
+            const unmatched = [];
+            const seen = new Set();
 
             for (const [name, data] of entries) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const { sqlLines, skipped } = processFile(e.target.result, data.mapel, classId);
-                    allBlocks.push({ namaMapel: data.mapel, fileName: name, sqlLines });
-                    if (skipped.length) allSkipped.push({ fileName: name, namaMapel: data.mapel, names: skipped });
-                    processed++;
+                const rows = parseCsv(data.content);
 
-                    if (processed === entries.length) renderOutput(allBlocks, allSkipped, classId);
-                };
-                reader.readAsText(data.file);
+                for (const row of rows) {
+                    const lastN = row['Last name'] || '';
+                    const firstN = row['First name'] || '';
+                    if (!firstN || !lastN) continue;
+                    if (lastN.toLowerCase().includes('average')) continue;
+
+                    const full = firstN + ' ' + lastN;
+                    const key = full.toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+
+                    const u = matchUser(firstN, lastN);
+                    if (u) matched.push({ csv: full, nick: u.nickname, full_name: u.full_name });
+                    else unmatched.push({ csv: full, file: name });
+                }
             }
+
+            // Tampilin hasil
+            let html = `<div style="margin-top:1rem; padding:1rem; border:1px solid rgba(0,234,255,0.15); border-radius:0.6rem;">
+                <h4 style="margin-bottom:0.5rem; color:#00eaff;"><i class="fa-solid fa-list"></i> Hasil Test Cocokin</h4>
+                <p style="font-size:0.85rem; color:rgba(255,255,255,0.5); margin-bottom:0.75rem;">
+                    ${matched.length} cocok · ${unmatched.length} gagal
+                </p>`;
+
+            if (matched.length) {
+                html += `<table style="width:100%; font-size:0.75rem; border-collapse:collapse;">
+                    <thead><tr style="color:#aaa; border-bottom:1px solid rgba(255,255,255,0.1);">
+                        <th style="padding:4px 6px; text-align:left;">CSV</th>
+                        <th style="padding:4px 6px; text-align:left;">Nickname</th>
+                        <th style="padding:4px 6px; text-align:left;">Full Name</th>
+                    </tr></thead><tbody>`;
+                matched.forEach(m => {
+                    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:4px 6px;">${m.csv}</td>
+                        <td style="padding:4px 6px; color:#2ed573;">${m.nick || '–'}</td>
+                        <td style="padding:4px 6px; color:#aaa;">${m.full_name || '–'}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+
+            if (unmatched.length) {
+                html += `<div style="margin-top:0.75rem; color:#ff6b81; font-size:0.8rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Gagal dicocokin:
+                    ${unmatched.map(u => `<span style="display:inline-block; margin:2px 4px; padding:2px 8px; background:rgba(255,0,0,0.1); border-radius:4px;">${u.csv}</span>`).join(', ')}
+                </div>`;
+            }
+
+            html += `</div>`;
+            const old = document.getElementById('testMatchResult');
+            if (old) old.remove();
+            const div = document.createElement('div');
+            div.id = 'testMatchResult';
+            div.innerHTML = html;
+            document.getElementById('resultSection').after(div);
+            div.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function renderOutput(blocks, skipped, classId) {
-            // skipped is now array of { fileName, namaMapel, names[] }
-            const totalQueries = blocks.reduce((s, b) => s + b.sqlLines.length, 0);
+        // ── IMPORT ────────────────────────────────────────────────────
+        async function startImport() {
+            const scoresType = document.getElementById('scoresType').value;
+            if (fileStore.size === 0) return showToast('Upload file CSV dulu!', 'error');
+            for (const [name, data] of fileStore) {
+                if (!data.mapel) return showToast(`Isi nama kolom mapel untuk: ${name}`, 'error');
+            }
+            if (!usersCache.length) {
+                await loadUsers();
+                if (!usersCache.length) return showToast('Tidak ada data user!', 'error');
+            }
 
-            // Build raw SQL (untuk copy/download): blok per file dipisah komentar
-            lastSqlRaw = blocks.map(b =>
-                `-- ${b.fileName} | ${b.namaMapel}\n` + b.sqlLines.join('\n')
-            ).join('\n\n');
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengimport...';
 
-            // Build highlighted HTML
-            const htmlBlocks = blocks.map(b => `
-                <div class="sql-file-block">
-                    <div class="sql-file-label">
-                        <i class="fa-solid fa-file-csv"></i>
-                        ${b.fileName} &mdash; <span>${b.namaMapel}</span>
-                        &nbsp;·&nbsp; ${b.sqlLines.length} query
-                    </div>
-                    ${b.sqlLines.map(highlightSql).join('\n')}
-                </div>
-            `).join('<div style="height:0.75rem;border-top:1px solid rgba(255,255,255,0.06);margin:0.75rem 0;"></div>');
+            document.getElementById('progressCard').style.display = 'block';
+            setProgress(0);
 
-            document.getElementById('sqlOutput').innerHTML = htmlBlocks;
-            document.getElementById('statRows').textContent  = totalQueries + ' query';
-            document.getElementById('statFiles').textContent = blocks.length + ' file';
+            const entries = [...fileStore.entries()];
+            const allSaved = [];
+            const allUnmatched = [];
 
-            const totalSkipped = skipped.reduce((s, g) => s + g.names.length, 0);
+            for (let fi = 0; fi < entries.length; fi++) {
+                const [name, data] = entries[fi];
+                const rows = parseCsv(data.content);
+                const gradeKey = rows.length > 0 ? Object.keys(rows[0]).find(k => k.startsWith('Grade/')) : null;
+                const gradeMax = gradeKey ? parseFloat(gradeKey.split('/')[1]) : 100;
+                const multiplier = gradeMax < 100 ? (100 / gradeMax) : 1;
+                const mapelCol = data.mapel;
 
-            if (totalSkipped > 0) {
-                document.getElementById('statSkipped').textContent = totalSkipped + ' dilewati';
-                document.getElementById('statSkipped').style.display = '';
-                document.getElementById('skippedList').innerHTML = skipped.map(g => `
-                    <div style="margin-bottom:0.75rem;">
-                        <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ff9f43;margin-bottom:0.4rem;">
-                            <i class="fa-solid fa-file-csv" style="margin-right:4px;"></i>${g.fileName} &mdash; ${g.namaMapel}
-                        </div>
-                        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
-                            ${g.names.map(n => `<span class="skip-chip"><i class="fa-solid fa-xmark" style="font-size:.65rem;margin-right:3px;"></i>${n}</span>`).join('')}
-                        </div>
-                    </div>
-                `).join('');
-                document.getElementById('skippedSection').classList.add('show');
+                for (const row of rows) {
+                    const lastN = row['Last name'] || '';
+                    const firstN = row['First name'] || '';
+                    const status = row['Status'] || '';
+                    const grade = gradeKey ? row[gradeKey] : null;
+
+                    if (!firstN || !lastN) continue;
+                    if (lastN.toLowerCase().includes('average')) continue;
+                    if (status.toLowerCase() !== 'finished' || !grade || grade === '-') continue;
+
+                    const matched = matchUser(firstN, lastN);
+                    if (!matched) {
+                        allUnmatched.push({ name: firstN + ' ' + lastN, file: name });
+                        continue;
+                    }
+
+                    const nilai = parseFloat((parseFloat(grade) * multiplier).toFixed(2));
+                    if (isNaN(nilai)) continue;
+
+                    allSaved.push({
+                        user_id: String(matched.id),
+                        class_id: String(matched.class_id),
+                        scores_type: scoresType,
+                        nama_siswa: matched.nickname || matched.full_name || firstN,
+                        [mapelCol]: nilai
+                    });
+                }
+
+                setProgress(((fi + 1) / entries.length) * 100);
+                document.getElementById('progressText').textContent =
+                    `File ${fi + 1}/${entries.length}: ${name} — ${allSaved.length} siswa diproses`;
+            }
+
+            // ── MERGE + BATCH UPSERT ──────────────────────────────────
+            let savedCount = 0;
+            if (allSaved.length) {
+                // Gabung record dengan (user_id, scores_type) yang sama
+                const merged = {};
+                for (const row of allSaved) {
+                    const key = row.user_id + '_' + row.scores_type;
+                    if (!merged[key]) merged[key] = { ...row };
+                    else Object.assign(merged[key], row);
+                }
+                const mergedList = Object.values(merged);
+
+                const BATCH = 50;
+                for (let i = 0; i < mergedList.length; i += BATCH) {
+                    const batch = mergedList.slice(i, i + BATCH);
+                    const { error } = await supabase.from('nilai_scores')
+                        .upsert(batch, { onConflict: 'user_id, scores_type' });
+                    if (error) {
+                        showPopup('Error upsert: ' + error.message, 'error');
+                        break;
+                    }
+                    savedCount += batch.length;
+                    setProgress(100);
+                    document.getElementById('progressText').textContent =
+                        `Menyimpan... ${savedCount}/${mergedList.length} siswa`;
+                }
+            }
+
+            // ── SHOW RESULTS ──────────────────────────────────────────
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Import ke Database';
+            document.getElementById('progressCard').style.display = 'none';
+
+            const subjectCount = new Set(allSaved.map(s => Object.keys(s).find(k =>
+                !['user_id', 'class_id', 'scores_type', 'nama_siswa'].includes(k)
+            ))).size;
+
+            document.getElementById('resultType').textContent = scoresType;
+            document.getElementById('resultSaved').textContent = savedCount;
+            document.getElementById('resultSubjects').textContent = subjectCount;
+            document.getElementById('statImported').textContent = savedCount + ' tersimpan';
+
+            if (allUnmatched.length) {
+                document.getElementById('statUnmatched').textContent = allUnmatched.length + ' gagal';
+                document.getElementById('statUnmatched').style.display = '';
+                document.getElementById('unmatchedSection').style.display = 'block';
+                document.getElementById('unmatchedList').innerHTML = allUnmatched.map(u =>
+                    `<div class="unmatched-item"><i class="fa-solid fa-xmark"></i> ${u.name} <span style="opacity:0.4;margin-left:auto;font-size:0.7rem;">${u.file}</span></div>`
+                ).join('');
             } else {
-                document.getElementById('statSkipped').style.display = 'none';
-                document.getElementById('skippedSection').classList.remove('show');
+                document.getElementById('statUnmatched').style.display = 'none';
+                document.getElementById('unmatchedSection').style.display = 'none';
             }
 
-            document.getElementById('outputSection').classList.add('show');
-            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            notify('SQL berhasil di-generate!', 'success');
+            document.getElementById('resultSection').classList.add('show');
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showToast(`Import selesai! ${savedCount} record tersimpan.`, 'success');
         }
 
-        // ── COPY & DOWNLOAD ───────────────────────────────────────────
-        function copySql() {
-            if (!lastSqlRaw) return;
-            navigator.clipboard.writeText(lastSqlRaw).then(() => notify('SQL berhasil di-copy!', 'success'));
-        }
-
-        function downloadSql() {
-            if (!lastSqlRaw) return;
-            const classId = document.getElementById('classId').value.trim() || 'kelas';
-            const blob = new Blob([lastSqlRaw], { type: 'text/plain' });
-            const a    = document.createElement('a');
-            a.href     = URL.createObjectURL(blob);
-            a.download = `sql_${classId}.sql`;
-            a.click();
-            notify('File .sql berhasil di-download!', 'success');
-        }
-
-        // ── NOTIFY ────────────────────────────────────────────────────
-        function notify(msg, type = 'success') {
-            if (typeof showToast === 'function') {
-                showToast(msg, type);
-            } else {
-                if (type === 'error') alert(msg);
-            }
+        function setProgress(pct) {
+            document.getElementById('progressFill').style.width = Math.min(pct, 100) + '%';
         }
 
         // ── KEYBOARD SHORTCUT ─────────────────────────────────────────
         document.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) convertCsv();
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) startImport();
         });
     </script>
 

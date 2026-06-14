@@ -267,7 +267,7 @@
                 Monitoring Nilai
             </h2>
             <p style="color:rgba(255,255,255,0.5); font-size:13px; margin-bottom:20px;">
-                Rekap nilai seluruh kelas — PSTS & PSASI
+                Rekap nilai seluruh kelas — PSTS / PSASI / PSAT
             </p>
 
             <!-- TAB -->
@@ -277,6 +277,9 @@
                 </button>
                 <button class="tab-btn" onclick="switchTab('psasi', this)">
                     <i class="fa-solid fa-file-lines"></i> PSASI
+                </button>
+                <button class="tab-btn" onclick="switchTab('psat', this)">
+                    <i class="fa-solid fa-file-lines"></i> PSAT
                 </button>
             </div>
 
@@ -348,6 +351,12 @@
             senibudaya: 'Senbud', informatika: 'Informatika', pjok: 'PJOK',
             proipas: 'Proipas', dasprog1: 'Dasprog 1', dasprog2: 'Dasprog 2', dasprog3: 'Dasprog 3'
         };
+        const MAPEL_PSAT = {
+            pabp: 'PABP', pp: 'PP', bindo: 'B. Indo', bing: 'B. Inggris',
+            mtk: 'MTK', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda',
+            senibudaya: 'Senbud', informatika: 'Informatika', pjok: 'PJOK',
+            proipas: 'Proipas', dasprog1: 'Dasprog 1', dasprog2: 'Dasprog 2', dasprog3: 'Dasprog 3'
+        };
         const MAPEL_PSASI = {
             pabp: 'PABP', pp: 'PP', bindo: 'B. Indo', bing: 'B. Inggris',
             mtk: 'MTK', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda',
@@ -400,9 +409,8 @@
                 </div>`;
 
             const classId  = document.getElementById('classSelect').value;
-            const table    = currentTab === 'psts' ? 'nilai_psts' : 'nilai_psasi';
 
-            let q = supabase.from(table).select('*');
+            let q = supabase.from('nilai_scores').select('*').eq('scores_type', currentTab);
             if (classId) q = q.eq('class_id', classId);
 
             const { data, error } = await q.order('nama_siswa');
@@ -422,7 +430,7 @@
 
         // ── RENDER TABLE ──────────────────────────────
         function renderTable() {
-            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : MAPEL_PSASI;
+            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
             const mapelKeys = Object.keys(MAPEL);
             const search   = document.getElementById('searchInput').value.toLowerCase();
             const sortBy   = document.getElementById('sortSelect').value;
@@ -569,7 +577,7 @@
 
         // ── UPDATE STATS ──────────────────────────────
         function updateStats(rows) {
-            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : MAPEL_PSASI;
+            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
             const mapelKeys = Object.keys(MAPEL);
 
             const total = rows.length;
@@ -594,7 +602,7 @@
         // ── EXPORT CSV ────────────────────────────────
         function exportCSV() {
             if (!allData.length) return;
-            const MAPEL     = currentTab === 'psts' ? MAPEL_PSTS : MAPEL_PSASI;
+            const MAPEL     = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
             const mapelKeys = Object.keys(MAPEL);
             const classId   = document.getElementById('classSelect').value;
             const table     = currentTab.toUpperCase();

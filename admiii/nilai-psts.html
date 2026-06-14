@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Input Nilai PSTS • E-Learning Nizam</title>
+    <title>Admin Input Nilai • E-Learning Nizam</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-clients.js?v=20260610" defer></script>
     <script src="../js/sidebar.js?v=20260610"></script>
@@ -95,7 +95,7 @@
     <!-- ══ MAIN CONTENT ══ -->
     <div class="main-content">
         <div class="left-section">
-            <h1 style="color:#00eaff; margin-bottom:10px;">Input Nilai PSTS</h1>
+            <h1 style="color:#00eaff; margin-bottom:10px;">Input Nilai</h1>
             <p style="opacity:0.8; margin-bottom:30px;" data-i18n="select_student_fill_score">Pilih nickname siswa, isi nilai, lalu simpan.</p>
 
             <div class="admin-container">
@@ -105,6 +105,22 @@
                     <select id="studentSelect" class="admin-select" onchange="loadStudentData()">
                         <option value="" data-i18n="select_student">-- Pilih Nama Siswa --</option>
                     </select>
+                </div>
+
+                <!-- Tipe Nilai -->
+                <div class="input-group">
+                    <label><i class="fa-solid fa-file-lines"></i> Tipe Nilai</label>
+                    <div style="display:flex; gap:12px; margin-top:5px; flex-wrap:wrap;">
+                        <label style="color:#fff; font-size:14px; cursor:pointer;">
+                            <input type="radio" name="scoresType" value="psts" checked onchange="loadStudentData()"> PSTS
+                        </label>
+                        <label style="color:#fff; font-size:14px; cursor:pointer;">
+                            <input type="radio" name="scoresType" value="psasi" onchange="loadStudentData()"> PSASI
+                        </label>
+                        <label style="color:#fff; font-size:14px; cursor:pointer;">
+                            <input type="radio" name="scoresType" value="psat" onchange="loadStudentData()"> PSAT
+                        </label>
+                    </div>
                 </div>
 
                 <hr style="border-color:rgba(255,255,255,0.1); margin:25px 0;">
@@ -155,7 +171,7 @@
 
             const { data, error } = await supabase
                 .from('users')
-                .select('nickname')
+                .select('id, nickname')
                 .eq('class_id', adminClass)
                 .neq('nickname', null)
                 .order('nickname', { ascending: true });
@@ -167,7 +183,8 @@
             data.forEach(u => {
                 if (u.nickname) {
                     const opt = document.createElement('option');
-                    opt.value = opt.text = u.nickname;
+                    opt.value = u.id;
+                    opt.textContent = u.nickname;
                     select.appendChild(opt);
                 }
             });
@@ -175,14 +192,17 @@
 
         // ── Auto-fill data lama ──
         async function loadStudentData() {
-            const nama = document.getElementById('studentSelect').value;
-            if (!nama) { resetForm(); return; }
+            const userId = document.getElementById('studentSelect').value;
+            if (!userId) { resetForm(); return; }
+
+            const scoresType = document.querySelector('input[name="scoresType"]:checked').value;
+            const nickname = document.getElementById('studentSelect').selectedOptions[0]?.textContent || '';
 
             const { data } = await supabase
-                .from('nilai_psts')            // <-- Tabel PSTS
+                .from('nilai_scores')
                 .select('*')
-                .eq('nama_siswa', nama)
-                .eq('class_id', adminClass)
+                .eq('user_id', userId)
+                .eq('scores_type', scoresType)
                 .single();
 
             if (data) {
@@ -190,10 +210,10 @@
                     const el = document.getElementById('inp_' + id);
                     if (el) el.value = data[id] !== null ? parseFloat(data[id]).toFixed(2) : '';
                 });
-                document.getElementById('btnSave').innerText = t('save') + ` (${nama})`;
+                document.getElementById('btnSave').innerText = t('save') + ` (${nickname})`;
             } else {
                 resetForm();
-                document.getElementById('btnSave').innerText = t('save') + " BARU";
+                document.getElementById('btnSave').innerText = t('save') + " BARU" + (nickname ? ` (${nickname})` : '');
             }
         }
 
@@ -208,22 +228,25 @@
 
         // ── Simpan ke Supabase (upsert) ──
         async function saveNilai() {
-            const nama = document.getElementById('studentSelect').value;
-            if (!nama) { alert(t('select_student_first_alert')); return; }
+            const userId = document.getElementById('studentSelect').value;
+            if (!userId) { alert(t('select_student_first_alert')); return; }
+
+            const scoresType = document.querySelector('input[name="scoresType"]:checked').value;
+            const nickname = document.getElementById('studentSelect').selectedOptions[0]?.textContent || '';
 
             const btn       = document.getElementById('btnSave');
             btn.disabled    = true;
             btn.innerText   = t('loading');
 
-            const payload = { nama_siswa: nama, class_id: adminClass };
+            const payload = { user_id: userId, scores_type: scoresType, class_id: adminClass, nama_siswa: nickname };
             MAPEL_IDS.forEach(id => {
                 const el    = document.getElementById('inp_' + id);
                 payload[id] = el && el.value !== "" ? parseFloat(el.value) : null;
             });
 
             const { error } = await supabase
-                .from('nilai_psts')            // <-- Tabel PSTS
-                .upsert(payload, { onConflict: 'nama_siswa, class_id' })
+                .from('nilai_scores')
+                .upsert(payload, { onConflict: 'user_id, scores_type' })
 
             btn.disabled = false;
 
@@ -232,11 +255,11 @@
                 alert(t('failed_save_label') + error.message);
                 btn.innerText = t('failed_generic');
             } else {
-                alert(t('saved_success_for', { name: nama }));
+                alert(t('saved_success_for', { name: nickname }));
                 btn.innerText = t('success_generic');
                 setTimeout(() => {
-                    if (document.getElementById('studentSelect').value === nama) {
-                        btn.innerText = t('save') + ` (${nama})`;
+                    if (document.getElementById('studentSelect').value === userId) {
+                        btn.innerText = t('save') + ` (${nickname})`;
                     }
                 }, 2000);
             }
