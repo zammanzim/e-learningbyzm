@@ -586,6 +586,59 @@
         .file-item .btn-lihat:hover {
             background: rgba(0, 234, 255, 0.2);
         }
+
+        .drop-zone-file {
+            border: 2px dashed rgba(0,234,255,0.3);
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0,234,255,0.03);
+            margin-top: 12px;
+        }
+        .drop-zone-file:hover,
+        .drop-zone-file.dragover {
+            border-color: #00eaff;
+            background: rgba(0,234,255,0.08);
+        }
+        .drop-zone-file .dz-icon { font-size: 32px; color: rgba(0,234,255,0.5); margin-bottom: 8px; }
+        .drop-zone-file .dz-text { font-size: 13px; color: rgba(255,255,255,0.5); }
+        .drop-zone-file .dz-file { font-size: 12px; color: #2ed573; margin-top: 6px; font-weight:600; }
+        .file-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; margin-top: 8px;
+            background: rgba(0,0,0,0.2); border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .file-row .fr-icon { font-size: 20px; color: #e74c3c; }
+        .file-row .fr-name { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-row input { width: 120px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: white; font-size: 12px; outline: none; flex-shrink: 0; }
+        .file-row input:focus { border-color: #00eaff; }
+        .file-row .fr-remove { cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; }
+        .file-row .fr-remove:hover { color: #ff6b81; }
+        .file-order-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; margin-top: 6px;
+            background: rgba(0,0,0,0.25); border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: grab; transition: opacity 0.2s, transform 0.2s;
+            user-select: none;
+        }
+        .file-order-item:active { cursor: grabbing; }
+        .file-order-item.drag-over { border-color: #00eaff; background: rgba(0,234,255,0.1); }
+        .file-order-item .fo-handle { color: rgba(255,255,255,0.25); font-size: 14px; }
+        .file-order-item .fo-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-order-item .fo-delete { cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; font-size: 14px; }
+        .file-order-item .fo-delete:hover { color: #ff6b81; }
+        .btn-save-order {
+            display: none; margin-top: 12px;
+            width: 100%; padding: 10px;
+            border: 1px solid #00eaff33; border-radius: 8px;
+            background: rgba(0,234,255,0.1); color: #00eaff;
+            font-size: 14px; cursor: pointer; text-align: center;
+        }
+        .btn-save-order:hover { background: rgba(0,234,255,0.2); }
     </style>
 </head>
 
@@ -617,21 +670,18 @@
 
             <hr style="border-color:rgba(255,255,255,0.1);margin:25px 0;">
             <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> Kelola File Nilai</h3>
-            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file"></p>
+            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file">Upload file PDF/gambar nilai asli</p>
             <div id="adminFilesList" class="config-list" style="margin-bottom:15px;"></div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                <input type="text" id="fileLabelInput" placeholder="Label (mis: PSAT X RPL)"
-                    style="flex:1; min-width:140px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:white; font-size:13px;">
-                <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;"
-                    onchange="document.getElementById('fileNameDisplay').textContent = this.files[0]?.name || ''">
-                <button class="fab-admin secondary"
-                    style="display:flex; position:static; width:auto; height:auto; padding:10px 18px; border-radius:8px; font-size:13px;"
-                    onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-folder-open"></i> <span data-i18n="select">Pilih</span></button>
-                <span id="fileNameDisplay"
-                    style="font-size:12px; opacity:0.6; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+            <div class="btn-save-order" id="saveOrderBtn" onclick="saveFileOrder()"><i class="fa-solid fa-floppy-disk"></i> Simpan Urutan</div>
+            <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;" multiple>
+            <div class="drop-zone-file" id="fileDropZone">
+                <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <div class="dz-text">Klik atau drag & drop file PDF/gambar</div>
+                <div class="dz-file" id="fileNameDisplay"></div>
             </div>
-            <button class="btn-save-config" onclick="uploadFile()" style="margin-top:12px;"><i
-                    class="fa-solid fa-upload"></i> Upload</button>
+            <div id="fileList" style="margin-top:10px;"></div>
+            <button class="btn-save-config" onclick="uploadAllFiles()" style="margin-top:12px; display:none;" id="uploadBtn">
+                <i class="fa-solid fa-upload"></i> Upload Semua</button>
         </div>
     </div>
 
@@ -785,6 +835,8 @@
             if (typeof SkeletonUI !== 'undefined') SkeletonUI.injectCSS();
             showSkeletons();
             await loadData();
+
+            setupMultiDrop();
         });
 
         function getDisplayName(nama) {
@@ -1136,7 +1188,7 @@
             const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
             const { data, error } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
-                .order('created_at', { ascending: false });
+                .order('display_order', { ascending: true, nullsFirst: false });
             if (error) return;
             const card = document.getElementById('filesCard');
             const list = document.getElementById('filesList');
@@ -1154,54 +1206,164 @@
             `).join('');
         }
 
-        async function uploadFile() {
-            const input = document.getElementById('fileInput');
-            const label = document.getElementById('fileLabelInput').value.trim();
-            if (!input.files.length) return showToast(t('select_file_first'), 'error');
-            const file = input.files[0];
-            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
-            const storagePath = `${currentTestId}/${classId}/${Date.now()}_${file.name}`;
-            showToast(t('uploading_text'), 'info');
-            const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, file);
-            if (upErr) return showPopup(t('failed_generic') + ' upload: ' + upErr.message, 'error');
-            const { data: urlData } = supabase.storage.from('nilai-files').getPublicUrl(storagePath);
-            const { error: dbErr } = await supabase.from('nilai_files').insert({
-                test_id: currentTestId, class_id: classId,
-                file_name: file.name, file_url: urlData.publicUrl,
-                label: label || file.name
+        // ── Multi-file store ──
+        const _nilaiFileStore = [];
+        function renderNilaiFileList() {
+            const list = document.getElementById('fileList');
+            const btn = document.getElementById('uploadBtn');
+            if (!_nilaiFileStore.length) { list.innerHTML = ''; btn.style.display = 'none'; return; }
+            btn.style.display = 'inline-flex';
+            list.innerHTML = _nilaiFileStore.map((f, i) =>
+                `<div class="file-row">
+                    <span class="fr-icon"><i class="fa-solid fa-file-pdf"></i></span>
+                    <span class="fr-name" title="${f.file.name}">${f.file.name}</span>
+                    <input type="text" value="${f.label}" placeholder="Label" onchange="_nilaiFileStore[${i}].label=this.value">
+                    <span class="fr-remove" onclick="removeNilaiFile(${i})"><i class="fa-solid fa-xmark"></i></span>
+                </div>`
+            ).join('');
+        }
+        function removeNilaiFile(idx) {
+            _nilaiFileStore.splice(idx, 1);
+            renderNilaiFileList();
+            document.getElementById('fileInput').value = '';
+        }
+        function setupMultiDrop() {
+            const dz = document.getElementById('fileDropZone');
+            const fi = document.getElementById('fileInput');
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', e => {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    for (const f of e.dataTransfer.files) _nilaiFileStore.push({ file: f, label: '' });
+                    renderNilaiFileList();
+                }
             });
-            if (dbErr) {
-                await supabase.storage.from('nilai-files').remove([storagePath]);
-                return showToast(t('failed_generic') + ': ' + dbErr.message, 'error');
+            fi.addEventListener('change', () => {
+                if (fi.files.length) {
+                    for (const f of fi.files) _nilaiFileStore.push({ file: f, label: '' });
+                    renderNilaiFileList();
+                    fi.value = '';
+                }
+            });
+            dz.addEventListener('click', () => fi.click());
+        }
+        async function uploadAllFiles() {
+            if (!_nilaiFileStore.length) return showToast(t('select_file_first'), 'error');
+            const classId = getEffectiveClassId();
+            showToast(t('uploading_text'), 'info');
+            const { data: maxRow } = await supabase.from('nilai_files')
+                .select('display_order').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('display_order', { ascending: false }).limit(1);
+            let order = (maxRow && maxRow.length && maxRow[0].display_order != null) ? maxRow[0].display_order + 1 : 0;
+            for (const entry of _nilaiFileStore) {
+                const storagePath = `${currentTestId}/${classId}/${Date.now()}_${entry.file.name}`;
+                const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, entry.file);
+                if (upErr) { showPopup('Gagal upload ' + entry.file.name + ': ' + upErr.message, 'error'); continue; }
+                const { data: urlData } = supabase.storage.from('nilai-files').getPublicUrl(storagePath);
+                const { error: dbErr } = await supabase.from('nilai_files').insert({
+                    test_id: currentTestId, class_id: classId,
+                    file_name: entry.file.name, file_url: urlData.publicUrl,
+                    label: entry.label || entry.file.name,
+                    display_order: order++
+                });
+                if (dbErr) {
+                    await supabase.storage.from('nilai-files').remove([storagePath]);
+                    showPopup('Gagal simpan ' + entry.file.name + ': ' + dbErr.message, 'error');
+                }
             }
-            showToast(t('success_generic'), 'success');
-            input.value = ''; document.getElementById('fileLabelInput').value = '';
-            document.getElementById('fileNameDisplay').textContent = '';
+            _nilaiFileStore.length = 0;
+            renderNilaiFileList();
             loadAndRenderFiles();
             renderAdminFiles();
         }
 
+        let _adminFilesData = [];
+        let _fileOrderDirty = false;
+        let _dragSrcIdx = null;
+
         async function renderAdminFiles() {
             const list = document.getElementById('adminFilesList');
             if (!list) return;
-            const classId = /*document.getElementById('classSelector').value ||*/ getEffectiveClassId();
+            const classId = getEffectiveClassId();
             const { data } = await supabase.from('nilai_files')
                 .select('*').eq('test_id', currentTestId).eq('class_id', classId)
-                .order('created_at', { ascending: false });
-            if (!data || !data.length) { list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">' + t('no_file_upload') + '</div>'; return; }
-            list.innerHTML = data.map(f => `
-                <div class="config-item">
-                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-                        <i class="fa-solid fa-file-pdf" style="color:#e74c3c;"></i>
-                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.label || f.file_name}</span>
-                    </div>
-                    <button onclick="deleteFile(${f.id})" style="background:none; border:none; color:#e74c3c; cursor:pointer; padding:5px; font-size:16px;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i></button>
+                .order('display_order', { ascending: true, nullsFirst: false });
+            if (!data || !data.length) {
+                list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">' + t('no_file_upload') + '</div>';
+                document.getElementById('saveOrderBtn').style.display = 'none';
+                _adminFilesData = []; return;
+            }
+            _adminFilesData = data;
+            _fileOrderDirty = false;
+            document.getElementById('saveOrderBtn').style.display = 'none';
+            renderAdminFileList();
+        }
+
+        function renderAdminFileList() {
+            const list = document.getElementById('adminFilesList');
+            if (!list) return;
+            list.innerHTML = _adminFilesData.map((f, i) => `
+                <div class="file-order-item" draggable="true"
+                    data-idx="${i}"
+                    ondragstart="onFileDragStart(event, ${i})"
+                    ondragover="onFileDragOver(event, ${i})"
+                    ondragend="onFileDragEnd(event)"
+                    ondrop="onFileDrop(event, ${i})">
+                    <span class="fo-handle"><i class="fa-solid fa-grip-lines"></i></span>
+                    <span class="fo-name" title="${f.label || f.file_name}">${f.label || f.file_name}</span>
+                    <span class="fo-delete" onclick="deleteFile(${f.id})"><i class="fa-solid fa-trash-can"></i></span>
                 </div>
             `).join('');
         }
 
+        function onFileDragStart(e, idx) {
+            _dragSrcIdx = idx;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', idx);
+            e.target.style.opacity = '0.4';
+        }
+        function onFileDragOver(e, idx) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            document.querySelectorAll('.file-order-item').forEach(el => el.classList.remove('drag-over'));
+            if (_dragSrcIdx !== null && _dragSrcIdx !== idx) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+        function onFileDragEnd(e) {
+            _dragSrcIdx = null;
+            document.querySelectorAll('.file-order-item').forEach(el => { el.style.opacity = ''; el.classList.remove('drag-over'); });
+        }
+        function onFileDrop(e, idx) {
+            e.preventDefault();
+            if (_dragSrcIdx === null || _dragSrcIdx === idx) return;
+            const item = _adminFilesData.splice(_dragSrcIdx, 1)[0];
+            _adminFilesData.splice(idx, 0, item);
+            _fileOrderDirty = true;
+            document.getElementById('saveOrderBtn').style.display = 'block';
+            renderAdminFileList();
+        }
+
+        async function saveFileOrder() {
+            if (!_fileOrderDirty) return;
+            const results = await Promise.all(
+                _adminFilesData.map((f, i) =>
+                    supabase.from('nilai_files').update({ display_order: i }).eq('id', f.id)
+                )
+            );
+            const err = results.find(r => r.error);
+            if (err) return showPopup('Gagal simpan urutan: ' + err.error.message, 'error');
+            _fileOrderDirty = false;
+            document.getElementById('saveOrderBtn').style.display = 'none';
+            showToast('Urutan file disimpan', 'success');
+            loadAndRenderFiles();
+        }
+
         async function deleteFile(id) {
-            if (!confirm(t('confirm_delete_file'))) return;
+            const sure = await showPopup(t('confirm_delete_file'), 'confirm');
+            if (!sure) return;
             const { data } = await supabase.from('nilai_files').select('file_url').eq('id', id).single();
             if (data) {
                 const path = data.file_url.split('/nilai-files/')[1];

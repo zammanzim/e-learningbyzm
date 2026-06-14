@@ -96,6 +96,9 @@ CREATE POLICY "auth_delete" ON nilai_scores FOR DELETE USING (true);
 
 -- ============================================================
 -- Migrasi data lama → nilai_scores
+-- ── display_order buat urutin file nilai ──
+ALTER TABLE nilai_files ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
+
 -- Jalanin bagian ini SETELAH CREATE TABLE diatas
 -- ============================================================
 
