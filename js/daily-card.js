@@ -456,7 +456,7 @@ async function initDailyCard(guestClassId) {
 
         // Render header real (ganti skeleton)
         const isExamMode = config.mode === 'exam';
-        const shortcutLink = isExamMode ? 'kisi-kisi' : 'tugas';
+        const shortcutLink = isExamMode ? 'a/kisi-kisi' : 'a/tugas';
         const shortcutIcon = isExamMode ? 'fa-solid fa-file-signature' : 'fa-solid fa-clipboard-list';
         const shortcutLabel = isExamMode ? `${t('exam_topics')}` : `${t('task')}`;
         const badgeDisplay = isExamMode ? 'none' : 'block';
