@@ -189,13 +189,13 @@ window.switchVisitorTab = function(classId) {
     renderVisitorStats();
 };
 
-async function renderVisitorStats() {
+async function renderVisitorStats(skipSkeleton) {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
 
-    // Tampilkan skeleton dulu saat popup dibuka
+    // Tampilkan skeleton cuma pas awal buka, bukan pas realtime update
     const listEl = document.getElementById("visitorList");
-    if (listEl) {
+    if (!skipSkeleton && listEl) {
         listEl.innerHTML = Array.from({ length: 3 }, () => `
             <div class="visitor-item">
                 <div class="dc-skel" style="width:30px; height:30px; border-radius:50%; flex-shrink:0;"></div>
@@ -299,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         schema: 'public',
                         table: 'visitors',
                         filter: `class_id=eq.${_activeVisitorClass || getEffectiveClassId() || user.class_id}`
-                    }, () => renderVisitorStats())
+                    }, () => renderVisitorStats(true))
                     .subscribe();
             }
         };
