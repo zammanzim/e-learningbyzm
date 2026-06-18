@@ -249,6 +249,7 @@
         .err404-meta { font-size: 10px; color: #888; margin-top: 2px; }
         .err404-del { background: none; border: none; color: #ff4757; font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0; }
         .err404-del:hover { color: #ff6b6b; }
+        .err404-item.active { border-color: var(--accent); background: rgba(255, 107, 107, 0.1); }
     </style>
 </head>
 
@@ -312,6 +313,7 @@
         let currentUsers = [];
         let activeUserId = null;
         let currentTimeFilter = 'all';
+        let _404selectedUser = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof supabase === 'undefined') return;
@@ -574,6 +576,24 @@
         }
 
         /* ── 404 ERROR LOGS ── */
+        let _404userMap = {}; // user_id → { name, avatar }
+
+        async function _load404Users() {
+            const { data } = await supabase.from('users').select('id, full_name, nickname, short_name, avatar_url');
+            if (data) {
+                data.forEach(u => {
+                    const name = u.nickname || u.short_name || u.full_name || 'User ' + u.id;
+                    _404userMap[String(u.id)] = { name, avatar: u.avatar_url };
+                });
+            }
+        }
+
+        function _404displayName(userId) {
+            if (!userId) return 'Anonymous';
+            const found = _404userMap[String(userId)];
+            return found ? found.name : userId;
+        }
+
         async function load404Errors() {
             const list = document.getElementById('lbList');
             const podium = document.getElementById('podiumContainer');
@@ -583,15 +603,22 @@
             document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-404').classList.add('active');
             podium.innerHTML = '';
+            _404selectedUser = null;
+
+            // Reset tracker
+            const tracker = document.getElementById('trackerContent');
+            if (tracker) tracker.innerHTML = `<div class="empty-state"><i class="fa-solid fa-shoe-prints"></i><p>Pilih user buat liat 404 nya.</p></div>`;
 
             list.innerHTML = `<div style="padding:20px;text-align:center;color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>`;
 
             try {
+                await _load404Users();
+
                 const { data, error } = await supabase
                     .from('page_errors')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(100);
+                    .limit(200);
 
                 if (error) throw error;
 
@@ -600,15 +627,33 @@
                     return;
                 }
 
-                list.innerHTML = data.map(e => `
-                    <div class="err404-item" onclick="view404Detail(${e.id})">
-                        <div style="flex:1;min-width:0;">
-                            <div class="err404-url">${escHtml(e.url)}</div>
-                            <div class="err404-meta">${e.referrer ? escHtml(e.referrer) : '-'} &bull; ${new Date(e.created_at).toLocaleString('id-ID', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                // Group by user_id
+                const groups = {};
+                data.forEach(e => {
+                    const key = e.user_id || '__anon__';
+                    if (!groups[key]) groups[key] = { userId: e.user_id, errors: [], count: 0, latest: null };
+                    groups[key].errors.push(e);
+                    groups[key].count++;
+                    if (!groups[key].latest || new Date(e.created_at) > new Date(groups[key].latest)) {
+                        groups[key].latest = e.created_at;
+                    }
+                });
+
+                const sorted = Object.values(groups).sort((a, b) => new Date(b.latest) - new Date(a.latest));
+
+                list.innerHTML = sorted.map(g => {
+                    const key = g.userId || '__anon__';
+                    const displayName = _404displayName(g.userId);
+                    return `
+                        <div class="err404-item ${_404selectedUser === key ? 'active' : ''}" data-userkey="${escHtml(key)}" onclick="view404User(this.dataset.userkey)">
+                            <div style="flex:1;min-width:0;">
+                                <div class="err404-url">${escHtml(displayName)}</div>
+                                <div class="err404-meta">${g.count} error${g.count > 1 ? 's' : ''} &bull; ${new Date(g.latest).toLocaleString('id-ID', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                            </div>
+                            <button class="err404-del" onclick="event.stopPropagation();deleteAllUser404('${escHtml(key)}')" title="Hapus semua"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <button class="err404-del" onclick="event.stopPropagation();delete404Error(${e.id})"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
             } catch (e) {
                 console.error(e);
@@ -616,12 +661,21 @@
             }
         }
 
-        async function view404Detail(id) {
+        async function view404User(userKey) {
+            _404selectedUser = userKey;
+
+            // Re-render list biar ada active state
+            document.querySelectorAll('.err404-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.userkey === userKey);
+            });
+
+            const actualUserId = userKey === '__anon__' ? '' : userKey;
+
             const { data, error } = await supabase
                 .from('page_errors')
                 .select('*')
-                .eq('id', id)
-                .single();
+                .eq('user_id', actualUserId)
+                .order('created_at', { ascending: false });
 
             if (error || !data) return;
 
@@ -634,30 +688,28 @@
                 if (typeof lockScroll === 'function') lockScroll();
             }
 
+            const displayName = _404displayName(actualUserId);
+
             container.innerHTML = `
                 <div class="track-header">
                     <div class="track-user-info">
-                        <h3><i class="fa-solid fa-bug" style="color:#ff6b6b;"></i> 404 Detail</h3>
-                        <p>${new Date(data.created_at).toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+                        <h3><i class="fa-solid fa-bug" style="color:#ff6b6b;"></i> 404 — ${escHtml(displayName)}</h3>
+                        <p>${data.length} error${data.length > 1 ? 's' : ''}</p>
                     </div>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:12px;">
-                    <div>
-                        <div style="font-size:10px;color:#888;margin-bottom:2px;">URL</div>
-                        <div style="font-size:12px;color:#fff;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.url)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:#888;margin-bottom:2px;">Referrer</div>
-                        <div style="font-size:12px;color:#fff;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.referrer || '-')}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:#888;margin-bottom:2px;">User Agent</div>
-                        <div style="font-size:11px;color:#aaa;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.user_agent || '-')}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:#888;margin-bottom:2px;">User ID</div>
-                        <div style="font-size:12px;color:var(--accent);background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.user_id || '-')}</div>
-                    </div>
+                <div class="timeline">
+                    ${data.map((e, i) => `
+                        <div class="timeline-item ${i === 0 ? 'recent' : ''}">
+                            <div class="tl-content" style="display:flex;flex-direction:column;gap:6px;">
+                                <span class="tl-time">${new Date(e.created_at).toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                                <div class="err404-url" style="white-space:normal;word-break:break-all;">${escHtml(e.url)}</div>
+                                ${e.referrer ? `<span style="font-size:10px;color:#666;">Dari: ${escHtml(e.referrer)}</span>` : ''}
+                                <button class="err404-del" onclick="delete404Error(${e.id})" style="align-self:flex-end;font-size:12px;">
+                                    <i class="fa-solid fa-trash"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
         }
@@ -677,6 +729,28 @@
             }
 
             showToast('Berhasil dihapus', 'success');
+            if (_404selectedUser) view404User(_404selectedUser);
+            else load404Errors();
+        }
+
+        async function deleteAllUser404(userKey) {
+            const confirmed = await showPopup('Hapus semua error 404 user ini?', 'confirm');
+            if (!confirmed) return;
+
+            const actualUserId = userKey === '__anon__' ? '' : userKey;
+
+            const { error } = await supabase
+                .from('page_errors')
+                .delete()
+                .eq('user_id', actualUserId);
+
+            if (error) {
+                showToast('Gagal hapus', 'error');
+                return;
+            }
+
+            showToast('Semua berhasil dihapus', 'success');
+            if (userKey === _404selectedUser) _404selectedUser = null;
             load404Errors();
         }
 
