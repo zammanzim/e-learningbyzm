@@ -196,7 +196,7 @@ async function renderVisitorStats(skipSkeleton) {
     // Tampilkan skeleton cuma pas awal buka, bukan pas realtime update
     const listEl = document.getElementById("visitorList");
     if (!skipSkeleton && listEl) {
-        listEl.innerHTML = Array.from({ length: 3 }, () => `
+        listEl.innerHTML = Array.from({ length: 4 }, () => `
             <div class="visitor-item">
                 <div class="dc-skel" style="width:30px; height:30px; border-radius:50%; flex-shrink:0;"></div>
                 <div style="flex:1; margin-left:10px;">
@@ -210,19 +210,24 @@ async function renderVisitorStats(skipSkeleton) {
         const targetClass = _activeVisitorClass || getEffectiveClassId() || user.class_id;
         const { data, error } = await supabase
             .from('visitors')
-            .select('user_id, visited_at, last_page, user:users(full_name, avatar_url, nickname)')
+            .select('user_id, visited_at, last_page, is_visible, user:users(full_name, avatar_url, nickname)')
             .eq('class_id', targetClass)
-            .eq('is_visible', true)
             .order('visited_at', { ascending: false });
 
         if (error) throw error;
 
-        // Dedup di DB harusnya sudah unique per user_id, tapi jaga-jaga
+        // Dedup — prioritaskan yg is_visible=true kalo ada duplikat user_id
         const uniqueMap = new Map();
-        data.forEach(v => { if (!uniqueMap.has(v.user_id)) uniqueMap.set(v.user_id, v); });
+        data.forEach(v => {
+            const existing = uniqueMap.get(v.user_id);
+            if (!existing || (!existing.is_visible && v.is_visible)) {
+                uniqueMap.set(v.user_id, v);
+            }
+        });
 
+        const visibleCount = [...uniqueMap.values()].filter(v => v.is_visible).length;
         const popupCount = document.getElementById("popupVisitorCount");
-        if (popupCount) popupCount.innerText = uniqueMap.size;
+        if (popupCount) popupCount.innerText = visibleCount;
 
         const listEl2 = document.getElementById("visitorList");
         if (!listEl2) return;
@@ -240,19 +245,20 @@ async function renderVisitorStats(skipSkeleton) {
             const tanggal = ts.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
             const jam = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-            const isOnline = window._onlineUsers.has(String(v.user_id));
+            const isOnline = v.is_visible && window._onlineUsers.has(String(v.user_id));
             const item = document.createElement('div');
             item.className = 'visitor-item';
+            item.style.opacity = v.is_visible ? '1' : '0.45';
             item.innerHTML = `
                 <div style="position:relative; width:30px; height:30px; flex-shrink:0;">
-                    <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                    <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; ${v.is_visible ? '' : 'filter:grayscale(0.7);'}">
                     ${isOnline ? '<div style="position:absolute; bottom:-1px; left:-1px; width:11px; height:11px; border-radius:50%; background:#22c55e; border:2px solid #0a0f19;"></div>' : ''}
                 </div>
                 <div style="flex:1; margin-left:10px;">
-                    <div style="font-size:13px; font-weight:bold;">${nickname}</div>
+                    <div style="font-size:13px; font-weight:bold; ${v.is_visible ? '' : 'color:#666;'}">${nickname}</div>
                     <div style="font-size:11px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <span style="color:var(--accent, #00eaff);">${v.last_page || 'Muter-muter'}</span>
-                        <span style="color:#aaa; white-space:nowrap;">${tanggal} • ${jam}</span>
+                        <span style="color:${v.is_visible ? 'var(--accent, #00eaff)' : '#555'};">${v.last_page || 'Muter-muter'}</span>
+                        <span style="color:#666; white-space:nowrap;">${tanggal} • ${jam}</span>
                     </div>
                 </div>`;
             listEl2.appendChild(item);
@@ -261,9 +267,48 @@ async function renderVisitorStats(skipSkeleton) {
         const adminActions = document.querySelector(".admin-actions");
         if (adminActions) {
             const isAdmin = user.role === 'class_admin' || user.role === 'super_admin';
-            adminActions.style.display = isAdmin ? 'block' : 'none';
+            adminActions.style.display = isAdmin ? 'flex' : 'none';
         }
     } catch (err) { console.error("Stats Error:", err); }
+}
+
+// ==========================================
+// 3.5 AUTO RESET — 15:00 setiap hari
+// ==========================================
+async function _checkAutoResetVisitor(user) {
+    try {
+        const lastDate = localStorage.getItem('auto_reset_visitor_date');
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+        // Skip kalo udah di-reset hari ini
+        if (lastDate === today) return;
+
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        // 15:00 = 3 PM
+        if (hour < 15 || (hour === 15 && minute === 0)) {
+            // Belum waktunya — cek sekali lagi nanti pas jam 15:00 lewat
+            const msUntil15 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 1, 0, 0) - now;
+            if (msUntil15 > 0) {
+                setTimeout(() => _checkAutoResetVisitor(user), msUntil15);
+            }
+            return;
+        }
+
+        // Waktunya reset (semua kelas)
+        const { error } = await supabase
+            .from('visitors')
+            .update({ is_visible: false })
+            .neq('id', 0);
+
+        if (error) throw error;
+
+        localStorage.setItem('auto_reset_visitor_date', today);
+        console.log('🔄 Visitor auto-reset at', new Date().toLocaleString('id-ID'));
+    } catch (err) {
+        console.error('Auto reset visitor error:', err);
+    }
 }
 
 // ==========================================
@@ -336,6 +381,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Auto Reset toggle
+    const autoResetChk = document.getElementById("autoResetVisitor");
+    if (autoResetChk) {
+        const saved = localStorage.getItem('auto_reset_visitor');
+        autoResetChk.checked = saved === 'true';
+        autoResetChk.addEventListener('change', () => {
+            localStorage.setItem('auto_reset_visitor', autoResetChk.checked);
+            if (autoResetChk.checked) _checkAutoResetVisitor(user);
+        });
+        if (autoResetChk.checked) _checkAutoResetVisitor(user);
+    }
+
     // Reset (admin only)
     if (resetBtn) {
         resetBtn.onclick = async () => {
@@ -346,11 +403,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             resetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
             try {
-                const resetClass = _activeVisitorClass || getEffectiveClassId() || user.class_id;
                 const { error } = await supabase
                     .from('visitors')
                     .update({ is_visible: false })
-                    .eq('class_id', resetClass);
+                    .neq('id', 0); // semua kelas
 
                 if (error) throw error;
                 showToast("List pengunjung telah di-reset!", "success");

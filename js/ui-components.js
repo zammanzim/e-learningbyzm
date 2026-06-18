@@ -122,7 +122,14 @@ const UIComponents = {
                     <div id="visitorList" class="visitor-list-container"></div>
                 </div>
 
-                <div class="admin-actions">
+                <div class="admin-actions" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#aaa;cursor:pointer;">
+                        <label class="switch" style="margin:0;">
+                            <input type="checkbox" id="autoResetVisitor">
+                            <span class="slider"></span>
+                        </label>
+                        Auto Reset 15:00
+                    </label>
                     <button id="resetVisitorBtn" class="btn-reset-text">
                         <i class="fa-solid fa-rotate-right"></i> ${t('resetvist')}
                      </button>

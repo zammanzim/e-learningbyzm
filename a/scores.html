@@ -33,8 +33,6 @@
 
         .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 25px;
@@ -461,7 +459,6 @@
         .fab-admin.secondary {
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -560,6 +557,14 @@
             animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
         }
 
+        [data-slide] .slide-target {
+            animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+            animation-play-state: paused;
+        }
+        [data-slide].slide-visible .slide-target {
+            animation-play-state: running;
+        }
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -569,6 +574,14 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
 
@@ -846,7 +859,7 @@
         </div>
 
         <div class="right-section">
-            <div class="glass-card">
+            <div class="glass-card" data-slide>
                 <div
                     style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
                     <h3 style="margin:0; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15 Leaderboard
@@ -861,18 +874,18 @@
                 <div class="leaderboard-list" id="podiumRest"></div>
             </div>
 
-            <div class="glass-card" id="avgCard">
+            <div class="glass-card" id="avgCard" data-slide>
                 <h3 style="margin-bottom:12px;"><i class="fa-solid fa-calculator"></i> Rata-rata Kelas</h3>
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0s;">
                         <div style="font-size:20px; font-weight:800; color:#00eaff;" id="avgOverall">–</div>
                         <div style="font-size:11px; opacity:0.5;">Rata-rata</div>
                     </div>
-                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0.06s;">
                         <div style="font-size:20px; font-weight:800; color:#2ed573;" id="avgPassRate">–</div>
                         <div style="font-size:11px; opacity:0.5;">Lulus ≥75</div>
                     </div>
-                    <div style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0.12s;">
                         <div style="font-size:20px; font-weight:800; color:#ffd700;" id="avgTop">–</div>
                         <div style="font-size:11px; opacity:0.5;">Tertinggi</div>
                     </div>
@@ -880,7 +893,7 @@
                 <div id="avgSubjectList" style="font-size:12px;"></div>
             </div>
 
-            <div class="glass-card">
+            <div class="glass-card" data-slide>
                 <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai
                         Kelas</span></h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -960,7 +973,7 @@
                 };
                 globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
                 avatarMap = nm; avatarUrlMap = nu; nicknameMap = nn;
-                renderAvgCard(); renderPodium(); renderClassTable(); loadAndRenderFiles();
+                renderAvgCard(); renderPodium(); renderClassTable(); loadAndRenderFiles(); initSlideAnimations();
             }).catch(console.error);
         }
 
@@ -1061,7 +1074,7 @@
             } catch (err) { if (render) console.error(err); }
         }
 
-        function renderAll() { renderMapelSelector(); renderPersonal(); renderAvgCard(); renderPodium(); renderClassTable(); }
+        function renderAll() { renderMapelSelector(); renderPersonal(); renderAvgCard(); renderPodium(); renderClassTable(); initSlideAnimations(); }
 
         function renderMapelSelector() {
             const sel = document.getElementById('mapelSelector');
@@ -1100,15 +1113,17 @@
             document.getElementById('avgTop').textContent = topAvg.toFixed(1);
 
             let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 12px;">';
+            let sIdx = 0;
             for (const k in totals) {
                 if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
                 const t = totals[k];
                 const avg = t.avg.toFixed(1);
                 const color = t.avg >= KKM ? '#2ed573' : '#ff6b81';
-                html += `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                html += `<div class="slide-target" style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); animation-delay:${sIdx * 0.06}s;">
                     <span style="opacity:0.7;">${MAPEL_CONFIG[k]}</span>
                     <span style="color:${color}; font-weight:600;">${avg}</span>
                 </div>`;
+                sIdx++;
             }
             html += '</div>';
             document.getElementById('avgSubjectList').innerHTML = html;
@@ -1146,12 +1161,14 @@
         function renderPodium() {
             const t3 = document.getElementById('podiumTop3'), rs = document.getElementById('podiumRest');
             t3.innerHTML = ""; rs.innerHTML = "";
+            let pIdx = 0;
             const mkP = (s, r, c) => {
                 const key = s.nama_siswa ? s.nama_siswa.toLowerCase() : '';
                 const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                 const isT10 = globalData.indexOf(s) < 10;
                 const privIcon = s.is_private && !isT10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
-                return `<div class="podium-box ${c}" onclick="showStudentScores(${s.user_id})" style="cursor:pointer;"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
+                pIdx++;
+                return `<div class="podium-box ${c} slide-target" style="cursor:pointer;animation-delay:${(pIdx - 1) * 0.1}s;" onclick="showStudentScores(${s.user_id})"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
             };
             if (globalData[1]) t3.innerHTML += mkP(globalData[1], 2, 'p2');
             if (globalData[0]) t3.innerHTML += mkP(globalData[0], 1, 'p1');
@@ -1161,7 +1178,7 @@
                     const key = globalData[i].nama_siswa ? globalData[i].nama_siswa.toLowerCase() : '';
                     const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
                     const gPrivIcon = globalData[i].is_private && i >= 10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
-                    rs.innerHTML += `<div class="leader-item" draggable="true" onclick="showStudentScores(${globalData[i].user_id})" style="cursor:pointer;"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
+                    rs.innerHTML += `<div class="leader-item slide-target" draggable="true" style="cursor:pointer;animation-delay:${(i - 2) * 0.06}s;" onclick="showStudentScores(${globalData[i].user_id})"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
                 }
             }
             initDragDrop();
@@ -1223,9 +1240,9 @@
             else sorted.sort((a, b) => (parseFloat(b[k]) || 0) - (parseFloat(a[k]) || 0) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
             sorted.forEach((s, i) => {
                 const v = parseFloat(s[k]); const dV = !isNaN(v) ? v.toFixed(2) : "-"; const cV = !isNaN(v) ? getDynamicColor(v) : "#fff";
-                const tr = document.createElement('tr'); tr.style.cursor = "pointer"; tr.onclick = () => showStudentScores(s.user_id);
+                const tr = document.createElement('tr'); tr.className = 'slide-target'; tr.style.cursor = "pointer"; tr.style.animationDelay = `${i * 0.04}s`; tr.onclick = () => showStudentScores(s.user_id);
                 if (localUser && String(s.user_id) === String(localUser.id)) { tr.style.background = "rgba(0, 234, 255, 0.15)"; tr.style.boxShadow = "inset 4px 0 0 var(--accent)"; }
-                tr.innerHTML = `<td style="font-weight:bold; opacity:0.5;">${sort === 'nama' ? '-' : i + 1}</td><td style="font-weight:600; display:flex; align-items:center; gap:8px;">${getDisplayName(s.nama_siswa)}${s.is_private ? '<i class="fa-solid fa-eye-slash" style="font-size:10px; opacity:0.3;"></i>' : ''}</td><td style="text-align:right;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${dV}</span></td>`;
+                tr.innerHTML = `<td style="font-weight:bold; opacity:0.5;">${i + 1}</td><td style="font-weight:600; display:flex; align-items:center; gap:8px;">${getDisplayName(s.nama_siswa)}${s.is_private ? '<i class="fa-solid fa-eye-slash" style="font-size:10px; opacity:0.3;"></i>' : ''}</td><td style="text-align:right;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${dV}</span></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -1293,10 +1310,64 @@
 
         function getDynamicColor(n) { n = parseFloat(n); if (isNaN(n)) return "#888"; if (n >= 90) return "#00eafe"; if (n >= 80) return "#00cec9"; if (n >= 75) return "#1abc9c"; if (n >= 70) return "#e67e22"; return "#ff4757"; }
 
-        window.onpopstate = () => {
+        function switchTest(testId) {
+            if (testId === currentTestId || !TEST_CONFIG[testId]) return;
+            currentTestId = testId;
+            const config = TEST_CONFIG[currentTestId];
+            document.title = `${config.title} • ${t('app_name')}`;
+            document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
+            showSkeletons();
+            loadData();
+            if (typeof updateActiveSidebar === 'function') updateActiveSidebar();
+        }
+
+        function closeMobileSidebar() {
+            if (window.innerWidth < 1024) {
+                const sb = document.getElementById('sidebar');
+                if (sb?.classList.contains('open')) {
+                    sb.classList.remove('open');
+                    document.getElementById('hamburger')?.classList.remove('active');
+                    document.getElementById('sidebarOverlay')?.classList.remove('show');
+                    document.body.style.overflow = '';
+                    if (typeof unlockScroll === 'function') unlockScroll();
+                }
+            }
+        }
+
+        // ── SPA NAVIGATION: intercept klik link ke halaman yang sama (scores) dengan ?id= ──
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href*="?id="]');
+            if (!link) return;
+            const url = new URL(link.href);
+            if (url.pathname !== window.location.pathname) return;
+            e.preventDefault();
+            const newId = url.searchParams.get('id');
+            if (!newId) return;
+            closeMobileSidebar();
+            history.pushState({ testId: newId }, '', link.href);
+            switchTest(newId);
+        });
+
+        window.addEventListener('popstate', () => {
             const sM = document.getElementById('scoreModal'), aM = document.getElementById('adminModal');
             if (sM) sM.classList.remove('active'); if (aM) aM.classList.remove('active'); document.body.style.overflow = '';
-        };
+            const urlParams = new URLSearchParams(window.location.search);
+            const testId = urlParams.get('id');
+            if (testId) switchTest(testId);
+        });
+
+        function initSlideAnimations() {
+            if (window._slideObserver) window._slideObserver.disconnect();
+            window._slideObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    const container = entry.target;
+                    container.classList.add('slide-visible');
+                    window._slideObserver.unobserve(container);
+                });
+            }, { threshold: 0.08 });
+            document.querySelectorAll('[data-slide]').forEach(el => window._slideObserver.observe(el));
+        }
 
         // ── Skeletons ──
         function showSkeletons() {

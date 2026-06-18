@@ -410,7 +410,7 @@ function processAndRenderSidebar(groups, items, user) {
                     url = adminPrefix + item.subject_id;
                     break;
                 case 'lessons':
-                    url = `${rootPrefix}subject?id=${item.subject_id}`;
+                    url = `/a/?id=${item.subject_id}`;
                     break;
                 case 'main':
                     url = rootPrefix + item.subject_id;
@@ -510,7 +510,9 @@ function updateActiveSidebar() {
         } else {
             const itemSeg = urlLow.split('/').pop();
             const pathSeg = currentPath.split('/').pop();
-            if (pathSeg === itemSeg) isMatch = true;
+            if (pathSeg === itemSeg) {
+                isMatch = itemSeg || !currentId;
+            }
         }
         if (isMatch) a.closest('.sidebar-menu-item')?.classList.add('active');
     });

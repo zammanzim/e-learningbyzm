@@ -431,12 +431,14 @@
             }
         }
 
-        // ── SPA NAVIGATION: intercept klik link ke subject? id=... ──
+        // ── SPA NAVIGATION: intercept klik link ke halaman yang sama (index) dengan ?id= ──
         document.addEventListener('click', (e) => {
-            const link = e.target.closest('a[href*="subject?id="]');
+            const link = e.target.closest('a[href*="?id="]');
             if (!link) return;
+            const url = new URL(link.href);
+            if (url.pathname !== window.location.pathname) return;
             e.preventDefault();
-            const newId = new URL(link.href).searchParams.get('id');
+            const newId = url.searchParams.get('id');
             if (!newId || newId === getSubjectId()) return;
             closeMobileSidebar();
             history.pushState({ subjectId: newId }, '', link.href);
