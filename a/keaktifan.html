@@ -231,6 +231,24 @@
             font-weight: 600;
             color: #ddd;
         }
+
+        /* ── 404 ERROR ITEMS ── */
+        .err404-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .err404-item:hover { background: rgba(255, 107, 107, 0.05); transform: translateX(4px); }
+        .err404-url { font-size: 12px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .err404-meta { font-size: 10px; color: #888; margin-top: 2px; }
+        .err404-del { background: none; border: none; color: #ff4757; font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0; }
+        .err404-del:hover { color: #ff6b6b; }
     </style>
 </head>
 
@@ -253,6 +271,7 @@
                     <button class="btn-filter active" id="btn-all" onclick="loadLeaderboard('all')" data-i18n="all_time">All Time</button>
                     <button class="btn-filter" id="btn-month" onclick="loadLeaderboard('month')">Bulan Ini</button>
                     <button class="btn-filter" id="btn-week" onclick="loadLeaderboard('week')">Minggu Ini</button>
+                    <button class="btn-filter" id="btn-404" onclick="load404Errors()" style="display:none; border-color:#ff6b6b; color:#ff6b6b;"><i class="fa-solid fa-bug"></i> 404</button>
                 </div>
             </div>
 
@@ -297,6 +316,12 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof supabase === 'undefined') return;
             setupClassSwitcher();
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'super_admin') {
+                document.getElementById('btn-404').style.display = '';
+            }
+
             await loadLeaderboard('all');
         });
 
@@ -403,9 +428,10 @@
             currentTimeFilter = timeFilter;
             const btns = document.querySelectorAll('.btn-filter');
             btns.forEach(b => {
+                b.classList.remove('active');
                 const txt = b.innerText.toLowerCase();
+                if (timeFilter === '404') return;
                 if (txt.includes('all') || txt.includes('bulan') || txt.includes('minggu')) {
-                    b.classList.remove('active');
                     if (txt.includes(timeFilter === 'all' ? 'all' : timeFilter === 'month' ? 'bulan' : 'minggu')) {
                         b.classList.add('active');
                     }
@@ -545,6 +571,119 @@
         function closeModal(e) {
             document.getElementById('activityModal').classList.add('hidden');
             if (typeof unlockScroll === 'function') unlockScroll();
+        }
+
+        /* ── 404 ERROR LOGS ── */
+        async function load404Errors() {
+            const list = document.getElementById('lbList');
+            const podium = document.getElementById('podiumContainer');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'super_admin') return;
+
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-404').classList.add('active');
+            podium.innerHTML = '';
+
+            list.innerHTML = `<div style="padding:20px;text-align:center;color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>`;
+
+            try {
+                const { data, error } = await supabase
+                    .from('page_errors')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-check"></i><p>Ga ada error 404 👍</p></div>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(e => `
+                    <div class="err404-item" onclick="view404Detail(${e.id})">
+                        <div style="flex:1;min-width:0;">
+                            <div class="err404-url">${escHtml(e.url)}</div>
+                            <div class="err404-meta">${e.referrer ? escHtml(e.referrer) : '-'} &bull; ${new Date(e.created_at).toLocaleString('id-ID', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                        </div>
+                        <button class="err404-del" onclick="event.stopPropagation();delete404Error(${e.id})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${t('failed_load_data')}</p></div>`;
+            }
+        }
+
+        async function view404Detail(id) {
+            const { data, error } = await supabase
+                .from('page_errors')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !data) return;
+
+            const isMobile = window.innerWidth < 1024;
+            const containerId = isMobile ? 'modalTrackerContent' : 'trackerContent';
+            const container = document.getElementById(containerId);
+
+            if (isMobile) {
+                document.getElementById('activityModal').classList.remove('hidden');
+                if (typeof lockScroll === 'function') lockScroll();
+            }
+
+            container.innerHTML = `
+                <div class="track-header">
+                    <div class="track-user-info">
+                        <h3><i class="fa-solid fa-bug" style="color:#ff6b6b;"></i> 404 Detail</h3>
+                        <p>${new Date(data.created_at).toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <div style="font-size:10px;color:#888;margin-bottom:2px;">URL</div>
+                        <div style="font-size:12px;color:#fff;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.url)}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#888;margin-bottom:2px;">Referrer</div>
+                        <div style="font-size:12px;color:#fff;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.referrer || '-')}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#888;margin-bottom:2px;">User Agent</div>
+                        <div style="font-size:11px;color:#aaa;word-break:break-all;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.user_agent || '-')}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#888;margin-bottom:2px;">User ID</div>
+                        <div style="font-size:12px;color:var(--accent);background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:8px;">${escHtml(data.user_id || '-')}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function delete404Error(id) {
+            const confirmed = await showPopup('Hapus entry 404 ini?', 'confirm');
+            if (!confirmed) return;
+
+            const { error } = await supabase
+                .from('page_errors')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Gagal hapus', 'error');
+                return;
+            }
+
+            showToast('Berhasil dihapus', 'success');
+            load404Errors();
+        }
+
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
         }
     </script>
 </body>

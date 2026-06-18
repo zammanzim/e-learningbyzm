@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Kelas • E-learning Nizam</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="256x256" href="../icon.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js" defer></script>
+    <script src="../js/ctx-menu.js"></script>
+    <script src="../js/ui-components.js" defer></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/lang.js"></script>
+    <script src="../js/basicfeat.js"></script>
+    <script src="../js/show-popup.js"></script>
+    <script src="../js/auth.js" defer></script>
+    <script src="../js/activity.js" defer></script>
+    <script src="../js/visitor.js" defer></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/toast.js"></script>
+    <script src="../js/bottom-nav.js"></script>
+    <script src="../js/system-notice.js"></script>
+
+    <link rel="stylesheet" href="../css/styleasli.css">
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content kp-pagegi">
+        <div class="left-section">
+            <!-- Hero -->
+            <div class="kp-hero">
+                <div class="kp-hero-content">
+                    <p class="kp-hero-sub kp-fade" id="kpHeroSub">Hi, Welcome To</p>
+                    <h1 class="kp-hero-title kp-fade" id="kpHeroTitle">X - RPL 2</h1>
+                    <div class="kp-stats kp-fade" id="kpStats">
+                        <div class="kp-stat"><i class="fa-solid fa-user-graduate"></i> <span id="statStudents">0</span> Siswa</div>
+                        <div class="kp-stat"><i class="fa-solid fa-eye"></i> <span id="statVisitors">0</span> Pengunjung</div>
+                        <div class="kp-stat"><i class="fa-solid fa-message"></i> <span id="statMessages">0</span> Pesan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="kp-search-wrap kp-fade">
+                <div class="kp-search">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="kpSearchInput" placeholder="Cari siswa..." autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="kp-social kp-fade">
+                <h2>Quick Links</h2>
+                <div class="kp-social-grid">
+                    <a href="https://www.instagram.com/sepuluh_rpl02" target="_blank" class="kp-soc kp-soc-ig"><i class="fa-brands fa-instagram"></i> Instagram Kelas</a>
+                    <a href="https://whatsapp.com/channel/0029Vb6VlB94Spk8FpXtaM1j" target="_blank" class="kp-soc kp-soc-wa"><i class="fa-brands fa-whatsapp"></i> WA Channel</a>
+                    <div class="kp-soc kp-soc-confess" id="kpConfessBtn"><i class="fa-regular fa-paper-plane"></i><span>Confess</span></div>
+                    <div class="kp-soc kp-soc-dev" id="kpDevBtn"><i class="fa-solid fa-bug"></i> Dev</div>
+                    <div class="kp-soc kp-soc-gallery" onclick="showToast('Gallery belum tersedia','info')"><i class="bi bi-images"></i> Gallery</div>
+                    <a href="subject.html" class="kp-soc kp-soc-elearn"><i class="ri-computer-line"></i> E-Learning</a>
+                </div>
+            </div>
+
+            <!-- Gallery -->
+            <div class="kp-gallery kp-fade">
+                <h2>Gallery</h2>
+                <div class="kp-gallery-scroll" id="kpGalleryScroll"></div>
+            </div>
+
+            <!-- Students -->
+            <div class="kp-students kp-fade">
+                <h2>Siswa</h2>
+                <div class="kp-tabs" id="kpTabs"></div>
+                <div class="kp-grid" id="kpGrid"></div>
+                <div class="kp-nav" id="kpNav">
+                    <button class="kp-nav-btn" id="prevTab">← Prev</button>
+                    <button class="kp-nav-btn" id="nextTab">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div class="kp-structure kp-fade">
+                <h2>Struktur Kelas</h2>
+                <div class="kp-tree" id="kpTree"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Player -->
+    <div id="kpPlayer" class="kp-player" aria-hidden="true">
+        <div class="mp-cover"><img src="" alt="cover" id="kpCover"></div>
+        <div class="mp-body">
+            <div class="mp-title" id="kpTitle">Unknown Track</div>
+            <div class="mp-artist" id="kpArtist"></div>
+            <div class="mp-row">
+                <span class="mp-time" id="kpCur">0:00</span>
+                <div class="mp-bar" id="kpBar"><div class="mp-fill" id="kpFill"></div></div>
+                <span class="mp-time" id="kpDur">0:00</span>
+            </div>
+            <div class="mp-ctrl">
+                <button id="kpPlay"><i id="kpPlayIcon" class="fa-solid fa-play"></i></button>
+            </div>
+        </div>
+        <button class="mp-close" id="kpClose">✕</button>
+        <audio id="kpAudio" preload="metadata"></audio>
+    </div>
+
+    <!-- Popup -->
+    <div class="kp-overlay" id="kpPopup">
+        <div class="kp-modal">
+            <div class="kp-modal-inner" id="kpModalInner"></div>
+        </div>
+    </div>
+
+    <script src="../js/class-profile.js" defer></script>
+</body>
+</html>

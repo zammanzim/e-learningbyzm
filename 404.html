@@ -48,6 +48,26 @@
     </div>
 
   </div>
+
+  <script>
+    // Log 404 ke database biar tau broken link
+    document.addEventListener('DOMContentLoaded', () => {
+      const payload = {
+        url: window.location.href,
+        referrer: document.referrer || '',
+        user_agent: navigator.userAgent,
+        user_id: (() => {
+          try {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            return u.id || u.email || '';
+          } catch { return ''; }
+        })()
+      };
+      supabase.from('page_errors').insert(payload).then(({ error }) => {
+        if (error) console.warn('Gagal log 404:', error);
+      });
+    });
+  </script>
 </body>
   
 </html>

@@ -66,14 +66,20 @@ supabase.from('classes').select('id, name').order('id')
 
 ## SQL Table — Wajib Sertain RLS Basic
 
-Kalo bikin table baru, include RLS sederhana:
+**⚠️ Penting: project ini pake localStorage custom auth, BUKAN Supabase Auth. Jangan pake `auth.role() = 'authenticated'` di RLS policy!**
+
+Kalo bikin table baru, include RLS sederhana (sesuai kebutuhan akses):
 ```sql
 ALTER TABLE nama_table ENABLE ROW LEVEL SECURITY;
 
+-- Public insert (contoh: 404 log, visitor)
+CREATE POLICY "public_insert" ON nama_table FOR INSERT WITH CHECK (true);
+-- Atau pake anon key kalo perlu restrict
+-- CREATE POLICY "anon_insert" ON nama_table FOR INSERT WITH CHECK (true);
+
+-- Select/update/delete biasanya terbatas
 CREATE POLICY "public_read" ON nama_table FOR SELECT USING (true);
-CREATE POLICY "auth_insert" ON nama_table FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "auth_update" ON nama_table FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "auth_delete" ON nama_table FOR DELETE USING (auth.role() = 'authenticated');
+CREATE POLICY "auth_delete" ON nama_table FOR DELETE USING (true);
 ```
 
 ## Key Architecture
