@@ -32,6 +32,10 @@ DROP POLICY IF EXISTS "public_read" ON simulation_questions;
 DROP POLICY IF EXISTS "public_insert" ON simulation_questions;
 DROP POLICY IF EXISTS "public_update" ON simulation_questions;
 DROP POLICY IF EXISTS "public_delete" ON simulation_questions;
+DROP POLICY IF EXISTS "public_read" ON flashcards;
+DROP POLICY IF EXISTS "public_insert" ON flashcards;
+DROP POLICY IF EXISTS "public_update" ON flashcards;
+DROP POLICY IF EXISTS "public_delete" ON flashcards;
 
 -- Buang policy lama pake auth.role() kalo masih ada
 DROP POLICY IF EXISTS "auth_insert" ON task_submissions;
@@ -203,6 +207,24 @@ CREATE POLICY "public_update" ON simulation_questions FOR UPDATE USING (true) WI
 CREATE POLICY "public_delete" ON simulation_questions FOR DELETE USING (true);
 
 -- ============================================================
+-- flashcards — kartu belajar
+-- ============================================================
+CREATE TABLE IF NOT EXISTS flashcards (
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    subject_id      TEXT NOT NULL,
+    class_id        BIGINT DEFAULT 0,
+    front           TEXT NOT NULL,
+    back            TEXT NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE flashcards ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read"   ON flashcards FOR SELECT USING (true);
+CREATE POLICY "public_insert" ON flashcards FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_update" ON flashcards FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "public_delete" ON flashcards FOR DELETE USING (true);
+
+
+-- ============================================================
 -- MIGRASI: nilai lama → nilai_scores
 -- ── Jalanin kalo perlu, aman di-run ulang (ON CONFLICT DO NOTHING)
 -- ============================================================
@@ -221,3 +243,24 @@ UNION ALL
 SELECT 'psat', n.nama_siswa FROM nilai_psat n
     LEFT JOIN users u ON LOWER(TRIM(n.nama_siswa)) = LOWER(TRIM(u.full_name))
     WHERE u.id IS NULL;
+
+
+-- ============================================================
+-- UPDATE LOG & MENU SEED (v4.1)
+-- ============================================================
+
+-- Tambahkan menu flashcard ke kelas 2 (master/system) jika belum ada
+INSERT INTO subjects_config (class_id, subject_id, subject_name, menu_group, display_order, icon)
+SELECT 2, 'flashcards.html', 'Flashcard', 'main', 99, 'fa-clone'
+WHERE NOT EXISTS (
+    SELECT 1 FROM subjects_config WHERE subject_id = 'flashcards.html' AND class_id = 2
+);
+
+INSERT INTO app_updates (title, version, items, created_at)
+VALUES (
+    'Jumat, 19 June 2026, 10.30',
+    'v4.1',
+    '["Halaman Flashcard Belajar (flashcards.html) selesai dibuat untuk bantu siswa ngafalin materi"]'::jsonb,
+    NOW()
+);
+

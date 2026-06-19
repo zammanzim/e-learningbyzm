@@ -4962,3 +4962,152 @@ input:checked+.slider:before {
     font-size: 0.85em;
 }
 
+/* ============================================================
+   FLASHCARDS WIDGET & 3D FLIP SYSTEM
+   ============================================================ */
+.flashcard-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 500px;
+    margin: 25px auto;
+}
+
+.flashcard-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard-wrapper.flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.flashcard-front {
+    background: linear-gradient(135deg, rgba(20, 25, 40, 0.95), rgba(10, 15, 25, 0.98));
+    color: #fff;
+}
+
+.flashcard-back {
+    background: linear-gradient(135deg, rgba(10, 30, 45, 0.95), rgba(5, 15, 25, 0.98));
+    color: var(--accent, #00eaff);
+    transform: rotateY(180deg);
+}
+
+.flashcard-content-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    overflow-y: auto;
+    max-height: 180px;
+    width: 100%;
+    padding: 0 10px;
+}
+
+.flashcard-hint {
+    font-size: 0.8rem;
+    color: #666;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: auto;
+    pointer-events: none;
+}
+
+.flashcard-front .flashcard-hint {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.flashcard-back .flashcard-hint {
+    color: rgba(0, 234, 255, 0.4);
+}
+
+/* Flashcard Navigation and Layout */
+.flashcard-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.flashcard-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.flashcard-btn:hover {
+    background: var(--accent, #00eaff);
+    color: #000;
+    border-color: var(--accent, #00eaff);
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+}
+
+.flashcard-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.flashcard-counter {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ccc;
+    font-family: monospace;
+}
+
+/* Admin Flashcard Cards */
+.flashcards-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.flashcard-admin-card {
+    background: rgba(20, 25, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.flashcard-admin-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(20, 25, 40, 0.8);
+}
+
+

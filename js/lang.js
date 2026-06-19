@@ -585,6 +585,17 @@ const i18n = {
             "not_yet_available": "(belum ada)",
             "all_tasks_done": "Hore! Semua tugas sudah selesai kamu kerjakan.",
             "main_navigation": "Navigasi utama",
+            // a/flashcards.html
+            "flashcards": "Flashcard",
+            "flashcard_list": "Daftar Flashcard",
+            "no_flashcards": "Belum ada flashcard untuk mapel ini",
+            "add_flashcard": "Tambah Flashcard",
+            "edit_flashcard": "Edit Flashcard",
+            "delete_flashcard_confirm": "Hapus flashcard ini?",
+            "front_side": "Sisi Depan (Konsep/Pertanyaan)",
+            "back_side": "Sisi Belakang (Definisi/Jawaban)",
+            "flip_hint": "Klik kartu untuk membalikkan",
+            "no_flashcard_questions": "Admin belum masukin flashcard buat mapel ini. Tungguin aja ya! wkwk",
         },
         en: {
             "app_name": "E-Learning Nizam",
@@ -1160,6 +1171,17 @@ const i18n = {
             "not_yet_available": "(not available)",
             "all_tasks_done": "Hooray! You've completed all your tasks.",
             "main_navigation": "Main navigation",
+            // a/flashcards.html
+            "flashcards": "Flashcards",
+            "flashcard_list": "Flashcards List",
+            "no_flashcards": "No flashcards for this subject",
+            "add_flashcard": "Add Flashcard",
+            "edit_flashcard": "Edit Flashcard",
+            "delete_flashcard_confirm": "Delete this flashcard?",
+            "front_side": "Front Side (Concept/Question)",
+            "back_side": "Back Side (Definition/Answer)",
+            "flip_hint": "Click card to flip",
+            "no_flashcard_questions": "Admin hasn't uploaded any flashcards for this subject yet. Please wait! wkwk",
         },
         su: {
             "app_name": "E-Learning Nizam",
@@ -1330,6 +1352,17 @@ const i18n = {
             "not_yet_available": "(can aya)",
             "all_tasks_done": "Alhamdulillah! Kabéh tugas geus réngsé.",
             "main_navigation": "Navigasi utama",
+            // a/flashcards.html
+            "flashcards": "Flashcard",
+            "flashcard_list": "Daftar Flashcard",
+            "no_flashcards": "Teu aya flashcard kanggo mapel ieu",
+            "add_flashcard": "Tambah Flashcard",
+            "edit_flashcard": "Édit Flashcard",
+            "delete_flashcard_confirm": "Hapus flashcard ieu?",
+            "front_side": "Sisi Payun (Konsép/Patarosan)",
+            "back_side": "Sisi Pengker (Hartosna/Waleran)",
+            "flip_hint": "Klik kartu pikeun malikkeun",
+            "no_flashcard_questions": "Admin teu acan ngalebetkeun flashcard kanggo mapel ieu. Antosan nya! wkwk",
         }
     },
 
