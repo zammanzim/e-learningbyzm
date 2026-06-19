@@ -44,7 +44,15 @@
       <a href="../../../../../" class="uni-btn" style="text-decoration: none;">
                         <i class="fa-solid fa-house"></i> <span data-i18n="home">Beranda</span>
       </a>
+    </div>
 
+    <div id="didYouMean" style="margin-top:18px; display:none;">
+      <p style="font-size:.9em; opacity:.7; margin-bottom:6px;">
+        <i class="fa-solid fa-lightbulb"></i> Mungkin maksudmu:
+      </p>
+      <a id="suggestedLink" href="#" class="uni-btn" style="text-decoration:none; font-size:.85em; display:inline-flex; align-items:center; gap:6px;">
+        <i class="fa-solid fa-arrow-right"></i> <span id="suggestedLabel"></span>
+      </a>
     </div>
 
   </div>
@@ -66,6 +74,72 @@
       supabase.from('page_errors').insert(payload).then(({ error }) => {
         if (error) console.warn('Gagal log 404:', error);
       });
+
+      // Did-you-mean logic
+      (function() {
+        var knownPages = [
+          { prefix: '/a/', pages: ['index', 'user', 'updates', 'tugas', 'theme', 'settingacc', 'send', 'search', 'scores', 'quiz', 'kisi-kisi', 'kirim-tugas', 'keaktifan', 'inifeedrusak', 'forum', 'feed', 'class-profile'] },
+          { prefix: '/admiii/', pages: ['visitor', 'tugas-masuk', 'send_notice', 'progress-tugas', 'nilai-psts', 'monitor_simulasi', 'monitor_nilai', 'menu', 'inputsoal', 'files', 'csv-sql', 'control', 'cleanup-storage', 'bottom-nav'] },
+          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', '404'] }
+        ];
+
+        var path = window.location.pathname.replace(/\/+$/, '');
+        var segments = path.split('/');
+        var pageName = (segments[segments.length - 1] || '').replace(/\.html$/i, '').toLowerCase();
+        if (!pageName) return;
+
+        var allPages = [];
+        for (var g = 0; g < knownPages.length; g++) {
+          var group = knownPages[g];
+          for (var p = 0; p < group.pages.length; p++) {
+            allPages.push({ name: group.pages[p], prefix: group.prefix, fullPath: group.prefix + group.pages[p] + '.html' });
+          }
+        }
+
+        function levenshtein(a, b) {
+          var m = a.length, n = b.length;
+          var dp = [];
+          for (var i = 0; i <= m; i++) { dp[i] = []; for (var j = 0; j <= n; j++) dp[i][j] = 0; }
+          for (var i = 0; i <= m; i++) dp[i][0] = i;
+          for (var j = 0; j <= n; j++) dp[0][j] = j;
+          for (var i = 1; i <= m; i++) {
+            for (var j = 1; j <= n; j++) {
+              dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+          }
+          return dp[m][n];
+        }
+
+        function showSuggestion(page) {
+          var el = document.getElementById('didYouMean');
+          var link = document.getElementById('suggestedLink');
+          var label = document.getElementById('suggestedLabel');
+          if (el && link && label) {
+            link.href = page.fullPath;
+            label.textContent = page.fullPath;
+            el.style.display = 'block';
+          }
+        }
+
+        // 1. Direct match — page name exists but wrong prefix
+        for (var i = 0; i < allPages.length; i++) {
+          if (allPages[i].name === pageName) {
+            showSuggestion(allPages[i]);
+            return;
+          }
+        }
+
+        // 2. Fuzzy match (typo) — Levenshtein distance <= 3
+        var best = null, bestDist = Infinity;
+        for (var i = 0; i < allPages.length; i++) {
+          var dist = levenshtein(pageName, allPages[i].name);
+          if (dist < bestDist && dist <= 3) {
+            bestDist = dist;
+            best = allPages[i];
+          }
+        }
+        if (best) showSuggestion(best);
+      })();
     });
   </script>
 </body>

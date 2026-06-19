@@ -1132,7 +1132,14 @@
         function renderPersonal() {
             if (!localUser) return;
             const idx = myGlobalData.findIndex(s => String(s.user_id) === String(localUser.id));
-            const data = myGlobalData[idx]; if (!data) return;
+            const data = myGlobalData[idx];
+            if (!data) {
+                document.getElementById('rataNum').innerText = '-';
+                document.getElementById('peringkatNum').innerText = '-';
+                document.getElementById('ucapanText').innerText = '';
+                document.getElementById('personalTableBody').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px 10px;opacity:0.5;"><i class="fa-solid fa-database" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data nilai</td></tr>';
+                return;
+            }
             document.getElementById('name').innerText = localUser.nickname || localUser.full_name || getDisplayName(data.nama_siswa);
             if (idx >= 0 && idx < 10) data.is_private = false;
             document.getElementById('privacyToggle').checked = !!data.is_private;
@@ -1160,6 +1167,11 @@
 
         function renderPodium() {
             const t3 = document.getElementById('podiumTop3'), rs = document.getElementById('podiumRest');
+            if (!globalData.length) {
+                t3.innerHTML = '';
+                rs.innerHTML = '<div style="text-align:center;padding:40px 10px;opacity:0.5;grid-column:1/-1;"><i class="fa-solid fa-trophy" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data leaderboard</div>';
+                return;
+            }
             t3.innerHTML = ""; rs.innerHTML = "";
             let pIdx = 0;
             const mkP = (s, r, c) => {
@@ -1235,7 +1247,12 @@
         function renderClassTable() {
             const k = document.getElementById('mapelSelector').value, sort = document.getElementById('sortSelector').value, tbody = document.getElementById('classTableBody');
             if (!tbody) return;
-            tbody.innerHTML = ''; let sorted = [...globalData];
+            tbody.innerHTML = '';
+            if (!globalData.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px 10px;opacity:0.5;"><i class="fa-solid fa-table" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data kelas</td></tr>';
+                return;
+            }
+            let sorted = [...globalData];
             if (sort === 'nama') sorted.sort((a, b) => (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
             else sorted.sort((a, b) => (parseFloat(b[k]) || 0) - (parseFloat(a[k]) || 0) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
             sorted.forEach((s, i) => {

@@ -11,6 +11,7 @@ window._activityStart = Date.now();
 setInterval(async () => {
     const user = _getActivityUser();
     if (!user || typeof supabase === 'undefined') return;
+    if (document.visibilityState !== 'visible') return;
     await logActivity('Online 30 Detik', 'Online', 5, `online_${Date.now()}`);
 }, 30000);
 

@@ -300,7 +300,7 @@ async function _checkAutoResetVisitor(user) {
         const { error } = await supabase
             .from('visitors')
             .update({ is_visible: false })
-            .neq('id', 0);
+            .neq('id', '00000000-0000-0000-0000-000000000000');
 
         if (error) throw error;
 
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const { error } = await supabase
                     .from('visitors')
                     .update({ is_visible: false })
-                    .neq('id', 0); // semua kelas
+                    .neq('id', '00000000-0000-0000-0000-000000000000'); // semua kelas
 
                 if (error) throw error;
                 showToast("List pengunjung telah di-reset!", "success");
