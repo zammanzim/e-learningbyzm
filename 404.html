@@ -46,14 +46,7 @@
       </a>
     </div>
 
-    <div id="didYouMean" style="margin-top:18px; display:none;">
-      <p style="font-size:.9em; opacity:.7; margin-bottom:6px;">
-        <i class="fa-solid fa-lightbulb"></i> Mungkin maksudmu:
-      </p>
-      <a id="suggestedLink" href="#" class="uni-btn" style="text-decoration:none; font-size:.85em; display:inline-flex; align-items:center; gap:6px;">
-        <i class="fa-solid fa-arrow-right"></i> <span id="suggestedLabel"></span>
-      </a>
-    </div>
+
 
   </div>
 
@@ -80,7 +73,7 @@
         var knownPages = [
           { prefix: '/a/', pages: ['index', 'user', 'updates', 'tugas', 'theme', 'settingacc', 'send', 'search', 'scores', 'quiz', 'kisi-kisi', 'kirim-tugas', 'keaktifan', 'inifeedrusak', 'forum', 'feed', 'class-profile'] },
           { prefix: '/admiii/', pages: ['visitor', 'tugas-masuk', 'send_notice', 'progress-tugas', 'nilai-psts', 'monitor_simulasi', 'monitor_nilai', 'menu', 'inputsoal', 'files', 'csv-sql', 'control', 'cleanup-storage', 'bottom-nav'] },
-          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', '404'] }
+          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', '404', 'announcements'] }
         ];
 
         var path = window.location.pathname.replace(/\/+$/, '');
@@ -92,7 +85,9 @@
         for (var g = 0; g < knownPages.length; g++) {
           var group = knownPages[g];
           for (var p = 0; p < group.pages.length; p++) {
-            allPages.push({ name: group.pages[p], prefix: group.prefix, fullPath: group.prefix + group.pages[p] + '.html' });
+            var name = group.pages[p];
+            var fp = name === 'announcements' ? '/' : group.prefix + name + '.html';
+            allPages.push({ name: name, prefix: group.prefix, fullPath: fp });
           }
         }
 
@@ -110,21 +105,10 @@
           return dp[m][n];
         }
 
-        function showSuggestion(page) {
-          var el = document.getElementById('didYouMean');
-          var link = document.getElementById('suggestedLink');
-          var label = document.getElementById('suggestedLabel');
-          if (el && link && label) {
-            link.href = page.fullPath;
-            label.textContent = page.fullPath;
-            el.style.display = 'block';
-          }
-        }
-
         // 1. Direct match — page name exists but wrong prefix
         for (var i = 0; i < allPages.length; i++) {
           if (allPages[i].name === pageName) {
-            showSuggestion(allPages[i]);
+            window.location.href = allPages[i].fullPath;
             return;
           }
         }
@@ -138,7 +122,7 @@
             best = allPages[i];
           }
         }
-        if (best) showSuggestion(best);
+        if (best) window.location.href = best.fullPath;
       })();
     });
   </script>
