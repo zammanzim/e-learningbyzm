@@ -15,6 +15,21 @@ const _getVisitorUser = () => {
 let _globalPresenceChannel = null;
 window._onlineUsers = new Set();
 
+function _getDeviceInfo() {
+    const ua = navigator.userAgent;
+    let device_type = 'desktop';
+    if (/tablet|ipad|playbook|silk|android(?!.*mobile)/i.test(ua)) device_type = 'tablet';
+    else if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile|wpdesktop/i.test(ua)) device_type = 'mobile';
+
+    return {
+        user_agent: ua.slice(0, 500),
+        device_type,
+        platform: navigator.platform || '',
+        screen_resolution: `${screen.width}x${screen.height}`,
+        browser_language: navigator.language || ''
+    };
+}
+
 async function logVisitor() {
     const user = _getVisitorUser();
     if (!user || typeof supabase === 'undefined') return;
@@ -86,13 +101,20 @@ async function logVisitor() {
     if (last.page === currentPage && (now - (last.ts || 0)) < 2 * 60 * 1000) return;
 
     try {
+        const deviceInfo = _getDeviceInfo();
+
         // Upsert ke visitors tetap untuk status Online
         const { error } = await supabase.from("visitors").upsert({
             user_id: user.id,
             class_id: getEffectiveClassId() || user.class_id,
             is_visible: true,
             last_page: currentPage,
-            visited_at: new Date().toISOString()
+            visited_at: new Date().toISOString(),
+            user_agent: deviceInfo.user_agent,
+            device_type: deviceInfo.device_type,
+            platform: deviceInfo.platform,
+            screen_resolution: deviceInfo.screen_resolution,
+            browser_language: deviceInfo.browser_language
         }, { onConflict: 'user_id' });
 
         if (!error) {
@@ -210,7 +232,7 @@ async function renderVisitorStats(skipSkeleton) {
         const targetClass = _activeVisitorClass || getEffectiveClassId() || user.class_id;
         const { data, error } = await supabase
             .from('visitors')
-            .select('user_id, visited_at, last_page, is_visible, user:users(full_name, avatar_url, nickname)')
+            .select('user_id, visited_at, last_page, is_visible, user_agent, device_type, platform, screen_resolution, browser_language, user:users(full_name, avatar_url, nickname)')
             .eq('class_id', targetClass)
             .order('visited_at', { ascending: false });
 
@@ -246,6 +268,13 @@ async function renderVisitorStats(skipSkeleton) {
             const jam = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
             const isOnline = v.is_visible && window._onlineUsers.has(String(v.user_id));
+
+            let deviceLabel = '';
+            if (v.device_type) deviceLabel += v.device_type;
+            if (v.platform) deviceLabel += deviceLabel ? ` • ${v.platform}` : v.platform;
+
+            const hasDeviceInfo = deviceLabel || v.user_agent || v.screen_resolution || v.browser_language;
+
             const item = document.createElement('div');
             item.className = 'visitor-item';
             item.style.opacity = v.is_visible ? '1' : '0.45';
@@ -254,13 +283,41 @@ async function renderVisitorStats(skipSkeleton) {
                     <img src="${avatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; ${v.is_visible ? '' : 'filter:grayscale(0.7);'}">
                     ${isOnline ? '<div style="position:absolute; bottom:-1px; left:-1px; width:11px; height:11px; border-radius:50%; background:#22c55e; border:2px solid #0a0f19;"></div>' : ''}
                 </div>
-                <div style="flex:1; margin-left:10px;">
+                <div style="flex:1; margin-left:10px; min-width:0;">
                     <div style="font-size:13px; font-weight:bold; ${v.is_visible ? '' : 'color:#666;'}">${nickname}</div>
                     <div style="font-size:11px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <span style="color:${v.is_visible ? 'var(--accent, #00eaff)' : '#555'};">${v.last_page || 'Muter-muter'}</span>
-                        <span style="color:#666; white-space:nowrap;">${tanggal} • ${jam}</span>
+                        <span style="color:${v.is_visible ? 'var(--accent, #00eaff)' : '#555'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${v.last_page || 'Muter-muter'}</span>
+                        <span style="color:#666; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+                            ${tanggal} • ${jam}
+                            ${hasDeviceInfo ? '<i class="fa-solid fa-chevron-down" style="font-size:9px; transition:transform .3s;"></i>' : ''}
+                        </span>
+                    </div>
+                    <div class="v-device-detail" style="max-height:0; opacity:0; overflow:hidden; transition:max-height .35s ease, opacity .35s ease; font-size:10px; color:#666; line-height:1.2;">
+                        ${deviceLabel ? `<span style="color:#888;">${deviceLabel}</span><br>` : ''}
+                        ${v.user_agent ? `<span style="color:#888;">UA:</span> ${v.user_agent}<br>` : ''}
+                        ${v.screen_resolution ? `<span style="color:#888;">Resolusi:</span> ${v.screen_resolution}<br>` : ''}
+                        ${v.browser_language ? `<span style="color:#888;">Bahasa:</span> ${v.browser_language}` : ''}
                     </div>
                 </div>`;
+
+            if (hasDeviceInfo) {
+                const detail = item.querySelector('.v-device-detail');
+                const arrow = item.querySelector('.fa-chevron-down');
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.admin-actions')) return;
+                    const isOpen = detail.style.maxHeight !== '0px' && detail.style.maxHeight !== '';
+                    if (isOpen) {
+                        detail.style.maxHeight = '0';
+                        detail.style.opacity = '0';
+                        if (arrow) arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        detail.style.maxHeight = detail.scrollHeight + 12 + 'px';
+                        detail.style.opacity = '1';
+                        if (arrow) arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+            }
+
             listEl2.appendChild(item);
         });
 

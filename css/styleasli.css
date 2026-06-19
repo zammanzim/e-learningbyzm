@@ -768,6 +768,7 @@ i {
     border-radius: 0.5312rem;
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 
 .visitor-pp {

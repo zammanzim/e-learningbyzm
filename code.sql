@@ -264,3 +264,12 @@ VALUES (
     NOW()
 );
 
+-- ============================================================
+-- MIGRASI: Tambah kolom device_info di visitors
+-- ============================================================
+ALTER TABLE visitors ADD COLUMN IF NOT EXISTS user_agent TEXT DEFAULT '';
+ALTER TABLE visitors ADD COLUMN IF NOT EXISTS device_type TEXT DEFAULT '';
+ALTER TABLE visitors ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT '';
+ALTER TABLE visitors ADD COLUMN IF NOT EXISTS screen_resolution TEXT DEFAULT '';
+ALTER TABLE visitors ADD COLUMN IF NOT EXISTS browser_language TEXT DEFAULT '';
+
