@@ -395,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Fix: paksa string comparison biar item beneran ke-filter dari state
         SubjectApp.state.announcements = SubjectApp.state.announcements.filter(a => String(a.id) !== String(id));
         showToast(t("item_deleted"), "success");
+        SubjectApp._syncDomToState();
         window.renderKisiList();
         // Re-apply edit mode ke card-card baru kalau masih dalam mode edit
         if (SubjectApp.state.editMode) _reapplyEditMode();

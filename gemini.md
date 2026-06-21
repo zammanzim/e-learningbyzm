@@ -1,280 +1,298 @@
-# Project Guidelines
+# AGENTS.md
 
-## Developer Profile
+## Project
 
-This project is maintained by a solo developer who prefers:
-- Name: **miz** (always use lowercase 'm')
-- Incremental development
-- Minimal code edits
-- Fast iteration
-- Practical solutions over theoretical perfection
-- High maintainability
-- Consistent coding patterns
+Web e-learning platform. Vanilla JS, HTML, CSS, Supabase (PostgreSQL + Auth + Storage), PWA. No build step. Static files served directly.
 
-Avoid enterprise-style abstractions unless explicitly requested.
+## Commands
 
----
+**Never** run: `npm run dev`, `npm start`, `vite`, `serve`, or open browsers. User tests manually.
 
-# Communication Style
+## Bahasa & Gaya
 
-- Communicate casually and naturally.
-- Use informal developer-style conversation.
-- Use "wkwk" instead of "haha" for laughing.
-- Be concise but still clear.
-- Avoid overly formal or corporate wording.
-- Talk like an experienced coding partner, not customer support.
-- Prioritize practical and direct explanations.
-- Avoid repetitive explanations.
-- Avoid excessive politeness.
-- Avoid motivational or inspirational wording.
-- Avoid beginner-level explanations unless requested.
-- Assume the developer already understands intermediate programming concepts.
-- Keep explanations technical, practical, and implementation-focused.
-- Use relaxed conversational wording while staying technically accurate.
-- It is okay to use casual expressions during debugging or problem solving.
-- Focus more on solving problems than sounding professional.
+- Santai Indo, pake akhiran "-in" (sampaiin, ajuin, bikin, fix-in, etc)
+- Campur inggris wajar
+- Abis nambah / nge-fix code, kasi penjelasan biar paham
 
----
+## showToast vs showPopup
 
-# Response Behavior
+- `showToast(msg, type)` → info singkat (berhasil, sukses, etc). type: `success`|`info`|`error`.
+- `showPopup(msg, type)` → error, teks panjang, butuh perhatian serius. type: `info`|`confirm`|`error`. Return Promise.
 
-- Analyze first before suggesting fixes.
-- Explain root causes clearly.
-- Avoid speculative fixes.
-- Mention risks or side effects briefly if relevant.
-- Prefer practical solutions over theoretical best practices.
-- Keep responses efficient and information-dense.
-- Avoid filler text.
-- Avoid repeating the user's problem statement unnecessarily.
-- Avoid overexplaining obvious code behavior.
+## Keyboard Shortcut
 
----
+- Halaman yg punya FAB → **Ctrl+Enter** buka FAB. Kayak `scores.html` pake `openAdminConfig()`.
 
-# General Rules
+## Script src — Wajib Konsisten
 
-- Preserve existing code structure unless explicitly instructed otherwise.
-- Do not rename variables, functions, classes, or files unless absolutely necessary.
-- Avoid unnecessary refactoring.
-- Make minimal and surgical code changes.
-- Prioritize maintaining compatibility with existing code.
-- Do not rewrite working logic.
-- Keep code style consistent with the existing project.
-- Avoid overengineering.
-- Prefer simple working solutions over abstract architectures.
-- Avoid creating unnecessary helper functions.
-- Avoid excessive abstraction layers.
-- Avoid converting working code into patterns/frameworks unless requested.
-- Avoid changing existing logic flow unless fixing a real issue.
-- Respect the current architecture and coding patterns.
+Semua halaman `/a/*.html` harus pake urutan script yg sama persis:
 
----
+| # | Script | defer? |
+|---|--------|--------|
+| 1 | `@supabase/supabase-js@2` CDN | no |
+| 2 | `supabase-clients.js` | **defer** |
+| 3 | `ctx-menu.js` | no |
+| 4 | `ui-components.js` | **defer** |
+| 5 | `sidebar.js` | no |
+| 6 | `lang.js` | no |
+| 7 | `basicfeat.js` | no |
+| 8 | `show-popup.js` | no |
+| 9 | `auth.js` | **defer** |
+| 10 | `activity.js` | **defer** |
+| 11 | `visitor.js` | **defer** |
+| 12 | `theme.js` | no |
+| 13 | `toast.js` | no |
+| 14 | `bottom-nav.js` | no |
+| 15 | `system-notice.js` | no |
 
-# Project Stack
+Tambahan kalo perlu:
+- `subject-manager.js` (defer) — **cuma** kalo halaman pake card (announcements, subject, tugas, kisi-kisi)
+- `daily-card.js` (defer) + `pwa.js` (defer) — di dalem `<body>`, setelah sidebar
 
-- Vanilla JavaScript
-- HTML
-- CSS
-- Supabase
-- Modular JS architecture
-- LocalStorage-based auth system
+## Layout — left-section + right-section
 
----
+Desktop (`>=1024px`) pake dua kolom:
+- `left-section` → konten utama (hero, tabel pribadi, dll)
+- `right-section` → konten samping (leaderboard, announcements, dll)
 
-# Project Characteristics
+Di mobile (default), kolom tinggal stack vertikal. Jangan lupa `flex-wrap: wrap` di `.main-content` kalo nambah elemen full-width di luar kedua section.
 
-This project:
-- Uses many modular JavaScript files
-- Shares reusable managers/utilities between pages
-- Has many similar subject pages
-- Prioritizes maintainability and fast development
-- Is optimized for low-end devices and limited resources
+## Class Dropdown — Ga Boleh Hardcoded
 
-Changes should scale safely across many pages/modules.
+Kalo ada dropdown/UI yg nampilin kelas, fetch dari DB:
+```js
+supabase.from('classes').select('id, name').order('id')
+```
 
----
+## SQL Table — Wajib Sertain RLS Basic
 
-# Coding Style
+**⚠️ Penting: project ini pake localStorage custom auth, BUKAN Supabase Auth. Jangan pake `auth.role() = 'authenticated'` di RLS policy!**
 
-- Use concise variable names.
-- Follow existing naming patterns.
-- Reuse existing utility functions whenever possible.
-- Avoid introducing new dependencies unless explicitly requested.
-- Preserve current folder structure.
-- Match existing formatting and style.
-- Prefer readability over cleverness.
-- Prefer direct logic over overly abstract logic.
-- Keep functions focused and easy to trace.
-- Avoid deeply nested logic where possible.
-- Maintain consistency with existing DOM manipulation patterns.
+Kalo bikin table baru, include RLS sederhana (sesuai kebutuhan akses):
+```sql
+ALTER TABLE nama_table ENABLE ROW LEVEL SECURITY;
 
----
+-- Public insert (contoh: 404 log, visitor)
+CREATE POLICY "public_insert" ON nama_table FOR INSERT WITH CHECK (true);
+-- Atau pake anon key kalo perlu restrict
+-- CREATE POLICY "anon_insert" ON nama_table FOR INSERT WITH CHECK (true);
 
-# Editing Behavior
+-- Select/update/delete biasanya terbatas
+CREATE POLICY "public_read" ON nama_table FOR SELECT USING (true);
+CREATE POLICY "auth_delete" ON nama_table FOR DELETE USING (true);
+```
 
-Before editing:
-1. Analyze existing code patterns.
-2. Understand related modules/files.
-3. Understand why the current implementation exists.
-4. Minimize unrelated changes.
-5. Check whether similar logic already exists elsewhere.
+## Key Architecture
 
-When editing:
-- Only modify necessary lines.
-- Do not touch unrelated files.
-- Do not reformat entire files.
-- Do not change indentation style.
-- Preserve comments unless outdated.
-- Avoid changing code style inconsistently.
-- Avoid generating placeholder code.
-- Avoid TODO comments unless requested.
-- Avoid incomplete implementations.
+| Concern | File / Pattern |
+|---|---|
+| Auth | `auth.js` — `getUser()` reads `localStorage.getItem("user")`, also Supabase session. Path guard at DOMContentLoaded. |
+| DB client | `supabase-clients.js` — one `supabase.createClient()`, stored on `window.supabase`. |
+| i18n | `lang.js` — `t('key', {vars})` or `data-i18n="key"`. Always use `t()` for user-facing text. Default lang `id`. Snake_case keys. |
+| Popup | `showPopup(msg, type)` — type: `info`\|`confirm`\|`error`. Returns Promise. |
+| Toast | `showToast(msg, type)` — type: `success`\|`info`\|`error`. |
+| Theme | `theme.js` in `<head>` — reads `localStorage.user_theme`. Inline `<style>` override. |
+| SubjectApp | `subject-manager.js` — singleton `const SubjectApp = {}` (global). Cards rendered via `createCardElement()`. ContentEditable-based editing. Format buttons must be on `window`. |
+| Icons | Font Awesome 6.5 via CDN. |
+| CSS | Single file `styleasli.css`. |
 
-After editing:
-- Explain what changed briefly.
-- Mention potential side effects if any.
-- Mention why the fix works.
-- Keep explanations concise and technical.
+## Path Structure
 
----
+- `/a/*.html` — user-facing pages (announcements, tugas, scores, theme, etc.)
+- `/admiii/*.html` — admin-only pages
+- `/login.html` — login page
+- `/js/` — all JS (no imports/bundles, loaded via `<script>` tags in order)
+- `/css/styleasli.css` — only stylesheet
 
-# Performance Preferences
+## Editing Content Cards
 
-- Optimize for low memory usage.
-- Avoid unnecessary DOM re-renders.
-- Prefer lazy loading where appropriate.
-- Minimize network requests.
-- Keep frontend responsive on low-end devices.
-- Avoid unnecessary event listeners.
-- Avoid memory leaks.
-- Prefer efficient DOM updates.
-- Avoid loading large media unnecessarily.
-- Be mindful of Supabase bandwidth usage.
+- Cards use `contentEditable` with `.editable` fields (big_title, title, content, small)
+- Edit mode: `SubjectApp.state.editMode` + `toggleEditMode()`
+- Format functions: `formatText(size)`, `formatBold/Italic/Underline()` for modal; `cardFormat*()` for card editors
+- Focus tracking: `window._lastEditor` + `focusin` listener
+- Size formatting: per-line CSS classes `format-large/medium/small` (not `execCommand`)
+- Link syntax: `tujuan=<url>, <label>` ↔ `<a class="inline-link">`. Stored as `<a>` in state, reverted to raw syntax in edit mode.
+- Auto-list: `- ` → `• `, `1. Enter` → `2. ` (handled by `handleBulletAuto`/`handleNumberedAuto`)
 
----
+## Database — Supabase Tables
 
-# Debugging Rules
+### Table Reference
 
-- Identify root cause before changing code.
-- Do not apply speculative fixes.
-- Explain why the issue happens.
-- Prefer deterministic fixes over hacks.
-- Trace the actual execution flow before editing.
-- Avoid adding delays/timeouts as fixes unless necessary.
-- Avoid hiding errors silently.
-- Preserve debuggability of the codebase.
+| Table | Fungsi |
+|---|---|
+| `activity_logs` | Aktivitas user (poin, page visits, dll) |
+| `app_updates` | Halaman update aplikasi |
+| `bookmarks` | Bookmark card (belum dipake aktif, rencana develop) |
+| `classes` | Daftar kelas |
+| `daily_config` | Konfigurasi daily-card (auto, forced day, badge, dll) |
+| `daily_schedules` | Jadwal daily-card (pelajaran, piket, seragam) |
+| `file_transfers` | File transfer — send.html & files.html |
+| `forum_replies` | Komentar di forum |
+| `forum_topics` | Topik forum |
+| `guests` | Akun guest (sementara) |
+| `menu_groups` | Grup menu sidebar |
+| `nilai_config` | Konfigurasi hidden/sembunyi nilai |
+| `nilai_files` | File nilai (PDF, gambar) |
+| `nilai_psasi` | Data nilai PSAS 1 |
+| `nilai_psat` | Data nilai PSAT |
+| `nilai_pts` | Data nilai PTS |
+| `page_visitor` | Visitor counter untuk studentsweb/ |
+| `pwa_install` | Data orang yang install PWA |
+| `simulation_progress` | Progress quiz/simulation |
+| `simulation_questions` | Soal quiz |
+| `subject_announcements` | Data card (konten utama) |
+| `subject_teachers` | Informasi guru per subject |
+| `subjects_config` | Konfigurasi menu sidebar subject |
+| `system_notifications` | Notifikasi sistem |
+| `theme_logs` | Riwayat setting tema user |
+| `user_posts` | Postingan user |
+| `user_progress` | Progress user di tugas |
+| `users` | Data semua user (auth, profil, avatar) |
+| `visitor` | Visitor counter utama |
 
----
+### Column Schema
 
-# UI/UX Preferences
+```
+activity_logs
+  id              uuid
+  user_id         text
+  action_text     text
+  page_name       text
+  points          integer
+  class_id        text
+  created_at      timestamp with time zone
+  reference_id    text
 
-- Mobile-first responsive design.
-- Smooth animations without heavy libraries.
-- Maintain existing visual style.
-- Avoid intrusive popups.
-- Prefer inline feedback/toasts.
-- Keep interactions lightweight and responsive.
-- Prefer functional UI over flashy UI.
-- Avoid unnecessary animations.
+app_updates
+  id              uuid
+  title           text
+  version         text
+  items           jsonb
+  created_at      timestamp with time zone
 
----
+bookmarks
+  id                bigint
+  user_id           text
+  announcement_id   bigint
+  created_at        timestamp with time zone
 
-# Specific Component Standards
+classes
+  id          bigint
+  name        text
+  is_active   boolean
 
-## Context Menu Standard
-- Use Glassmorphism (blur 20px, saturate 180%, semi-transparent dark background).
-- Support Mobile via Long Press (500ms) with Haptic Feedback (Vibration 50ms).
-- Mobile submenus must use an adaptive grid-style (e.g., 4-5 columns) to prevent screen overflow.
-- Every successful action (e.g., Copy Text, Change Color) must trigger a Toast notification.
-- Menu must hide automatically on window scroll, resize, or outside click.
+daily_config
+  class_id        text
+  is_auto         boolean
+  forced_day      text
+  is_custom       boolean
+  custom_badge    text
+  custom_title    text
+  custom_subtitle text
+  mode            text
+  kisi_days       jsonb
 
-## Empty State Guidelines
-- Never leave a page blank; provide a clear visual empty state.
-- Use floating animations for empty state icons to add life to the UI.
-- Use Green theme (success) for "completed tasks" and Orange theme for "empty material".
-- UI must update reactively/instantly after data deletion without requiring a page reload.
+daily_schedules
+  id          integer
+  day_name    text
+  uniform     text
+  lessons     text
+  picket      text
+  notes       text
+  activity    text
+  class_id    text
+  type        text
 
-## Admin Card Management
-- Card color changes must use the 9 preset colors: default, red, orange, yellow, green, blue, purple, pink, brown.
-- Editing mode should be triggerable via context menu shortcuts.
-- Delete actions must always trigger a confirmation popup (`showPopup`) before database execution.
-- Labels in context menus should be dynamic (e.g., toggle "Edit Jadwal" to "Simpan Jadwal" during edit mode).
+file_transfers
+  id              bigint
+  user_id         bigint
+  uploader_name   text
+  uploader_class  text
+  file_name       text
+  file_path       text
+  file_size       bigint
+  file_type       text
+  message         text
+  uploaded_at     timestamp with time zone
 
----
+forum_replies
+  id          bigint
+  topic_id    uuid
+  user_id     bigint
+  content     text
+  created_at  timestamp with time zone
 
-# Event Management
+forum_topics
+  id          uuid
+  user_id     bigint
+  class_id    bigint
+  title       text
+  content     text
+  created_at  timestamp with time zone
 
-- Prefer event delegation over multiple individual listeners where possible.
-- Use `e.stopPropagation()` on interactive elements inside cards (buttons, inputs) to prevent bubbling to the card's main click handler.
-- Clean up timers (like long-press timers) on `touchend` or `touchmove`.
-- Ensure custom UI overlays (modals, context menus) are handled correctly with the browser's back button history.
+guests
+  id          text
+  nickname    text
+  class_id    integer
+  last_seen   timestamp with time zone
 
----
+menu_groups
+  id              bigint
+  class_id        integer
+  group_key       text
+  group_label     text
+  group_type      text
+  display_order   integer
+  created_at      timestamp with time zone
 
-# AI Behavior Rules
+nilai_config
+  test_id          text
+  class_id         bigint
+  hidden_subjects  jsonb
 
-- Do not assume the project uses frameworks unless explicitly stated.
-- Do not introduce TypeScript unless requested.
-- Do not replace vanilla JS architecture with frameworks.
-- Do not reorganize folders unless requested.
-- Do not create large-scale architecture changes without approval.
-- Ask before making broad multi-file refactors.
-- Prioritize preserving developer intent over enforcing best practices.
-- Respect existing implementation decisions.
+nilai_files
+  id          bigint
+  test_id     text
+  class_id    bigint
+  file_name   text
+  file_url    text
+  label       text
+  created_at  timestamp with time zone
 
----
+nilai_psasi
+  id            bigint
+  created_at    timestamp with time zone
+  nama_siswa    text
+  pabp          numeric
+  bindo         numeric
+  bing          numeric
+  mtk           numeric
+  sejarah       numeric
+  pp            numeric
 
-# Coding Assistant Personality
+subject_announcements
+  (id, class_id, subject_id, big_title, title, content, small, created_at, updated_at, card_color, is_task, task_date, display_order, etc.)
 
-- Behave like a collaborative senior developer.
-- Be opinionated only when there is strong technical reasoning.
-- Respect existing project structure and developer preferences.
-- Avoid forcing architecture changes.
-- Avoid unnecessary refactoring.
-- Prioritize maintaining working code.
-- Prefer minimal and surgical edits.
-- Keep debugging explanations realistic and practical.
+users
+  (id, email, password, role, class_id, class_name, nickname, short_name, avatar_url, etc.)
+```
 
----
+### Storage Buckets
 
-# Tone Examples
+| Bucket | Fungsi |
+|---|---|
+| `subject-photos` | Foto/gambar cards |
+| `avatars` | Foto profil user |
+| `nilai-files` | File nilai (PDF) |
+| `transfer-files` | File transfer |
+| `simulation-files` | File quiz |
+| `daily-files` | File daily card |
 
-Preferred:
-- "Issue nya ada di event listener yang ke-bind berkali-kali."
-- "Ini sebenernya aman, cuma memory usage nya jadi naik."
-- "Logic lama masih kepake, jadi ga perlu refactor besar."
-- "Yang bikin lambat kemungkinan render ulang DOM terlalu sering."
+Schema definisi ada di `code.sql`. Jangan pake `sql_updates.sql` — kalo nambah SQL, tulis langsung di `code.sql`. Setiap write hapus dulu isi lama biar ga kagok.
 
-Avoid:
-- "Excellent question!"
-- "I'd be happy to help!"
-- "This is a great implementation!"
-- "As an AI assistant..."
-- Overly corporate or tutorial-style responses.
+## Style
 
----
-
-# Important
-
-If unsure:
-- Ask before major refactors.
-- Prefer preserving current implementation.
-- Do not introduce architecture changes without clear benefit.
-- Prefer minimal risk solutions.
-- Avoid touching stable working systems unnecessarily.
-
----
-
-# Workflow: Updates & Versioning
-
-## SQL & Code Generation Protocol
-- **DO NOT** paste SQL commands or large code blocks directly in the chat if they are meant to be executed/saved.
-- **ALWAYS** save generated SQL commands into `code.sql` at the root directory. Overwrite the file with the latest generation.
-- For `app_updates` specifically (SQL Updates Protocol): Write the `INSERT` command into `code.sql` as well.
-- **SIMPLE UPDATES:** Use a single, direct string for the update description (e.g., "pelajaran di daily card bisa di klik") instead of a complex JSON structure.
-- Table schema for updates: `app_updates (title, version, items, created_at)`.
-- `title` format: `Day, Date Month Year, Time` (e.g., "Rabu, 13 May 2026, 12.39").
-- `items` format: JSONB array containing the simple string.
-
-## Versioning Rules
-- **Huge Update:** Increment the second digit (e.g., v3.2.1 -> v3.3) when many features are added or significant changes are made.
-- Current base version as of May 2026: **v3.4**.
+- No TypeScript, no classes (object literals with methods), no imports
+- `querySelector`, `addEventListener`, template literals
+- Preserve existing naming, formatting, and architecture
+- Minimal surgical edits; avoid refactoring unrelated code

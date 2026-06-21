@@ -273,3 +273,24 @@ ALTER TABLE visitors ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT '';
 ALTER TABLE visitors ADD COLUMN IF NOT EXISTS screen_resolution TEXT DEFAULT '';
 ALTER TABLE visitors ADD COLUMN IF NOT EXISTS browser_language TEXT DEFAULT '';
 
+
+-- ============================================================
+-- UPDATE LOG & MENU SEED (v4.2)
+-- ============================================================
+
+-- Tambahkan menu Class Profile v2 ke kelas 2 (master/system) jika belum ada
+INSERT INTO subjects_config (class_id, subject_id, subject_name, menu_group, display_order, icon)
+SELECT 2, 'class-profile-v2.html', 'Profil Kelas v2', 'main', 98, 'fa-users'
+WHERE NOT EXISTS (
+    SELECT 1 FROM subjects_config WHERE subject_id = 'class-profile-v2.html' AND class_id = 2
+);
+
+INSERT INTO app_updates (title, version, items, created_at)
+VALUES (
+    'Sabtu, 20 June 2026, 17.30',
+    'v4.2',
+    '["Halaman Profil Kelas v2 (class-profile-v2.html) selesai dibuat untuk mockup visual bento grid"]'::jsonb,
+    NOW()
+);
+
+

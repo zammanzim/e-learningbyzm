@@ -1091,6 +1091,22 @@ const SubjectApp = {
             dragSrcCard = card;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', card.dataset.id);
+
+            // Custom drag image: cuma big_title (konsisten sama mobile ghost)
+            const title = card.querySelector('[data-field="big_title"]')?.innerText || '';
+            const dragImg = document.createElement('div');
+            dragImg.innerHTML = `<i class="fa-solid fa-grip-vertical" style="margin-right:10px;color:rgba(0,234,255,0.8);"></i>${title}`;
+            dragImg.style.cssText = `
+                position:absolute;top:-9999px;left:-9999px;
+                padding:12px 24px;background:rgba(0,20,30,0.85);
+                border:2px solid rgba(0,234,255,0.7);border-radius:14px;
+                color:rgba(255,255,255,0.85);font-size:15px;font-weight:600;
+                display:flex;align-items:center;gap:10px;white-space:nowrap;
+            `;
+            document.body.appendChild(dragImg);
+            e.dataTransfer.setDragImage(dragImg, dragImg.offsetWidth / 2, dragImg.offsetHeight / 2);
+            requestAnimationFrame(() => dragImg.remove());
+
             requestAnimationFrame(() => {
                 // Collapse semua card biar keliatan urutannya
                 container.querySelectorAll('.course-card').forEach(c => c.classList.add('dragging'));
@@ -1151,42 +1167,42 @@ const SubjectApp = {
             touchCard = card;
             lastTarget = null;
             const touch = e.touches[0];
-            const rect = card.getBoundingClientRect();
 
-            // Ghost ringan: hanya ukuran + judul, bukan clone full DOM
+            // Ghost ringan: cuma big_title (konsisten sama desktop)
             const title = card.querySelector('[data-field="big_title"]')?.innerText || '';
             ghost = document.createElement('div');
             ghost.style.cssText = `
                 position: fixed;
-                left: ${rect.left}px;
-                top: ${rect.top}px;
-                width: ${rect.width}px;
-                height: ${rect.height}px;
+                left: 0;
+                top: 0;
+                padding: 12px 24px;
                 background: rgba(0,20,30,0.85);
                 border: 2px solid rgba(0,234,255,0.7);
                 border-radius: 14px;
                 box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,234,255,0.2);
                 display: flex;
                 align-items: center;
-                justify-content: center;
+                gap: 10px;
+                white-space: nowrap;
                 pointer-events: none;
                 z-index: 9999;
                 will-change: transform;
                 color: rgba(255,255,255,0.85);
                 font-size: 15px;
                 font-weight: 600;
-                padding: 0 20px;
-                text-align: center;
-                overflow: hidden;
             `;
-            ghost.innerHTML = `<i class="fa-solid fa-grip-vertical" style="margin-right:10px; color:rgba(0,234,255,0.8);"></i>${title}`;
+            ghost.innerHTML = `<i class="fa-solid fa-grip-vertical" style="color:rgba(0,234,255,0.8);"></i>${title}`;
             document.body.appendChild(ghost);
 
-            ghostInitX = rect.left - (touch.clientX - rect.left);
-            ghostInitY = rect.top - (touch.clientY - rect.top);
+            const ghostRect = ghost.getBoundingClientRect();
+            ghostInitX = -ghostRect.width / 2;
+            ghostInitY = -ghostRect.height / 2;
+            ghost.style.transform = `translate(${touch.clientX + ghostInitX}px, ${touch.clientY + ghostInitY}px)`;
 
             card.style.opacity = '0.3';
             card.style.transition = 'opacity 0.15s';
+            // Collapse semua card biar keliatan urutannya (sama kayak desktop)
+            container.querySelectorAll('.course-card').forEach(c => c.classList.add('dragging'));
             e.preventDefault();
             startAutoScroll();
         }, { passive: false });
@@ -1563,6 +1579,20 @@ const SubjectApp = {
         } catch (err) { console.error(err); }
     },
 
+    _syncDomToState() {
+        if (!this.state.editMode) return;
+        const cards = document.querySelectorAll(".course-card");
+        cards.forEach(card => {
+            const id = card.dataset.id;
+            const ann = this.state.announcements.find(a => String(a.id) === String(id));
+            if (!ann) return;
+            ann.big_title = card.querySelector('[data-field="big_title"]')?.innerText.trim() || "";
+            ann.title = card.querySelector('[data-field="title"]')?.innerText.trim() || "";
+            ann.content = card.querySelector('[data-field="content"]')?.innerHTML || "";
+            ann.small = card.querySelector('[data-field="small"]')?.innerText.trim() || "";
+        });
+    },
+
     async deleteAnnouncement(card) {
         if (!await showPopup(t('confirm_delete_material'), "confirm")) return;
         const id = card.dataset.id;
@@ -1605,6 +1635,7 @@ const SubjectApp = {
                 if (typeof updateProgressUI === 'function') updateProgressUI();
             }
 
+            this._syncDomToState();
             this.renderAnnouncements();
             showToast(t('deleted_success'), "success");
         } catch (err) {

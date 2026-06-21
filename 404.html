@@ -19,6 +19,7 @@
   <script src="../js/subject-manager.js?v=20260619" defer></script>
   <script src="../js/theme.js?v=20260619"></script>
   <script src="../js/toast.js?v=20260619"></script>
+  <script src="../js/footer.js?v=20260619"></script>
   <link rel="stylesheet" href="../css/styleasli.css?v=20260619">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -71,9 +72,9 @@
       // Did-you-mean logic
       (function() {
         var knownPages = [
-          { prefix: '/a/', pages: ['index', 'user', 'updates', 'tugas', 'theme', 'settingacc', 'send', 'search', 'scores', 'quiz', 'kisi-kisi', 'kirim-tugas', 'keaktifan', 'inifeedrusak', 'forum', 'feed', 'class-profile'] },
+          { prefix: '/a/', pages: ['index', 'user', 'updates', 'tugas', 'theme', 'settingacc', 'send', 'search', 'scores', 'subject', 'quiz', 'kisi-kisi', 'kirim-tugas', 'keaktifan', 'inifeedrusak', 'forum', 'feed', 'class-profile'] },
           { prefix: '/admiii/', pages: ['visitor', 'tugas-masuk', 'send_notice', 'progress-tugas', 'nilai-psts', 'monitor_simulasi', 'monitor_nilai', 'menu', 'inputsoal', 'files', 'csv-sql', 'control', 'cleanup-storage', 'bottom-nav'] },
-          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', '404', 'announcements'] }
+          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', 'announcements'] }
         ];
 
         var path = window.location.pathname.replace(/\/+$/, '');
