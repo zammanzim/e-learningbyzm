@@ -186,6 +186,7 @@ async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, ra
                 .select('*')
                 .eq('class_id', classId)
                 .or('is_lesson.eq.true,is_task.eq.true')
+                .order('is_pinned', { ascending: false })
                 .order('created_at', { ascending: false }),
             supabase.from('user_progress')
                 .select('announcement_id')
@@ -415,8 +416,10 @@ function applyCurrentFilter() {
     if (currentFilter === 'pending') {
         const filtered = byMapel.filter(t => !doneIds.includes(String(t.id)));
 
-        // Urutkan: Deadline (merah) dulu, baru Pending (kuning)
+        // Urutkan: Pinned dulu, Deadline (merah), baru Pending (kuning)
         filtered.sort((a, b) => {
+            if (a.is_pinned && !b.is_pinned) return -1;
+            if (!a.is_pinned && b.is_pinned) return 1;
             const aIsDeadline = deadlineSubjects.some(s => {
                 const normSubject = normalize(a.subject_id);
                 const normTitle = normalize(a.big_title);

@@ -498,15 +498,15 @@ const SubjectApp = {
                 } catch (e) { return null; }
             };
             const writeCache = (data) => {
-                try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+                try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) { }
             };
             let data, error;
             try {
                 // Balikin ke logic asal miz: 
                 // Lessons = Newest First, Announcements = Ikut display_order
                 const res = this.state.isLessonMode
-                    ? await query.order("created_at", { ascending: false })
-                    : await query.order("display_order", { ascending: true }).order("created_at", { ascending: false });
+                    ? await query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false })
+                    : await query.order("is_pinned", { ascending: false }).order("display_order", { ascending: true }).order("created_at", { ascending: false });
 
                 data = res.data; error = res.error;
                 if (error) throw error;
@@ -643,7 +643,7 @@ const SubjectApp = {
         let colorClass = data.card_color && data.card_color !== 'default' ? `color-${data.card_color}` : "";
         if (options.statusClass) colorClass = options.statusClass; // Override if statusClass provided
 
-        card.className = `course-card ${colorClass}`;
+        card.className = `course-card ${colorClass}${data.is_pinned ? ' is-pinned' : ''}`;
 
         // DEFINISI isAdmin BIAR GAK ERROR "NOT DEFINED"
         const isAdmin = this.state.user && (this.state.user.role === 'class_admin' || this.state.user.role === 'super_admin');
@@ -699,9 +699,9 @@ const SubjectApp = {
     <button onclick="cardFormatItalic(event)" class="fmt-btn" style="font-style:italic;">I</button>
     <button onclick="cardFormatUnderline(event)" class="fmt-btn" style="text-decoration:underline;">U</button>
     <span style="width:1px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
-    <button onclick="cardFormatText(event,'5')" class="fmt-btn" style="font-size:10px;">Besar</button>
-    <button onclick="cardFormatText(event,'3')" class="fmt-btn" style="font-size:10px;">Sedang</button>
-    <button onclick="cardFormatText(event,'2')" class="fmt-btn" style="font-size:10px;">Kecil</button>
+    <button onclick="cardFormatText(event,'5')" class="fmt-btn" style="font-size:10px;">XL</button>
+    <button onclick="cardFormatText(event,'3')" class="fmt-btn" style="font-size:10px;">L</button>
+    <button onclick="cardFormatText(event,'2')" class="fmt-btn" style="font-size:10px;">M</button>
     <span style="width:1px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px;"></span>
     <button onclick="cardFormatLink(event)" class="fmt-btn" title="${t('add_link')}"><i class="fa-solid fa-link" style="font-size:11px;"></i></button>
 </div>`;
@@ -744,6 +744,9 @@ const SubjectApp = {
                 <i class="fa-solid fa-grip-vertical" style="pointer-events:none; font-size:14px;"></i>
             </div>
         </div>
+        <div class="pin-badge" style="display:${data.is_pinned ? 'flex' : 'none'}; position:absolute; top:10px; right:10px; z-index:55; background:var(--accent,#00eaff); color:#000; width:28px; height:28px; border-radius:50%; align-items:center; justify-content:center; font-size:11px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+            <i class="fa-solid fa-thumbtack"></i>
+        </div>
         ${photoHTML}
         <div class="pending-photo-preview" style="display:none; margin-bottom:12px;"></div>
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
@@ -764,6 +767,10 @@ const SubjectApp = {
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:1; position:relative;">
                 ${isAdmin ? formatTools : ''}
                 ${isAdmin ? colorTools : ''}
+                ${isAdmin ? `
+                <button class="pin-btn" onclick="event.stopPropagation();SubjectApp.togglePin('${data.id}')" style="display:none; background:${data.is_pinned ? 'var(--accent,#00eaff)' : 'rgba(0,234,255,0.12)'}; border:1px solid rgba(0,234,255,0.3); color:${data.is_pinned ? '#000' : 'var(--accent,#00eaff)'}; padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px;" title="${data.is_pinned ? 'Unpin' : 'Pin ke atas'}">
+                    <i class="fa-solid fa-thumbtack" style="pointer-events:none;"></i>
+                </button>` : ''}
 
                 <button class="delete-btn" style="display:none; background:#f44336; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:0 !important;">
                     <i class="fa-solid fa-trash" style="margin-right:0;"></i>
@@ -809,6 +816,32 @@ const SubjectApp = {
         }
     },
 
+    togglePin(id) {
+        const card = document.querySelector(`.course-card[data-id="${id}"]`);
+        if (!card) return;
+        const ann = this.state.announcements.find(a => String(a.id) === String(id));
+        if (!ann) return;
+
+        const newPinned = !ann.is_pinned;
+        ann.is_pinned = newPinned;
+
+        card.classList.toggle('is-pinned', newPinned);
+
+        const badge = card.querySelector('.pin-badge');
+        if (badge) badge.style.display = newPinned ? 'flex' : 'none';
+
+        const pinBtn = card.querySelector('.pin-btn');
+        if (pinBtn) {
+            pinBtn.style.background = newPinned ? 'var(--accent,#00eaff)' : 'rgba(0,234,255,0.12)';
+            pinBtn.style.color = newPinned ? '#000' : 'var(--accent,#00eaff)';
+            pinBtn.title = newPinned ? 'Unpin' : 'Pin ke atas';
+        }
+
+        // Tandai pending biar pas save nanti ikut ke-upsert
+        this._pendingPinChanges = this._pendingPinChanges || new Set();
+        this._pendingPinChanges.add(String(id));
+    },
+
     async toggleEditMode() {
         if (this.state.isToggling) return;
         this.state.isToggling = true;
@@ -845,6 +878,7 @@ const SubjectApp = {
             const formatTools = card.querySelector(".card-format-tools");
             const reorderHandle = card.querySelector(".reorder-handle");
             const cameraBtn = card.querySelector(".camera-btn");
+            const pinBtn = card.querySelector(".pin-btn");
             const deletePhotoBtns = card.querySelectorAll(".delete-photo-btn");
 
             if (this.state.editMode) {
@@ -862,9 +896,12 @@ const SubjectApp = {
                     // Reorder handle HANYA tampil di Announcements
                     // (Lessons pake sorting created_at, Kisi-kisi dipetakan ke hari)
                     const isStaticPage = this.state.isLessonMode || this.state.subjectId === 'kisi-kisi';
-                    reorderHandle.style.display = isStaticPage ? "none" : "flex";
+                    const isPinnedCard = card.classList.contains('is-pinned');
+                    reorderHandle.style.display = (isStaticPage || isPinnedCard) ? "none" : "flex";
+
                 }
                 if (cameraBtn) cameraBtn.style.display = "flex";
+                if (pinBtn) pinBtn.style.display = "inline-flex";
                 deletePhotoBtns.forEach(b => b.style.display = "flex");
             } else {
                 card.classList.remove("editable-mode");
@@ -874,6 +911,7 @@ const SubjectApp = {
                 if (formatTools) formatTools.style.display = "none";
                 if (reorderHandle) reorderHandle.style.display = "none";
                 if (cameraBtn) cameraBtn.style.display = "none";
+                if (pinBtn) pinBtn.style.display = "none";
                 deletePhotoBtns.forEach(b => b.style.display = "none");
                 card.draggable = false;
             }
@@ -978,7 +1016,8 @@ const SubjectApp = {
 
                 // LOGIC DIRTY CHECK: Bandingkan data UI vs data asli di state
                 // Jika ID ada di dirtyCardIds (karena upload foto), otomatis true
-                const isChanged = dirtyCardIds.has(id) || !ann ||
+                const hasPinChange = this._pendingPinChanges && this._pendingPinChanges.has(id);
+                const isChanged = dirtyCardIds.has(id) || hasPinChange || !ann ||
                     getVal("big_title") !== (ann.big_title || "") ||
                     getVal("title") !== (ann.title || "") ||
                     getContent() !== (ann.content || "") ||
@@ -992,6 +1031,7 @@ const SubjectApp = {
                 return {
                     id,
                     ...(this.state.isLessonMode ? {} : { display_order: currentOrder }),
+                    is_pinned: ann ? ann.is_pinned : false,
                     big_title: getVal("big_title"),
                     title: getVal("title"),
                     content: getContent(),
@@ -1022,6 +1062,8 @@ const SubjectApp = {
             try {
                 localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify({ ts: Date.now(), data: this.state.announcements }));
             } catch (e) { }
+
+            this._pendingPinChanges = new Set();
 
             if (typeof showPopup === 'function') showToast(t('all_changes_saved'), "success");
         } catch (err) {
@@ -1124,7 +1166,7 @@ const SubjectApp = {
             cursorY = e.clientY;
             const target = e.target.closest('.course-card');
             if (target && target !== dragSrcCard) {
-                this._showDropIndicator(container, target, e.clientY, dragDir);
+                this._showDropIndicator(container, target, e.clientY, dragDir, dragSrcCard);
             }
         });
 
@@ -1224,7 +1266,7 @@ const SubjectApp = {
             const target = el?.closest('.course-card');
             if (target && target !== touchCard && target !== lastTarget) {
                 lastTarget = target;
-                this._showDropIndicator(container, target, touch.clientY);
+                this._showDropIndicator(container, target, touch.clientY, 'down', touchCard);
             }
             e.preventDefault();
         }, { passive: false });
@@ -1245,8 +1287,55 @@ const SubjectApp = {
         container.addEventListener('touchcancel', onTouchEnd);
     },
 
-    _showDropIndicator(container, target, clientY, dragDir = 'down') {
+    _showDropIndicator(container, target, clientY, dragDir = 'down', sourceCard = null) {
         this._removeDropIndicator();
+
+        const allCards = [...container.querySelectorAll('.course-card')];
+        const sourceIsPinned = sourceCard && sourceCard.classList.contains('is-pinned');
+
+        // Cari index card pinned terakhir
+        let lastPinnedIdx = -1;
+        for (let i = allCards.length - 1; i >= 0; i--) {
+            if (allCards[i].classList.contains('is-pinned')) {
+                lastPinnedIdx = i;
+                break;
+            }
+        }
+
+        // Kalo source unpinned & ada pinned card, restrict drop area
+        if (!sourceIsPinned && lastPinnedIdx >= 0) {
+            const targetIdx = allCards.indexOf(target);
+            const rect = target.getBoundingClientRect();
+            const threshold = dragDir === 'up'
+                ? rect.top + rect.height * 0.9
+                : rect.top + rect.height * 0.5;
+            const insertBefore = clientY < threshold;
+            const insertIdx = insertBefore ? targetIdx : targetIdx + 1;
+
+            if (insertIdx <= lastPinnedIdx) {
+                // Redirect indicator ke setelah pinned card terakhir
+                const line = document.createElement('div');
+                line.id = '_dnd_indicator';
+                line.style.cssText = `
+                    height: 3px;
+                    background: var(--accent, #00eaff);
+                    border-radius: 3px;
+                    margin: 2px 0;
+                    box-shadow: 0 0 10px var(--accent, #00eaff), 0 0 20px rgba(0,234,255,0.4);
+                    pointer-events: none;
+                    animation: dndPulse 0.8s ease-in-out infinite alternate;
+                `;
+                if (!document.getElementById('_dnd_style')) {
+                    const s = document.createElement('style');
+                    s.id = '_dnd_style';
+                    s.textContent = `@keyframes dndPulse { from { opacity:0.6; } to { opacity:1; } }`;
+                    document.head.appendChild(s);
+                }
+                allCards[lastPinnedIdx].after(line);
+                return;
+            }
+        }
+
         const line = document.createElement('div');
         line.id = '_dnd_indicator';
         line.style.cssText = `
@@ -1921,6 +2010,7 @@ const SubjectApp = {
             is_done: false, // default
             is_lesson: d.isLesson,
             is_task: d.isTask || false,
+            is_pinned: false,
             display_order: 0
         });
 

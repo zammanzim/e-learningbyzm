@@ -294,3 +294,35 @@ VALUES (
 );
 
 
+-- ============================================================
+-- UPDATE LOG & MENU SEED (v4.3) — Class Profil (dynamic, student-editable)
+-- ============================================================
+
+-- Tambah kolom profile ke table users (single source of truth, ga perlu join students)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS quote text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS wa text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ig text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS card_color text;
+
+-- Tambah menu "Profil Kelas" ke kelas 2 (master/system) biar muncul di sidebar semua kelas
+INSERT INTO subjects_config (class_id, subject_id, subject_name, menu_group, display_order, icon)
+SELECT 2, 'class-profil', 'Profil Kelas', 'main', 97, 'fa-id-card'
+WHERE NOT EXISTS (
+    SELECT 1 FROM subjects_config WHERE subject_id = 'class-profil' AND class_id = 2
+);
+
+INSERT INTO app_updates (title, version, items, created_at)
+VALUES (
+    'Sabtu, 21 June 2026, 12.00',
+    'v4.3',
+    '["Halaman Profil Kelas (class-profil.html) selesai dibuat — dynamic dari table users, siswa bisa edit quote/deskripsi/foto profil sendiri"]'::jsonb,
+    NOW()
+);
+
+-- ============================================================
+-- MIGRASI: Tambah kolom is_pinned di subject_announcements
+-- ============================================================
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
+
+

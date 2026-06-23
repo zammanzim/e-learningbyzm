@@ -223,6 +223,7 @@
                 .select('*')
                 .eq('subject_id', 'guest')
                 .eq('class_id', 2)
+                .order('is_pinned', { ascending: false })
                 .order('created_at', { ascending: false });
 
             _guestAnnouncements = data || [];

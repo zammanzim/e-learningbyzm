@@ -30,7 +30,7 @@ async function checkPathAccess(user) {
     if (user.role === 'class_admin' && window.location.pathname.includes('/admiii/')) return;
 
     const currentId = getPathIdentifier();
-    const whitelist = ['login', '404', 'index', 'theme', 'settingacc', 'user', 'kirim-tugas'];
+    const whitelist = ['login', '404', 'index', 'theme', 'settingacc', 'user', 'kirim-tugas', 'class-profil'];
     
     // 1. Cek Whitelist Dasar
     if (whitelist.includes(currentId) || !currentId) return;
