@@ -36,6 +36,36 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://e-learniz.my.id/a/scores</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/quiz</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/kirim-tugas</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/keaktifan</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/send</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/class-profil</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://e-learniz.my.id/a/search</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
@@ -44,5 +74,25 @@
     <loc>https://e-learniz.my.id/a/updates</loc>
     <priority>0.6</priority>
     <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/settingacc</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/theme</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/a/user</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://e-learniz.my.id/404</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
   </url>
 </urlset>
