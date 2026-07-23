@@ -325,4 +325,11 @@ VALUES (
 -- ============================================================
 ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
 
+-- ============================================================
+-- MIGRASI: Tambah kolom is_lesson di subject_announcements
+-- is_lesson = true untuk mapel (indo, mtk, dll), false untuk
+-- pengumuman & kisi-kisi
+-- ============================================================
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_lesson BOOLEAN DEFAULT false;
+
 

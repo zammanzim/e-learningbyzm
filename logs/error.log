@@ -1,0 +1,257 @@
+⚠️ Command gagal
+Command : nizamai
+User    : 147593078272132
+Time    : 19/7/2026, 11.08.50
+Error   : Error: OpenRouter 401: {"error":{"message":"Missing Authentication header","code":401}}
+    at callOpenRouter (C:\e-learniz\bot\src\services\ai.js:37:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async ask (C:\e-learniz\bot\src\services\ai.js:54:15)
+    at async Object.execute (C:\e-learniz\bot\src\commands\nizamai.js:58:19)
+    at async handleMessage (C:\e-learniz\bot\src\events\handler.js:60:5)
+    at async EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:5)
+
+⚠️ Command gagal
+Command : nizamai
+User    : 147593078272132
+Time    : 19/7/2026, 11.13.38
+Error   : Error: OpenRouter 401: {"error":{"message":"Missing Authentication header","code":401}}
+    at callOpenRouter (C:\e-learniz\bot\src\services\ai.js:37:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async ask (C:\e-learniz\bot\src\services\ai.js:54:15)
+    at async Object.execute (C:\e-learniz\bot\src\commands\nizamai.js:58:19)
+    at async handleMessage (C:\e-learniz\bot\src\events\handler.js:60:5)
+    at async EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:5)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:16:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:88:7)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:153:7)
+    at processNodeWithBuffer (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1944:6)
+    at async processNode (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1994:4)
+    at async WebSocketClient.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:2000:3)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:16:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:88:7)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:153:7)
+    at processNodeWithBuffer (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1944:6)
+    at async processNode (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1994:4)
+    at async WebSocketClient.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:2000:3)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:16:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:88:7)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:153:7)
+    at processNodeWithBuffer (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1944:6)
+    at async processNode (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1994:4)
+    at async WebSocketClient.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:2000:3)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 147593078272132
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:20:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:88:7)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:153:7)
+    at processNodeWithBuffer (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1944:6)
+    at async processNode (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1994:4)
+    at async WebSocketClient.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:2000:3)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:20:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:88:7)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Utils\event-buffer.ts:153:7)
+    at processNodeWithBuffer (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1944:6)
+    at async processNode (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:1994:4)
+    at async WebSocketClient.<anonymous> (C:\e-learniz\bot\node_modules\@whiskeysockets\baileys\src\Socket\messages-recv.ts:2000:3)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:20:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+    at processNodeWithBuffer (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1574:12)
+    at async processNode (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1608:13)
+    at async WebSocketClient.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1613:9)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 147593078272132
+Time    : 
+Error   : TypeError: sock.downloadMediaMessage is not a function
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:20:33)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+    at processNodeWithBuffer (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1574:12)
+    at async processNode (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1608:13)
+    at async WebSocketClient.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Socket/messages-recv.js:1613:9)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:17:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363420066535277
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:17:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:16:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:16:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:23:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:23:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:26:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
+⚠️ Command gagal
+Command : cardPhoto
+User    : 120363409064495358
+Time    : 
+Error   : Error: Cannot derive from empty media key
+    at getMediaKeys (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:72:15)
+    at downloadContentFromMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages-media.js:424:24)
+    at downloadMsg (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:869:30)
+    at downloadMediaMessage (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/messages.js:834:26)
+    at handleMessage (C:\e-learniz\bot\src\events\handler.js:26:28)
+    at EventEmitter.<anonymous> (C:\e-learniz\bot\src\index.js:80:11)
+    at EventEmitter.emit (node:events:508:28)
+    at EventEmitter.<anonymous> (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:38:16)
+    at EventEmitter.emit (node:events:508:28)
+    at Object.flush (file:///C:/e-learniz/bot/node_modules/@whiskeysockets/baileys/lib/Utils/event-buffer.js:92:16)
+
