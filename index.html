@@ -304,6 +304,7 @@
                 if (!title && !content) { showPopup('Isi judul atau konten', 'error'); return; }
                 const { data, error } = await supabase.from('subject_announcements').insert({
                     subject_id: 'guest', class_id: 2,
+                    academic_year: '2025/2026',
                     title: title || 'Tanpa Judul', content: content || '',
                 }).select();
                 if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }

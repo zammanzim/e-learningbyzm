@@ -181,10 +181,12 @@ function _parseDeadlineSubjects(lessons) {
 // ── Helper: fetch fresh dari DB, update cache & UI ───────────────
 async function _fetchTugasFresh({ user, classId, tasksCacheKey, doneCacheKey, rankCacheKey, render = false }) {
     try {
+        const academicYear = await getAcademicYear(classId);
         const [{ data: tasks, error: err1 }, { data: progress, error: err2 }] = await Promise.all([
             supabase.from('subject_announcements')
                 .select('*')
                 .eq('class_id', classId)
+                .eq('academic_year', academicYear)
                 .or('is_lesson.eq.true,is_task.eq.true')
                 .order('is_pinned', { ascending: false })
                 .order('created_at', { ascending: false }),

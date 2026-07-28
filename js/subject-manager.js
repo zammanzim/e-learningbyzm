@@ -1,3 +1,12 @@
+// Helper untuk dapatkan academic_year berdasarkan class_id
+async function getAcademicYear(classId) {
+    if (!classId) return '2025/2026';
+    try {
+        const { data } = await supabase.from('classes').select('academic_year').eq('id', classId).single();
+        return data?.academic_year || '2025/2026';
+    } catch (e) { return '2025/2026'; }
+}
+
 const SubjectApp = {
     state: {
         editMode: false,
@@ -483,8 +492,10 @@ const SubjectApp = {
                 }
             }
 
+            const academicYear = await getAcademicYear(targetClassId);
+
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
-            query = query.eq("class_id", targetClassId);
+            query = query.eq("class_id", targetClassId).eq("academic_year", academicYear);
 
             const cacheKey = `announcements_${this.state.subjectId}`;
             // Helper read cache dgn TTL 10 menit
@@ -2001,9 +2012,13 @@ const SubjectApp = {
             })
         )).filter(Boolean);
 
+        const targetClassId = await SubjectApp._getTargetClassId();
+        const academicYear = await getAcademicYear(targetClassId);
+
         const { error } = await supabase.from('subject_announcements').insert({
             subject_id: d.dest,
-            class_id: await SubjectApp._getTargetClassId(),
+            class_id: targetClassId,
+            academic_year: academicYear,
             big_title: d.big, title: d.tit, content: d.con, small: d.sml,
             photo_url: urls.length > 1 ? urls : (urls[0] || null),
             card_color: d.cardColor,

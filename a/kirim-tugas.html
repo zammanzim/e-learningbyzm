@@ -564,12 +564,14 @@
             const tugasSel = document.getElementById('tugasSelect');
 
             try {
+                const academicYear = await getAcademicYear(classId);
                 // Fetch tasks + subject_teachers + user_progress sekaligus
                 const [tasksRes, teachersRes, progressRes] = await Promise.all([
                     supabase.from('subject_announcements')
                         .select('id, big_title, subject_id, class_id')
                         .eq('is_task', true)
                         .eq('class_id', classId)
+                        .eq('academic_year', academicYear)
                         .order('created_at', { ascending: false }),
                     supabase.from('subject_teachers')
                         .select('subject_id, teacher_name'),

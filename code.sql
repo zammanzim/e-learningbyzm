@@ -48,6 +48,21 @@ DROP POLICY IF EXISTS "auth_select" ON page_errors;
 DROP POLICY IF EXISTS "auth_delete" ON page_errors;
 
 -- ============================================================
+-- classes — Daftar kelas (master)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS classes (
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name            TEXT NOT NULL,
+    academic_year   TEXT DEFAULT '2025/2026',
+    is_active       BOOLEAN DEFAULT true
+);
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read"   ON classes FOR SELECT USING (true);
+CREATE POLICY "public_insert" ON classes FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_update" ON classes FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "public_delete" ON classes FOR DELETE USING (true);
+
+-- ============================================================
 -- task_submissions — kirim-tugas
 -- ============================================================
 CREATE TABLE IF NOT EXISTS task_submissions (
@@ -331,5 +346,12 @@ ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEF
 -- pengumuman & kisi-kisi
 -- ============================================================
 ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS is_lesson BOOLEAN DEFAULT false;
+
+-- ============================================================
+-- MIGRASI: Tambah kolom academic_year ke classes & subject_announcements
+-- Untuk pisahin data antar tahun ajaran (kelas naik tingkat)
+-- ============================================================
+ALTER TABLE classes ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2025/2026';
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2025/2026';
 
 

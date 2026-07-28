@@ -46,6 +46,14 @@ function getEffectiveClassId() {
     } catch(e) { return null; }
 }
 
+async function getAcademicYear(classId) {
+    if (!classId) return '2025/2026';
+    try {
+        const { data } = await supabase.from('classes').select('academic_year').eq('id', classId).single();
+        return data?.academic_year || '2025/2026';
+    } catch (e) { return '2025/2026'; }
+}
+
 function getEffectiveClassName() {
     try {
         const override = sessionStorage.getItem('class_override_name');

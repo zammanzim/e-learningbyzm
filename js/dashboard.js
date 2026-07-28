@@ -2,6 +2,14 @@
 // DASHBOARD.JS — Academic & Productivity Dashboard
 // =====================================================
 
+async function getAcademicYear(classId) {
+    if (!classId) return '2025/2026';
+    try {
+        const { data } = await supabase.from('classes').select('academic_year').eq('id', classId).single();
+        return data?.academic_year || '2025/2026';
+    } catch (e) { return '2025/2026'; }
+}
+
 const DashboardApp = {
     state: {
         user: null,
@@ -151,9 +159,10 @@ const DashboardApp = {
         try {
             const classId = this.state.user.class_id;
             const uid = this.state.user.id;
+            const academicYear = await getAcademicYear(classId);
 
             const [{ data: tasks }, { data: progress }] = await Promise.all([
-                supabase.from('subject_announcements').select('id, is_done').eq('class_id', classId).eq('is_lesson', true),
+                supabase.from('subject_announcements').select('id, is_done').eq('class_id', classId).eq('is_lesson', true).eq('academic_year', academicYear),
                 supabase.from('user_progress').select('announcement_id').eq('user_id', uid)
             ]);
 

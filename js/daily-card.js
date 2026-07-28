@@ -4,6 +4,14 @@ window.isDailyEditing = false;
 window.editingDay = null;
 window.currentViewDay = null;
 
+async function getAcademicYear(classId) {
+    if (!classId) return '2025/2026';
+    try {
+        const { data } = await supabase.from('classes').select('academic_year').eq('id', classId).single();
+        return data?.academic_year || '2025/2026';
+    } catch (e) { return '2025/2026'; }
+}
+
 // ==========================================
 // SKELETON LOADER
 // ==========================================
@@ -779,11 +787,13 @@ async function updateTaskBadge(user) {
     sessionStorage.removeItem('task_badge_dirty');
 
     try {
+        const academicYear = await getAcademicYear(USER_CLASS_ID);
         if (isExamMode) {
             // COUNT MATERI KISI-KISI
             const { count } = await supabase.from('subject_announcements')
                 .select('*', { count: 'exact', head: true })
                 .eq('class_id', targetClassId)
+                .eq('academic_year', academicYear)
                 .eq('subject_id', 'kisi-kisi');
             
             const totalKisi = count || 0;
@@ -795,6 +805,7 @@ async function updateTaskBadge(user) {
                 supabase.from('subject_announcements')
                     .select('*', { count: 'exact', head: true })
                     .eq('class_id', USER_CLASS_ID)
+                    .eq('academic_year', academicYear)
                     .neq('subject_id', 'announcements')
                     .neq('subject_id', 'kisi-kisi')
                     .neq('subject_id', 'akuhutajakus')

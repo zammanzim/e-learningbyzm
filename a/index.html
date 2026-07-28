@@ -243,10 +243,12 @@
                 ? getEffectiveClassId()
                 : user.class_id;
 
+            const academicYear = await getAcademicYear(classId);
+
             const [configRes, teacherRes, countRes] = await Promise.all([
                 supabase.from('subjects_config').select('*').eq('subject_id', subjectId).limit(1),
                 supabase.from('subject_teachers').select('*').eq('subject_id', subjectId).maybeSingle(),
-                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId).eq('class_id', classId)
+                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId).eq('class_id', classId).eq('academic_year', academicYear)
             ]);
 
             if (configRes.error) {
@@ -303,7 +305,8 @@
                     .from('subject_announcements')
                     .select('id, is_done')
                     .eq('subject_id', subjectId)
-                    .eq('class_id', classId);
+                    .eq('class_id', classId)
+                    .eq('academic_year', academicYear);
 
                 if (anns && anns.length) {
                     const annIds = anns.map(a => a.id);
