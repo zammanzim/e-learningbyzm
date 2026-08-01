@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotak Aspirasi — OSIS TARPAN ONE</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="top-nav">
+        <div class="brand">
+            <div class="logo-box">
+                <img data-foto="logo1" alt="Logo OSIS">
+            </div>
+            <div class="brand-text">
+                <h2>SUARA TARPAN</h2>
+                <p>Kotak Aspirasi OSIS</p>
+            </div>
+        </div>
+        <div class="top-nav-extra">
+            <a href="admin.html" class="icon-btn admin" title="Admin">⚙️</a>
+        </div>
+    </header>
+
+    <section class="wrap">
+        <div class="sec-head">
+            <div>
+                <div class="sec-tag">Suara Siswa</div>
+                <h2 class="sec-title">Sampaikan <span class="red">Aspirasimu</span></h2>
+                <p class="sec-sub">Punya kritik, saran, atau ide seru untuk SMK Taruna Harapan 1? Suarakan langsung di bawah ini dengan aman!</p>
+            </div>
+        </div>
+
+        <div class="rule-strip">
+            <div class="rule-card">
+                <div class="rule-emoji">🔒</div>
+                <h5>100% Terjaga</h5>
+                <p>Identitas di-keep rahasia oleh OSIS</p>
+            </div>
+            <div class="rule-card">
+                <div class="rule-emoji">✍️</div>
+                <h5>Etika Bahasa</h5>
+                <p>Wajib pakai kalimat yang sopan</p>
+            </div>
+            <div class="rule-card">
+                <div class="rule-emoji">🚫</div>
+                <h5>Sistem Bersih</h5>
+                <p>Semua pesan dibaca, dilarang spam</p>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="form-head">Formulir Suara Tarpan</div>
+
+            <div class="field">
+                <label>Nama Lengkap</label>
+                <input type="text" id="namaSiswa" placeholder="Nama lengkap (opsional, boleh anonim)">
+            </div>
+            <div class="field">
+                <label>Kelas</label>
+                <input type="text" id="kelasSiswa" placeholder="Contoh: XII RPL 1 (opsional)">
+            </div>
+            <div class="field">
+                <label>Isi Aspirasi</label>
+                <textarea id="isiAspirasi" placeholder="Tulis kritik, saran, atau ide kreatifmu di sini secara jelas & detail..."></textarea>
+            </div>
+
+            <button class="btn btn-red" id="btnKirimAspirasi" onclick="Aspirasi.kirim()">
+                ✈️ Kirim Suara Tarpan
+            </button>
+
+            <div id="feedbackAspirasi" class="form-feedback"></div>
+        </div>
+    </section>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="tab-item"><span class="ico">🏠</span>Home</a>
+        <a href="sekbid.html" class="tab-item"><span class="ico">🗂️</span>Sekbid</a>
+        <a href="kontak.html" class="tab-item"><span class="ico">📞</span>Kontak</a>
+        <a href="aspirasi.html" class="tab-item active"><span class="ico">📩</span>Aspirasi</a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/db.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/aspirasi.js" defer></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 ## Project
 
-Web e-learning platform. Vanilla JS, HTML, CSS, Supabase (PostgreSQL + Auth + Storage), PWA. No build step. Static files served directly.
+Web e-learning platform. Vanilla JS, HTML, CSS, Supabase (PostgreSQL + Auth + Storage). No build step. Static files served directly.
 
 ## Commands
 
@@ -47,7 +47,7 @@ Semua halaman `/a/*.html` harus pake urutan script yg sama persis:
 
 Tambahan kalo perlu:
 - `subject-manager.js` (defer) — **cuma** kalo halaman pake card (announcements, subject, tugas, kisi-kisi)
-- `daily-card.js` (defer) + `pwa.js` (defer) — di dalem `<body>`, setelah sidebar
+- `daily-card.js` (defer) — di dalem `<body>`, setelah sidebar
 
 ## Layout — left-section + right-section
 
@@ -137,7 +137,7 @@ CREATE POLICY "auth_delete" ON nama_table FOR DELETE USING (true);
 | `nilai_psat` | Data nilai PSAT |
 | `nilai_pts` | Data nilai PTS |
 | `page_visitor` | Visitor counter untuk studentsweb/ |
-| `pwa_install` | Data orang yang install PWA |
+
 | `simulation_progress` | Progress quiz/simulation |
 | `simulation_questions` | Soal quiz |
 | `subject_announcements` | Data card (konten utama) |

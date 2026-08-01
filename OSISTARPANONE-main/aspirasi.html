@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotak Aspirasi - OSIS TARPAN ONE</title>
+    <link rel="stylesheet" href="aspirasi-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="top-nav-aspirasi">
+        <div class="brand">
+            <div class="logo-box">
+                <img src="https://eefdfaqcccgpfthdidzp.supabase.co/storage/v1/object/public/osis-foto/web/logo1.png" alt="OSIS">
+            </div>
+            <div class="brand-text">
+                <h2>SUARA TARPAN</h2>
+                <p>OSIS SMK TARPAN ONE</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="aspirasi-main-content">
+        
+        <div class="aspirasi-intro">
+            <span class="aspirasi-badge-top">Suara Siswa</span>
+            <h3>Sampaikan Aspirasimu</h3>
+            <p>Punya kritik, saran, atau ide seru untuk SMK Taruna Harapan 1? Suarakan langsung di bawah ini secara aman!</p>
+        </div>
+
+        <div class="glass-rule-container">
+            <div class="glass-rule-item">
+                <div class="rule-icon-box">🔒</div>
+                <div class="rule-details">
+                    <h4>100% Terjaga</h4>
+                    <p>Identitas di-keep rahasia oleh OSIS</p>
+                </div>
+            </div>
+            <div class="glass-rule-item">
+                <div class="rule-icon-box">✍️</div>
+                <div class="rule-details">
+                    <h4>Etika Berbahasa</h4>
+                    <p>Wajib menggunakan kalimat yang sopan</p>
+                </div>
+            </div>
+            <div class="glass-rule-item">
+                <div class="rule-icon-box">🚫</div>
+                <div class="rule-details">
+                    <h4>Sistem Bersih</h4>
+                    <p>Semua pesan dibaca, dilarang spam</p>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="section-title">📌 Alur Pengisian</h3>
+        <div class="stack-timeline">
+            <div class="stack-card">
+                <span class="stack-num">01</span>
+                <p>Pahami aturan & siapkan masukan yang membangun.</p>
+            </div>
+            <div class="stack-card">
+                <span class="stack-num">02</span>
+                <p>Ketik aspirasimu dengan jelas pada kolom di bawah.</p>
+            </div>
+            <div class="stack-card">
+                <span class="stack-num">03</span>
+                <p>Tekan tombol kirim, data langsung masuk Spreadsheet OSIS.</p>
+            </div>
+        </div>
+
+        <h3 class="section-title">💡 Panduan Pengisian</h3>
+        <div class="versus-wrapper">
+            <div class="v-panel panel-yes">
+                <div class="panel-badge">DO</div>
+                <p>"OSIS, aku ada saran nih gimana kalau untuk kegiatan selanjutnya bikin kegiatan kayak gini (Jelasin kegiatan) Nah kegiatan ini bertujuan untuk (kasih tau tujuan) terus manfaatnya tuh banyak, kayak.. (jelasin juga manfaatnya)"</p> <p>jadi untuk Aspirasi disini, Wajib untuk mengirimkan teks nya secara jelas, mudah dipahami, tidak kasar dan tidak keluar dari pembahasan </p>
+            </div>
+            <div class="v-panel panel-no">
+                <div class="panel-badge">DON'T</div>
+                <p>"Woi OSIS, kegiatan kemarin ga jelas bgt, ga seru, minimal bikin kegiatan tuh yang seru lah jangan gini-gini mulu bosen."</p>
+                <p> Nah jadi ini salah satu contoh kirim aspirasi yang salah yaa ^^ kalau kirim masukan usahain bahasa yang sopan, jelas dan tidak mengandung unsur kebencian</p>
+            </div>
+        </div>
+
+        <h3 class="section-title">📝 Ruang Ketik Suara Tarpan</h3>
+        <div class="premium-form-card">
+            <div class="form-header-inner">
+                <span class="status-indicator"></span>
+                <h5>Formulir Enkripsi Aman</h5>
+            </div>
+            
+            <div class="form-row-inputs">
+                <input type="text" id="namaSiswa" placeholder="Nama Lengkap">
+                <input type="text" id="kelasSiswa" placeholder="Kelas">
+            </div>
+
+            <textarea id="isiAspirasi" placeholder="Silahkan tulis unek-unek atau ide kreatifmu di sini secara detail..."></textarea>
+            
+            <button class="btn-glow-kirim" onclick="kirimAspirasiLangsung()">
+                <span>Kirim Suara Tarpan</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+        </div>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <div class="tab-item" onclick="location.href='index.html'">🏠<span>Home</span></div>
+        <div class="tab-item" onclick="location.href='sekbid.html'">🗂️<span>Sekbid</span></div>
+        <div class="tab-item" onclick="location.href='kontak.html'">📞<span>Kontak</span></div>
+        <div class="tab-item active">📩<span>Aspirasi</span></div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="aspirasi-script.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

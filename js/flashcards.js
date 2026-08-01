@@ -266,7 +266,7 @@ const FlashcardsApp = {
         if (!this.state.currentSubjectId) return;
 
         // Custom inputs via popup form
-        const front = await showPopup('Masukkan Sisi Depan (Konsep/Pertanyaan)', 'form', { placeholder: 'Contoh: Apa kepanjangan dari PWA?' });
+        const front = await showPopup('Masukkan Sisi Depan (Konsep/Pertanyaan)', 'form', { placeholder: 'Contoh: Apa kepanjangan dari HTML?' });
         if (front === null || front.trim() === '') return;
 
         const back = await showPopup('Masukkan Sisi Belakang (Definisi/Jawaban)', 'form', { placeholder: 'Contoh: Progressive Web App' });

@@ -355,3 +355,9 @@ ALTER TABLE classes ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2025/20
 ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2025/2026';
 
 
+
+-- ============================================================
+-- MIGRASI: Tambah kolom foto di tabel sekbid (BPH & seksi bidang)
+-- Foto orang-orang OSIS, path di bucket osis-foto/sekbid/
+-- ============================================================
+ALTER TABLE sekbid ADD COLUMN IF NOT EXISTS foto TEXT DEFAULT NULL;

@@ -3210,6 +3210,24 @@ input:checked+.slider:before {
     outline: none;
 }
 
+.edit-mode-on .card-val.editable-active,
+.editable-active.card-val {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+}
+
+.edit-mode-on .tl-time-final.editable-active,
+.editable-active.tl-time-final {
+    white-space: normal !important;
+}
+
+.editable-active[contenteditable="true"] {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+}
+
 .btn-add-inline {
     background: transparent;
     border: 1px dashed rgba(255, 255, 255, 0.15);
