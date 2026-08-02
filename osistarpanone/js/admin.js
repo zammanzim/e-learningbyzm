@@ -218,8 +218,8 @@ const AdminApp = {
                         <input type="text" class="admin-input" id="anggotaJabatan-${a.id}" value="${escapeHtml(a.jabatan)}" placeholder="Jabatan">
                         <input type="number" class="admin-input" id="anggotaUrutan-${a.id}" value="${a.urutan}" min="1" max="99" style="max-width: 80px;">
                         <div style="display: flex; gap: 6px;">
-                            <button class="btn btn-dark btn-sm" data-action="anggota.simpan" data-id="${a.id}">💾</button>
-                            <button class="btn btn-sm" style="background:#ffe9e9;color:var(--red-dark);" data-action="anggota.hapus" data-id="${a.id}">🗑️</button>
+                            <button class="btn btn-dark btn-sm" data-action="anggota.simpan" data-id="${a.id}"><i class="fa-solid fa-floppy-disk"></i></button>
+                            <button class="btn btn-sm" style="background:#ffe9e9;color:var(--red-dark);" data-action="anggota.hapus" data-id="${a.id}"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>`).join("");
             } catch (err) {
@@ -285,10 +285,10 @@ const AdminApp = {
                                 <option value="SEKBID" ${s.kategori !== "BPH" ? "selected" : ""}>SEKBID</option>
                             </select>
                             <input type="text" class="admin-input" id="sekbidNama-${s.id}" value="${escapeHtml(s.nama)}" placeholder="Nama">
-                            <input type="text" class="admin-input" id="sekbidIcon-${s.id}" value="${escapeHtml(s.icon)}" placeholder="Emoji" maxlength="8">
+                            <input type="text" class="admin-input" id="sekbidIcon-${s.id}" value="${escapeHtml(s.icon)}" placeholder="FA icon (cth: fa-solid fa-megaphone)" maxlength="40">
                             <div style="display: flex; gap: 6px;">
-                                <button class="btn btn-dark btn-sm" data-action="sekbid.simpan" data-id="${s.id}">💾</button>
-                                <button class="btn btn-sm" style="background:#ffe9e9;color:var(--red-dark);" data-action="sekbid.hapus" data-id="${s.id}">🗑️</button>
+                                <button class="btn btn-dark btn-sm" data-action="sekbid.simpan" data-id="${s.id}"><i class="fa-solid fa-floppy-disk"></i></button>
+                                <button class="btn btn-sm" style="background:#ffe9e9;color:var(--red-dark);" data-action="sekbid.hapus" data-id="${s.id}"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">

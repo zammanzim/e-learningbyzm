@@ -20,11 +20,11 @@ const Aspirasi = {
         const btn = document.getElementById("btnKirimAspirasi");
 
         [nama, kelas, isi].forEach(el => {
-            if (el) { el.disabled = true; el.placeholder = "🔒 Ditutup sementara"; }
+            if (el) { el.disabled = true; el.placeholder = "Ditutup sementara"; }
         });
-        if (isi) isi.placeholder = "🔒 Maaf, kotak aspirasi sedang ditutup sementara oleh pengurus OSIS.";
+        if (isi) isi.placeholder = "Maaf, kotak aspirasi sedang ditutup sementara oleh pengurus OSIS.";
         if (btn) {
-            btn.innerHTML = "🔒 Kotak Aspirasi Ditutup";
+            btn.innerHTML = '<i class="fa-solid fa-lock"></i> Kotak Aspirasi Ditutup';
             btn.style.opacity = "0.6";
             btn.style.cursor = "not-allowed";
             btn.style.pointerEvents = "none";
@@ -46,12 +46,12 @@ const Aspirasi = {
         }
 
         btn.disabled = true;
-        btn.innerHTML = "⏳ Mengirim...";
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
         Aspirasi.tampilkan(feedback, "", "");
 
         try {
             await kirimAspirasi(nama || "Anonim", kelas || "-", isi);
-            Aspirasi.tampilkan(feedback, "Terima kasih! Aspirasimu sudah terkirim langsung ke database OSIS Tarpan One. 🙌", "ok");
+            Aspirasi.tampilkan(feedback, "Terima kasih! Aspirasimu sudah terkirim langsung ke database OSIS Tarpan One.", "ok");
             document.getElementById("namaSiswa").value = "";
             document.getElementById("kelasSiswa").value = "";
             document.getElementById("isiAspirasi").value = "";
@@ -60,7 +60,7 @@ const Aspirasi = {
             Aspirasi.tampilkan(feedback, "Waduh, gagal terkirim. Cek koneksi internet lalu coba lagi ya!", "err");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = "✈️ Kirim Suara Tarpan";
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Suara Tarpan';
         }
     },
 

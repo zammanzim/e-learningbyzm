@@ -90,7 +90,28 @@ async function initTugas() {
         }
 
         const classId = getEffectiveClassId();
-        const schedCacheKey = `tugas_sched_${classId}_${targetDayName}`;
+
+        // ── Tentukan tipe jadwal aktif (regular/exam/custom) ─────────
+        // daily_schedules bisa punya jadwal ganda per hari (mis. class 2:
+        // regular + exam). Ambil mode dari daily_config biar query spesifik.
+        const MASTER_CLASS_ID = 2;
+        let activeType = 'regular';
+        let scheduleClassId = classId;
+        try {
+            const { data: cfg } = await supabase.from('daily_config')
+                .select('mode').eq('class_id', classId).maybeSingle();
+            if (cfg?.mode) activeType = cfg.mode;
+            if (String(classId) !== String(MASTER_CLASS_ID)) {
+                const { data: masterCfg } = await supabase.from('daily_config')
+                    .select('mode').eq('class_id', MASTER_CLASS_ID).maybeSingle();
+                if (masterCfg?.mode === 'exam') {
+                    scheduleClassId = String(MASTER_CLASS_ID);
+                    activeType = 'exam';
+                }
+            }
+        } catch (e) { /* fallback regular */ }
+
+        const schedCacheKey = `tugas_sched_${scheduleClassId}_${targetDayName}_${activeType}`;
         const tasksCacheKey = `tugas_tasks_${classId}`;
         const doneCacheKey = `tugas_done_${user.id}`;
         const rankCacheKey = `tugas_rank_${user.id}`;
@@ -112,7 +133,7 @@ async function initTugas() {
             deadlineSubjects = cachedSched;
             // Refresh di background
             supabase.from('daily_schedules').select('lessons')
-                .eq('class_id', classId).eq('day_name', targetDayName).single()
+                .eq('class_id', scheduleClassId).eq('day_name', targetDayName).eq('type', activeType).single()
                 .then(({ data }) => {
                     if (data?.lessons) {
                         const fresh = _parseDeadlineSubjects(data.lessons);
@@ -122,7 +143,7 @@ async function initTugas() {
         } else {
             const { data: sched } = await supabase
                 .from('daily_schedules').select('lessons')
-                .eq('class_id', classId).eq('day_name', targetDayName).single();
+                .eq('class_id', scheduleClassId).eq('day_name', targetDayName).eq('type', activeType).single();
             if (sched?.lessons) {
                 deadlineSubjects = _parseDeadlineSubjects(sched.lessons);
                 _tugasCacheSet(schedCacheKey, deadlineSubjects);

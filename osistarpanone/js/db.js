@@ -13,6 +13,21 @@ function getFoto(pathFoto) {
 }
 
 // =========================================================================
+// AUTH — akun OSIS dari tabel osis_users
+// =========================================================================
+
+// Ambil akun OSIS by username (password dicompare di client, pola e-learniz)
+async function getOsisUser(username) {
+    const { data, error } = await supa
+        .from("osis_users")
+        .select("id, username, password, nama, jabatan")
+        .eq("username", username)
+        .maybeSingle();
+    if (error) throw error;
+    return data || null;
+}
+
+// =========================================================================
 // PUBLIC
 // =========================================================================
 

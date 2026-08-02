@@ -6,6 +6,7 @@
     <title>OSIS TARPAN ONE — SMK Taruna Harapan 1 Cipatat</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
@@ -20,9 +21,7 @@
                 <p>SMK Taruna Harapan 1 Cipatat</p>
             </div>
         </a>
-        <div class="top-nav-extra">
-            <a href="admin.html" class="icon-btn admin" title="Admin">⚙️</a>
-        </div>
+        <div class="top-nav-extra" id="areaAuth"></div>
     </header>
 
     <!-- ============================================================
@@ -34,7 +33,7 @@
         <section class="hero">
             <div class="hero-inner">
                 <div class="hero-content">
-                    <span class="hero-badge">⚡ Est. 2010 — Satu Keluarga</span>
+                    <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Est. 2010 — Satu Keluarga</span>
                     <h1>
                         OSIS<br>
                         <span class="outline">TARPAN</span><br>
@@ -60,11 +59,11 @@
         <!-- TICKER -->
         <div class="ticker" aria-hidden="true">
             <div class="ticker-track" id="tickerTrack">
-                <span>⚡ GENERASI EMAS PENUH AKSI ⚡</span>
+                <span><i class="fa-solid fa-bolt"></i> GENERASI EMAS PENUH AKSI <i class="fa-solid fa-bolt"></i></span>
                 <span class="red">MAKRAB OSIS 2026</span>
                 <span class="yellow">PESAK — PENTAS SENI ANTAR KELAS</span>
                 <span>TAKJILIN & KEMAH TANGKAS 1.0</span>
-                <span class="red">BERSATU KITA TEGUH ✊</span>
+                <span class="red">BERSATU KITA TEGUH <i class="fa-solid fa-hand-fist"></i></span>
             </div>
         </div>
 
@@ -80,12 +79,12 @@
 
                 <div class="vm-grid">
                     <div class="vm-card visi">
-                        <h3>🛡️ Visi</h3>
+                        <h3><i class="fa-solid fa-shield-halved"></i> Visi</h3>
                         <p>Menjadikan OSIS sebagai laboratorium kepemimpinan siswa yang berintegritas, beretika mulia, dan berdampak positif bagi sekolah dan masyarakat.</p>
                     </div>
 
                     <div class="vm-card">
-                        <h3>🎯 Misi</h3>
+                        <h3><i class="fa-solid fa-bullseye"></i> Misi</h3>
                         <div class="misi-item">
                             <div class="misi-num">1</div>
                             <div>
@@ -187,7 +186,7 @@
                 </div>
 
                 <div class="prestasi-banner">
-                    <span class="medal">🏆</span>
+                    <span class="medal"><i class="fa-solid fa-trophy"></i></span>
                     <div>
                         <h4>Generasi Emas Penuh Aksi</h4>
                         <p>OSIS Taruna Harapan 1 Cipatat meraih penghargaan tingkat kabupaten.</p>
@@ -283,17 +282,17 @@
 
             <div class="rule-strip">
                 <div class="rule-card">
-                    <div class="rule-emoji">🔒</div>
+                    <div class="rule-emoji"><i class="fa-solid fa-lock"></i></div>
                     <h5>100% Terjaga</h5>
                     <p>Identitas di-keep rahasia oleh OSIS</p>
                 </div>
                 <div class="rule-card">
-                    <div class="rule-emoji">✍️</div>
+                    <div class="rule-emoji"><i class="fa-solid fa-pen-nib"></i></div>
                     <h5>Etika Bahasa</h5>
                     <p>Wajib pakai kalimat yang sopan</p>
                 </div>
                 <div class="rule-card">
-                    <div class="rule-emoji">🚫</div>
+                    <div class="rule-emoji"><i class="fa-solid fa-ban"></i></div>
                     <h5>Sistem Bersih</h5>
                     <p>Semua pesan dibaca, dilarang spam</p>
                 </div>
@@ -316,7 +315,7 @@
                 </div>
 
                 <button class="btn btn-red" id="btnKirimAspirasi" onclick="Aspirasi.kirim()">
-                    ✈️ Kirim Suara Tarpan
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Suara Tarpan
                 </button>
 
                 <div id="feedbackAspirasi" class="form-feedback"></div>
@@ -339,10 +338,10 @@
 
             <a class="music-card" href="https://ngl.link/osis_tarpanone" target="_blank" rel="noopener">
                 <div>
-                    <h4>📻 Tarpan Music Station</h4>
+                    <h4><i class="fa-solid fa-radio"></i> Tarpan Music Station</h4>
                     <p>Request lagu jam istirahat via NGL!</p>
                 </div>
-                <div class="music-ico">🎵</div>
+                <div class="music-ico"><i class="fa-solid fa-music"></i></div>
             </a>
 
             <div class="social-grid">
@@ -397,10 +396,10 @@
     <!-- ===== BOTTOM NAV ===== -->
     <nav class="bottom-nav" id="bottomNav">
         <span class="nav-pill" id="navPill"></span>
-        <a href="#/" class="tab-item" data-route="home"><span class="ico">🏠</span>Home</a>
-        <a href="#/sekbid" class="tab-item" data-route="sekbid"><span class="ico">🗂️</span>Sekbid</a>
-        <a href="#/aspirasi" class="tab-item" data-route="aspirasi"><span class="ico">📩</span>Aspirasi</a>
-        <a href="#/kontak" class="tab-item" data-route="kontak"><span class="ico">📞</span>Kontak</a>
+        <a href="#/" class="tab-item" data-route="home"><span class="ico"><i class="fa-solid fa-house"></i></span>Home</a>
+        <a href="#/sekbid" class="tab-item" data-route="sekbid"><span class="ico"><i class="fa-solid fa-folder-open"></i></span>Sekbid</a>
+        <a href="#/aspirasi" class="tab-item" data-route="aspirasi"><span class="ico"><i class="fa-solid fa-inbox"></i></span>Aspirasi</a>
+        <a href="#/kontak" class="tab-item" data-route="kontak"><span class="ico"><i class="fa-solid fa-phone"></i></span>Kontak</a>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -410,5 +409,6 @@
     <script src="js/home.js" defer></script>
     <script src="js/sekbid.js" defer></script>
     <script src="js/aspirasi.js" defer></script>
+    <script src="js/osis-auth.js" defer></script>
 </body>
 </html>

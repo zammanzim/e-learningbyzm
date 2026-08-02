@@ -103,6 +103,35 @@ img {
   align-items: center;
   gap: 8px;
 }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 160px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border: 2.5px solid var(--ink);
+  background: var(--yellow);
+  font-size: 0.8rem;
+  font-weight: 800;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.user-chip i {
+  font-size: 0.9rem;
+}
+.user-chip-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--ink);
+}
+.user-chip.chip-tamu {
+  background: var(--white);
+  border-style: dashed;
+}
 .icon-btn {
   width: 40px;
   height: 40px;
@@ -1425,7 +1454,7 @@ img {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 4px;
+  padding: 8px 16px;
   border-radius: 14px;
   font-size: 0.62rem;
   font-weight: 800;
@@ -1742,6 +1771,114 @@ img {
 .btn-block {
   width: 100%;
   justify-content: center;
+}
+
+/* ============================================================
+   LOGIN (login.html)
+   ============================================================ */
+.login-body {
+  background: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.login-card {
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  padding: 32px 26px;
+  width: min(400px, 100%);
+  text-align: center;
+}
+.login-logo {
+  width: 76px;
+  margin: 0 auto 14px;
+}
+.login-logo img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(3px 3px 0 var(--ink));
+}
+.login-card h1 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.login-sub {
+  font-size: 0.8rem;
+  color: var(--gray);
+  font-weight: 600;
+  margin: 4px 0 20px;
+}
+.login-card .lbl {
+  text-align: left;
+  display: block;
+  margin-bottom: 6px;
+}
+.login-card .admin-input {
+  text-align: left;
+  margin-bottom: 14px;
+}
+.login-card #loginPassword {
+  text-align: center;
+}
+.login-error {
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 10px;
+  min-height: 18px;
+}
+.login-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--gray);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.login-back:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.login-center {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+.login-mode-btn {
+  margin-bottom: 12px;
+}
+
+/* --- SLIDER (pola login e-learniz) --- */
+.login-card .slider-window {
+  overflow: hidden;
+  margin: 0 -4px;
+}
+.login-card .slider-content {
+  display: flex;
+  width: 200%;
+  transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.login-card .slide-step {
+  width: 50%;
+  padding: 2px 4px;
+}
+.login-card .slider-content.step-1 {
+  transform: translateX(-50%);
 }
 
 .admin-topbar {

@@ -46,7 +46,10 @@ const Sekbid = {
 
     seksi(item, peran) {
         const nama = escapeHtml(item.nama);
-        const icon = item.icon || "📌";
+        const icon = item.icon || "fa-solid fa-users";
+        const ikon = icon.trim().startsWith("fa")
+            ? `<i class="${escapeHtml(icon)}"></i>`
+            : escapeHtml(icon);
         const foto = item.foto
             ? `<img src="${getFoto(item.foto)}" alt="${nama}" loading="lazy"
                    onerror="this.parentNode.classList.add('tanpa-foto'); this.remove();">`
@@ -55,7 +58,7 @@ const Sekbid = {
             <div class="orang-block">
                 <div class="orang-photo${item.foto ? "" : " tanpa-foto"}">
                     ${foto}
-                    <span class="orang-fallback">${escapeHtml(icon)}</span>
+                    <span class="orang-fallback">${ikon}</span>
                 </div>
                 <div class="orang-info">
                     <span class="orang-role">${peran}</span>
