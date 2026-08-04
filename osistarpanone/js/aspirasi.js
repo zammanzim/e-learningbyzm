@@ -11,6 +11,45 @@ const Aspirasi = {
         Aspirasi.terinisialisasi = true;
         Aspirasi.status = await cekStatusAspirasi();
         if (Aspirasi.status === "TUTUP") Aspirasi.kunciFormulir();
+        Aspirasi.muatPesan();
+    },
+
+    // ============ DAFTAR PESAN ============
+    async muatPesan() {
+        const list = document.getElementById("daftarPesan");
+        if (!list) return;
+        try {
+            const data = await getAspirasi();
+            const jum = document.getElementById("jumPesan");
+            if (jum) jum.textContent = data.length;
+
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-comments"></i> Belum ada suara masuk. Jadilah yang pertama!</div>`;
+                return;
+            }
+
+            const deviceId = getDeviceId();
+            const batasHapus = Date.now() - 3600000; // 1 jam
+            list.innerHTML = data.map(p => `
+                <div class="pesan-item">
+                    <div class="pesan-meta">
+                        <span class="pesan-nama"><i class="fa-solid fa-user"></i> ${escapeHtml(p.nama || "Anonim")}</span>
+                        <span class="pesan-kelas">${escapeHtml(p.kelas || "-")}</span>
+                        <span class="pesan-waktu">${Aspirasi.formatWaktu(p.created_at)}</span>
+                        ${p.device_id === deviceId && new Date(p.created_at).getTime() > batasHapus ? `<button class="hapus-btn" onclick="Aspirasi.hapus(${p.id})" title="Hapus pesanku"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+                    </div>
+                    <p class="pesan-isi">${escapeHtml(p.isi)}</p>
+                </div>`).join("");
+        } catch (err) {
+            console.error(err);
+            list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat suara. Cek koneksi.</div>`;
+        }
+    },
+
+    formatWaktu(t) {
+        try {
+            return new Date(t).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+        } catch { return ""; }
     },
 
     kunciFormulir() {
@@ -37,37 +76,55 @@ const Aspirasi = {
         const nama = document.getElementById("namaSiswa").value.trim();
         const kelas = document.getElementById("kelasSiswa").value.trim();
         const isi = document.getElementById("isiAspirasi").value.trim();
-        const feedback = document.getElementById("feedbackAspirasi");
         const btn = document.getElementById("btnKirimAspirasi");
 
         if (!isi) {
-            Aspirasi.tampilkan(feedback, "Unek-uneknya diisi dulu yaa, jangan dikosongkan!", "err");
+            showToast("Unek-uneknya diisi dulu yaa, jangan dikosongkan!", "error");
             return;
         }
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
-        Aspirasi.tampilkan(feedback, "", "");
 
         try {
             await kirimAspirasi(nama || "Anonim", kelas || "-", isi);
-            Aspirasi.tampilkan(feedback, "Terima kasih! Aspirasimu sudah terkirim langsung ke database OSIS Tarpan One.", "ok");
+            showToast("Terima kasih! Aspirasimu sudah terkirim.", "success");
             document.getElementById("namaSiswa").value = "";
             document.getElementById("kelasSiswa").value = "";
             document.getElementById("isiAspirasi").value = "";
+            Aspirasi.muatPesan();
         } catch (err) {
             console.error(err);
-            Aspirasi.tampilkan(feedback, "Waduh, gagal terkirim. Cek koneksi internet lalu coba lagi ya!", "err");
+            if (err.message === "ERR_LIMIT") {
+                showToast("Kamu udah kirim 3 suara hari ini. Coba lagi besok yaa!", "error");
+            } else {
+                showToast("Waduh, gagal terkirim. Cek koneksi lalu coba lagi ya!", "error");
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Suara Tarpan';
         }
     },
 
-    tampilkan(el, pesan, tipe) {
-        el.textContent = pesan;
-        el.className = "form-feedback " + tipe;
-    }
+    // ============ HAPUS PESAN SENDIRI ============
+    async hapus(id) {
+        const yakin = await showPopup("Yakin mau hapus pesan ini?", "confirm");
+        if (!yakin) return;
+        try {
+            await hapusAspirasiSendiri(id);
+            showToast("Pesan berhasil dihapus", "success");
+            Aspirasi.muatPesan();
+        } catch (err) {
+            console.error(err);
+            if (err.message === "ERR_EXPIRED") {
+                showPopup("Pesan udah lebih dari 1 jam, udah ga bisa dihapus.", "error");
+            } else if (err.message === "ERR_FORBIDDEN") {
+                showPopup("Ini bukan pesan kamu!", "error");
+            } else {
+                showPopup("Gagal hapus. Cek koneksi lalu coba lagi.", "error");
+            }
+        }
+    },
 };
 
 if (typeof Router !== "undefined") {

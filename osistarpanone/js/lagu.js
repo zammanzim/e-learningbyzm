@@ -1,0 +1,116 @@
+// =========================================================================
+// LAGU — request lagu radio jam istirahat (form + playlist)
+// =========================================================================
+
+const Lagu = {
+    terinisialisasi: false,
+
+    async init() {
+        if (Lagu.terinisialisasi) return;
+        Lagu.terinisialisasi = true;
+        Lagu.muatDaftar();
+    },
+
+    // ============ PLAYLIST ============
+    async muatDaftar() {
+        const list = document.getElementById("daftarLagu");
+        if (!list) return;
+        try {
+            const data = await getRequestLagu();
+            const jum = document.getElementById("jumLagu");
+            if (jum) jum.textContent = data.length;
+
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-headphones"></i> Playlist masih kosong. Jadilah request pertama!</div>`;
+                return;
+            }
+
+            const deviceId = getDeviceId();
+            const batasHapus = Date.now() - 3600000; // 1 jam
+            list.innerHTML = data.map(l => `
+                <div class="lagu-item">
+                    <div class="lagu-cover"><div class="lagu-kaset"><i class="fa-solid fa-music"></i></div></div>
+                    <div class="lagu-body">
+                        <div class="lagu-title">${escapeHtml(l.judul)}</div>
+                        <div class="lagu-artis">${escapeHtml(l.penyanyi || "-")}</div>
+                        <div class="lagu-meta">
+                            <span><i class="fa-solid fa-user"></i> ${escapeHtml(l.nama || "Anonim")}</span>
+                            <span class="pesan-waktu">${Lagu.formatWaktu(l.created_at)}</span>
+                            ${l.device_id === deviceId && new Date(l.created_at).getTime() > batasHapus ? `<button class="hapus-btn" onclick="Lagu.hapus(${l.id})" title="Hapus request-ku"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+                        </div>
+                    </div>
+                </div>`).join("");
+        } catch (err) {
+            console.error(err);
+            list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat playlist. Cek koneksi.</div>`;
+        }
+    },
+
+    formatWaktu(t) {
+        try {
+            return new Date(t).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+        } catch { return ""; }
+    },
+
+    async kirim() {
+        const judul = document.getElementById("judulLagu").value.trim();
+        const penyanyi = document.getElementById("penyanyiLagu").value.trim();
+        const nama = document.getElementById("namaPengirim").value.trim();
+        const btn = document.getElementById("btnKirimLagu");
+
+        if (!judul || !penyanyi) {
+            showToast("Judul lagu dan penyanyinya diisi dulu yaa!", "error");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+
+        try {
+            await kirimRequestLagu(judul, penyanyi, nama || "Anonim");
+            showToast("Mantap! Lagu kamu masuk playlist.", "success");
+            document.getElementById("judulLagu").value = "";
+            document.getElementById("penyanyiLagu").value = "";
+            document.getElementById("namaPengirim").value = "";
+            Lagu.muatDaftar();
+        } catch (err) {
+            console.error(err);
+            if (err.message === "ERR_LIMIT") {
+                showToast("Request lagu hari ini udah 5. Ditabung dulu, besok request lagi yaa!", "error");
+            } else {
+                showToast("Waduh, gagal terkirim. Cek koneksi lalu coba lagi ya!", "error");
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-music"></i> Kirim Request Lagu';
+        }
+    },
+
+    // ============ HAPUS REQUEST SENDIRI ============
+    async hapus(id) {
+        const yakin = await showPopup("Yakin mau hapus request lagu ini?", "confirm");
+        if (!yakin) return;
+        try {
+            await hapusLaguSendiri(id);
+            showToast("Request lagu dihapus", "success");
+            Lagu.muatDaftar();
+        } catch (err) {
+            console.error(err);
+            if (err.message === "ERR_EXPIRED") {
+                showPopup("Request udah lebih dari 1 jam, udah ga bisa dihapus.", "error");
+            } else if (err.message === "ERR_FORBIDDEN") {
+                showPopup("Ini bukan request kamu!", "error");
+            } else {
+                showPopup("Gagal hapus. Cek koneksi lalu coba lagi.", "error");
+            }
+        }
+    },
+};
+
+if (typeof Router !== "undefined") {
+    Router.register("kontak", () => Lagu.init());
+} else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => Lagu.init());
+} else {
+    Lagu.init();
+}

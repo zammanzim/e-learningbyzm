@@ -70,8 +70,12 @@ function _getDayForItem(item) {
 window.refreshKisiData = function() {
     const user = JSON.parse(localStorage.getItem('user'));
     if (user) {
-        const cacheKey = `announcements_kisi-kisi`;
-        localStorage.removeItem(cacheKey);
+        // Hapus semua cache announcements kisi-kisi (format baru: `announcements_kisi-kisi_<class>_<tahun>` + format lama)
+        Object.keys(localStorage).forEach(k => {
+            if (k === 'announcements_kisi-kisi' || k.startsWith('announcements_kisi-kisi_')) {
+                localStorage.removeItem(k);
+            }
+        });
         
         // Hapus juga cache schedule biar dapet yang paling fresh
         const MASTER_CLASS_ID = 2;

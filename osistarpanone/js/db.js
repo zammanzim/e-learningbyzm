@@ -13,6 +13,19 @@ function getFoto(pathFoto) {
 }
 
 // =========================================================================
+// DEVICE ID — id unik per perangkat (buat limit harian)
+// =========================================================================
+
+function getDeviceId() {
+    let id = localStorage.getItem("osis_device_id");
+    if (!id) {
+        id = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem("osis_device_id", id);
+    }
+    return id;
+}
+
+// =========================================================================
 // AUTH — akun OSIS dari tabel osis_users
 // =========================================================================
 
@@ -72,12 +85,37 @@ async function getWebFoto() {
     return data;
 }
 
-// Kirim aspirasi siswa
+// Kirim aspirasi siswa — lewat RPC biar bisa dilimit per device per hari
 async function kirimAspirasi(nama, kelas, isi) {
-    const { error } = await supa
-        .from("aspirasi")
-        .insert({ nama: nama, kelas: kelas, isi: isi });
+    const { data, error } = await supa.rpc("kirim_aspirasi_terbatas", {
+        p_device_id: getDeviceId(),
+        p_nama: nama,
+        p_kelas: kelas,
+        p_isi: isi
+    });
     if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// Ambil aspirasi terbaru buat ditampilkan (terbaru di atas, maks 50)
+async function getAspirasi() {
+    const { data, error } = await supa
+        .from("aspirasi")
+        .select("id, device_id, nama, kelas, isi, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+    if (error) throw error;
+    return data || [];
+}
+
+// Hapus aspirasi milik sendiri (device_id dicek di server)
+async function hapusAspirasiSendiri(id) {
+    const { data, error } = await supa.rpc("hapus_aspirasi_own", {
+        p_device_id: getDeviceId(),
+        p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
 }
 
 // Cek sakelar buka/tutup aspirasi
@@ -94,6 +132,48 @@ async function cekStatusAspirasi() {
         console.error("Gagal baca sakelar aspirasi, default BUKA", err);
         return "BUKA";
     }
+}
+
+// Kirim request lagu (radio jam istirahat) — lewat RPC biar bisa dilimit
+async function kirimRequestLagu(judul, penyanyi, nama) {
+    const { data, error } = await supa.rpc("kirim_lagu_terbatas", {
+        p_device_id: getDeviceId(),
+        p_judul: judul,
+        p_penyanyi: penyanyi,
+        p_nama: nama
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// Catat pengunjung unik per device (1x per hari), return total kunjungan
+async function catatVisitor() {
+    const { data, error } = await supa.rpc("tambah_visitor_unik", {
+        p_device_id: getDeviceId()
+    });
+    if (error) throw error;
+    return data || 0;
+}
+
+// Ambil request lagu terbaru (terbaru di atas, maks 30)
+async function getRequestLagu() {
+    const { data, error } = await supa
+        .from("lagu_requests")
+        .select("id, device_id, judul, penyanyi, nama, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+    if (error) throw error;
+    return data || [];
+}
+
+// Hapus request lagu milik sendiri (device_id dicek di server)
+async function hapusLaguSendiri(id) {
+    const { data, error } = await supa.rpc("hapus_lagu_own", {
+        p_device_id: getDeviceId(),
+        p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
 }
 
 // =========================================================================

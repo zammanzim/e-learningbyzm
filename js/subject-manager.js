@@ -497,7 +497,10 @@ const SubjectApp = {
             let query = supabase.from("subject_announcements").select("*").eq("subject_id", this.state.subjectId);
             query = query.eq("class_id", targetClassId).eq("academic_year", academicYear);
 
-            const cacheKey = `announcements_${this.state.subjectId}`;
+            // Key cache sekarang include class + tahun biar ga ketuker antar kelas
+            const cacheKey = `announcements_${this.state.subjectId}_${targetClassId}_${academicYear}`;
+            // Simpan key di state biar pas save nulis ke cache yang sama persis
+            this.state._announcementsCacheKey = cacheKey;
             // Helper read cache dgn TTL 10 menit
             const readCache = () => {
                 try {
@@ -1071,7 +1074,8 @@ const SubjectApp = {
                 if (ann) Object.assign(ann, u);
             });
             try {
-                localStorage.setItem(`announcements_${this.state.subjectId}`, JSON.stringify({ ts: Date.now(), data: this.state.announcements }));
+                const cacheKey = this.state._announcementsCacheKey || `announcements_${this.state.subjectId}`;
+                localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: this.state.announcements }));
             } catch (e) { }
 
             this._pendingPinChanges = new Set();

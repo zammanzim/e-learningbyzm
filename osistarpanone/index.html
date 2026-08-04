@@ -21,7 +21,13 @@
                 <p>SMK Taruna Harapan 1 Cipatat</p>
             </div>
         </a>
-        <div class="top-nav-extra" id="areaAuth"></div>
+        <div class="top-nav-extra">
+            <button class="visitor-trigger" id="visitorTrigger" onclick="Visitor.bukaPopup()" title="Statistik pengunjung">
+                <i class="fa-solid fa-eye"></i>
+                <span id="headerVisitorCount">-</span>
+            </button>
+            <div id="areaAuth"></div>
+        </div>
     </header>
 
     <!-- ============================================================
@@ -47,6 +53,7 @@
                     <div class="hero-chip">
                         <span class="chip"><b id="chipTahun">2010–2027</b>&nbsp;Jejak Angkatan</span>
                         <span class="chip"><b id="chipSekbid">15</b>&nbsp;Seksi Bidang</span>
+                        <span class="chip"><b id="chipVisitor">-</b>&nbsp;Pengunjung</span>
                     </div>
                 </div>
                 <div class="hero-logo">
@@ -298,27 +305,39 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <div class="form-head">Formulir Suara Tarpan</div>
+            <div class="aspirasi-grid">
+                <div class="form-card">
+                    <div class="form-head">Formulir Suara Tarpan</div>
 
-                <div class="field">
-                    <label>Nama Lengkap</label>
-                    <input type="text" id="namaSiswa" placeholder="Nama lengkap (opsional, boleh anonim)">
-                </div>
-                <div class="field">
-                    <label>Kelas</label>
-                    <input type="text" id="kelasSiswa" placeholder="Contoh: XII RPL 1 (opsional)">
-                </div>
-                <div class="field">
-                    <label>Isi Aspirasi</label>
-                    <textarea id="isiAspirasi" placeholder="Tulis kritik, saran, atau ide kreatifmu di sini secara jelas & detail..."></textarea>
+                    <div class="field">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="namaSiswa" placeholder="Nama lengkap (opsional, boleh anonim)">
+                    </div>
+                    <div class="field">
+                        <label>Kelas</label>
+                        <input type="text" id="kelasSiswa" placeholder="Contoh: XII RPL 1 (opsional)">
+                    </div>
+                    <div class="field">
+                        <label>Isi Aspirasi</label>
+                        <textarea id="isiAspirasi" placeholder="Tulis kritik, saran, atau ide kreatifmu di sini secara jelas & detail..."></textarea>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button class="btn btn-red" id="btnKirimAspirasi" onclick="Aspirasi.kirim()">
+                            <i class="fa-solid fa-paper-plane"></i> Kirim Suara Tarpan
+                        </button>
+                    </div>
                 </div>
 
-                <button class="btn btn-red" id="btnKirimAspirasi" onclick="Aspirasi.kirim()">
-                    <i class="fa-solid fa-paper-plane"></i> Kirim Suara Tarpan
-                </button>
-
-                <div id="feedbackAspirasi" class="form-feedback"></div>
+                <div class="pesan-card">
+                    <div class="pesan-head">
+                        <h4><i class="fa-solid fa-comments"></i> Suara yang Masuk</h4>
+                        <span class="pesan-count" id="jumPesan">0</span>
+                    </div>
+                    <div class="pesan-list" id="daftarPesan">
+                        <div class="pesan-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat suara...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -336,59 +355,73 @@
                 </div>
             </div>
 
-            <a class="music-card" href="https://ngl.link/osis_tarpanone" target="_blank" rel="noopener">
-                <div>
-                    <h4><i class="fa-solid fa-radio"></i> Tarpan Music Station</h4>
-                    <p>Request lagu jam istirahat via NGL!</p>
-                </div>
-                <div class="music-ico"><i class="fa-solid fa-music"></i></div>
-            </a>
+            <h3 class="social-title"><i class="fa-solid fa-share-nodes"></i> Sosial Media Kami</h3>
 
             <div class="social-grid">
                 <a class="social-card" href="https://instagram.com/osis_smktarpanone" target="_blank" rel="noopener">
-                    <span class="social-badge ig">Instagram</span>
-                    <div class="social-photo" data-foto-bg="bg"></div>
-                    <div class="social-body">
-                        <h5>OSIS Tarpan One</h5>
-                        <p>Feed & Reels informasi utama</p>
-                    </div>
+                    <span class="social-ico sc-ig"><i class="fa-brands fa-instagram"></i></span>
+                    <span class="social-name">Instagram</span>
+                    <span class="social-handle">@osis_smktarpanone</span>
                 </a>
 
                 <a class="social-card" href="https://tiktok.com/@osis_tarpan" target="_blank" rel="noopener">
-                    <span class="social-badge tt">TikTok</span>
-                    <div class="social-photo" data-foto-bg="bg"></div>
-                    <div class="social-body">
-                        <h5>@osis_tarpan</h5>
-                        <p>Kilas balik video event & promosi</p>
-                    </div>
+                    <span class="social-ico sc-tt"><i class="fa-brands fa-tiktok"></i></span>
+                    <span class="social-name">TikTok</span>
+                    <span class="social-handle">@osis_tarpan</span>
                 </a>
 
                 <a class="social-card" href="https://youtube.com/@osisrinyuhtarpanone" target="_blank" rel="noopener">
-                    <span class="social-badge yt">YouTube</span>
-                    <div class="social-photo" data-foto-bg="bg"></div>
-                    <div class="social-body">
-                        <h5>OSIS Rinyuh Tarpan One</h5>
-                        <p>Dokumentasi kegiatan durasi panjang</p>
-                    </div>
+                    <span class="social-ico sc-yt"><i class="fa-brands fa-youtube"></i></span>
+                    <span class="social-name">YouTube</span>
+                    <span class="social-handle">OSIS Rinyuh Tarpan One</span>
                 </a>
 
                 <a class="social-card" href="https://whatsapp.com/channel/0029VavIK3L5a23uXQChYz02" target="_blank" rel="noopener">
-                    <span class="social-badge wa">WhatsApp</span>
-                    <div class="social-photo" data-foto-bg="bg"></div>
-                    <div class="social-body">
-                        <h5>Saluran WhatsApp</h5>
-                        <p>Dokumentasi & info ter-update</p>
-                    </div>
+                    <span class="social-ico sc-wa"><i class="fa-brands fa-whatsapp"></i></span>
+                    <span class="social-name">WhatsApp</span>
+                    <span class="social-handle">Saluran Resmi</span>
                 </a>
 
                 <a class="social-card" href="mailto:osisrinyuh10@gmail.com" target="_blank" rel="noopener">
-                    <span class="social-badge mail">E-Mail</span>
-                    <div class="social-photo" data-foto-bg="bg"></div>
-                    <div class="social-body">
-                        <h5>Official Email</h5>
-                        <p>Kerja sama eksternal & proposal</p>
-                    </div>
+                    <span class="social-ico sc-mail"><i class="fa-solid fa-envelope"></i></span>
+                    <span class="social-name">E-Mail</span>
+                    <span class="social-handle">osisrinyuh10@gmail.com</span>
                 </a>
+            </div>
+
+            <div class="kontak-grid">
+                <div class="form-card">
+                    <div class="form-head">Form Request Lagu</div>
+
+                    <div class="field">
+                        <label>Judul Lagu</label>
+                        <input type="text" id="judulLagu" placeholder="Judul lagu yang mau diputar (wajib)">
+                    </div>
+                    <div class="field">
+                        <label>Penyanyi / Band</label>
+                        <input type="text" id="penyanyiLagu" placeholder="Siapa yang nyanyiin? (wajib)">
+                    </div>
+                    <div class="field">
+                        <label>Nama (Opsional)</label>
+                        <input type="text" id="namaPengirim" placeholder="Nama kamu biar di-announce (opsional)">
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button class="btn btn-red" id="btnKirimLagu" onclick="Lagu.kirim()">
+                            <i class="fa-solid fa-music"></i> Kirim Request Lagu
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pesan-card">
+                    <div class="pesan-head">
+                        <h4><i class="fa-solid fa-headphones"></i> Playlist Request</h4>
+                        <span class="pesan-count" id="jumLagu">0</span>
+                    </div>
+                    <div class="pesan-list" id="daftarLagu">
+                        <div class="pesan-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat playlist...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -398,17 +431,53 @@
         <span class="nav-pill" id="navPill"></span>
         <a href="#/" class="tab-item" data-route="home"><span class="ico"><i class="fa-solid fa-house"></i></span>Home</a>
         <a href="#/sekbid" class="tab-item" data-route="sekbid"><span class="ico"><i class="fa-solid fa-folder-open"></i></span>Sekbid</a>
-        <a href="#/aspirasi" class="tab-item" data-route="aspirasi"><span class="ico"><i class="fa-solid fa-inbox"></i></span>Aspirasi</a>
         <a href="#/kontak" class="tab-item" data-route="kontak"><span class="ico"><i class="fa-solid fa-phone"></i></span>Kontak</a>
+        <a href="#/aspirasi" class="tab-item" data-route="aspirasi"><span class="ico"><i class="fa-solid fa-inbox"></i></span>Aspirasi</a>
     </nav>
+
+    <!-- ===== POPUP VISITOR ===== -->
+    <div class="visitor-overlay" id="visitorOverlay">
+        <div class="visitor-popup">
+            <div class="visitor-pop-head">
+                <h3><i class="fa-solid fa-eye"></i> Pengunjung</h3>
+                <button id="tutupVisitor" onclick="Visitor.tutupPopup()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="visitor-stats">
+                <div class="vstat-card">
+                    <b id="vstatTotal">-</b>
+                    <span>Total</span>
+                </div>
+                <div class="vstat-card">
+                    <b id="vstatHari">-</b>
+                    <span>Hari Ini</span>
+                </div>
+                <div class="vstat-card">
+                    <b id="vstatUnik">-</b>
+                    <span>Perangkat Unik</span>
+                </div>
+            </div>
+
+            <div class="visitor-list-head">
+                <h4><i class="fa-solid fa-mobile-screen"></i> Pengunjung Hari Ini</h4>
+            </div>
+            <div class="visitor-list" id="visitorList">
+                <div class="pesan-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat daftar...</div>
+            </div>
+            <p class="visitor-note"><i class="fa-solid fa-circle-info"></i> Satu perangkat dihitung 1x per hari.</p>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/db.js" defer></script>
     <script src="js/app.js" defer></script>
+    <script src="js/toast.js" defer></script>
+    <script src="js/show-popup.js" defer></script>
+    <script src="js/visitor.js" defer></script>
     <script src="js/home.js" defer></script>
     <script src="js/sekbid.js" defer></script>
     <script src="js/aspirasi.js" defer></script>
+    <script src="js/lagu.js" defer></script>
     <script src="js/osis-auth.js" defer></script>
 </body>
 </html>

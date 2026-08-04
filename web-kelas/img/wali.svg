@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="630" viewBox="0 0 600 630">
+  <rect width="600" height="630" fill="#f5efea"/>
+  <rect width="600" height="630" fill="none" stroke="#1a1314" stroke-width="8" rx="0"/>
+  <circle cx="300" cy="230" r="110" fill="#e8e0da" stroke="#1a1314" stroke-width="8"/>
+  <path d="M80 570 C80 420 180 360 300 360 C420 360 520 420 520 570 Z" fill="#e8e0da" stroke="#1a1314" stroke-width="8"/>
+  <text x="300" y="560" font-family="Outfit, Arial, sans-serif" font-size="44" font-weight="900" fill="#6f6668" text-anchor="middle">WALI</text>
+  <text x="300" y="610" font-family="Outfit, Arial, sans-serif" font-size="44" font-weight="900" fill="#6f6668" text-anchor="middle">KELAS</text>
+</svg>
