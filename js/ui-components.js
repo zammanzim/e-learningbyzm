@@ -167,6 +167,26 @@ const UIComponents = {
                     </div>
                 </div>
 
+                <!-- Materi Susulan: pilih hari (cuma muncul di halaman susulan) -->
+                <div id="susulanDayWrap" style="display:none; background: rgba(0,234,255,0.05); border: 1px solid rgba(0,234,255,0.25); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                    <label style="font-size: 11px; color: #888; margin-bottom: 5px; display: block;">${t('choose_day')}:</label>
+                    <select id="susulanDaySelect" class="glass-input" style="padding: 8px 12px; font-size: 13px; width:100%;">
+                        <option value="Senin">${t('senin')}</option>
+                        <option value="Selasa">${t('selasa')}</option>
+                        <option value="Rabu">${t('rabu')}</option>
+                        <option value="Kamis">${t('kamis')}</option>
+                        <option value="Jumat">${t('jumat')}</option>
+                    </select>
+                </div>
+
+                <!-- Materi Susulan: pilih pelajaran (sesuai jadwal daily card) -->
+                <div id="susulanSubjectWrap" style="display:none; background: rgba(0,234,255,0.05); border: 1px solid rgba(0,234,255,0.25); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                    <label style="font-size: 11px; color: #888; margin-bottom: 5px; display: block;">${t('susulan_subject')}:</label>
+                    <select id="susulanSubjectSelect" class="glass-input" style="padding: 8px 12px; font-size: 13px; width:100%;">
+                        <option value="">-</option>
+                    </select>
+                </div>
+
                 <input type="text" id="addJudul" class="glass-input" placeholder="${t('title')}" spellcheck="false">
                 <input type="text" id="addSubjudul" class="glass-input" placeholder="${t('subtitle')}" spellcheck="false">
                 <div class="editor-toolbar" style="display:flex; gap:6px; margin-bottom: 8px; align-items:center;">

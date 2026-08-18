@@ -351,6 +351,26 @@ const SubjectApp = {
                 if (taskBtn.classList.contains('task-wajib') || taskBtn.classList.contains('done')) return;
                 self.toggleTaskStatus(taskBtn.closest(".course-card"), taskBtn);
             }
+
+            // Handle Tombol Copy Kode
+            const copyBtn = e.target.closest(".code-copy-btn");
+            if (copyBtn) {
+                e.preventDefault();
+                const body = copyBtn.closest('.code-block-wrap')?.querySelector('.code-block-body');
+                if (body) {
+                    const text = body.innerText;
+                    const done = () => {
+                        copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> ${t('copied')}`;
+                        setTimeout(() => { copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> ${t('copy_code')}`; }, 1600);
+                        if (typeof showToast === 'function') showToast(t('copied'), 'success');
+                    };
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text).then(done).catch(() => _copyTextFallback(text, done));
+                    } else {
+                        _copyTextFallback(text, done);
+                    }
+                }
+            }
         });
     },
 
@@ -766,7 +786,7 @@ const SubjectApp = {
         <h3 contenteditable="false" spellcheck="false" class="editable" data-field="big_title">${bigTitle}</h3>
         ${isTaskCard ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#ffd32a;background:rgba(255,211,42,0.12);padding:3px 10px;border-radius:20px;margin-bottom:8px;border:1px solid rgba(255,211,42,0.2);">📋 Wajib Dikumpul</span>` : ''}
         ${displayTitleHTML}
-        <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${processCardLinks(content)}</div>
+        <div contenteditable="false" spellcheck="false" class="editable" data-field="content" style="margin-bottom: 15px;">${processCodeBlocks(processCardLinks(content))}</div>
         <small contenteditable="false" spellcheck="false" class="editable" data-field="small">${small}</small>
         
         <div class="card-actions" style="margin-top:15px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
@@ -931,18 +951,23 @@ const SubjectApp = {
             }
         });
 
-        // 3. KONVERSI LINK: revert <a> ke tujuan= pas edit, balikin pas simpan
+        // 3. KONVERSI LINK & CODE BLOCK: revert pas edit, balikin pas simpan
         cards.forEach(card => {
             const contentEl = card.querySelector('[data-field="content"]');
             if (!contentEl) return;
             contentEl.innerHTML = this.state.editMode
-                ? revertCardLinks(contentEl.innerHTML)
+                ? revertCodeBlocks(revertCardLinks(contentEl.innerHTML))
                 : processCardLinks(contentEl.innerHTML);
         });
 
         // 4. SIMPAN DATA (Hanya saat keluar dari mode edit)
         if (!this.state.editMode) {
             await this.saveAllChanges();
+            // Re-apply code block wrapper (visual doang — data yg disimpan tetap raw)
+            cards.forEach(card => {
+                const contentEl = card.querySelector('[data-field="content"]');
+                if (contentEl) contentEl.innerHTML = processCodeBlocks(processCardLinks(contentEl.innerHTML));
+            });
         } else {
             this._initDragDrop();
         }
@@ -1963,9 +1988,10 @@ const SubjectApp = {
             let html = `
                 <option value="announcements" data-is-lesson="false">Announcements</option>
                 <option value="kisi-kisi" data-is-lesson="false">Kisi-kisi PSTS</option>
+                <option value="susulan" data-is-lesson="false">Materi Susulan</option>
             `;
             data.forEach(item => {
-                if (item.subject_id === 'announcements' || item.subject_id === 'kisi-kisi') return;
+                if (item.subject_id === 'announcements' || item.subject_id === 'kisi-kisi' || item.subject_id === 'susulan') return;
                 html += `<option value="${item.subject_id}" data-is-lesson="true">${item.subject_name}</option>`;
             });
             select.innerHTML = html;
@@ -2019,7 +2045,7 @@ const SubjectApp = {
         const targetClassId = await SubjectApp._getTargetClassId();
         const academicYear = await getAcademicYear(targetClassId);
 
-        const { error } = await supabase.from('subject_announcements').insert({
+        const { data: inserted, error } = await supabase.from('subject_announcements').insert({
             subject_id: d.dest,
             class_id: targetClassId,
             academic_year: academicYear,
@@ -2030,14 +2056,88 @@ const SubjectApp = {
             is_lesson: d.isLesson,
             is_task: d.isTask || false,
             is_pinned: false,
+            susulan_day: d.susulanDay || null,
+            susulan_subject: d.susulanSubject || null,
             display_order: 0
-        });
+        }).select();
 
         if (!error) {
-            // Kalau post ke halaman yang sama, reload.
+            // Kalau post ke halaman yang sama, tampilkan langsung tanpa refresh.
             // Jika di halaman 'tugas', reload kalau yang dipost adalah task (isLesson)
             if (d.dest === this.state.subjectId || (this.state.subjectId === 'tugas' && d.isLesson)) {
-                // Buat objek announcement baru dari data yang disimpan\r\n                const newAnnouncement = {\r\n                    id: Date.now(), // ID sementara, akan diganti oleh DB setelah sinkronisasi\r\n                    subject_id: d.dest,\r\n                    class_id: await this._getTargetClassId(),\r\n                    academic_year: await getAcademicYear(await this._getTargetClassId()),\r\n                    big_title: d.big,\r\n                    title: d.tit,\r\n                    content: d.con,\r\n                    small: d.sml,\r\n                    photo_url: urls.length > 1 ? urls : (urls[0] || null),\r\n                    card_color: d.cardColor,\r\n                    is_done: false,\r\n                    is_lesson: d.isLesson,\r\n                    is_task: d.isTask || false,\r\n                    is_pinned: false,\r\n                    display_order: 0\r\n                };\r\n\r\n                // Tambah ke state announcements di posisi awal (terbaru)\r\n                this.state.announcements.unshift(newAnnouncement);\r\n\r\n                // Render card baru langsung ke UI tanpa reload\r\n                const container = document.getElementById('announcements');\r\n                if (container) {\r\n                    const newCard = this.createCardElement(newAnnouncement);\r\n                    // Sisipkan di awal, setelah header jika ada\r\n                    const header = container.querySelector('h3');\r\n                    if (header) {\r\n                        container.insertBefore(newCard, header.nextSibling);\r\n                    } else {\r\n                        container.prepend(newCard);\r\n                    }\r\n\r\n                    // Jika lagi dalam edit mode, pastikan card baru juga bisa diedit\r\n                    if (this.state.editMode) {\r\n                        newCard.classList.add('editable-mode');\r\n                        newCard.querySelectorAll('.editable').forEach(f => {\r\n                            f.contentEditable = 'true';\r\n                            f.style.pointerEvents = 'auto';\r\n                            f.style.cursor = 'text';\r\n                        });\r\n                        const deleteBtn = newCard.querySelector('.delete-btn');\r\n                        if (deleteBtn) deleteBtn.style.display = 'inline-block';\r\n                        const colorTools = newCard.querySelector('.card-color-tools');\r\n                        if (colorTools) colorTools.style.display = 'flex';\r\n                        const formatTools = newCard.querySelector('.card-format-tools');\r\n                        if (formatTools) formatTools.style.display = 'flex';\r\n                        const reorderHandle = newCard.querySelector('.reorder-handle');\n                        if (reorderHandle) {\n                            const isStaticPage = this.state.isLessonMode || this.state.subjectId === 'kisi-kisi';\n                            reorderHandle.style.display = isStaticPage ? 'none' : 'flex';\n                        }\n                        const cameraBtn = newCard.querySelector('.camera-btn');\n                        if (cameraBtn) cameraBtn.style.display = 'flex';\n                        newCard.querySelectorAll('.delete-photo-btn').forEach(b => b.style.display = 'flex');\n                    }\r\n\r\n                    // Fokus ke card baru untuk user convenience\r\n                    newCard.querySelector('[data-field=\"big_title\"]')?.focus();\r\n                }\r\n\r\n                showToast(t('task_sent_success'), 'success');
+                if (this.state.subjectId === 'tugas') {
+                    // Halaman tugas punya renderer sendiri (filter + numbering) — reload biar konsisten
+                    showToast(t('task_sent_success'), 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                    return;
+                }
+
+                // 1. Kalau lagi edit mode, simpen dulu perubahan card yang belum di-save
+                if (this.state.editMode) {
+                    await this.saveAllChanges();
+                    // saveAllChanges ngereset FAB ke ikon edit — balikin ke tampilan mode edit
+                    const toggleBtn = document.getElementById("toggleEditMode");
+                    const fabContainer = document.getElementById("adminFabContainer");
+                    if (toggleBtn && fabContainer) {
+                        fabContainer.classList.add("active");
+                        toggleBtn.className = "fab-main state-done";
+                        toggleBtn.innerHTML = `<i class="fa-solid fa-check fab-icon"></i><span class="fab-label">${t('save')}</span>`;
+                    }
+                }
+
+                // 2. Pakai id asli dari DB biar pas di-save lagi nanti gak dobel
+                const row = (inserted && inserted[0]) || null;
+                const newAnnouncement = {
+                    id: row ? row.id : Date.now(),
+                    subject_id: d.dest,
+                    class_id: targetClassId,
+                    academic_year: academicYear,
+                    big_title: d.big,
+                    title: d.tit,
+                    content: d.con,
+                    small: d.sml,
+                    photo_url: urls.length > 1 ? urls : (urls[0] || null),
+                    card_color: d.cardColor,
+                    is_done: false,
+                    is_lesson: d.isLesson,
+                    is_task: d.isTask || false,
+                    is_pinned: false,
+                    susulan_day: d.susulanDay || null,
+                    display_order: 0
+                };
+
+                // 3. Masukin ke state paling atas + render ulang tanpa refresh
+                this.state.announcements.unshift(newAnnouncement);
+                this.renderAnnouncements();
+
+                // 4. Kisi-kisi render ulang pake renderer sendiri (group per hari),
+                //    jadi pastiin edit mode ke-apply ulang di semua card
+                if (this.state.editMode) {
+                    document.querySelectorAll(".course-card").forEach(card => {
+                        card.classList.add("editable-mode");
+                        card.querySelectorAll(".editable").forEach(f => {
+                            f.contentEditable = "true";
+                            f.style.pointerEvents = "auto";
+                            f.style.cursor = "text";
+                        });
+                        const deleteBtn = card.querySelector(".delete-btn");
+                        if (deleteBtn) deleteBtn.style.display = "inline-block";
+                        const colorTools = card.querySelector(".card-color-tools");
+                        if (colorTools) colorTools.style.display = "flex";
+                        const formatTools = card.querySelector(".card-format-tools");
+                        if (formatTools) formatTools.style.display = "flex";
+                        const reorderHandle = card.querySelector(".reorder-handle");
+                        if (reorderHandle) {
+                            const isStaticPage = this.state.isLessonMode || this.state.subjectId === 'kisi-kisi';
+                            reorderHandle.style.display = isStaticPage ? "none" : "flex";
+                        }
+                        const cameraBtn = card.querySelector(".camera-btn");
+                        if (cameraBtn) cameraBtn.style.display = "flex";
+                        card.querySelectorAll(".delete-photo-btn").forEach(b => b.style.display = "flex");
+                    });
+                }
+
+                showToast(t('task_sent_success'), 'success');
             } else {
                 showToast(t('task_sent_success'), 'success');
             }
@@ -2224,7 +2324,7 @@ function openDetail(data, photoIndex = 0) {
 
     document.getElementById('detailBigTxt').innerText = data.big_title || '';
     document.getElementById('detailTitleTxt').innerText = data.title || '';
-    document.getElementById('detailContentTxt').innerHTML = processCardLinks(data.content || '');
+    document.getElementById('detailContentTxt').innerHTML = processCodeBlocks(processCardLinks(data.content || ''));
     document.getElementById('detailSmallTxt').innerText = data.small || '';
 
     let photos = [];
@@ -2531,6 +2631,158 @@ function revertCardLinks(html) {
     return html.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, (m, url, label) => {
         return `<span class="tujuan-marker">tujuan=</span>${url}, ${label}`;
     });
+}
+
+// ── CODE BLOCK: deteksi & bungkus kode biar ada tombol copy ──
+// Dipakai di render view (DOM doang). Pas edit mode, revertCodeBlocks
+// balikin ke HTML asli biar yang ke-save tetap data mentah.
+
+function _looksLikeCodeLine(el) {
+    if (el.tagName !== 'DIV') return false;
+    const spans = el.querySelectorAll('span');
+    if (spans.length === 0) return false;
+    let colored = 0;
+    spans.forEach(s => {
+        const st = s.getAttribute('style') || '';
+        if (st.includes('color') || st.includes('font-family')) colored++;
+    });
+    return colored >= 1;
+}
+
+function _makeCodeCopyBtn() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-copy-btn';
+    btn.title = t('copy_code');
+    btn.innerHTML = `<i class="fa-regular fa-copy"></i> ${t('copy_code')}`;
+    return btn;
+}
+
+function _makeCodeWrapper() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrap';
+    wrapper.dataset.cb = '1';
+    const body = document.createElement('div');
+    body.className = 'code-block-body';
+    wrapper.appendChild(body);
+    wrapper.appendChild(_makeCodeCopyBtn());
+    return wrapper;
+}
+
+function _wrapCodeBlock(el) {
+    if (el.classList.contains('code-block-wrap')) return;
+    const wrapper = _makeCodeWrapper();
+    el.parentNode.insertBefore(wrapper, el);
+    wrapper.querySelector('.code-block-body').appendChild(el);
+}
+
+// Rangkaian <div> ber-span warna (paste dari VSCode/IDE)
+function _wrapColoredRuns(tmp) {
+    const children = Array.from(tmp.children);
+    let run = [];
+    const flushRun = () => {
+        if (run.length >= 3 && run.every(el => _looksLikeCodeLine(el))) {
+            const wrapper = _makeCodeWrapper();
+            run[0].parentNode.insertBefore(wrapper, run[0]);
+            run.forEach(el => wrapper.querySelector('.code-block-body').appendChild(el));
+        }
+        run = [];
+    };
+    children.forEach(el => {
+        if (el.tagName === 'DIV') run.push(el);
+        else flushRun();
+    });
+    flushRun();
+}
+
+// Elemen yang isinya markup: teks literal '<' (&lt;) atau elemen dokumen
+// HTML (header/nav/section/table/dll) yang ke-render pas paste halaman web
+function _isPlainCodeEl(el) {
+    if (el.classList.contains('code-block-wrap')) return false;
+    const inner = el.innerHTML || '';
+    if (inner.includes('&lt;')) return true;
+    const tag = el.tagName;
+    if (['SECTION', 'NAV', 'HEADER', 'FOOTER', 'MAIN', 'TABLE', 'ARTICLE', 'ASIDE', 'FORM'].includes(tag)) return true;
+    // Tag dokumen di dalamnya (dokumen HTML yang ke-parse jadi elemen asli)
+    const docTags = ['<section', '<nav', '<header', '<main', '<footer', '<table', '<article', '<aside', '<form', '<html', '<body'];
+    return docTags.some(t => inner.toLowerCase().includes(t));
+}
+
+// Markup polos (plain text HTML): ubah text node ber-'<' jadi div, lalu
+// grup elemen markup berurutan jadi satu blok kode
+function _wrapPlainCodeRuns(tmp) {
+    Array.from(tmp.childNodes).forEach(n => {
+        if (n.nodeType === 3 && n.textContent.includes('<')) {
+            const d = document.createElement('div');
+            d.textContent = n.textContent;
+            n.replaceWith(d);
+        }
+    });
+
+    const children = Array.from(tmp.children);
+    let run = [];
+    const flushRun = () => {
+        if (run.length > 0) {
+            const wrapper = _makeCodeWrapper();
+            run[0].parentNode.insertBefore(wrapper, run[0]);
+            run.forEach(el => wrapper.querySelector('.code-block-body').appendChild(el));
+        }
+        run = [];
+    };
+    children.forEach(el => {
+        if (_isPlainCodeEl(el)) run.push(el);
+        else flushRun();
+    });
+    flushRun();
+}
+
+function processCodeBlocks(html) {
+    if (!html || typeof html !== 'string') return html;
+    const signals = ['<pre', '<div', '&lt;', '<table', '<section', '<nav', '<header', '<main', '<footer'];
+    if (!signals.some(s => html.includes(s))) return html;
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+
+    // 1. Blok <pre>
+    tmp.querySelectorAll('pre').forEach(pre => _wrapCodeBlock(pre));
+
+    // 2. Rangkaian <div> ber-span warna (paste VSCode/IDE)
+    _wrapColoredRuns(tmp);
+
+    // 3. Markup polos / dokumen HTML (plain text paste)
+    _wrapPlainCodeRuns(tmp);
+
+    return tmp.innerHTML;
+}
+
+function revertCodeBlocks(html) {
+    if (!html || !html.includes('code-block-wrap')) return html;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    tmp.querySelectorAll('.code-block-wrap').forEach(w => {
+        const body = w.querySelector('.code-block-body');
+        if (body) {
+            while (body.firstChild) w.parentNode.insertBefore(body.firstChild, w);
+        }
+        w.remove();
+    });
+    return tmp.innerHTML;
+}
+
+function _copyTextFallback(text, onDone) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed; top:0; left:0; opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        onDone();
+    } catch (e) {
+        if (typeof showToast === 'function') showToast(t('failed_save_data'), 'error');
+    }
 }
 
 function handleBulletAuto(e) {

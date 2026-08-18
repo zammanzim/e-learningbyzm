@@ -509,6 +509,65 @@ header {
     line-height: 1.4;
 }
 
+/* ── Code Block (preview 3 baris + tombol copy) ── */
+.code-block-wrap {
+    position: relative;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    margin: 12px 0;
+    overflow: hidden;
+}
+
+.code-block-body {
+    max-height: 84px;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    opacity: 0.3;
+    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+}
+
+.code-block-body div,
+.code-block-body span {
+    font-family: inherit;
+}
+
+.code-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: calc(100% - 20px);
+    margin: 0 10px 10px;
+    padding: 9px;
+    background: rgba(0, 234, 255, 0.12);
+    border: 1px solid rgba(0, 234, 255, 0.35);
+    color: var(--accent, #00eaff);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.code-copy-btn:hover {
+    background: rgba(0, 234, 255, 0.25);
+}
+
+.code-copy-btn.copied {
+    background: rgba(46, 204, 113, 0.15);
+    border-color: rgba(46, 204, 113, 0.4);
+    color: #2ecc71;
+}
+
 .card-photo-container {
     width: 100%;
     position: relative;

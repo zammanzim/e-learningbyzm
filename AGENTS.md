@@ -46,7 +46,7 @@ Semua halaman `/a/*.html` harus pake urutan script yg sama persis:
 | 15 | `system-notice.js` | no |
 
 Tambahan kalo perlu:
-- `subject-manager.js` (defer) — **cuma** kalo halaman pake card (announcements, subject, tugas, kisi-kisi)
+- `subject-manager.js` (defer) — **cuma** kalo halaman pake card (announcements, subject, tugas, kisi-kisi, susulan)
 - `daily-card.js` (defer) — di dalem `<body>`, setelah sidebar
 
 ## Layout — left-section + right-section
@@ -271,7 +271,9 @@ nilai_psasi
   pp            numeric
 
 subject_announcements
-  (id, class_id, subject_id, big_title, title, content, small, created_at, updated_at, card_color, is_task, task_date, display_order, etc.)
+  (id, class_id, subject_id, big_title, title, content, small, created_at, updated_at, card_color, is_task, task_date, display_order, susulan_day, susulan_subject, etc.)
+  - susulan_day: hari penempatan materi susulan (Senin..Jumat)
+  - susulan_subject: nama pelajaran (dari jadwal utama daily card, type='regular') — buat filter & urutan card ngikut jadwal
 
 users
   (id, email, password, role, class_id, class_name, nickname, short_name, avatar_url, etc.)

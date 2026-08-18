@@ -361,3 +361,23 @@ ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS academic_year TEXT DE
 -- Foto orang-orang OSIS, path di bucket osis-foto/sekbid/
 -- ============================================================
 ALTER TABLE sekbid ADD COLUMN IF NOT EXISTS foto TEXT DEFAULT NULL;
+
+-- ============================================================
+-- MIGRASI: Materi Susulan (a/susulan.html)
+-- Kolom susulan_day = hari penempatan materi (Senin..Jumat)
+-- ============================================================
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS susulan_day TEXT DEFAULT NULL;
+
+-- ============================================================
+-- MIGRASI: Materi Susulan — kolom mata pelajaran
+-- susulan_subject = nama pelajaran (diambil dari jadwal utama
+-- daily card), dipakai buat filter & urutan card ngikut jadwal
+-- ============================================================
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS susulan_subject TEXT DEFAULT NULL;
+
+-- Seed menu "Materi Susulan" untuk kelas 2 (master/system)
+INSERT INTO subjects_config (class_id, subject_id, subject_name, menu_group, display_order, icon)
+SELECT 2, 'susulan', 'Materi Susulan', 'main', 96, 'fa-book-open-reader'
+WHERE NOT EXISTS (
+    SELECT 1 FROM subjects_config WHERE subject_id = 'susulan' AND class_id = 2
+);

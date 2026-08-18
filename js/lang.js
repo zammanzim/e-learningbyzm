@@ -114,6 +114,17 @@ const i18n = {
             "all_lessons": "Semua Pelajaran",
             "no_kisi": "Belum ada kisi-kisi untuk hari ini",
 
+            // Materi Susulan
+            "susulan": "Materi Susulan",
+            "no_susulan": "Belum ada materi susulan",
+            "choose_day": "Pilih Hari",
+            "susulan_subject": "Mata Pelajaran",
+            "susulan_page": "Halaman Materi Susulan — materi pelajaran yang terlewat, dibagi per hari",
+
+            // Code Block
+            "copy_code": "Salin Kode",
+            "copied": "Tersalin!",
+
             // daily-card.js
             "edit_schedule": "Edit jadwal",
             "activate_mode": "Mode jadwal",
@@ -703,6 +714,17 @@ const i18n = {
             "choose_lesson": "Choose a Lesson",
             "all_lessons": "All Lessons",
             "no_kisi": "There are no exam topics for this day",
+
+            // Materi Susulan
+            "susulan": "Makeup Materials",
+            "no_susulan": "No makeup materials yet",
+            "choose_day": "Choose Day",
+            "susulan_subject": "Subject",
+            "susulan_page": "Makeup materials page — missed lessons, divided by day",
+
+            // Code Block
+            "copy_code": "Copy Code",
+            "copied": "Copied!",
 
             //daily-card.js
             "edit_schedule": "Edit schedule",
@@ -1321,6 +1343,17 @@ const i18n = {
             "no_visitors": "Can aya nu ngalongok",
             "visitor": "Nu Ngalongok",
             "resetvist": "Reset Nu Ngalongok",
+
+            // Materi Susulan
+            "susulan": "Materi Susulan",
+            "no_susulan": "Can acan aya materi susulan",
+            "choose_day": "Pilih Poe",
+            "susulan_subject": "Mata Pangajaran",
+            "susulan_page": "Kaca Materi Susulan — materi anu kaliwat, dibagi per poe",
+
+            // Code Block
+            "copy_code": "Salin Kode",
+            "copied": "Kasalim!",
 
             "material_not_found": "Materi teu kapendak.",
             "student_not_found": "Data murid teu kapendak di kelas ieu.",
