@@ -153,7 +153,7 @@ function adjustScore(teamId, delta, scoreEl) {
   if (!team) return;
 
   const prevScore = team.score;
-  team.score = Math.max(0, team.score + delta); // no negative scores
+  team.score = team.score + delta; // skor boleh negatif
 
   // record for undo
   lastAction = { teamId, prevScore, newScore: team.score };
@@ -198,7 +198,8 @@ undoBtn.addEventListener("click", () => {
 
 /* ---------- Point value controls ---------- */
 function setActivePoint(val) {
-  val = Math.max(1, Math.floor(Number(val) || 1));
+  val = Math.floor(Number(val));
+  if (!Number.isFinite(val) || val === 0) return; // 0 tidak berguna, abaikan
   activePoint = val;
   pointDisplayEl.textContent = val;
   pointInputEl.value = "";
