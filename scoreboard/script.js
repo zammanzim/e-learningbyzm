@@ -4,21 +4,23 @@
 
 const STORAGE_KEY = "scoreboard_data_v1";
 const DEFAULT_POINT = 1;
+const DEFAULT_COUNT = 5;
+const MAX_COUNT = 20;
 
 const medal = ["🥇", "🥈", "🥉"];
 
 /* ---------- State ---------- */
 let state = loadState();
 let activePoint = state.activePoint || DEFAULT_POINT;
+let teamCount = state.teamCount || DEFAULT_COUNT;
 let lastAction = null; // for undo
 
+function makeTeam(n) {
+  return { id: n, name: "TIM " + n, score: 0, order: n - 1 };
+}
+
 function defaultTeams() {
-  return [1, 2, 3, 4, 5].map((n, i) => ({
-    id: i + 1,
-    name: "TIM " + n,
-    score: 0,
-    order: i, // tie-breaker: original position
-  }));
+  return Array.from({ length: DEFAULT_COUNT }, (_, i) => makeTeam(i + 1));
 }
 
 function loadState() {
@@ -26,25 +28,34 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.teams) && parsed.teams.length === 5) {
+      if (parsed && Array.isArray(parsed.teams) && parsed.teams.length > 0) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Gagal baca localStorage", e);
   }
-  return { teams: defaultTeams(), activePoint: DEFAULT_POINT };
+  return { teams: defaultTeams(), activePoint: DEFAULT_POINT, teamCount: DEFAULT_COUNT };
+}
+
+function ensureTeams() {
+  while (state.teams.length < teamCount) {
+    const n = state.teams.length + 1;
+    state.teams.push(makeTeam(n));
+  }
 }
 
 function saveState() {
   state.activePoint = activePoint;
+  state.teamCount = teamCount;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 /* ---------- Ranking ---------- */
 function rankedTeams() {
-  // sort by score desc, tie-break by original order asc
-  return [...state.teams].sort((a, b) => {
+  // hanya tim yang ditampilkan, diurutkan skor desc, tie-break urutan awal asc
+  const shown = state.teams.slice(0, teamCount);
+  return [...shown].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     return a.order - b.order;
   });
@@ -56,8 +67,18 @@ const pointDisplayEl = document.getElementById("pointDisplay");
 const pointInputEl = document.getElementById("pointInput");
 const undoBtn = document.getElementById("undoBtn");
 
+/* ---------- Layout: columns follow team count, responsive ---------- */
+function applyLayout() {
+  const w = window.innerWidth;
+  let cols = teamCount;
+  if (w <= 620) cols = 1;
+  else if (w <= 1100) cols = Math.min(teamCount, 2);
+  boardEl.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+}
+
 /* ---------- Render board with FLIP animation ---------- */
 function renderBoard(animate = true) {
+  applyLayout();
   const ranked = rankedTeams();
 
   // record old positions for FLIP
@@ -169,8 +190,17 @@ function adjustScore(teamId, delta, scoreEl) {
     scoreEl.classList.add("bump");
   }
 
-  // re-rank after a short delay so the bump is visible first
-  setTimeout(() => renderBoard(true), 220);
+  // tunda perubahan urutan 3 detik (threshold), reset tiap ada perubahan baru
+  scheduleReorder();
+}
+
+let reorderTimer = null;
+function scheduleReorder() {
+  if (reorderTimer) clearTimeout(reorderTimer);
+  reorderTimer = setTimeout(() => {
+    reorderTimer = null;
+    renderBoard(true);
+  }, 3000);
 }
 
 function resetTeam(teamId) {
@@ -220,6 +250,31 @@ pointInputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && pointInputEl.value) setActivePoint(pointInputEl.value);
 });
 
+/* ---------- Team count controls ---------- */
+const countInputEl = document.getElementById("countInput");
+
+function setTeamCount(val) {
+  val = Math.floor(Number(val));
+  if (!Number.isFinite(val) || val < 1 || val > MAX_COUNT) return;
+  teamCount = val;
+  ensureTeams();
+  document.querySelectorAll(".count-btn").forEach((b) => {
+    b.classList.toggle("active", Number(b.dataset.count) === teamCount);
+  });
+  saveState();
+  renderBoard(false);
+}
+
+document.querySelectorAll(".count-btn[data-count]").forEach((btn) => {
+  btn.addEventListener("click", () => setTeamCount(btn.dataset.count));
+});
+document.getElementById("countApply").addEventListener("click", () => {
+  if (countInputEl.value) setTeamCount(countInputEl.value);
+});
+countInputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && countInputEl.value) setTeamCount(countInputEl.value);
+});
+
 /* ---------- Reset all (with confirm modal) ---------- */
 const resetModal = document.getElementById("resetModal");
 
@@ -247,6 +302,11 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- Init ---------- */
+ensureTeams();
 setActivePoint(activePoint);
+document.querySelectorAll(".count-btn").forEach((b) => {
+  b.classList.toggle("active", Number(b.dataset.count) === teamCount);
+});
 undoBtn.disabled = !lastAction;
 renderBoard(false);
+window.addEventListener("resize", applyLayout);
