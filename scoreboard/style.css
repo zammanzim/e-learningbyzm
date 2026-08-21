@@ -337,3 +337,23 @@ body {
   .title { width: 100%; text-align: center; }
   .point-control { justify-content: center; }
 }
+
+/* ---------- Touch: ilangin outline & highlight biru pas disentuh ---------- */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-focus-ring-color: transparent;
+  }
+  *:focus,
+  *:focus-visible,
+  button:focus,
+  input:focus,
+  .team-name:focus,
+  .big-btn:focus,
+  .point-btn:focus,
+  .count-btn:focus,
+  .reset-one:focus,
+  .ctrl-btn:focus {
+    outline: none !important;
+  }
+}
