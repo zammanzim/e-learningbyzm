@@ -11,7 +11,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (user) {
         await autoFetchUser();
         // Path Guard: Cek apakah user boleh akses halaman ini
-        await checkPathAccess(user);
+        // [TEMP DISABLED] banyak bug — nonaktifin dulu biar semua halaman bisa diakses sementara
+        // await checkPathAccess(user);
     } else {
         // Biar kalau gak login pas di folder admin, gak mental ke admin/index
         window.location.href = pathPrefix + "login";
@@ -24,6 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  * Kecuali super_admin (miz).
  */
 async function checkPathAccess(user) {
+    return; // [TEMP DISABLED] fitur halaman dilarang dimatiin sementara — hapus baris ini buat aktifin lagi
     if (!user || user.role === 'super_admin' || user.role === 'teacher') return;
 
     // class_admin boleh akses semua halaman di /admiii/
