@@ -2057,6 +2057,7 @@ const SubjectApp = {
             is_task: d.isTask || false,
             is_pinned: false,
             susulan_day: d.susulanDay || null,
+            susulan_date: d.susulanDate || null,
             susulan_subject: d.susulanSubject || null,
             display_order: 0
         }).select();
@@ -2103,6 +2104,8 @@ const SubjectApp = {
                     is_task: d.isTask || false,
                     is_pinned: false,
                     susulan_day: d.susulanDay || null,
+                    susulan_date: d.susulanDate || null,
+                    susulan_subject: d.susulanSubject || null,
                     display_order: 0
                 };
 

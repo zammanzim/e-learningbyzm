@@ -381,3 +381,27 @@ SELECT 2, 'susulan', 'Materi Susulan', 'main', 96, 'fa-book-open-reader'
 WHERE NOT EXISTS (
     SELECT 1 FROM subjects_config WHERE subject_id = 'susulan' AND class_id = 2
 );
+
+-- ============================================================
+-- MIGRASI: Materi Susulan — tanggal fleksibel (ganti Senin-Jumat fixed)
+-- Kolom susulan_date = tanggal penempatan materi (YYYY-MM-DD)
+-- Tabel susulan_dates = daftar tanggal per kelas (biar bisa nambah Senin 1 Aug, 8 Aug, dst)
+-- ============================================================
+ALTER TABLE subject_announcements ADD COLUMN IF NOT EXISTS susulan_date DATE DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS susulan_dates (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    class_id    BIGINT NOT NULL,
+    date        DATE NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (class_id, date)
+);
+ALTER TABLE susulan_dates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public_read" ON susulan_dates;
+DROP POLICY IF EXISTS "public_insert" ON susulan_dates;
+DROP POLICY IF EXISTS "public_update" ON susulan_dates;
+DROP POLICY IF EXISTS "public_delete" ON susulan_dates;
+CREATE POLICY "public_read"   ON susulan_dates FOR SELECT USING (true);
+CREATE POLICY "public_insert" ON susulan_dates FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_update" ON susulan_dates FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "public_delete" ON susulan_dates FOR DELETE USING (true);

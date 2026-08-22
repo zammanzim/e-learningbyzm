@@ -271,9 +271,16 @@ nilai_psasi
   pp            numeric
 
 subject_announcements
-  (id, class_id, subject_id, big_title, title, content, small, created_at, updated_at, card_color, is_task, task_date, display_order, susulan_day, susulan_subject, etc.)
-  - susulan_day: hari penempatan materi susulan (Senin..Jumat)
+  (id, class_id, subject_id, big_title, title, content, small, created_at, updated_at, card_color, is_task, task_date, display_order, susulan_day, susulan_date, susulan_subject, etc.)
+  - susulan_day: (legacy) hari penempatan materi susulan (Senin..Jumat) — backward compat
+  - susulan_date: tanggal penempatan materi susulan (YYYY-MM-DD) — fleksibel, bisa nambah minggu depan
   - susulan_subject: nama pelajaran (dari jadwal utama daily card, type='regular') — buat filter & urutan card ngikut jadwal
+
+susulan_dates
+  id          bigint
+  class_id    bigint
+  date        date  (YYYY-MM-DD, unique per class)
+  created_at  timestamp with time zone
 
 users
   (id, email, password, role, class_id, class_name, nickname, short_name, avatar_url, etc.)

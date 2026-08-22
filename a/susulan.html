@@ -49,6 +49,21 @@
                     <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
                     <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
                 </div>
+                <!-- Admin: Kelola Tanggal Susulan -->
+                <div id="susulanDateManager" style="display:none; margin-top:18px; border-top:1px solid rgba(255,255,255,0.08); padding-top:16px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <i class="fa-solid fa-calendar-days" style="color:var(--accent,#00eaff); font-size:13px;"></i>
+                        <span style="font-size:13px; font-weight:700; color:#fff;" data-i18n="susulan_manage_dates"></span>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input type="date" id="susulanNewDate" class="glass-input" style="flex:1; padding:8px 10px; font-size:13px;">
+                        <button id="susulanAddDateBtn" onclick="addSusulanDate()" style="background:var(--accent,#00eaff); color:#000; border:none; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="add"></span>
+                        </button>
+                    </div>
+                    <div id="susulanDateList" style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto;"></div>
+                    <p style="font-size:11px; color:rgba(255,255,255,0.35); margin:8px 0 0; line-height:1.4;" data-i18n="susulan_date_hint"></p>
+                </div>
             </div>
         </div>
 
