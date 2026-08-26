@@ -13,16 +13,90 @@ function getFoto(pathFoto) {
 }
 
 // =========================================================================
-// DEVICE ID — id unik per perangkat (buat limit harian)
+// DEVICE ID — id unik per perangkat (buat limit harian & visitor)
+// Disimpan dobel: localStorage + cookie (2 tahun). Kalo salah satunya
+// kehapus (clear data, dll), id lamanya masih kebaca — anti nambah
+// kunjungan palsu dari perangkat yang sama.
 // =========================================================================
 
+const DEVICE_COOKIE = "osis_did";
+
+function bacaCookie(nama) {
+    const m = document.cookie.match(new RegExp("(?:^|;\\s*)" + nama + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : "";
+}
+
+function simpanCookie(nama, nilai) {
+    document.cookie = nama + "=" + encodeURIComponent(nilai) +
+        ";max-age=63072000;path=/;SameSite=Lax";
+}
+
 function getDeviceId() {
-    let id = localStorage.getItem("osis_device_id");
+    let id = localStorage.getItem("osis_device_id") || bacaCookie(DEVICE_COOKIE);
     if (!id) {
         id = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
-        localStorage.setItem("osis_device_id", id);
     }
+    localStorage.setItem("osis_device_id", id);
+    simpanCookie(DEVICE_COOKIE, id);
     return id;
+}
+
+// Nama perangkat friendly dari user-agent (buat list di popup visitor)
+function namaPerangkat() {
+    const ua = navigator.userAgent || "";
+    let m;
+    if (/iPhone/i.test(ua)) return "iPhone";
+    if (/iPad/i.test(ua)) return "iPad";
+    // Android: model HP sering kebawa di UA (cth: SM-A155F, Redmi Note 12)
+    m = ua.match(/Android[\s\d.]*;\s*([^;)]+?)\s*(?:Build\/|\))/i);
+    if (m) {
+        const model = m[1].trim().replace(/\s+/g, " ");
+        if (!model || model.toLowerCase() === "k") return "Android";
+        return model.slice(0, 32);
+    }
+    m = ua.match(/Android\s([\d.]+)/i);
+    if (m) return "Android " + m[1];
+    if (/Windows/i.test(ua)) {
+        const br = /Edg\//i.test(ua) ? "Edge"
+            : /OPR\//i.test(ua) ? "Opera"
+            : /Chrome/i.test(ua) ? "Chrome"
+            : /Firefox/i.test(ua) ? "Firefox" : "";
+        return br ? "Windows · " + br : "Windows";
+    }
+    if (/Macintosh|Mac OS X/i.test(ua)) return "Mac";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "Unknown";
+}
+
+// Info perangkat buat dicatat: tipe, user-agent mentah, resolusi layar
+function infoPerangkat() {
+    const ua = navigator.userAgent || "";
+    let tipe = "Desktop";
+    if (/iPad|Tablet|PlayBook|Silk/i.test(ua) ||
+        (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+        tipe = "Tablet";
+    } else if (/Mobi|iPhone|iPod|Android/i.test(ua)) {
+        tipe = "Mobile";
+    }
+    return {
+        tipe: tipe,
+        ua: ua,
+        resolusi: window.screen ? window.screen.width + "x" + window.screen.height : ""
+    };
+}
+
+// Nama buat kolom name di tabel visitor:
+// - login OSIS -> nama anggota
+// - login guest -> nickname
+// - anonim -> kosong (biar ga ngehapus nama lama yang udah kesimpen)
+function getVisitorName() {
+    try {
+        const u = (typeof OsisAuth !== "undefined" && OsisAuth.getUser)
+            ? OsisAuth.getUser() : null;
+        if (!u) return "";
+        if (u.mode === "osis") return String(u.nama || "").trim();
+        return String(u.nickname || "").trim(); // guest
+    } catch { return ""; }
 }
 
 // =========================================================================
@@ -146,10 +220,16 @@ async function kirimRequestLagu(judul, penyanyi, nama) {
     if (data !== "OK") throw new Error(data);
 }
 
-// Catat pengunjung unik per device (1x per hari), return total kunjungan
+// Catat kunjungan unik per perangkat (1x per hari WIB), return total kunjungan
 async function catatVisitor() {
+    const info = infoPerangkat();
     const { data, error } = await supa.rpc("tambah_visitor_unik", {
-        p_device_id: getDeviceId()
+        p_key: getDeviceId(),
+        p_label: namaPerangkat(),
+        p_tipe: info.tipe,
+        p_ua: info.ua,
+        p_resolusi: info.resolusi,
+        p_name: getVisitorName()
     });
     if (error) throw error;
     return data || 0;
@@ -170,6 +250,66 @@ async function getRequestLagu() {
 async function hapusLaguSendiri(id) {
     const { data, error } = await supa.rpc("hapus_lagu_own", {
         p_device_id: getDeviceId(),
+        p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// =========================================================================
+// GALLERY — dokumentasi kegiatan (judul + foto, khusus akun OSIS)
+// =========================================================================
+
+// Ambil semua kegiatan (terbaru di atas)
+async function getGallery() {
+    const { data, error } = await supa
+        .from("gallery")
+        .select("id, judul, deskripsi, fotos, created_by, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+    if (error) throw error;
+    return data || [];
+}
+
+// Tambah kegiatan, balikin id barunya (<=0 = gagal, server validasi)
+async function buatGallery(userId, judul, deskripsi, fotos) {
+    const { data, error } = await supa.rpc("buat_gallery", {
+        p_user_id: userId,
+        p_judul: judul,
+        p_deskripsi: deskripsi,
+        p_fotos: fotos
+    });
+    if (error) throw error;
+    return data || 0;
+}
+
+// Append 1 foto ke kegiatan yang udah ada
+async function galeriAddFoto(userId, id, path) {
+    const { data, error } = await supa.rpc("galeri_add_foto", {
+        p_user_id: userId,
+        p_id: id,
+        p_path: path
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// Update judul & deskripsi kegiatan
+async function galeriUpdateMeta(userId, id, judul, deskripsi) {
+    const { data, error } = await supa.rpc("galeri_update_meta", {
+        p_user_id: userId,
+        p_id: id,
+        p_judul: judul,
+        p_deskripsi: deskripsi
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// Hapus kegiatan (server validasi id OSIS)
+async function hapusGallery(userId, id) {
+    const { data, error } = await supa.rpc("hapus_gallery", {
+        p_user_id: userId,
         p_id: id
     });
     if (error) throw error;

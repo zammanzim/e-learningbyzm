@@ -68,7 +68,7 @@ function labelTahun(thn) {
 // =========================================================================
 
 const Router = {
-    daftarView: ["home", "sekbid", "aspirasi", "kontak"],
+    daftarView: ["home", "sekbid", "galeri", "aspirasi", "kontak"],
     initFns: {},       // init lazy per view
     selesai: {},       // flag view sudah pernah di-init
     current: "home",

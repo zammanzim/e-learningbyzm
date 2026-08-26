@@ -63,13 +63,17 @@ function getPathIdentifier() {
     const parts = path.split('/');
     let filename = parts.pop() || parts.pop() || '';
     filename = filename.replace('.html', '').toLowerCase();
-    
-    // Khusus subject.html, identitasnya adalah nilai dari param 'id' (materi pelajaran)
-    if (filename === 'subject') {
-        const params = new URLSearchParams(search);
-        return params.get('id')?.toLowerCase() || '';
+
+    const params = new URLSearchParams(search);
+    const idParam = params.get('id')?.toLowerCase();
+
+    // Lesson page sekarang pake /a/index.html?id=xxx (dulu subject.html)
+    // Jadi kalau ada ?id= dan filenya index / a / subject / kosong, balikin id-nya aja
+    // biar cocok sama subjects_config.subject_id (mis: 'matematika', 'bing', dll)
+    if (idParam && (filename === 'subject' || filename === 'index' || filename === 'a' || filename === '')) {
+        return idParam;
     }
-    
+
     // Untuk halaman lain, identitasnya adalah filename + query string (misal: scores?id=psat)
     // Ini biar cocok ama subject_id yang diinput manual di database
     const query = search ? search.toLowerCase() : '';

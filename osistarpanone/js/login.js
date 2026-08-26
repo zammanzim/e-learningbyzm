@@ -1,22 +1,25 @@
 // =========================================================================
-// LOGIN — 2 mode: Tamu (nickname) / OSIS (username + password)
+// LOGIN — 2 mode: Guest (nickname) / OSIS (username + password)
 // =========================================================================
 
 const Login = {
-    back: "index.html#/",
+    back: "index",
 
     init() {
-        const params = new URLSearchParams(location.search);
-        const back = params.get("back");
-        if (back && /^(index\.html|\.\/|#)/.test(back)) Login.back = back;
+        // Tujuan balik disimpan di sessionStorage (biar URL login tetap bersih)
+        try {
+            const back = sessionStorage.getItem("osis_login_back");
+            if (back) Login.back = back;
+            sessionStorage.removeItem("osis_login_back");
+        } catch (e) {}
 
         if (OsisAuth.getUser()) {
-            location.replace("index.html");
+            location.replace("index.z");
             return;
         }
 
-        document.getElementById("tamuNama").addEventListener("keydown", (e) => {
-            if (e.key === "Enter") Login.masukTamu();
+        document.getElementById("guestNickname").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") Login.masukGuest();
         });
         document.getElementById("osisUsername").addEventListener("keydown", (e) => {
             if (e.key === "Enter") document.getElementById("osisPassword").focus();
@@ -33,16 +36,17 @@ const Login = {
 
         setTimeout(() => {
             if (mode === "osis") document.getElementById("osisUsername").focus();
-            if (mode === "") document.getElementById("tamuNama").focus();
+            if (mode === "") document.getElementById("guestNickname").focus();
         }, 260);
     },
 
-    masukTamu() {
-        const nama = document.getElementById("tamuNama").value.trim();
+    masukGuest() {
+        const nickname = document.getElementById("guestNickname").value.trim();
         Login.bersihError();
-        if (!nama) return Login.tampilError("Nama panggilan diisi dulu yaa.");
+        if (!nickname) return Login.tampilError("Nama panggilan diisi dulu yaa.");
 
-        OsisAuth.loginTamu(nama);
+        // Nama kecatet ke tabel visitor pas index.html kebuka lagi (catatVisitor)
+        OsisAuth.loginGuest(nickname);
         location.replace(Login.back);
     },
 

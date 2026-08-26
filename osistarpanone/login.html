@@ -21,11 +21,11 @@
             <div class="slider-window">
                 <div class="slider-content" id="mainSlider">
 
-                    <!-- STEP 1: form tamu (default) -->
+                    <!-- STEP 1: form guest (default) -->
                     <div class="slide-step">
                         <label class="lbl">Nama Panggilan</label>
-                        <input type="text" id="tamuNama" class="admin-input" placeholder="Nama" maxlength="30" autocomplete="off">
-                        <button class="btn btn-red btn-block" onclick="Login.masukTamu()"><i class="fa-solid fa-arrow-right"></i> Masuk</button>
+                        <input type="text" id="guestNickname" class="admin-input" placeholder="Nama" maxlength="30" autocomplete="off">
+                        <button class="btn btn-red btn-block" onclick="Login.masukGuest()"><i class="fa-solid fa-arrow-right"></i> Masuk</button>
                         <a class="login-back login-center" onclick="Login.pilih('osis')"><i class="fa-solid fa-id-card"></i> Masuk sebagai OSIS</a>
                     </div>
 
@@ -44,7 +44,7 @@
 
             <div class="login-error" id="loginError"></div>
 
-            <a class="login-back login-center" href=""><i class="fa-solid fa-house"></i> Kembali ke beranda</a>
+            <a class="login-back login-center" href="index"><i class="fa-solid fa-house"></i> Kembali ke beranda</a>
         </div>
     </div>
 

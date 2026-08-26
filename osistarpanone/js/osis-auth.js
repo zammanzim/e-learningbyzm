@@ -1,5 +1,5 @@
 // =========================================================================
-// AUTH OSIS — login 2 mode: Tamu (nickname) / OSIS (username+password)
+// AUTH OSIS — login 2 mode: Guest (nickname) / OSIS (username+password)
 // localStorage.osis_user (key beda dari e-learniz biar ga tabrakan)
 // =========================================================================
 
@@ -11,11 +11,16 @@ const OsisAuth = {
         catch { return null; }
     },
 
-    // Masuk sebagai tamu (tanpa akun, cuma nickname)
-    loginTamu(nama) {
+    // Cek user itu guest (mode "guest" baru, "tamu" = sisa sesi lama)
+    isGuest(user) {
+        return !!user && (user.mode === "guest" || user.mode === "tamu");
+    },
+
+    // Masuk sebagai guest (tanpa akun, cuma nickname)
+    loginGuest(nickname) {
         localStorage.setItem(OsisAuth.KEY, JSON.stringify({
-            mode: "tamu",
-            nickname: nama
+            mode: "guest",
+            nickname: nickname
         }));
     },
 
@@ -31,30 +36,43 @@ const OsisAuth = {
         localStorage.removeItem(OsisAuth.KEY);
     },
 
+    // Nama buat ditampilin: guest -> nickname, OSIS -> nama anggota
+    displayName(user) {
+        if (!user) return "";
+        if (user.mode === "osis") return String(user.nama || user.username || "").trim();
+        return String(user.nickname || "").trim();
+    },
+
     // Render area auth di header publik
     renderHeader() {
         const area = document.getElementById("areaAuth");
         if (!area) return;
         const user = OsisAuth.getUser();
 
-        if (user && user.nickname) {
-            const tamu = user.mode === "tamu";
-            const ikon = tamu
-                ? '<i class="fa-solid fa-user"></i>'
-                : '<i class="fa-solid fa-id-card"></i>';
+        if (!user) {
             area.innerHTML = `
-                <span class="user-chip ${tamu ? "chip-tamu" : ""}" title="${tamu ? "Tamu" : (user.jabatan || "Anggota OSIS")}">
-                    ${ikon}
-                    ${escapeHtml(user.nickname)}
-                </span>
-                <button class="icon-btn" title="Keluar" onclick="OsisAuth.logout(); OsisAuth.renderHeader();">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>`;
-        } else {
-            const back = encodeURIComponent("index.html" + location.hash);
-            area.innerHTML = `
-                <a href="login.html?back=${back}" class="btn btn-red btn-sm"><i class="fa-solid fa-right-to-bracket"></i> Masuk</a>`;
+                <a href="login" class="btn btn-red btn-sm" onclick="OsisAuth.simpanBack()"><i class="fa-solid fa-right-to-bracket"></i> Masuk</a>`;
+            return;
         }
+
+        const guest = OsisAuth.isGuest(user);
+        const ikon = guest ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-id-card"></i>';
+        const judul = guest ? "Tamu" : (user.jabatan || "Anggota OSIS");
+
+        area.innerHTML = `
+            <span class="user-chip ${guest ? "chip-guest" : ""}" title="${judul}">
+                ${ikon}
+                ${escapeHtml(OsisAuth.displayName(user))}
+            </span>
+            <button class="icon-btn" title="Keluar" onclick="OsisAuth.logout(); OsisAuth.renderHeader();">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>`;
+    },
+
+    // Simpan halaman sekarang biar login bisa balik ke sini (URL login tetap bersih)
+    simpanBack() {
+        try { sessionStorage.setItem("osis_login_back", "index.html" + location.hash); }
+        catch (e) {}
     }
 };
 

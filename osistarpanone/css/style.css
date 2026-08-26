@@ -1,5 +1,5 @@
-/* ============================================================
-   OSIS TARPAN ONE — NEW SITE
+﻿/* ============================================================
+   OSIS TARPAN ONE â€” NEW SITE
    Tema: Merah-Putih Enerjik
    ============================================================ */
 
@@ -78,21 +78,39 @@ img {
   object-fit: contain;
 }
 
+.brand-text {
+  min-width: 0;
+}
+
 .brand-text h2 {
-  font-size: 1.05rem;
+  font-size: clamp(0.78rem, 4vw, 1.05rem);
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .brand-text p {
-  font-size: 0.62rem;
+  font-size: clamp(0.5rem, 2.3vw, 0.62rem);
   font-weight: 700;
   color: var(--red);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-nav-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Wrapper tombol login/user-chip biar sejajar 1 baris */
+#areaAuth {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -294,6 +312,63 @@ img {
   color: var(--red);
   margin-right: 5px;
 }
+.vitem-info {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--gray);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.vitem-info i {
+  font-size: 0.62rem;
+  color: var(--red);
+  margin-right: 5px;
+}
+.vitem-count {
+  font-size: 0.66rem;
+  font-weight: 900;
+  color: var(--white);
+  background: var(--red-dark);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+/* Tab popup visitor: Hari Ini / Total */
+.vtab-wrap {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.vtab {
+  padding: 6px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--white);
+  font-family: inherit;
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--gray);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+.vtab.active {
+  background: var(--red);
+  color: var(--white);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.vtab:not(.active):hover {
+  background: var(--paper-2);
+  color: var(--ink);
+}
 .user-chip {
   display: flex;
   align-items: center;
@@ -319,7 +394,7 @@ img {
   object-fit: cover;
   border: 2px solid var(--ink);
 }
-.user-chip.chip-tamu {
+.user-chip.chip-guest {
   background: var(--white);
   border-style: dashed;
 }
@@ -1647,7 +1722,7 @@ img {
 }
 
 /* ============================================================
-   TOAST — notifikasi singkat (universal)
+   TOAST â€” notifikasi singkat (universal)
    ============================================================ */
 #toast-container {
   position: fixed;
@@ -1703,7 +1778,7 @@ img {
 }
 
 /* ============================================================
-   POPUP — universal (pengganti alert/confirm)
+   POPUP â€” universal (pengganti alert/confirm)
    ============================================================ */
 .uni-overlay {
   position: fixed;
@@ -2222,7 +2297,7 @@ img {
 }
 
 /* ============================================================
-   ASPIRASI — grid form + daftar suara
+   ASPIRASI â€” grid form + daftar suara
    ============================================================ */
 .aspirasi-grid {
   display: grid;
@@ -2651,4 +2726,106 @@ img {
   .tab-btn {
     white-space: nowrap;
   }
+}
+
+/* ============================================================
+   GALERI — bento-block: judul -> subjudul -> deretan foto
+   horizontal (semua ukuran sama, bisa scroll samping)
+   ============================================================ */
+#galGrid .bento-meta {
+  position: relative;
+  padding-right: 44px;
+}
+
+.gal-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px;
+}
+
+/* Thumbnail foto & slot tambah: ukuran/rasio/border/shadow sama */
+.gal-row .item,
+.up-slot {
+  flex: 0 0 clamp(150px, 42%, 260px);
+  aspect-ratio: 4 / 3;
+  position: relative;
+  border-radius: 14px;
+  border: 2.5px solid var(--ink);
+  box-shadow: 2.5px 2.5px 0 var(--ink);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.gal-row .item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
+}
+.gal-row .item:hover img {
+  transform: scale(1.05);
+}
+
+.gal-row .item {
+  cursor: zoom-in;
+}
+.up-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  cursor: pointer;
+}
+.up-slot i {
+  font-size: 1.4rem;
+  color: var(--red);
+}
+.up-slot:active {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+/* Judul & subjudul draft: editable tapi nyatu sama layout */
+.draft [contenteditable] {
+  outline: none;
+  min-height: 1em;
+  transition: box-shadow 0.15s;
+}
+.draft [contenteditable]:focus {
+  box-shadow: 0 2.5px 0 var(--red);
+}
+[contenteditable]:empty::before {
+  content: attr(data-ph);
+  opacity: 0.45;
+  pointer-events: none;
+}
+h4[contenteditable]:empty::before {
+  font-weight: inherit;
+}
+p[contenteditable]:empty::before {
+  color: var(--gray);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Tombol hapus / buang draft: cuma muncul kalo login sbg OSIS */
+.gal-del {
+  display: none !important;
+  position: absolute;
+  top: 8px;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: #ffe9e9;
+  color: var(--red-dark);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+#galGrid.mode-osis .gal-del {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
 }

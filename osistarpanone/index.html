@@ -275,6 +275,30 @@
     </section>
 
     <!-- ============================================================
+         VIEW: GALERI
+         ============================================================ -->
+    <section class="view" data-view="galeri">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <div class="sec-tag">Galeri</div>
+                    <h2 class="sec-title">Dokumentasi <span class="red">Kegiatan</span></h2>
+                    <p class="sec-sub">Momen-momen seru perjalanan OSIS Tarpan One, terekam abadi di sini.</p>
+                </div>
+                <button class="btn btn-red" id="btnBukaUpload" onclick="Galeri.buatDraft()" style="display:none">
+                    <i class="fa-solid fa-plus"></i> Tambah
+                </button>
+            </div>
+
+            <!-- Editor inline (cuma muncul kalo login sbg OSIS, klik tombol +) -->
+            <div class="bento-stack" id="galGrid">
+                <div class="loading-block"><div class="spinner"></div>Memuat galeri...</div>
+            </div>
+            <input type="file" id="galFileInput" accept="image/*" style="display:none">
+        </div>
+    </section>
+
+    <!-- ============================================================
          VIEW: ASPIRASI
          ============================================================ -->
     <section class="view" data-view="aspirasi">
@@ -431,6 +455,7 @@
         <span class="nav-pill" id="navPill"></span>
         <a href="#/" class="tab-item" data-route="home"><span class="ico"><i class="fa-solid fa-house"></i></span>Home</a>
         <a href="#/sekbid" class="tab-item" data-route="sekbid"><span class="ico"><i class="fa-solid fa-folder-open"></i></span>Sekbid</a>
+        <a href="#/galeri" class="tab-item" data-route="galeri"><span class="ico"><i class="fa-solid fa-images"></i></span>Galeri</a>
         <a href="#/kontak" class="tab-item" data-route="kontak"><span class="ico"><i class="fa-solid fa-phone"></i></span>Kontak</a>
         <a href="#/aspirasi" class="tab-item" data-route="aspirasi"><span class="ico"><i class="fa-solid fa-inbox"></i></span>Aspirasi</a>
     </nav>
@@ -458,7 +483,11 @@
             </div>
 
             <div class="visitor-list-head">
-                <h4><i class="fa-solid fa-mobile-screen"></i> Pengunjung Hari Ini</h4>
+                <h4><i class="fa-solid fa-mobile-screen"></i> Daftar Perangkat</h4>
+                <div class="vtab-wrap">
+                    <button type="button" class="vtab active" data-vtab="hari" onclick="Visitor.gantiTab('hari')">Hari Ini</button>
+                    <button type="button" class="vtab" data-vtab="total" onclick="Visitor.gantiTab('total')">Total</button>
+                </div>
             </div>
             <div class="visitor-list" id="visitorList">
                 <div class="pesan-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat daftar...</div>
@@ -478,6 +507,7 @@
     <script src="js/sekbid.js" defer></script>
     <script src="js/aspirasi.js" defer></script>
     <script src="js/lagu.js" defer></script>
+    <script src="js/galeri.js" defer></script>
     <script src="js/osis-auth.js" defer></script>
 </body>
 </html>

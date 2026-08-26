@@ -19,7 +19,7 @@ VALUES (
     '[
         "System: Penyatuan halaman nilai ujian (PSTS & PSASI) menjadi satu halaman dinamis (test-scores).",
         "System: Memungkinkan penambahan jenis nilai ujian baru hanya lewat konfigurasi tanpa bikin file HTML baru.",
-        "UI: Perbaikan minor pada tampilan leaderboard dan tabel nilai kelas."
+        "UI: Perb   aikan minor pada tampilan leaderboard dan tabel nilai kelas."
     ]'::jsonb,
     NOW()
 );
