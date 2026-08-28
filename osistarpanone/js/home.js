@@ -25,6 +25,8 @@ const Home = {
         const gridPrestasi = document.querySelector(".prestasi-grid");
         if (gridPrestasi) {
             gridPrestasi.addEventListener("click", (e) => {
+                if (e.target.closest("[data-edit-key]")) return;
+                if (document.body.classList.contains("edit-mode")) return;
                 const card = e.target.closest(".prestasi-card");
                 if (!card) return;
                 const img = card.querySelector("img");
@@ -140,6 +142,11 @@ const Home = {
 
     tutupModal(dariBack = false) {
         const modal = document.querySelector(".struktur-modal");
+        // auto-save kalau lagi edit mode (tanpa ubah layout, tanpa tombol)
+        if (modal && document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.savePopup) {
+            const t = parseInt(modal.dataset.tahun, 10);
+            if (t && !isNaN(t)) SiteEdit.savePopup(t, modal);
+        }
         if (modal) {
             modal.classList.add("tutup");
             setTimeout(() => {
@@ -166,20 +173,39 @@ const Home = {
         const pimpinan = Home.cachePimpinan[String(tahun)] || null;
         const anggota = Home.cacheAnggota[String(tahun)] || [];
         const foto = (pimpinan && pimpinan.foto_angkatan) ? pimpinan.foto_angkatan : `angkatan/foto-${tahun}.jpg`;
+        const isEdit = document.body.classList.contains("edit-mode") && (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
 
         let chips = "";
-        if (anggota.length > 0) {
-            chips = anggota.map(a => `
-                <div class="anggota-chip">
-                    <b>${escapeHtml(a.nama)}</b>
-                    <span>${escapeHtml(a.jabatan)}</span>
-                </div>`).join("");
+        if (!isEdit) {
+            if (anggota.length > 0) {
+                chips = anggota.map(a => `
+                    <div class="anggota-chip">
+                        <b>${escapeHtml(a.nama)}</b>
+                        <span>${escapeHtml(a.jabatan)}</span>
+                    </div>`).join("");
+            } else {
+                chips = `<div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--gray); font-weight: 700;">Belum ada data anggota tahun ini.</div>`;
+            }
         } else {
-            chips = `<div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--gray); font-weight: 700;">Belum ada data anggota tahun ini.</div>`;
+            if (anggota.length > 0) {
+                chips = anggota.map(a => `
+                    <div class="anggota-chip" data-anggota-id="${a.id}">
+                        <b contenteditable="true" spellcheck="false" data-field="nama" data-anggota-id="${a.id}">${escapeHtml(a.nama)}</b>
+                        <span contenteditable="true" spellcheck="false" data-field="jabatan" data-anggota-id="${a.id}">${escapeHtml(a.jabatan)}</span>
+                    </div>`).join("");
+            } else {
+                chips = "";
+            }
+            chips += `<div class="anggota-chip tambah" onclick="SiteEdit.tambahAnggotaInline(${tahun})" style="border-style:dashed; cursor:pointer; align-items:center; justify-content:center; color:var(--gray); min-height:56px;"><span><i class="fa-solid fa-plus"></i> Tambah anggota</span></div>`;
+            if (anggota.length === 0) {
+                chips = `<div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--gray); font-weight: 700; margin-bottom:6px;">Belum ada data anggota tahun ini.</div>` + chips;
+            }
         }
 
         const modal = document.createElement("div");
         modal.className = "struktur-modal";
+        // simpan tahun di dataset modal biar auto-save tau konteksnya
+        modal.dataset.tahun = String(tahun);
         modal.innerHTML = `
             <div class="struktur-modal-bg"></div>
             <div class="struktur-modal-box">
@@ -187,11 +213,11 @@ const Home = {
                     <h4>${labelTahun(tahun)} (${tahun})</h4>
                     <button class="struktur-close" type="button">&times;</button>
                 </div>
-                <div class="struktur-foto">
-                    <img src="${getFoto(foto)}" alt="Angkatan ${tahun}" loading="lazy"
-                         onerror="this.remove();">
-                </div>
                 <div class="struktur-modal-body">
+                    <div class="struktur-foto">
+                        <img src="${getFoto(foto)}" alt="Angkatan ${tahun}" loading="lazy"
+                             onerror="this.remove();">
+                    </div>
 
                     <div class="struktur-pimpinan">
                         <div class="pimp-card">
@@ -200,7 +226,7 @@ const Home = {
                                      onerror="this.remove();">
                             </div>
                             <div class="pimp-info">
-                                <b>${pimpinan && pimpinan.ketua_nama ? escapeHtml(pimpinan.ketua_nama) : "Belum Ada"}</b>
+                                ${isEdit ? `<b contenteditable="true" spellcheck="false" data-pimp-field="ketua_nama" data-tahun="${tahun}">${pimpinan && pimpinan.ketua_nama ? escapeHtml(pimpinan.ketua_nama) : ""}</b>` : `<b>${pimpinan && pimpinan.ketua_nama ? escapeHtml(pimpinan.ketua_nama) : "Belum Ada"}</b>`}
                                 <span>Ketua OSIS</span>
                             </div>
                         </div>
@@ -210,7 +236,7 @@ const Home = {
                                      onerror="this.remove();">
                             </div>
                             <div class="pimp-info">
-                                <b>${pimpinan && pimpinan.wakil_nama ? escapeHtml(pimpinan.wakil_nama) : "Belum Ada"}</b>
+                                ${isEdit ? `<b contenteditable="true" spellcheck="false" data-pimp-field="wakil_nama" data-tahun="${tahun}">${pimpinan && pimpinan.wakil_nama ? escapeHtml(pimpinan.wakil_nama) : ""}</b>` : `<b>${pimpinan && pimpinan.wakil_nama ? escapeHtml(pimpinan.wakil_nama) : "Belum Ada"}</b>`}
                                 <span>Wakil Ketua</span>
                             </div>
                         </div>
@@ -228,6 +254,9 @@ const Home = {
         modal.querySelector(".struktur-modal-bg").addEventListener("click", () => Home.tutupModal());
         modal.querySelector(".struktur-close").addEventListener("click", () => Home.tutupModal());
         document.body.appendChild(modal);
+        if (typeof isEdit !== "undefined" && isEdit && typeof SiteEdit !== "undefined" && SiteEdit.injectModalFotoButtons) {
+            SiteEdit.injectModalFotoButtons(modal, tahun);
+        }
         document.body.style.overflow = "hidden";
     }
 };

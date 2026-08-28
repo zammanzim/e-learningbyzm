@@ -22,11 +22,26 @@
             </div>
         </a>
         <div class="top-nav-extra">
+            <label class="edit-toggle-wrap" id="editToggleWrap" style="display:none">
+                <input type="checkbox" id="editToggle" onchange="SiteEdit.toggle(this.checked)" autocomplete="off">
+                <span class="edit-slider"></span>
+                <span>Edit</span>
+            </label>
             <button class="visitor-trigger" id="visitorTrigger" onclick="Visitor.bukaPopup()" title="Statistik pengunjung">
                 <i class="fa-solid fa-eye"></i>
                 <span id="headerVisitorCount">-</span>
             </button>
             <div id="areaAuth"></div>
+            <div class="header-more-wrap" id="headerMoreWrap" style="display:none">
+                <button class="icon-btn" id="headerMoreBtn" onclick="HeaderMore.toggle()" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                <div class="header-more-menu" id="headerMoreMenu">
+                    <label class="header-more-item" id="headerMoreEditRow" style="display:none">
+                        <span>Edit mode</span>
+                        <label class="edit-toggle-wrap small"><input type="checkbox" id="headerMoreEditToggle" onchange="HeaderMore.onEditToggle(this.checked)" autocomplete="off"><span class="edit-slider"></span></label>
+                    </label>
+                    <button class="header-more-item danger" id="headerMoreLogout" onclick="HeaderMore.logout()" style="display:none"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -39,13 +54,13 @@
         <section class="hero">
             <div class="hero-inner">
                 <div class="hero-content">
-                    <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Est. 2010 — Satu Keluarga</span>
+                    <span class="hero-badge" data-edit-key="hero_badge"><i class="fa-solid fa-bolt"></i> Est. 2010 — Satu Keluarga</span>
                     <h1>
-                        OSIS<br>
-                        <span class="outline">TARPAN</span><br>
-                        <span class="red">ONE</span>
+                        <span data-edit-key="hero_line1">OSIS</span><br>
+                        <span class="outline" data-edit-key="hero_line2">TARPAN</span><br>
+                        <span class="red" data-edit-key="hero_line3">ONE</span>
                     </h1>
-                    <p class="hero-tagline">Organisasi kepemimpinan siswa yang berintegritas, beretika mulia, dan berdampak nyata untuk sekolah.</p>
+                    <p class="hero-tagline" data-edit-key="hero_tagline">Organisasi kepemimpinan siswa yang berintegritas, beretika mulia, dan berdampak nyata untuk sekolah.</p>
                     <div class="hero-cta">
                         <a href="#/sekbid" class="btn btn-red">Lihat Sekbid →</a>
                         <a href="#/aspirasi" class="btn btn-white">Sampaikan Aspirasi</a>
@@ -87,7 +102,7 @@
                 <div class="vm-grid">
                     <div class="vm-card visi">
                         <h3><i class="fa-solid fa-shield-halved"></i> Visi</h3>
-                        <p>Menjadikan OSIS sebagai laboratorium kepemimpinan siswa yang berintegritas, beretika mulia, dan berdampak positif bagi sekolah dan masyarakat.</p>
+                        <p data-edit-key="visi_text">Menjadikan OSIS sebagai laboratorium kepemimpinan siswa yang berintegritas, beretika mulia, dan berdampak positif bagi sekolah dan masyarakat.</p>
                     </div>
 
                     <div class="vm-card">
@@ -95,29 +110,29 @@
                         <div class="misi-item">
                             <div class="misi-num">1</div>
                             <div>
-                                <h4>Pembinaan Kepemimpinan</h4>
-                                <p>Menjadikan OSIS sebagai sarana pembinaan kepemimpinan siswa yang berlandaskan integritas dan etika mulia.</p>
+                                <h4 data-edit-key="misi_1_title">Pembinaan Kepemimpinan</h4>
+                                <p data-edit-key="misi_1_desc">Menjadikan OSIS sebagai sarana pembinaan kepemimpinan siswa yang berlandaskan integritas dan etika mulia.</p>
                             </div>
                         </div>
                         <div class="misi-item">
                             <div class="misi-num">2</div>
                             <div>
-                                <h4>Tanggung Jawab & Disiplin</h4>
-                                <p>Menumbuhkan sikap tanggung jawab, kedisiplinan, dan keteladanan dalam setiap peran dan aktivitas OSIS.</p>
+                                <h4 data-edit-key="misi_2_title">Tanggung Jawab & Disiplin</h4>
+                                <p data-edit-key="misi_2_desc">Menumbuhkan sikap tanggung jawab, kedisiplinan, dan keteladanan dalam setiap peran dan aktivitas OSIS.</p>
                             </div>
                         </div>
                         <div class="misi-item">
                             <div class="misi-num">3</div>
                             <div>
-                                <h4>Tata Kelola Adaptif</h4>
-                                <p>Mewujudkan tata kelola OSIS yang adaptif, tertib administrasi, dan menjunjung keterbukaan di setiap prosesnya.</p>
+                                <h4 data-edit-key="misi_3_title">Tata Kelola Adaptif</h4>
+                                <p data-edit-key="misi_3_desc">Mewujudkan tata kelola OSIS yang adaptif, tertib administrasi, dan menjunjung keterbukaan di setiap prosesnya.</p>
                             </div>
                         </div>
                         <div class="misi-item">
                             <div class="misi-num">4</div>
                             <div>
-                                <h4>Program Kerja Inovatif</h4>
-                                <p>Menghadirkan program kerja yang inovatif, solutif, dan berdampak nyata bagi warga sekolah serta masyarakat.</p>
+                                <h4 data-edit-key="misi_4_title">Program Kerja Inovatif</h4>
+                                <p data-edit-key="misi_4_desc">Menghadirkan program kerja yang inovatif, solutif, dan berdampak nyata bagi warga sekolah serta masyarakat.</p>
                             </div>
                         </div>
                     </div>
@@ -141,10 +156,10 @@
                     </div>
                     <div class="pembina-info">
                         <span class="pembina-badge">PEMBINA OSIS</span>
-                        <h3>Robi Sanusi, S.E</h3>
-                        <p class="pembina-jabatan">Masa Jabatan: 2010 — 2026</p>
+                        <h3 data-edit-key="pembina_name">Robi Sanusi, S.E</h3>
+                        <p class="pembina-jabatan" data-edit-key="pembina_jabatan">Masa Jabatan: 2010 — 2026</p>
                         <div class="pembina-quote">
-                            <span class="mark">“</span>Bersatu kita teguh, bercerai kita runtuh.<span class="mark">”</span>
+                            <span class="mark">“</span><span data-edit-key="pembina_quote">Bersatu kita teguh, bercerai kita runtuh.</span><span class="mark">”</span>
                         </div>
                     </div>
                 </div>
@@ -176,27 +191,27 @@
                 <div class="prestasi-grid">
                     <div class="prestasi-card">
                         <img data-foto="prestasi3" alt="Prestasi">
-                        <span class="prestasi-tag">Kemah Tangkas 1.0</span>
+                        <span class="prestasi-tag" data-edit-key="prestasi_3_tag">Kemah Tangkas 1.0</span>
                     </div>
                     <div class="prestasi-card">
                         <img data-foto="prestasi2" alt="Prestasi">
-                        <span class="prestasi-tag">Jambore OSIS</span>
+                        <span class="prestasi-tag" data-edit-key="prestasi_2_tag">Jambore OSIS</span>
                     </div>
                     <div class="prestasi-card">
                         <img data-foto="prestasi1" alt="Prestasi">
-                        <span class="prestasi-tag">Paskibra</span>
+                        <span class="prestasi-tag" data-edit-key="prestasi_1_tag">Paskibra</span>
                     </div>
                     <div class="prestasi-card">
                         <img data-foto="prestasi4" alt="Prestasi">
-                        <span class="prestasi-tag">Teater</span>
+                        <span class="prestasi-tag" data-edit-key="prestasi_4_tag">Teater</span>
                     </div>
                 </div>
 
                 <div class="prestasi-banner">
                     <span class="medal"><i class="fa-solid fa-trophy"></i></span>
                     <div>
-                        <h4>Generasi Emas Penuh Aksi</h4>
-                        <p>OSIS Taruna Harapan 1 Cipatat meraih penghargaan tingkat kabupaten.</p>
+                        <h4 data-edit-key="prestasi_banner_title">Generasi Emas Penuh Aksi</h4>
+                        <p data-edit-key="prestasi_banner_desc">OSIS Taruna Harapan 1 Cipatat meraih penghargaan tingkat kabupaten.</p>
                     </div>
                 </div>
             </div>
@@ -215,8 +230,8 @@
 
                 <div class="bento-block">
                     <div class="bento-meta">
-                        <h4>Makrab OSIS 2026</h4>
-                        <p>Meningkatkan rasa kekeluargaan antar pengurus</p>
+                        <h4 data-edit-key="kegiatan_1_title">Makrab OSIS 2026</h4>
+                        <p data-edit-key="kegiatan_1_desc">Meningkatkan rasa kekeluargaan antar pengurus</p>
                     </div>
                     <div class="bento-grid">
                         <div class="item"><img data-foto="makrab1" alt="Makrab"><span class="bento-badge">MAKRAB</span></div>
@@ -228,8 +243,8 @@
 
                 <div class="bento-block">
                     <div class="bento-meta">
-                        <h4>Takjilin OSIS 2026</h4>
-                        <p>Membangun jiwa kewirausahaan & berbagi</p>
+                        <h4 data-edit-key="kegiatan_2_title">Takjilin OSIS 2026</h4>
+                        <p data-edit-key="kegiatan_2_desc">Membangun jiwa kewirausahaan & berbagi</p>
                     </div>
                     <div class="bento-grid">
                         <div class="item"><img data-foto="takjilin1" alt="Takjilin"><span class="bento-badge">TAKJILIN</span></div>
@@ -241,8 +256,8 @@
 
                 <div class="bento-block">
                     <div class="bento-meta">
-                        <h4>Pentas Seni Antar Kelas</h4>
-                        <p>Ajang ekspresi bakat dan kreativitas siswa</p>
+                        <h4 data-edit-key="kegiatan_3_title">Pentas Seni Antar Kelas</h4>
+                        <p data-edit-key="kegiatan_3_desc">Ajang ekspresi bakat dan kreativitas siswa</p>
                     </div>
                     <div class="bento-grid">
                         <div class="item"><img data-foto="pesak1" alt="Pesak"><span class="bento-badge">PESAK</span></div>
@@ -382,34 +397,34 @@
             <h3 class="social-title"><i class="fa-solid fa-share-nodes"></i> Sosial Media Kami</h3>
 
             <div class="social-grid">
-                <a class="social-card" href="https://instagram.com/osis_smktarpanone" target="_blank" rel="noopener">
+                <a class="social-card" href="https://instagram.com/osis_smktarpanone" data-edit-href="kontak_ig_url" target="_blank" rel="noopener">
                     <span class="social-ico sc-ig"><i class="fa-brands fa-instagram"></i></span>
                     <span class="social-name">Instagram</span>
-                    <span class="social-handle">@osis_smktarpanone</span>
+                    <span class="social-handle" data-edit-key="kontak_ig_handle">@osis_smktarpanone</span>
                 </a>
 
-                <a class="social-card" href="https://tiktok.com/@osis_tarpan" target="_blank" rel="noopener">
+                <a class="social-card" href="https://tiktok.com/@osis_tarpan" data-edit-href="kontak_tt_url" target="_blank" rel="noopener">
                     <span class="social-ico sc-tt"><i class="fa-brands fa-tiktok"></i></span>
                     <span class="social-name">TikTok</span>
-                    <span class="social-handle">@osis_tarpan</span>
+                    <span class="social-handle" data-edit-key="kontak_tt_handle">@osis_tarpan</span>
                 </a>
 
-                <a class="social-card" href="https://youtube.com/@osisrinyuhtarpanone" target="_blank" rel="noopener">
+                <a class="social-card" href="https://youtube.com/@osisrinyuhtarpanone" data-edit-href="kontak_yt_url" target="_blank" rel="noopener">
                     <span class="social-ico sc-yt"><i class="fa-brands fa-youtube"></i></span>
                     <span class="social-name">YouTube</span>
-                    <span class="social-handle">OSIS Rinyuh Tarpan One</span>
+                    <span class="social-handle" data-edit-key="kontak_yt_handle">OSIS Rinyuh Tarpan One</span>
                 </a>
 
-                <a class="social-card" href="https://whatsapp.com/channel/0029VavIK3L5a23uXQChYz02" target="_blank" rel="noopener">
+                <a class="social-card" href="https://whatsapp.com/channel/0029VavIK3L5a23uXQChYz02" data-edit-href="kontak_wa_url" target="_blank" rel="noopener">
                     <span class="social-ico sc-wa"><i class="fa-brands fa-whatsapp"></i></span>
                     <span class="social-name">WhatsApp</span>
-                    <span class="social-handle">Saluran Resmi</span>
+                    <span class="social-handle" data-edit-key="kontak_wa_handle">Saluran Resmi</span>
                 </a>
 
-                <a class="social-card" href="mailto:osisrinyuh10@gmail.com" target="_blank" rel="noopener">
+                <a class="social-card" href="mailto:osisrinyuh10@gmail.com" data-edit-href="kontak_email_url" target="_blank" rel="noopener">
                     <span class="social-ico sc-mail"><i class="fa-solid fa-envelope"></i></span>
                     <span class="social-name">E-Mail</span>
-                    <span class="social-handle">osisrinyuh10@gmail.com</span>
+                    <span class="social-handle" data-edit-key="kontak_email_handle">osisrinyuh10@gmail.com</span>
                 </a>
             </div>
 
@@ -424,6 +439,10 @@
                     <div class="field">
                         <label>Penyanyi / Band</label>
                         <input type="text" id="penyanyiLagu" placeholder="Siapa yang nyanyiin? (wajib)">
+                    </div>
+                    <div class="field">
+                        <label>Kata-kata yang mau disampaikan</label>
+                        <textarea id="kataLagu" placeholder="Tulis pesan, salam, atau kata-kata buat teman... (opsional)" maxlength="300" rows="3"></textarea>
                     </div>
                     <div class="field">
                         <label>Nama (Opsional)</label>
@@ -509,5 +528,6 @@
     <script src="js/lagu.js" defer></script>
     <script src="js/galeri.js" defer></script>
     <script src="js/osis-auth.js" defer></script>
+    <script src="js/site-edit.js" defer></script>
 </body>
 </html>

@@ -933,7 +933,9 @@ img {
   position: relative;
   width: min(600px, 100%);
   max-height: 88vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--white);
   border: 3px solid var(--ink);
   border-radius: var(--radius);
@@ -944,6 +946,7 @@ img {
   position: sticky;
   top: 0;
   z-index: 5;
+  flex-shrink: 0;
 }
 .struktur-modal-box.foto-only {
   width: min(720px, 100%);
@@ -958,13 +961,22 @@ img {
 .struktur-foto img {
   display: block;
   width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
   border-bottom: 3px solid var(--ink);
   background: var(--paper-2);
 }
 .struktur-modal-body {
+  flex: 1;
+  overflow-y: auto;
   padding: 14px;
+}
+.struktur-modal-body .struktur-foto {
+  margin: -14px -14px 14px -14px;
+}
+.struktur-modal-body .struktur-foto img {
+  border-radius: 0;
 }
 .struktur-modal-body .struktur-pimpinan {
   padding: 0 0 14px;
@@ -1223,18 +1235,23 @@ img {
   width: 100%;
 }
 .bento-block .bento-meta {
-  padding: 14px 4px 2px;
+  padding: 14px 4px 6px;
 }
 .bento-block .bento-meta h4 {
   font-size: 1rem;
   font-weight: 900;
   text-transform: uppercase;
+  margin-bottom: 1px;
 }
 .bento-block .bento-meta p {
   font-size: 0.78rem;
   color: var(--gray);
   font-weight: 600;
-  margin-top: 3px;
+  margin-top: 2px;
+}
+.bento-meta + .bento-grid,
+.bento-meta + .gal-row {
+  margin-top: 8px;
 }
 
 .bento-grid {
@@ -2227,13 +2244,14 @@ img {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: 480px;
+    width: min(560px, calc(100vw - 40px));
     bottom: 20px;
   }
   .tab-item {
     flex-direction: row;
-    gap: 7px;
-    font-size: 0.7rem;
+    gap: 5px;
+    font-size: 0.68rem;
+    padding: 8px 10px;
   }
 }
 
@@ -2734,7 +2752,14 @@ img {
    ============================================================ */
 #galGrid .bento-meta {
   position: relative;
-  padding-right: 44px;
+  padding-right: 82px;
+}
+.gal-actions {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  display: flex;
+  gap: 6px;
 }
 
 .gal-row {
@@ -2809,23 +2834,262 @@ p[contenteditable]:empty::before {
   font-weight: 600;
 }
 
-/* Tombol hapus / buang draft: cuma muncul kalo login sbg OSIS */
+/* Tombol draft & hapus: cuma muncul kalo login sbg OSIS */
+.gal-save,
 .gal-del {
   display: none !important;
-  position: absolute;
-  top: 8px;
-  right: 0;
   width: 32px;
   height: 32px;
   border: 2.5px solid var(--ink);
   border-radius: 10px;
-  background: #ffe9e9;
-  color: var(--red-dark);
   cursor: pointer;
   font-size: 0.8rem;
 }
+.gal-save {
+  background: #d6f5d6;
+  color: #146314;
+}
+.gal-del {
+  background: #ffe9e9;
+  color: var(--red-dark);
+}
+#galGrid.mode-osis .gal-save,
 #galGrid.mode-osis .gal-del {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
+}
+/* kartu yang udah kepublish cuma punya 1 tombol hapus (tanpa .gal-actions) — keep absolute */
+#galGrid .bento-block:not(.draft) .gal-del {
+  position: absolute;
+  top: 8px;
+  right: 0;
+}
+/* ============================================================
+   EDIT MODE — toggle di header, cuma OSIS
+   ============================================================ */
+.edit-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.edit-toggle-wrap input { display: none; }
+.edit-slider {
+  width: 36px;
+  height: 20px;
+  background: var(--line);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.edit-slider::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 14px;
+  height: 14px;
+  background: var(--white);
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.edit-toggle-wrap input:checked + .edit-slider { background: var(--red); }
+.edit-toggle-wrap input:checked + .edit-slider::after { transform: translateX(16px); }
+
+/* text editable */
+body.edit-mode [data-edit-key] {
+  outline: 1.5px dashed var(--red);
+  outline-offset: 2px;
+  border-radius: 6px;
+  cursor: text;
+  min-height: 1em;
+}
+body.edit-mode [data-edit-key]:focus {
+  outline: 2px solid var(--red);
+  background: #fff8f0;
+}
+/* tag prestasi & banner & visi merah: jangan jadi putih pas focus (teksnya putih) */
+body.edit-mode .prestasi-tag:focus,
+body.edit-mode .prestasi-banner [data-edit-key]:focus,
+body.edit-mode .vm-card.visi [data-edit-key]:focus {
+  background: var(--red) !important;
+  color: #fff !important;
+}
+
+/* foto editable — tombol kamera kecil */
+.photo-edit-btn {
+  display: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background: var(--yellow);
+  color: var(--ink);
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+  z-index: 2;
+}
+body.edit-mode .photo-edit-btn { display: inline-flex; }
+.photo-edit-btn:active { transform: translate(1px,1px); box-shadow: none; }
+
+/* tambah/hapus di mode edit */
+.edit-add-btn {
+  display: none;
+  width: 100%;
+  padding: 12px;
+  border: 2.5px dashed var(--ink);
+  border-radius: 14px;
+  background: var(--paper-2);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--gray);
+  cursor: pointer;
+}
+body.edit-mode .edit-add-btn { display: block; }
+.edit-add-btn:hover { background: var(--white); color: var(--ink); }
+
+.edit-del-btn {
+  display: none;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #ffe9e9;
+  color: var(--red-dark);
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 2;
+}
+body.edit-mode .edit-del-btn { display: inline-flex; }
+
+/* biar edit area ga ketutup bottom nav */
+body.edit-mode { padding-bottom: 180px; }
+/* edit-mode: slot tambah foto kegiatan di home */
+.up-slot-kegiatan i { font-size: 1.4rem; color: var(--red); }
+/* ============================================================
+   HEADER MORE (titik tiga) — mobile sempit
+   ============================================================ */
+#headerMoreWrap { display: none; position: relative; }
+.header-more-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 170px;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 95;
+}
+.header-more-menu.open { display: flex; }
+.header-more-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+}
+.header-more-item:hover { background: var(--paper-2); }
+.header-more-item.danger { color: var(--red-dark); }
+.header-more-item .edit-toggle-wrap.small {
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+}
+@media (max-width: 500px) {
+  #editToggleWrap { display: none !important; }
+  #areaAuth .icon-btn { display: none !important; }
+  #headerMoreWrap.show { display: inline-flex !important; }
+}
+/* kegiatan home: tombol hapus di kanan atas meta (jangan nutupin judul) */
+.edit-del-btn.kegiatan-del {
+  left: auto !important;
+  right: 0 !important;
+  top: 8px !important;
+}
+#galGrid .bento-block .gal-del { left: auto; right: 0; }
+/* popup jejak editable */
+.anggota-chip.edit {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.anggota-input {
+  flex: 1;
+  min-width: 70px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--white);
+}
+/* pemisah tanggal per hari — aspirasi & playlist */
+.pesan-date-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--gray);
+  text-transform: capitalize;
+}
+.pesan-date-sep:first-child { margin-top: 2px; }
+.pesan-date-line {
+  flex: 1;
+  height: 1.5px;
+  background: var(--line);
+  border-radius: 1px;
+}
+.lagu-pesan {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--gray);
+  line-height: 1.4;
+  background: var(--paper-2);
+  border-left: 3px solid var(--red);
+  padding: 6px 10px;
+  border-radius: 8px;
 }

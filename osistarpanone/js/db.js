@@ -209,11 +209,12 @@ async function cekStatusAspirasi() {
 }
 
 // Kirim request lagu (radio jam istirahat) — lewat RPC biar bisa dilimit
-async function kirimRequestLagu(judul, penyanyi, nama) {
+async function kirimRequestLagu(judul, penyanyi, pesan, nama) {
     const { data, error } = await supa.rpc("kirim_lagu_terbatas", {
         p_device_id: getDeviceId(),
         p_judul: judul,
         p_penyanyi: penyanyi,
+        p_pesan: pesan,
         p_nama: nama
     });
     if (error) throw error;
@@ -239,7 +240,7 @@ async function catatVisitor() {
 async function getRequestLagu() {
     const { data, error } = await supa
         .from("lagu_requests")
-        .select("id, device_id, judul, penyanyi, nama, created_at")
+        .select("id, device_id, judul, penyanyi, pesan, nama, created_at")
         .order("created_at", { ascending: false })
         .limit(30);
     if (error) throw error;
@@ -250,6 +251,24 @@ async function getRequestLagu() {
 async function hapusLaguSendiri(id) {
     const { data, error } = await supa.rpc("hapus_lagu_own", {
         p_device_id: getDeviceId(),
+        p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// Hapus aspirasi/lagu oleh OSIS (boleh hapus punya siapa aja)
+async function hapusAspirasiOsis(userId, id) {
+    const { data, error } = await supa.rpc("hapus_aspirasi_osis", {
+        p_user_id: userId,
+        p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+async function hapusLaguOsis(userId, id) {
+    const { data, error } = await supa.rpc("hapus_lagu_osis", {
+        p_user_id: userId,
         p_id: id
     });
     if (error) throw error;
@@ -311,6 +330,28 @@ async function hapusGallery(userId, id) {
     const { data, error } = await supa.rpc("hapus_gallery", {
         p_user_id: userId,
         p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+}
+
+// =========================================================================
+// SITE CONTENT — teks editable (hero/visi/misi/pembina/dll)
+// =========================================================================
+
+async function getSiteContent() {
+    const { data, error } = await supa
+        .from("site_content")
+        .select("kunci, nilai");
+    if (error) throw error;
+    return data || [];
+}
+
+async function saveSiteText(userId, kunci, nilai) {
+    const { data, error } = await supa.rpc("save_site_text", {
+        p_user_id: userId,
+        p_key: kunci,
+        p_value: nilai
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);

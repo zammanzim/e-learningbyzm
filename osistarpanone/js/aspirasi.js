@@ -30,16 +30,39 @@ const Aspirasi = {
 
             const deviceId = getDeviceId();
             const batasHapus = Date.now() - 3600000; // 1 jam
-            list.innerHTML = data.map(p => `
+            const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+            // group per hari WIB
+            const groups = [];
+            let curKey = null;
+            let curGroup = null;
+            data.forEach(p => {
+                const key = new Date(p.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+                if (key !== curKey) {
+                    curKey = key;
+                    const display = new Date(p.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+                    curGroup = { key, display, items: [] };
+                    groups.push(curGroup);
+                }
+                curGroup.items.push(p);
+            });
+            list.innerHTML = groups.map(g => {
+                const sep = `<div class="pesan-date-sep"><span>${g.display}</span><span class="pesan-date-line"></span></div>`;
+                const items = g.items.map(p => {
+                    const own = p.device_id === deviceId && new Date(p.created_at).getTime() > batasHapus;
+                    const canHapus = own || isOsis;
+                    return `
                 <div class="pesan-item">
                     <div class="pesan-meta">
                         <span class="pesan-nama"><i class="fa-solid fa-user"></i> ${escapeHtml(p.nama || "Anonim")}</span>
                         <span class="pesan-kelas">${escapeHtml(p.kelas || "-")}</span>
                         <span class="pesan-waktu">${Aspirasi.formatWaktu(p.created_at)}</span>
-                        ${p.device_id === deviceId && new Date(p.created_at).getTime() > batasHapus ? `<button class="hapus-btn" onclick="Aspirasi.hapus(${p.id})" title="Hapus pesanku"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+                        ${canHapus ? `<button class="hapus-btn" onclick="Aspirasi.hapus(${p.id})" title="${isOsis ? "Hapus (OSIS)" : "Hapus pesanku"}"><i class="fa-solid fa-trash-can"></i></button>` : ""}
                     </div>
                     <p class="pesan-isi">${escapeHtml(p.isi)}</p>
-                </div>`).join("");
+                </div>`;
+                }).join("");
+                return sep + items;
+            }).join("");
         } catch (err) {
             console.error(err);
             list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat suara. Cek koneksi.</div>`;
@@ -106,12 +129,18 @@ const Aspirasi = {
         }
     },
 
-    // ============ HAPUS PESAN SENDIRI ============
+    // ============ HAPUS PESAN ============
     async hapus(id) {
         const yakin = await showPopup("Yakin mau hapus pesan ini?", "confirm");
         if (!yakin) return;
+        const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
         try {
-            await hapusAspirasiSendiri(id);
+            if (isOsis) {
+                const u = OsisAuth.getUser();
+                await hapusAspirasiOsis(u.id, id);
+            } else {
+                await hapusAspirasiSendiri(id);
+            }
             showToast("Pesan berhasil dihapus", "success");
             Aspirasi.muatPesan();
         } catch (err) {
@@ -120,6 +149,8 @@ const Aspirasi = {
                 showPopup("Pesan udah lebih dari 1 jam, udah ga bisa dihapus.", "error");
             } else if (err.message === "ERR_FORBIDDEN") {
                 showPopup("Ini bukan pesan kamu!", "error");
+            } else if (err.message === "ERR_NO_AUTH") {
+                showPopup("Cuma OSIS yang bisa hapus pesan ini.", "error");
             } else {
                 showPopup("Gagal hapus. Cek koneksi lalu coba lagi.", "error");
             }

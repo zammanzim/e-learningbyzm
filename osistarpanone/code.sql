@@ -15,6 +15,8 @@
 -- 5. Grant function ke anon
 -- 6. Tabel gallery        (dokumentasi kegiatan: judul + deskripsi + foto)
 -- 7. Storage policy       (folder gallery/ di bucket osis-foto)
+-- 8. Site content         (teks editable hero/visi/misi/pembina/dll)
+-- 9. Web foto + storage   (web/ & angkatan/ buat foto editable)
 --
 -- NOTE VISITOR:
 -- - device_id = id perangkat MURNI (ga pernah berubah jadi key akun).
@@ -32,9 +34,12 @@ CREATE TABLE IF NOT EXISTS public.lagu_requests (
     device_id text NOT NULL DEFAULT '',
     judul text NOT NULL,
     penyanyi text NOT NULL,
+    pesan text NOT NULL DEFAULT '',
     nama text NOT NULL DEFAULT 'Anonim',
     created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.lagu_requests ADD COLUMN IF NOT EXISTS pesan text NOT NULL DEFAULT '';
 
 CREATE INDEX IF NOT EXISTS idx_lagu_requests_created ON public.lagu_requests (created_at DESC);
 
@@ -134,6 +139,7 @@ CREATE OR REPLACE FUNCTION public.kirim_lagu_terbatas(
     p_device_id text,
     p_judul text,
     p_penyanyi text,
+    p_pesan text,
     p_nama text,
     p_batas_harian integer DEFAULT 5
 ) RETURNS text
@@ -150,10 +156,12 @@ BEGIN
     IF n >= p_batas_harian THEN
         RETURN 'ERR_LIMIT';
     END IF;
-    INSERT INTO public.lagu_requests (device_id, judul, penyanyi, nama)
-    VALUES (p_device_id, p_judul, p_penyanyi, p_nama);
+    INSERT INTO public.lagu_requests (device_id, judul, penyanyi, pesan, nama)
+    VALUES (p_device_id, p_judul, p_penyanyi, COALESCE(NULLIF(btrim(p_pesan), ''), ''), p_nama);
     RETURN 'OK';
 END $$;
+
+DROP FUNCTION IF EXISTS public.kirim_lagu_terbatas(text, text, text, text, integer);
 
 -- Hapus function visitor signature lama biar ga nyangkut overload
 DROP FUNCTION IF EXISTS public.tambah_visitor_unik(text);
@@ -286,17 +294,55 @@ BEGIN
     RETURN 'ERR_FORBIDDEN';
 END $$;
 
+-- Hapus aspirasi oleh OSIS (boleh hapus punya siapa aja, validasi id OSIS)
+CREATE OR REPLACE FUNCTION public.hapus_aspirasi_osis(
+    p_user_id bigint,
+    p_id bigint
+)
+RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id = p_user_id) THEN
+        RETURN 'ERR_NO_AUTH';
+    END IF;
+    DELETE FROM public.aspirasi WHERE id = p_id;
+    IF FOUND THEN RETURN 'OK'; END IF;
+    RETURN 'ERR_NOT_FOUND';
+END $$;
+
+-- Hapus request lagu oleh OSIS (boleh hapus punya siapa aja)
+CREATE OR REPLACE FUNCTION public.hapus_lagu_osis(
+    p_user_id bigint,
+    p_id bigint
+)
+RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id = p_user_id) THEN
+        RETURN 'ERR_NO_AUTH';
+    END IF;
+    DELETE FROM public.lagu_requests WHERE id = p_id;
+    IF FOUND THEN RETURN 'OK'; END IF;
+    RETURN 'ERR_NOT_FOUND';
+END $$;
+
 -- ============ 5. GRANT FUNCTION (anon) ============
 REVOKE EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, integer) FROM public;
-REVOKE EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, text, integer) FROM public;
 REVOKE EXECUTE ON FUNCTION public.tambah_visitor_unik(text, text, text, text, text, text) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_aspirasi_own(text, bigint) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_lagu_own(text, bigint) FROM public;
+REVOKE EXECUTE ON FUNCTION public.hapus_aspirasi_osis(bigint, bigint) FROM public;
+REVOKE EXECUTE ON FUNCTION public.hapus_lagu_osis(bigint, bigint) FROM public;
 GRANT EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, integer) TO anon;
-GRANT EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, text, integer) TO anon;
 GRANT EXECUTE ON FUNCTION public.tambah_visitor_unik(text, text, text, text, text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.hapus_aspirasi_own(text, bigint) TO anon;
 GRANT EXECUTE ON FUNCTION public.hapus_lagu_own(text, bigint) TO anon;
+GRANT EXECUTE ON FUNCTION public.hapus_aspirasi_osis(bigint, bigint) TO anon;
+GRANT EXECUTE ON FUNCTION public.hapus_lagu_osis(bigint, bigint) TO anon;
 
 -- ============ 6. TABEL GALLERY (dokumentasi kegiatan) ============
 -- Satu baris = satu kegiatan. `fotos` = jsonb array path foto di bucket.
@@ -465,6 +511,110 @@ DROP POLICY IF EXISTS "osis_foto_gallery_delete" ON storage.objects;
 CREATE POLICY "osis_foto_gallery_delete" ON storage.objects
     FOR DELETE TO anon
     USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'gallery');
+
+-- ============ 8. SITE CONTENT — TEKS EDITABLE (HERO/VISI/MISI/PEMBINA/DLL) ============
+-- Satu baris per kunci (cth: hero_badge, visi_text, misi_1_title ...).
+-- Cuma akun OSIS boleh nulis, baca bebas.
+CREATE TABLE IF NOT EXISTS public.site_content (
+    kunci text PRIMARY KEY,
+    nilai text NOT NULL DEFAULT '',
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    updated_by bigint
+);
+
+ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "site_content_public_select" ON public.site_content;
+CREATE POLICY "site_content_public_select" ON public.site_content
+    FOR SELECT USING (true);
+
+-- Insert/update langsung di-revoke: cuma lewat function save_site_text
+DROP POLICY IF EXISTS "site_content_public_insert" ON public.site_content;
+
+CREATE OR REPLACE FUNCTION public.save_site_text(
+    p_user_id bigint,
+    p_key text,
+    p_value text
+)
+RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS
+        (SELECT 1 FROM public.osis_users WHERE id = p_user_id) THEN
+        RETURN 'ERR_NO_AUTH';
+    END IF;
+    p_key := COALESCE(NULLIF(btrim(p_key), ''), '');
+    IF p_key = '' THEN
+        RETURN 'ERR_NO_KEY';
+    END IF;
+    -- batasi panjang biar ga di-abuse, tapi longgar (up to 800 char)
+    p_value := COALESCE(p_value, '');
+    IF char_length(p_value) > 2000 THEN
+        p_value := left(p_value, 2000);
+    END IF;
+
+    INSERT INTO public.site_content (kunci, nilai, updated_at, updated_by)
+    VALUES (p_key, p_value, now(), p_user_id)
+    ON CONFLICT (kunci) DO UPDATE SET
+        nilai = EXCLUDED.nilai,
+        updated_at = now(),
+        updated_by = EXCLUDED.updated_by;
+    RETURN 'OK';
+END $$;
+
+REVOKE EXECUTE ON FUNCTION public.save_site_text(bigint, text, text) FROM public;
+GRANT EXECUTE ON FUNCTION public.save_site_text(bigint, text, text) TO anon;
+
+-- ============ 9. WEB_FOTO + STORAGE WEB/ANGKATAN (buat foto editable) ============
+-- Foto prestasi/kegiatan/hero/pembina pake tabel web_foto + bucket osis-foto/web/
+-- dan foto angkatan pake bucket angkatan/. Kasih policy biar anon (OSIS
+-- client) bisa upsert — validasi OSIS Tetep di client (SiteEdit cek mode).
+CREATE TABLE IF NOT EXISTS public.web_foto (
+    kunci text PRIMARY KEY,
+    path text NOT NULL DEFAULT '',
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.web_foto ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "web_foto_public_select" ON public.web_foto;
+CREATE POLICY "web_foto_public_select" ON public.web_foto
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "web_foto_public_insert" ON public.web_foto;
+CREATE POLICY "web_foto_public_insert" ON public.web_foto
+    FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "web_foto_public_update" ON public.web_foto;
+CREATE POLICY "web_foto_public_update" ON public.web_foto
+    FOR UPDATE USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "web_foto_public_delete" ON public.web_foto;
+CREATE POLICY "web_foto_public_delete" ON public.web_foto
+    FOR DELETE USING (true);
+
+-- Storage: folder web/
+DROP POLICY IF EXISTS "osis_foto_web_select" ON storage.objects;
+CREATE POLICY "osis_foto_web_select" ON storage.objects
+    FOR SELECT TO anon USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'web');
+DROP POLICY IF EXISTS "osis_foto_web_insert" ON storage.objects;
+CREATE POLICY "osis_foto_web_insert" ON storage.objects
+    FOR INSERT TO anon WITH CHECK (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'web');
+DROP POLICY IF EXISTS "osis_foto_web_delete" ON storage.objects;
+CREATE POLICY "osis_foto_web_delete" ON storage.objects
+    FOR DELETE TO anon USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'web');
+
+-- Storage: folder angkatan/ (foto jejak organisasi)
+DROP POLICY IF EXISTS "osis_foto_angkatan_select" ON storage.objects;
+CREATE POLICY "osis_foto_angkatan_select" ON storage.objects
+    FOR SELECT TO anon USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'angkatan');
+DROP POLICY IF EXISTS "osis_foto_angkatan_insert" ON storage.objects;
+CREATE POLICY "osis_foto_angkatan_insert" ON storage.objects
+    FOR INSERT TO anon WITH CHECK (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'angkatan');
+DROP POLICY IF EXISTS "osis_foto_angkatan_delete" ON storage.objects;
+CREATE POLICY "osis_foto_angkatan_delete" ON storage.objects
+    FOR DELETE TO anon USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'angkatan');
 
 -- Bersihin sisa objek eksperimen sebelumnya (ganti desain)
 DROP TABLE IF EXISTS public.guests CASCADE;

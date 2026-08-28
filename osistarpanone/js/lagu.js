@@ -27,19 +27,43 @@ const Lagu = {
 
             const deviceId = getDeviceId();
             const batasHapus = Date.now() - 3600000; // 1 jam
-            list.innerHTML = data.map(l => `
+            const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+            // group per hari WIB
+            const groups = [];
+            let curKey = null;
+            let curGroup = null;
+            data.forEach(l => {
+                const key = new Date(l.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+                if (key !== curKey) {
+                    curKey = key;
+                    const display = new Date(l.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+                    curGroup = { key, display, items: [] };
+                    groups.push(curGroup);
+                }
+                curGroup.items.push(l);
+            });
+            list.innerHTML = groups.map(g => {
+                const sep = `<div class="pesan-date-sep"><span>${g.display}</span><span class="pesan-date-line"></span></div>`;
+                const items = g.items.map(l => {
+                    const own = l.device_id === deviceId && new Date(l.created_at).getTime() > batasHapus;
+                    const canHapus = own || isOsis;
+                    return `
                 <div class="lagu-item">
                     <div class="lagu-cover"><div class="lagu-kaset"><i class="fa-solid fa-music"></i></div></div>
                     <div class="lagu-body">
                         <div class="lagu-title">${escapeHtml(l.judul)}</div>
                         <div class="lagu-artis">${escapeHtml(l.penyanyi || "-")}</div>
+                        ${l.pesan ? `<div class="lagu-pesan">“${escapeHtml(l.pesan)}”</div>` : ""}
                         <div class="lagu-meta">
                             <span><i class="fa-solid fa-user"></i> ${escapeHtml(l.nama || "Anonim")}</span>
                             <span class="pesan-waktu">${Lagu.formatWaktu(l.created_at)}</span>
-                            ${l.device_id === deviceId && new Date(l.created_at).getTime() > batasHapus ? `<button class="hapus-btn" onclick="Lagu.hapus(${l.id})" title="Hapus request-ku"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+                            ${canHapus ? `<button class="hapus-btn" onclick="Lagu.hapus(${l.id})" title="${isOsis ? "Hapus (OSIS)" : "Hapus request-ku"}"><i class="fa-solid fa-trash-can"></i></button>` : ""}
                         </div>
                     </div>
-                </div>`).join("");
+                </div>`;
+                }).join("");
+                return sep + items;
+            }).join("");
         } catch (err) {
             console.error(err);
             list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat playlist. Cek koneksi.</div>`;
@@ -55,6 +79,7 @@ const Lagu = {
     async kirim() {
         const judul = document.getElementById("judulLagu").value.trim();
         const penyanyi = document.getElementById("penyanyiLagu").value.trim();
+        const kata = document.getElementById("kataLagu").value.trim();
         const nama = document.getElementById("namaPengirim").value.trim();
         const btn = document.getElementById("btnKirimLagu");
 
@@ -67,10 +92,11 @@ const Lagu = {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
 
         try {
-            await kirimRequestLagu(judul, penyanyi, nama || "Anonim");
+            await kirimRequestLagu(judul, penyanyi, kata, nama || "Anonim");
             showToast("Mantap! Lagu kamu masuk playlist.", "success");
             document.getElementById("judulLagu").value = "";
             document.getElementById("penyanyiLagu").value = "";
+            document.getElementById("kataLagu").value = "";
             document.getElementById("namaPengirim").value = "";
             Lagu.muatDaftar();
         } catch (err) {
@@ -86,12 +112,18 @@ const Lagu = {
         }
     },
 
-    // ============ HAPUS REQUEST SENDIRI ============
+    // ============ HAPUS REQUEST ============
     async hapus(id) {
         const yakin = await showPopup("Yakin mau hapus request lagu ini?", "confirm");
         if (!yakin) return;
+        const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
         try {
-            await hapusLaguSendiri(id);
+            if (isOsis) {
+                const u = OsisAuth.getUser();
+                await hapusLaguOsis(u.id, id);
+            } else {
+                await hapusLaguSendiri(id);
+            }
             showToast("Request lagu dihapus", "success");
             Lagu.muatDaftar();
         } catch (err) {
@@ -100,6 +132,8 @@ const Lagu = {
                 showPopup("Request udah lebih dari 1 jam, udah ga bisa dihapus.", "error");
             } else if (err.message === "ERR_FORBIDDEN") {
                 showPopup("Ini bukan request kamu!", "error");
+            } else if (err.message === "ERR_NO_AUTH") {
+                showPopup("Cuma OSIS yang bisa hapus ini.", "error");
             } else {
                 showPopup("Gagal hapus. Cek koneksi lalu coba lagi.", "error");
             }

@@ -26,13 +26,7 @@ const Galeri = {
         const fileInput = document.getElementById("galFileInput");
         if (fileInput) fileInput.addEventListener("change", () => Galeri.tambahFotoDraft(fileInput));
 
-        // Simpan judul/subjudul pas selesai ngetik
-        grid.addEventListener("focusout", (e) => {
-            if (!Galeri.draft) return;
-            if (e.target.classList.contains("draft-judul") || e.target.classList.contains("draft-desk")) {
-                Galeri.syncMeta();
-            }
-        });
+
     },
 
     // Tombol + & elemen edit cuma aktif kalo login sbg OSIS
@@ -48,10 +42,11 @@ const Galeri = {
     // ============ DRAFT BLOCK ============
     buatDraft() {
         if (Galeri.draft) {
-            Galeri.render();
+            const j = document.querySelector(".draft-judul");
+            if (j) j.focus();
             return;
         }
-        Galeri.draft = { id: null, judul: "", deskripsi: "", fotos: [] };
+        Galeri.draft = { judul: "", deskripsi: "", files: [] };
         Galeri.render();
         const j = document.querySelector(".draft-judul");
         if (j) j.focus();
@@ -66,88 +61,73 @@ const Galeri = {
         if (d) Galeri.draft.deskripsi = d.textContent.trim();
     },
 
-    // Pastikan draft udah punya baris di DB (dipanggil sebelum nambah foto)
-    async pastikanRow() {
+    // Tambah foto ke draft — cuma preview lokal, belum upload
+    tambahFotoDraft(input) {
+        if (!Galeri.draft) return;
         Galeri.bacaTeksDraft();
-        if (Galeri.draft.id) return;
-        const u = OsisAuth.getUser();
-        const idBaru = await buatGallery(
-            u.id,
-            Galeri.draft.judul || "Tanpa Judul",
-            Galeri.draft.deskripsi,
-            [Galeri.draft.fotos[0]]
-        );
-        if (!idBaru || idBaru <= 0) throw new Error("Gagal bikin kegiatan (" + idBaru + ")");
-        Galeri.draft.id = idBaru;
-    },
-
-    // Upload foto yang dipilih lewat slot +
-    async tambahFotoDraft(input) {
-        const u = OsisAuth.getUser();
-        if (!u || u.mode !== "osis" || !Galeri.draft) return;
         const file = input.files && input.files[0];
         input.value = "";
         if (!file || !file.type.startsWith("image/")) return;
-
-        try {
-            const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-            const path = `gallery/galeri-${u.id}-${Date.now()}.${ext}`;
-            await uploadFotoStorage(file, path);
-            Galeri.bacaTeksDraft();
-            Galeri.draft.fotos.push(path);
-
-            await Galeri.pastikanRow();
-            // Foto pertama udah ke-insert pas buat row, sisanya di-append
-            if (Galeri.draft.fotos.length > 1) {
-                await galeriAddFoto(u.id, Galeri.draft.id, path);
-            }
-            Galeri.render();
-            showToast("Foto ditambahin!", "success");
-        } catch (err) {
-            console.error(err);
-            showToast("Gagal upload foto. Cek koneksi ya!", "error");
-        }
+        if (!Galeri.draft.files) Galeri.draft.files = [];
+        Galeri.draft.files.push(file);
+        Galeri.render();
+        // fokus balik biar gampang tambah lagi
+        const draftEl = document.querySelector(".bento-block.draft");
+        if (draftEl) draftEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
     },
 
-    // Simpan judul & subjudul pas blur (cuma kalo row udah ada)
-    async syncMeta() {
-        Galeri.bacaTeksDraft();
+    // Simpan draft — upload semua foto baru bikin row DB
+    async simpanDraft() {
         const u = OsisAuth.getUser();
-        if (!u || !Galeri.draft || !Galeri.draft.id) return;
-        try {
-            await galeriUpdateMeta(u.id, Galeri.draft.id, Galeri.draft.judul, Galeri.draft.deskripsi);
-        } catch (err) {
-            console.warn("Gagal sync judul:", err.message);
+        if (!u || u.mode !== "osis" || !Galeri.draft) return;
+        Galeri.bacaTeksDraft();
+        const judul = Galeri.draft.judul || "";
+        const files = Galeri.draft.files || [];
+
+        if (!judul) {
+            showToast("Judul kegiatan diisi dulu yaa!", "error");
+            const el = document.querySelector(".draft-judul");
+            if (el) el.focus();
+            return;
         }
-    },
-
-    // Buang draft: kalo udah kesimpen di DB, ikut hapus bareng filenya
-    async buangDraft() {
-        const d = Galeri.draft;
-        if (!d) return;
-
-        if (!d.id) {
-            Galeri.draft = null;
-            Galeri.render();
+        if (files.length === 0) {
+            showToast("Tambah minimal 1 foto dulu!", "error");
             return;
         }
 
-        const yakin = await showPopup("Buang kegiatan ini? Fotonya ikut terhapus.", "confirm");
-        if (!yakin) return;
+        const btn = document.querySelector(".gal-save");
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
 
         try {
-            const u = OsisAuth.getUser();
-            await hapusGallery(u.id, d.id);
-            for (const path of d.fotos) {
-                try { await hapusFotoStorage(path); } catch (e) { console.warn("Gagal hapus file:", path); }
+            const paths = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+                const path = `gallery/galeri-${u.id}-${Date.now()}-${i}.${ext}`;
+                await uploadFotoStorage(file, path);
+                paths.push(path);
             }
+            const newId = await buatGallery(u.id, judul, Galeri.draft.deskripsi || "", paths);
+            if (!newId || newId <= 0) throw new Error("Gagal simpan (" + newId + ")");
+            showToast("Kegiatan berhasil dipublish!", "success");
             Galeri.draft = null;
-            Galeri.render();
-            showToast("Draft dibuang", "success");
+            Galeri.cache = [];
+            await Galeri.muat();
         } catch (err) {
             console.error(err);
-            showPopup("Gagal buang draft. Cek koneksi.", "error");
+            if (String(err.message).includes("-1") || err.message === "ERR_NO_AUTH") {
+                showPopup("Cuma akun OSIS yang bisa nambah galeri.", "error");
+            } else {
+                showToast("Gagal upload. Cek koneksi ya!", "error");
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i>'; }
         }
+    },
+
+    // Buang draft lokal (belum ke-DB jadi langsung hilang)
+    buangDraft() {
+        Galeri.draft = null;
+        Galeri.render();
     },
 
     // ============ MUAT & RENDER ============
@@ -187,19 +167,25 @@ const Galeri = {
     // Struktur draft = persis kartu kegiatan: judul -> subjudul -> foto [+]
     kartuDraft() {
         const d = Galeri.draft;
-        let fotoHtml = d.fotos.map(path =>
-            `<div class="item"><img src="${getFoto(path)}" alt=""></div>`
-        ).join("");
+        let fotoHtml = (d.files || []).map(file => {
+            const url = URL.createObjectURL(file);
+            return `<div class="item"><img src="${url}" alt=""></div>`;
+        }).join("");
         fotoHtml += `<div class="up-slot" title="Tambah foto"><i class="fa-solid fa-plus"></i></div>`;
 
         return `
             <div class="bento-block draft">
                 <div class="bento-meta">
-                    <h4 class="draft-judul" contenteditable="true" spellcheck="false" data-ph="Judul Kegiatan"></h4>
-                    <p class="draft-desk" contenteditable="true" spellcheck="false" data-ph="Sub judul / deskripsi singkat..."></p>
-                    <button class="icon-btn gal-del" onclick="Galeri.buangDraft()" title="Buang draft">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <h4 class="draft-judul" contenteditable="true" spellcheck="false" data-ph="Judul Kegiatan">${escapeHtml(d.judul || "")}</h4>
+                    <p class="draft-desk" contenteditable="true" spellcheck="false" data-ph="Sub judul / deskripsi singkat...">${escapeHtml(d.deskripsi || "")}</p>
+                    <div class="gal-actions">
+                        <button class="icon-btn gal-save" onclick="Galeri.simpanDraft()" title="Simpan kegiatan">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button class="icon-btn gal-del" onclick="Galeri.buangDraft()" title="Buang draft">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="gal-row">${fotoHtml}</div>
             </div>`;
