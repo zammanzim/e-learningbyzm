@@ -11,24 +11,21 @@ const Lagu = {
         Lagu.muatDaftar();
     },
 
-    // ============ PLAYLIST ============
+    // ============ PLAYLIST — SWR ============
     async muatDaftar() {
         const list = document.getElementById("daftarLagu");
         if (!list) return;
-        try {
-            const data = await getRequestLagu();
+
+        const render = (data) => {
             const jum = document.getElementById("jumLagu");
             if (jum) jum.textContent = data.length;
-
             if (!data || data.length === 0) {
                 list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-headphones"></i> Playlist masih kosong. Jadilah request pertama!</div>`;
                 return;
             }
-
             const deviceId = getDeviceId();
-            const batasHapus = Date.now() - 3600000; // 1 jam
+            const batasHapus = Date.now() - 3600000;
             const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
-            // group per hari WIB
             const groups = [];
             let curKey = null;
             let curGroup = null;
@@ -53,7 +50,7 @@ const Lagu = {
                     <div class="lagu-body">
                         <div class="lagu-title">${escapeHtml(l.judul)}</div>
                         <div class="lagu-artis">${escapeHtml(l.penyanyi || "-")}</div>
-                        ${l.pesan ? `<div class="lagu-pesan">“${escapeHtml(l.pesan)}”</div>` : ""}
+                        ${l.pesan ? `<div class="lagu-pesan">${escapeHtml(l.pesan)}</div>` : ""}
                         <div class="lagu-meta">
                             <span><i class="fa-solid fa-user"></i> ${escapeHtml(l.nama || "Anonim")}</span>
                             <span class="pesan-waktu">${Lagu.formatWaktu(l.created_at)}</span>
@@ -64,6 +61,24 @@ const Lagu = {
                 }).join("");
                 return sep + items;
             }).join("");
+        };
+
+        const cached = Cache.get("lagu");
+        if (cached) {
+            render(cached);
+            getRequestLagu().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("lagu", fresh);
+                    render(fresh);
+                }
+            }).catch(() => {});
+            return;
+        }
+
+        try {
+            const data = await getRequestLagu();
+            Cache.set("lagu", data);
+            render(data);
         } catch (err) {
             console.error(err);
             list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat playlist. Cek koneksi.</div>`;
@@ -98,6 +113,7 @@ const Lagu = {
             document.getElementById("penyanyiLagu").value = "";
             document.getElementById("kataLagu").value = "";
             document.getElementById("namaPengirim").value = "";
+            Cache.del("lagu");
             Lagu.muatDaftar();
         } catch (err) {
             console.error(err);
@@ -125,6 +141,7 @@ const Lagu = {
                 await hapusLaguSendiri(id);
             }
             showToast("Request lagu dihapus", "success");
+            Cache.del("lagu");
             Lagu.muatDaftar();
         } catch (err) {
             console.error(err);

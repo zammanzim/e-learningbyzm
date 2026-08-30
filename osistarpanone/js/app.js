@@ -29,10 +29,24 @@ const FOTO_DEFAULT = {
 const FotoWeb = {
     map: { ...FOTO_DEFAULT },
 
-    // Muat override dari tabel web_foto lalu terapkan ke halaman
+    // Muat override dari tabel web_foto — SWR biar instant
     async init() {
+        const cached = Cache.get("web_foto");
+        if (cached) {
+            cached.forEach(r => { if (r.path) FotoWeb.map[r.kunci] = r.path; });
+            FotoWeb.apply();
+            getWebFoto().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("web_foto", fresh);
+                    fresh.forEach(r => { if (r.path) FotoWeb.map[r.kunci] = r.path; });
+                    FotoWeb.apply();
+                }
+            }).catch(() => {});
+            return;
+        }
         try {
             const rows = await getWebFoto();
+            Cache.set("web_foto", rows);
             rows.forEach(r => { if (r.path) FotoWeb.map[r.kunci] = r.path; });
         } catch (err) {
             console.error("Gagal muat web_foto, pakai default:", err);
@@ -63,7 +77,7 @@ function labelTahun(thn) {
 }
 
 // =========================================================================
-// ROUTER — SPA hash routing (index.html)
+// ROUTER — SPA hash routing (index)
 // Rute: #/ #/sekbid #/aspirasi #/kontak
 // =========================================================================
 

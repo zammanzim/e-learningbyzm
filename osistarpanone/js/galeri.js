@@ -111,6 +111,7 @@ const Galeri = {
             if (!newId || newId <= 0) throw new Error("Gagal simpan (" + newId + ")");
             showToast("Kegiatan berhasil dipublish!", "success");
             Galeri.draft = null;
+            Cache.del("gallery");
             Galeri.cache = [];
             await Galeri.muat();
         } catch (err) {
@@ -130,13 +131,28 @@ const Galeri = {
         Galeri.render();
     },
 
-    // ============ MUAT & RENDER ============
+    // ============ MUAT & RENDER — SWR ============
     async muat() {
         const grid = document.getElementById("galGrid");
         if (!grid) return;
 
+        const cached = Cache.get("gallery");
+        if (cached) {
+            Galeri.cache = cached;
+            Galeri.render();
+            getGallery().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("gallery", fresh);
+                    Galeri.cache = fresh;
+                    Galeri.render();
+                }
+            }).catch(() => {});
+            return;
+        }
+
         try {
             const data = await getGallery();
+            Cache.set("gallery", data);
             Galeri.cache = data || [];
             Galeri.render();
         } catch (err) {
@@ -243,6 +259,7 @@ const Galeri = {
             }
 
             showToast("Kegiatan dihapus", "success");
+            Cache.del("gallery");
             Galeri.muat();
         } catch (err) {
             console.error(err);

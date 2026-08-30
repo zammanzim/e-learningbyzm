@@ -13,6 +13,36 @@ function getFoto(pathFoto) {
 }
 
 // =========================================================================
+// CACHE — SWR (stale-while-revalidate) biar instant
+// Simpen hasil fetch di localStorage, tampilin cache dulu, revalidasi
+// di background. Key: osis_cache_<nama>
+// =========================================================================
+const Cache = {
+    version: "v2",
+    prefix: "osis_cache_",
+    key(key) {
+        return Cache.prefix + Cache.version + "_" + key;
+    },
+    get(key) {
+        try {
+            const raw = localStorage.getItem(Cache.key(key));
+            if (!raw) return null;
+            const obj = JSON.parse(raw);
+            return obj.data;
+        } catch { return null; }
+    },
+    set(key, data) {
+        try { localStorage.setItem(Cache.key(key), JSON.stringify({ data, t: Date.now(), v: Cache.version })); } catch {}
+    },
+    del(key) {
+        try { localStorage.removeItem(Cache.key(key)); } catch {}
+    },
+    delMany(keys) {
+        keys.forEach(key => Cache.del(key));
+    }
+};
+
+// =========================================================================
 // DEVICE ID — id unik per perangkat (buat limit harian & visitor)
 // Disimpan dobel: localStorage + cookie (2 tahun). Kalo salah satunya
 // kehapus (clear data, dll), id lamanya masih kebaca — anti nambah
@@ -160,12 +190,13 @@ async function getWebFoto() {
 }
 
 // Kirim aspirasi siswa — lewat RPC biar bisa dilimit per device per hari
-async function kirimAspirasi(nama, kelas, isi) {
+async function kirimAspirasi(nama, kelas, isi, isPrivate = false) {
     const { data, error } = await supa.rpc("kirim_aspirasi_terbatas", {
         p_device_id: getDeviceId(),
         p_nama: nama,
         p_kelas: kelas,
-        p_isi: isi
+        p_isi: isi,
+        p_is_private: !!isPrivate
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);
@@ -175,7 +206,7 @@ async function kirimAspirasi(nama, kelas, isi) {
 async function getAspirasi() {
     const { data, error } = await supa
         .from("aspirasi")
-        .select("id, device_id, nama, kelas, isi, created_at")
+        .select("id, device_id, nama, kelas, isi, is_private, created_at")
         .order("created_at", { ascending: false })
         .limit(50);
     if (error) throw error;
@@ -299,6 +330,7 @@ async function buatGallery(userId, judul, deskripsi, fotos) {
         p_fotos: fotos
     });
     if (error) throw error;
+    Cache.del("gallery");
     return data || 0;
 }
 
@@ -311,6 +343,7 @@ async function galeriAddFoto(userId, id, path) {
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);
+    Cache.del("gallery");
 }
 
 // Update judul & deskripsi kegiatan
@@ -323,6 +356,7 @@ async function galeriUpdateMeta(userId, id, judul, deskripsi) {
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);
+    Cache.del("gallery");
 }
 
 // Hapus kegiatan (server validasi id OSIS)
@@ -333,6 +367,7 @@ async function hapusGallery(userId, id) {
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);
+    Cache.del("gallery");
 }
 
 // =========================================================================
@@ -355,6 +390,7 @@ async function saveSiteText(userId, kunci, nilai) {
     });
     if (error) throw error;
     if (data !== "OK") throw new Error(data);
+    Cache.del("site_content");
 }
 
 // =========================================================================
@@ -383,41 +419,49 @@ async function simpanPimpinan(row) {
         .from("pimpinan")
         .upsert(row, { onConflict: "tahun" });
     if (error) throw error;
+    Cache.del("pimpinan");
 }
 
 async function hapusPimpinan(tahun) {
     const { error } = await supa.from("pimpinan").delete().eq("tahun", tahun);
     if (error) throw error;
+    Cache.del("pimpinan");
 }
 
 async function tambahAnggota(row) {
     const { error } = await supa.from("anggota").insert(row);
     if (error) throw error;
+    Cache.del("anggota");
 }
 
 async function updateAnggota(id, row) {
     const { error } = await supa.from("anggota").update(row).eq("id", id);
     if (error) throw error;
+    Cache.del("anggota");
 }
 
 async function hapusAnggota(id) {
     const { error } = await supa.from("anggota").delete().eq("id", id);
     if (error) throw error;
+    Cache.del("anggota");
 }
 
 async function tambahSekbid(row) {
     const { error } = await supa.from("sekbid").insert(row);
     if (error) throw error;
+    Cache.del("sekbid");
 }
 
 async function updateSekbid(id, row) {
     const { error } = await supa.from("sekbid").update(row).eq("id", id);
     if (error) throw error;
+    Cache.del("sekbid");
 }
 
 async function hapusSekbid(id) {
     const { error } = await supa.from("sekbid").delete().eq("id", id);
     if (error) throw error;
+    Cache.del("sekbid");
 }
 
 async function simpanWebFoto(kunci, path) {
@@ -425,12 +469,91 @@ async function simpanWebFoto(kunci, path) {
         .from("web_foto")
         .upsert({ kunci: kunci, path: path, updated_at: new Date().toISOString() });
     if (error) throw error;
+    Cache.del("web_foto");
+}
+
+// Kompres gambar di browser biar <1MB sebelum upload
+// - resize max 1920px, iterative quality 0.85 -> 0.4
+async function compressImage(file, maxMB = 0.95, maxDim = 1920) {
+    if (!file.type.startsWith("image/")) return file;
+    // kalau udah kecil dan dimensi ga gede, skip
+    if (file.size <= maxMB * 1024 * 1024) {
+        // cek dimensi tetep, kalo kecil skip biar cepet
+        try {
+            const bmp = await createImageBitmap(file);
+            if (bmp.width <= maxDim && bmp.height <= maxDim) {
+                bmp.close && bmp.close();
+                return file;
+            }
+            bmp.close && bmp.close();
+        } catch {}
+    }
+
+    const loadImg = () => new Promise((res, rej) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); res(img); };
+        img.onerror = (e) => { URL.revokeObjectURL(url); rej(e); };
+        img.src = url;
+    });
+
+    let img;
+    try { img = await loadImg(); } catch { return file; }
+
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    const scale = Math.min(1, maxDim / Math.max(w, h));
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    // PNG transparan -> kasih background putih biar JPEG ga hitam
+    if (file.type === "image/png") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+    }
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const toBlob = (q, type) => new Promise(res => canvas.toBlob(b => res(b), type, q));
+
+    // coba JPEG dulu (paling efisien), kalo PNG kecil dan butuh transparansi tetep JPEG aja gapapa
+    let targetType = file.type === "image/png" && file.size > 1024 * 1024 ? "image/jpeg" : file.type;
+    if (targetType !== "image/jpeg" && targetType !== "image/webp") targetType = "image/jpeg";
+
+    let quality = 0.85;
+    let blob = await toBlob(quality, targetType);
+    // turunin quality kalo masih kegedean
+    while (blob && blob.size > maxMB * 1024 * 1024 && quality > 0.42) {
+        quality -= 0.12;
+        blob = await toBlob(quality, targetType);
+    }
+    // kalo masih kegedean, kecilin dimensi lagi 15% dan coba lagi sekali
+    if (blob && blob.size > maxMB * 1024 * 1024) {
+        const w2 = Math.round(w * 0.75);
+        const h2 = Math.round(h * 0.75);
+        canvas.width = w2;
+        canvas.height = h2;
+        if (file.type === "image/png") { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w2, h2); }
+        ctx.drawImage(img, 0, 0, w2, h2);
+        blob = await toBlob(0.72, targetType);
+    }
+    if (!blob) return file;
+    if (blob.size >= file.size) return file; // kompres malah gede, pake asli
+    return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: targetType, lastModified: Date.now() });
 }
 
 async function uploadFotoStorage(file, path) {
+    let toUpload = file;
+    if (file && file.type && file.type.startsWith("image/")) {
+        try { toUpload = await compressImage(file); } catch (e) { console.warn("compress gagal, pakai asli:", e); }
+    }
+    // kalau path masih .png tapi file jadi jpeg, biarin aja — storage ga ngecek ekstensi
     const { error } = await supa.storage
         .from(STORAGE_BUCKET)
-        .upload(path, file, { upsert: true, cacheControl: "3600" });
+        .upload(path, toUpload, { upsert: true, cacheControl: "3600" });
     if (error) throw error;
     return path;
 }

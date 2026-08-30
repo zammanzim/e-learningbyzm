@@ -14,28 +14,28 @@ const Aspirasi = {
         Aspirasi.muatPesan();
     },
 
-    // ============ DAFTAR PESAN ============
+    // ============ DAFTAR PESAN — SWR ============
     async muatPesan() {
         const list = document.getElementById("daftarPesan");
         if (!list) return;
-        try {
-            const data = await getAspirasi();
-            const jum = document.getElementById("jumPesan");
-            if (jum) jum.textContent = data.length;
 
-            if (!data || data.length === 0) {
-                list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-comments"></i> Belum ada suara masuk. Jadilah yang pertama!</div>`;
+        const render = (data) => {
+            const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+            const visible = isOsis ? data : (data || []).filter(p => !p.is_private);
+            const jum = document.getElementById("jumPesan");
+            if (jum) jum.textContent = visible.length;
+            if (!visible || visible.length === 0) {
+                list.innerHTML = isOsis
+                    ? `<div class="pesan-empty"><i class="fa-solid fa-comments"></i> Belum ada suara masuk.</div>`
+                    : `<div class="pesan-empty"><i class="fa-solid fa-comments"></i> Belum ada suara public. Private hanya OSIS yang bisa lihat.</div>`;
                 return;
             }
-
             const deviceId = getDeviceId();
-            const batasHapus = Date.now() - 3600000; // 1 jam
-            const isOsis = (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
-            // group per hari WIB
+            const batasHapus = Date.now() - 3600000;
             const groups = [];
             let curKey = null;
             let curGroup = null;
-            data.forEach(p => {
+            visible.forEach(p => {
                 const key = new Date(p.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
                 if (key !== curKey) {
                     curKey = key;
@@ -50,11 +50,13 @@ const Aspirasi = {
                 const items = g.items.map(p => {
                     const own = p.device_id === deviceId && new Date(p.created_at).getTime() > batasHapus;
                     const canHapus = own || isOsis;
+                    const lock = p.is_private ? `<span title="Private — hanya OSIS" style="color:var(--red);font-size:0.7rem"><i class="fa-solid fa-lock"></i> Private</span>` : "";
                     return `
-                <div class="pesan-item">
+                <div class="pesan-item" style="${p.is_private ? "border-style:dashed" : ""}">
                     <div class="pesan-meta">
                         <span class="pesan-nama"><i class="fa-solid fa-user"></i> ${escapeHtml(p.nama || "Anonim")}</span>
                         <span class="pesan-kelas">${escapeHtml(p.kelas || "-")}</span>
+                        ${lock}
                         <span class="pesan-waktu">${Aspirasi.formatWaktu(p.created_at)}</span>
                         ${canHapus ? `<button class="hapus-btn" onclick="Aspirasi.hapus(${p.id})" title="${isOsis ? "Hapus (OSIS)" : "Hapus pesanku"}"><i class="fa-solid fa-trash-can"></i></button>` : ""}
                     </div>
@@ -63,6 +65,24 @@ const Aspirasi = {
                 }).join("");
                 return sep + items;
             }).join("");
+        };
+
+        const cached = Cache.get("aspirasi");
+        if (cached) {
+            render(cached);
+            getAspirasi().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("aspirasi", fresh);
+                    render(fresh);
+                }
+            }).catch(() => {});
+            return;
+        }
+
+        try {
+            const data = await getAspirasi();
+            Cache.set("aspirasi", data);
+            render(data);
         } catch (err) {
             console.error(err);
             list.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat suara. Cek koneksi.</div>`;
@@ -99,6 +119,7 @@ const Aspirasi = {
         const nama = document.getElementById("namaSiswa").value.trim();
         const kelas = document.getElementById("kelasSiswa").value.trim();
         const isi = document.getElementById("isiAspirasi").value.trim();
+        const isPrivate = !!document.getElementById("isPrivateAspirasi")?.checked;
         const btn = document.getElementById("btnKirimAspirasi");
 
         if (!isi) {
@@ -110,11 +131,13 @@ const Aspirasi = {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
 
         try {
-            await kirimAspirasi(nama || "Anonim", kelas || "-", isi);
-            showToast("Terima kasih! Aspirasimu sudah terkirim.", "success");
+            await kirimAspirasi(nama || "Anonim", kelas || "-", isi, isPrivate);
+            showToast(isPrivate ? "Terkirim sebagai private (hanya OSIS bisa lihat)." : "Terima kasih! Aspirasimu sudah terkirim.", "success");
             document.getElementById("namaSiswa").value = "";
             document.getElementById("kelasSiswa").value = "";
             document.getElementById("isiAspirasi").value = "";
+            const cb = document.getElementById("isPrivateAspirasi"); if (cb) cb.checked = false;
+            Cache.del("aspirasi");
             Aspirasi.muatPesan();
         } catch (err) {
             console.error(err);
@@ -142,6 +165,7 @@ const Aspirasi = {
                 await hapusAspirasiSendiri(id);
             }
             showToast("Pesan berhasil dihapus", "success");
+            Cache.del("aspirasi");
             Aspirasi.muatPesan();
         } catch (err) {
             console.error(err);

@@ -42,24 +42,15 @@ const Visitor = {
         } catch { return ""; }
     },
 
-    // ============ STATISTIK ============
+    // ============ STATISTIK — SWR ============
     async muatStats() {
-        try {
-            const { data, error } = await supa
-                .from("visitor")
-                .select("device_id, jumlah, name, label, tipe, user_agent, resolusi, masuk, last_seen");
-            if (error) throw error;
-            const rows = data || [];
-
+        const apply = (rows) => {
             const total = rows.reduce((a, r) => a + (r.jumlah || 0), 0);
             const tglHariIni = Visitor.tanggalWib(Date.now());
-
             Visitor.rowsHari = rows
                 .filter(r => Visitor.tanggalWib(r.last_seen) === tglHariIni)
                 .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
-            Visitor.rowsSemua = [...rows]
-                .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
-
+            Visitor.rowsSemua = [...rows].sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
             const el = document.getElementById("headerVisitorCount");
             if (el) el.textContent = total.toLocaleString("id-ID");
             const t = document.getElementById("vstatTotal");
@@ -68,8 +59,30 @@ const Visitor = {
             if (h) h.textContent = Visitor.rowsHari.length.toLocaleString("id-ID");
             const u = document.getElementById("vstatUnik");
             if (u) u.textContent = rows.length.toLocaleString("id-ID");
-
             Visitor.renderList();
+        };
+
+        const cached = Cache.get("visitor");
+        if (cached) {
+            apply(cached);
+            supa.from("visitor").select("device_id, jumlah, name, label, tipe, user_agent, resolusi, masuk, last_seen").then(({ data, error }) => {
+                if (error || !data) return;
+                if (JSON.stringify(data) !== JSON.stringify(cached)) {
+                    Cache.set("visitor", data);
+                    apply(data);
+                }
+            });
+            return;
+        }
+
+        try {
+            const { data, error } = await supa
+                .from("visitor")
+                .select("device_id, jumlah, name, label, tipe, user_agent, resolusi, masuk, last_seen");
+            if (error) throw error;
+            const rows = data || [];
+            Cache.set("visitor", rows);
+            apply(rows);
         } catch (err) {
             console.error("Gagal muat statistik visitor:", err);
         }

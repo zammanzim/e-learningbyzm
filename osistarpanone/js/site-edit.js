@@ -53,8 +53,7 @@ const SiteEdit = {
     },
 
     async loadTexts() {
-        try {
-            const rows = await getSiteContent();
+        const apply = (rows) => {
             rows.forEach(r => {
                 const el = document.querySelector(`[data-edit-key="${r.kunci}"]`);
                 if (el) {
@@ -67,6 +66,22 @@ const SiteEdit = {
                 const a = document.querySelector(`[data-edit-href="${r.kunci}"]`);
                 if (a) a.setAttribute("href", r.nilai);
             });
+        };
+        const cached = Cache.get("site_content");
+        if (cached) {
+            apply(cached);
+            getSiteContent().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("site_content", fresh);
+                    apply(fresh);
+                }
+            }).catch(() => {});
+            return;
+        }
+        try {
+            const rows = await getSiteContent();
+            Cache.set("site_content", rows);
+            apply(rows);
         } catch (err) {
             console.warn("Gagal load site_content:", err.message);
         }
@@ -111,6 +126,12 @@ const SiteEdit = {
         if (!key) return;
         try {
             await saveSiteText(u.id, key, simpanVal);
+            // update cache biar instant next load
+            const cached = Cache.get("site_content") || [];
+            const idx = cached.findIndex(r => r.kunci === key);
+            if (idx >= 0) cached[idx].nilai = simpanVal;
+            else cached.push({ kunci: key, nilai: simpanVal });
+            Cache.set("site_content", cached);
             showToast("Tersimpan: " + key, "success");
         } catch (err) {
             console.error(err);
@@ -279,6 +300,16 @@ const SiteEdit = {
                 try {
                     if (urlKey) await saveSiteText(u.id, urlKey, newUrl);
                     if (handleKey) await saveSiteText(u.id, handleKey, newHandle);
+                    const cached2 = Cache.get("site_content") || [];
+                    if (urlKey) {
+                        const i = cached2.findIndex(r => r.kunci === urlKey);
+                        if (i >= 0) cached2[i].nilai = newUrl; else cached2.push({ kunci: urlKey, nilai: newUrl });
+                    }
+                    if (handleKey) {
+                        const j = cached2.findIndex(r => r.kunci === handleKey);
+                        if (j >= 0) cached2[j].nilai = newHandle; else cached2.push({ kunci: handleKey, nilai: newHandle });
+                    }
+                    Cache.set("site_content", cached2);
                     showToast("Kontak diperbarui!", "success");
                 } catch (err) {
                     console.error(err);
@@ -386,9 +417,14 @@ const SiteEdit = {
                 simpanPimpinan({ tahun: parseInt(tahun, 10), ketua_nama: ketuaNama, wakil_nama: wakilNama, ketua_foto: ketuaFoto, wakil_foto: wakilFoto, foto_angkatan: fotoAngkatan }).then(() => {
                     if (typeof Home !== "undefined") {
                         Home.cachePimpinan[key] = { ...(lama || {}), tahun: parseInt(tahun, 10), ketua_nama: ketuaNama, wakil_nama: wakilNama, ketua_foto: ketuaFoto, wakil_foto: wakilFoto, foto_angkatan: fotoAngkatan };
+                        Cache.set("pimpinan", Object.values(Home.cachePimpinan));
                         const cardImg = document.querySelector(`.year-card[onclick*="${tahun}"] img`);
                         if (cardImg && fotoAngkatan) cardImg.src = getFoto(fotoAngkatan);
                     }
+                    // hapus file lama yang keganti
+                    if (pending.ketua_foto && lama.ketua_foto && pending.ketua_foto !== lama.ketua_foto) { hapusFotoStorage(lama.ketua_foto).catch(()=>{}); }
+                    if (pending.wakil_foto && lama.wakil_foto && pending.wakil_foto !== lama.wakil_foto) { hapusFotoStorage(lama.wakil_foto).catch(()=>{}); }
+                    if (pending.foto_angkatan && lama.foto_angkatan && pending.foto_angkatan !== lama.foto_angkatan) { hapusFotoStorage(lama.foto_angkatan).catch(()=>{}); }
                 })
             );
         }
@@ -591,24 +627,38 @@ const SiteEdit = {
         const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
         try {
             if (target.type === "web_foto") {
+                const oldPath = FotoWeb.map[target.key];
                 const path = `web/${target.key}-${Date.now()}.${ext}`;
                 await uploadFotoStorage(file, path);
                 await simpanWebFoto(target.key, path);
+                // update cache web_foto
+                const wfCache = Cache.get("web_foto") || [];
+                const wi = wfCache.findIndex(r => r.kunci === target.key);
+                if (wi >= 0) wfCache[wi].path = path; else wfCache.push({ kunci: target.key, path });
+                Cache.set("web_foto", wfCache);
                 // update UI langsung
                 document.querySelectorAll(`[data-foto="${target.key}"]`).forEach(el => {
                     el.src = getFoto(path);
                 });
                 FotoWeb.map[target.key] = path;
+                if (oldPath && oldPath !== path) { try { await hapusFotoStorage(oldPath); } catch {} }
                 showToast("Foto diganti!", "success");
             } else if (target.type === "pimpinan") {
+                const oldPath = (typeof Home !== "undefined" && Home.cachePimpinan && Home.cachePimpinan[String(target.tahun)]) ? Home.cachePimpinan[String(target.tahun)].foto_angkatan : null;
                 const path = `angkatan/foto-${target.tahun}-${Date.now()}.${ext}`;
                 await uploadFotoStorage(file, path);
                 // simpan ke pimpinan (upsert)
                 await simpanPimpinan({ tahun: parseInt(target.tahun, 10), foto_angkatan: path });
+                if (typeof Home !== "undefined") {
+                    if (!Home.cachePimpinan[String(target.tahun)]) Home.cachePimpinan[String(target.tahun)] = { tahun: parseInt(target.tahun, 10) };
+                    Home.cachePimpinan[String(target.tahun)].foto_angkatan = path;
+                    Cache.set("pimpinan", Object.values(Home.cachePimpinan));
+                }
                 // update card preview
                 const card = document.querySelector(`.year-card[onclick*="${target.tahun}"]`);
                 const img = card && card.querySelector("img");
                 if (img) img.src = getFoto(path);
+                if (oldPath && oldPath !== path) { try { await hapusFotoStorage(oldPath); } catch {} }
                 showToast("Foto angkatan diganti!", "success");
             } else if (target.type === "pimpinan_modal") {
                 const tahun = target.tahun;
@@ -666,8 +716,10 @@ const HeaderMore = {
         SiteEdit.toggle(checked);
         HeaderMore.close();
     },
-    logout() {
+    async logout() {
         HeaderMore.close();
+        const yakin = await showPopup("Yakin mau logout?", "confirm");
+        if (!yakin) return;
         OsisAuth.logout();
         OsisAuth.renderHeader();
     },

@@ -36,6 +36,13 @@ const OsisAuth = {
         localStorage.removeItem(OsisAuth.KEY);
     },
 
+    async confirmLogout() {
+        const yakin = await showPopup("Yakin mau logout?", "confirm");
+        if (!yakin) return;
+        OsisAuth.logout();
+        OsisAuth.renderHeader();
+    },
+
     // Nama buat ditampilin: guest -> nickname, OSIS -> nama anggota
     displayName(user) {
         if (!user) return "";
@@ -64,14 +71,14 @@ const OsisAuth = {
                 ${ikon}
                 ${escapeHtml(OsisAuth.displayName(user))}
             </span>
-            <button class="icon-btn" title="Keluar" onclick="OsisAuth.logout(); OsisAuth.renderHeader();">
+            <button class="icon-btn" title="Keluar" onclick="OsisAuth.confirmLogout()">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>`;
     },
 
     // Simpan halaman sekarang biar login bisa balik ke sini (URL login tetap bersih)
     simpanBack() {
-        try { sessionStorage.setItem("osis_login_back", "index.html" + location.hash); }
+        try { sessionStorage.setItem("osis_login_back", "index" + location.hash); }
         catch (e) {}
     }
 };

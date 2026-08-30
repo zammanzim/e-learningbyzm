@@ -60,12 +60,14 @@ CREATE TABLE IF NOT EXISTS public.aspirasi (
     nama text NOT NULL DEFAULT 'Anonim',
     kelas text NOT NULL DEFAULT '-',
     isi text NOT NULL,
+    is_private boolean NOT NULL DEFAULT false,
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_aspirasi_created ON public.aspirasi (created_at DESC);
 
 ALTER TABLE public.aspirasi ADD COLUMN IF NOT EXISTS device_id text NOT NULL DEFAULT '';
+ALTER TABLE public.aspirasi ADD COLUMN IF NOT EXISTS is_private boolean NOT NULL DEFAULT false;
 
 ALTER TABLE public.aspirasi ENABLE ROW LEVEL SECURITY;
 
@@ -108,12 +110,13 @@ CREATE POLICY "visitor_public_select" ON public.visitor
 -- SECURITY DEFINER: jalan sebagai pemilik tabel, bypass RLS, jadi
 -- limit HARUS lewat function ini â€” ga bisa bypass dari client.
 
--- Kirim aspirasi: maks 3 per device per hari
+-- Kirim aspirasi: maks 3 per device per hari, support private
 CREATE OR REPLACE FUNCTION public.kirim_aspirasi_terbatas(
     p_device_id text,
     p_nama text,
     p_kelas text,
     p_isi text,
+    p_is_private boolean DEFAULT false,
     p_batas_harian integer DEFAULT 3
 ) RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER
@@ -129,10 +132,12 @@ BEGIN
     IF n >= p_batas_harian THEN
         RETURN 'ERR_LIMIT';
     END IF;
-    INSERT INTO public.aspirasi (device_id, nama, kelas, isi)
-    VALUES (p_device_id, p_nama, p_kelas, p_isi);
+    INSERT INTO public.aspirasi (device_id, nama, kelas, isi, is_private)
+    VALUES (p_device_id, p_nama, p_kelas, p_isi, COALESCE(p_is_private, false));
     RETURN 'OK';
 END $$;
+
+DROP FUNCTION IF EXISTS public.kirim_aspirasi_terbatas(text, text, text, text, integer);
 
 -- Kirim request lagu: maks 5 per device per hari
 CREATE OR REPLACE FUNCTION public.kirim_lagu_terbatas(
@@ -329,14 +334,14 @@ BEGIN
 END $$;
 
 -- ============ 5. GRANT FUNCTION (anon) ============
-REVOKE EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, boolean, integer) FROM public;
 REVOKE EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, text, integer) FROM public;
 REVOKE EXECUTE ON FUNCTION public.tambah_visitor_unik(text, text, text, text, text, text) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_aspirasi_own(text, bigint) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_lagu_own(text, bigint) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_aspirasi_osis(bigint, bigint) FROM public;
 REVOKE EXECUTE ON FUNCTION public.hapus_lagu_osis(bigint, bigint) FROM public;
-GRANT EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.kirim_aspirasi_terbatas(text, text, text, text, boolean, integer) TO anon;
 GRANT EXECUTE ON FUNCTION public.kirim_lagu_terbatas(text, text, text, text, text, integer) TO anon;
 GRANT EXECUTE ON FUNCTION public.tambah_visitor_unik(text, text, text, text, text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.hapus_aspirasi_own(text, bigint) TO anon;

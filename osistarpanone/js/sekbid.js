@@ -11,25 +11,37 @@ const Sekbid = {
         const container = document.getElementById("sekbidList");
         if (!container) return;
 
-        let data;
-        try {
-            data = await getSekbid();
-        } catch (err) {
-            console.error(err);
-            container.innerHTML = `<div class="loading-block">Gagal memuat data. Cek koneksi.</div>`;
+        const render = (data) => {
+            const jum = document.getElementById("jumSekbid");
+            if (jum && data) jum.textContent = data.length;
+            const listBPH = (data || []).filter(s => s.kategori === "BPH");
+            const listSekbid = (data || []).filter(s => s.kategori !== "BPH");
+            let html = "";
+            html += Sekbid.renderGrup("Badan Pengurus Harian", listBPH, "BPH");
+            html += Sekbid.renderGrup("Seksi Bidang", listSekbid, "SEKBID");
+            container.innerHTML = html;
+        };
+
+        const cached = Cache.get("sekbid");
+        if (cached) {
+            render(cached);
+            getSekbid().then(fresh => {
+                if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+                    Cache.set("sekbid", fresh);
+                    render(fresh);
+                }
+            }).catch(() => {});
             return;
         }
 
-        const jum = document.getElementById("jumSekbid");
-        if (jum && data) jum.textContent = data.length;
-
-        const listBPH = (data || []).filter(s => s.kategori === "BPH");
-        const listSekbid = (data || []).filter(s => s.kategori !== "BPH");
-
-        let html = "";
-        html += Sekbid.renderGrup("Badan Pengurus Harian", listBPH, "BPH");
-        html += Sekbid.renderGrup("Seksi Bidang", listSekbid, "SEKBID");
-        container.innerHTML = html;
+        try {
+            const data = await getSekbid();
+            Cache.set("sekbid", data);
+            render(data);
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = `<div class="loading-block">Gagal memuat data. Cek koneksi.</div>`;
+        }
     },
 
     renderGrup(judul, list, peran) {

@@ -84,29 +84,23 @@ const Home = {
         track.innerHTML += track.innerHTML;
     },
 
-    // ============ ARSIP ANGKATAN ============
+    // ============ ARSIP ANGKATAN — SWR (cache dulu biar instant) ============
     async muatArsip() {
         const grid = document.getElementById("yearGrid");
         if (!grid) return;
 
-        grid.innerHTML = `<div class="year-card" style="grid-column: 1 / -1; aspect-ratio: auto; cursor: default;">
-            <div class="year-loading"><div class="spinner"></div>Memuat jejak organisasi...</div>
-        </div>`;
-
-        try {
-            const [listPimpinan, listAnggota] = await Promise.all([getPimpinan(), getAnggota()]);
-
+        const render = (listPimpinan, listAnggota) => {
+            Home.cachePimpinan = {};
+            Home.cacheAnggota = {};
             listPimpinan.forEach(p => { Home.cachePimpinan[String(p.tahun)] = p; });
             listAnggota.forEach(a => {
                 const k = String(a.tahun);
                 if (!Home.cacheAnggota[k]) Home.cacheAnggota[k] = [];
                 Home.cacheAnggota[k].push(a);
             });
-
             const totalTahun = Object.keys(Home.cachePimpinan).length;
             const chipTahun = document.getElementById("chipTahun");
             if (chipTahun && totalTahun) chipTahun.textContent = `${Math.min(...Object.keys(Home.cachePimpinan))}–${Math.max(...Object.keys(Home.cachePimpinan))}`;
-
             let html = "";
             for (let thn = 2010; thn <= 2027; thn++) {
                 const p = Home.cachePimpinan[String(thn)];
@@ -122,6 +116,34 @@ const Home = {
                     </div>`;
             }
             grid.innerHTML = html;
+            if (document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.injectPhotoButtons) {
+                SiteEdit.injectPhotoButtons();
+            }
+        };
+
+        const cachedP = Cache.get("pimpinan");
+        const cachedA = Cache.get("anggota");
+        if (cachedP && cachedA) {
+            render(cachedP, cachedA);
+            Promise.all([getPimpinan(), getAnggota()]).then(([freshP, freshA]) => {
+                if (JSON.stringify(freshP) !== JSON.stringify(cachedP) || JSON.stringify(freshA) !== JSON.stringify(cachedA)) {
+                    Cache.set("pimpinan", freshP);
+                    Cache.set("anggota", freshA);
+                    render(freshP, freshA);
+                }
+            }).catch(() => {});
+            return;
+        }
+
+        grid.innerHTML = `<div class="year-card" style="grid-column: 1 / -1; aspect-ratio: auto; cursor: default;">
+            <div class="year-loading"><div class="spinner"></div>Memuat jejak organisasi...</div>
+        </div>`;
+
+        try {
+            const [freshP, freshA] = await Promise.all([getPimpinan(), getAnggota()]);
+            Cache.set("pimpinan", freshP);
+            Cache.set("anggota", freshA);
+            render(freshP, freshA);
         } catch (err) {
             console.error("Gagal muat arsip:", err);
             grid.innerHTML = `<div class="year-card" style="grid-column: 1 / -1; aspect-ratio: auto; cursor: default;">

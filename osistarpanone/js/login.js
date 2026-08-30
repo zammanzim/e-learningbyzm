@@ -45,7 +45,7 @@ const Login = {
         Login.bersihError();
         if (!nickname) return Login.tampilError("Nama panggilan diisi dulu yaa.");
 
-        // Nama kecatet ke tabel visitor pas index.html kebuka lagi (catatVisitor)
+        // Nama kecatet ke tabel visitor pas index kebuka lagi (catatVisitor)
         OsisAuth.loginGuest(nickname);
         location.replace(Login.back);
     },

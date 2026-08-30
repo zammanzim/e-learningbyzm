@@ -360,6 +360,9 @@
                         <label>Isi Aspirasi</label>
                         <textarea id="isiAspirasi" placeholder="Tulis kritik, saran, atau ide kreatifmu di sini secara jelas & detail..."></textarea>
                     </div>
+                    <div class="field">
+                        <label class="aspirasi-private" style="display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:700;cursor:pointer;"><input type="checkbox" id="isPrivateAspirasi" style="width:16px;height:16px;accent-color:var(--red)"> <i class="fa-solid fa-lock" style="color:var(--red)"></i> Private — hanya OSIS yang bisa lihat</label>
+                    </div>
 
                     <div class="form-actions-row">
                         <button class="btn btn-red" id="btnKirimAspirasi" onclick="Aspirasi.kirim()">
