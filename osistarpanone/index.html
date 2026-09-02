@@ -186,26 +186,10 @@
                         <div class="sec-tag" style="color: var(--yellow);">Pencapaian</div>
                         <h2 class="sec-title">Prestasi <span class="red">OSIS</span></h2>
                     </div>
+                    <button class="btn btn-red" id="btnTambahPrestasi" onclick="Prestasi.bukaForm()" style="display:none"><i class="fa-solid fa-plus"></i> Tambah</button>
                 </div>
 
-                <div class="prestasi-grid">
-                    <div class="prestasi-card">
-                        <img data-foto="prestasi3" alt="Prestasi">
-                        <span class="prestasi-tag" data-edit-key="prestasi_3_tag">Kemah Tangkas 1.0</span>
-                    </div>
-                    <div class="prestasi-card">
-                        <img data-foto="prestasi2" alt="Prestasi">
-                        <span class="prestasi-tag" data-edit-key="prestasi_2_tag">Jambore OSIS</span>
-                    </div>
-                    <div class="prestasi-card">
-                        <img data-foto="prestasi1" alt="Prestasi">
-                        <span class="prestasi-tag" data-edit-key="prestasi_1_tag">Paskibra</span>
-                    </div>
-                    <div class="prestasi-card">
-                        <img data-foto="prestasi4" alt="Prestasi">
-                        <span class="prestasi-tag" data-edit-key="prestasi_4_tag">Teater</span>
-                    </div>
-                </div>
+                <div class="prestasi-grid" id="prestasiGrid"><div class="loading-block"><div class="spinner"></div>Memuat prestasi...</div></div>
 
                 <div class="prestasi-banner">
                     <span class="medal"><i class="fa-solid fa-trophy"></i></span>
@@ -224,50 +208,10 @@
                     <div class="sec-tag">Kilas Balik</div>
                     <h2 class="sec-title">Dokumentasi <span class="red">Kegiatan</span></h2>
                 </div>
+                <button class="btn btn-red" id="btnTambahKegiatan" onclick="Kegiatan.buatDraft()" style="display:none"><i class="fa-solid fa-plus"></i> Tambah</button>
             </div>
 
-            <div class="bento-stack" id="bentoScroll">
-
-                <div class="bento-block">
-                    <div class="bento-meta">
-                        <h4 data-edit-key="kegiatan_1_title">Makrab OSIS 2026</h4>
-                        <p data-edit-key="kegiatan_1_desc">Meningkatkan rasa kekeluargaan antar pengurus</p>
-                    </div>
-                    <div class="bento-grid">
-                        <div class="item"><img data-foto="makrab1" alt="Makrab"><span class="bento-badge">MAKRAB</span></div>
-                        <div class="item"><img data-foto="makrab2" alt="Makrab"></div>
-                        <div class="item"><img data-foto="makrab3" alt="Makrab"></div>
-                        <div class="item"><img data-foto="makrab4" alt="Makrab"></div>
-                    </div>
-                </div>
-
-                <div class="bento-block">
-                    <div class="bento-meta">
-                        <h4 data-edit-key="kegiatan_2_title">Takjilin OSIS 2026</h4>
-                        <p data-edit-key="kegiatan_2_desc">Membangun jiwa kewirausahaan & berbagi</p>
-                    </div>
-                    <div class="bento-grid">
-                        <div class="item"><img data-foto="takjilin1" alt="Takjilin"><span class="bento-badge">TAKJILIN</span></div>
-                        <div class="item"><img data-foto="takjilin2" alt="Takjilin"></div>
-                        <div class="item"><img data-foto="takjilin3" alt="Takjilin"></div>
-                        <div class="item"><img data-foto="takjilin4" alt="Takjilin"></div>
-                    </div>
-                </div>
-
-                <div class="bento-block">
-                    <div class="bento-meta">
-                        <h4 data-edit-key="kegiatan_3_title">Pentas Seni Antar Kelas</h4>
-                        <p data-edit-key="kegiatan_3_desc">Ajang ekspresi bakat dan kreativitas siswa</p>
-                    </div>
-                    <div class="bento-grid">
-                        <div class="item"><img data-foto="pesak1" alt="Pesak"><span class="bento-badge">PESAK</span></div>
-                        <div class="item"><img data-foto="pesak2" alt="Pesak"></div>
-                        <div class="item"><img data-foto="pesak3" alt="Pesak"></div>
-                        <div class="item"><img data-foto="pesak4" alt="Pesak"></div>
-                    </div>
-                </div>
-
-            </div>
+            <div class="bento-stack" id="kegiatanGrid"><div class="loading-block"><div class="spinner"></div>Memuat kegiatan...</div></div>
         </section>
 
     </section>
@@ -526,6 +470,8 @@
     <script src="js/show-popup.js" defer></script>
     <script src="js/visitor.js" defer></script>
     <script src="js/home.js" defer></script>
+    <script src="js/prestasi.js" defer></script>
+    <script src="js/kegiatan.js" defer></script>
     <script src="js/sekbid.js" defer></script>
     <script src="js/aspirasi.js" defer></script>
     <script src="js/lagu.js" defer></script>

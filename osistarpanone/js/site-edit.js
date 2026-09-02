@@ -110,6 +110,10 @@ const SiteEdit = {
             SiteEdit.removePhotoButtons();
         }
         HeaderMore.refresh();
+        if (typeof Prestasi !== "undefined" && Prestasi.render) Prestasi.render();
+        if (typeof Kegiatan !== "undefined" && Kegiatan.render) Kegiatan.render();
+        if (typeof Prestasi !== "undefined" && Prestasi.cekLogin) Prestasi.cekLogin();
+        if (typeof Kegiatan !== "undefined" && Kegiatan.cekLogin) Kegiatan.cekLogin();
     },
 
     // Save pas selesai ngetik (blur)
@@ -181,85 +185,7 @@ const SiteEdit = {
             card.appendChild(btn);
         });
 
-        // prestasi: tombol tambah/hapus card
-        const presGrid = document.querySelector(".prestasi-grid");
-        if (presGrid && !presGrid.querySelector(".edit-add-btn")) {
-            const add = document.createElement("button");
-            add.className = "edit-add-btn";
-            add.textContent = "+ Tambah prestasi";
-            add.onclick = () => SiteEdit.tambahPrestasi();
-            presGrid.appendChild(add);
-        }
-        document.querySelectorAll(".prestasi-card").forEach(card => {
-            if (card.querySelector(".edit-del-btn")) return;
-            const del = document.createElement("button");
-            del.className = "edit-del-btn";
-            del.title = "Hapus";
-            del.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            del.onclick = (ev) => {
-                ev.stopPropagation();
-                card.remove();
-                showToast("Prestasi dihapus (preview). Simpen via admin buat permanen.", "info");
-            };
-            card.style.position = "relative";
-            card.appendChild(del);
-        });
-
-        // kegiatan home: tambah blok + hapus blok + tambah foto per blok
-        const bentoScroll = document.getElementById("bentoScroll");
-        if (bentoScroll && !bentoScroll.querySelector(".edit-add-btn.kegiatan-add")) {
-            const addK = document.createElement("button");
-            addK.className = "edit-add-btn kegiatan-add";
-            addK.textContent = "+ Tambah kegiatan";
-            addK.onclick = () => SiteEdit.tambahKegiatan();
-            bentoScroll.appendChild(addK);
-        }
-        document.querySelectorAll("#bentoScroll .bento-block").forEach(block => {
-            if (block.querySelector(".edit-del-btn.kegiatan-del")) return;
-            const meta = block.querySelector(".bento-meta");
-            if (!meta) return;
-            meta.style.position = "relative";
-            meta.style.paddingRight = "44px";
-            const del = document.createElement("button");
-            del.className = "edit-del-btn kegiatan-del";
-            del.title = "Hapus kegiatan";
-            del.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            del.onclick = (ev) => {
-                ev.stopPropagation();
-                block.remove();
-                showToast("Kegiatan dihapus (preview)", "info");
-            };
-            meta.appendChild(del);
-
-            const grid = block.querySelector(".bento-grid");
-            if (grid && !grid.querySelector(".up-slot-kegiatan")) {
-                const slot = document.createElement("div");
-                slot.className = "item up-slot-kegiatan";
-                slot.title = "Tambah foto";
-                slot.innerHTML = '<i class="fa-solid fa-plus"></i>';
-                slot.style.display = "flex";
-                slot.style.alignItems = "center";
-                slot.style.justifyContent = "center";
-                slot.style.background = "var(--white)";
-                slot.style.cursor = "pointer";
-                slot.onclick = (ev) => {
-                    ev.stopPropagation();
-                    const newKey = "kegiatan_add_" + Date.now();
-                    const newItem = document.createElement("div");
-                    newItem.className = "item";
-                    newItem.style.position = "relative";
-                    const img = document.createElement("img");
-                    img.dataset.foto = newKey;
-                    img.alt = "Kegiatan";
-                    newItem.appendChild(img);
-                    grid.insertBefore(newItem, slot);
-                    SiteEdit.fileTarget = { type: "web_foto", key: newKey };
-                    document.getElementById("siteEditFileInput").click();
-                    setTimeout(() => SiteEdit.injectPhotoButtons(), 200);
-                };
-                grid.appendChild(slot);
-            }
-        });
+        // prestasi & kegiatan sekarang DB-driven (prestasi.js/kegiatan.js handle sendiri)
 
         // kontak social: edit href + handle
         document.querySelectorAll(".social-card").forEach(card => {
@@ -320,31 +246,6 @@ const SiteEdit = {
         });
     },
 
-    tambahKegiatan() {
-        const stack = document.getElementById("bentoScroll");
-        if (!stack) return;
-        const id = Date.now();
-        const block = document.createElement("div");
-        block.className = "bento-block";
-        block.innerHTML = `
-            <div class="bento-meta" style="position:relative; padding-right:44px;">
-                <h4 data-edit-key="kegiatan_new_${id}_title" contenteditable="true">Kegiatan Baru</h4>
-                <p data-edit-key="kegiatan_new_${id}_desc" contenteditable="true">Deskripsi kegiatan...</p>
-                <button class="edit-del-btn kegiatan-del" title="Hapus" style="display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-trash-can"></i></button>
-            </div>
-            <div class="bento-grid">
-                <div class="item" style="position:relative"><img data-foto="kegiatan_new_${id}_1" alt="Kegiatan"></div>
-            </div>
-        `;
-        const addBtn = stack.querySelector(".edit-add-btn.kegiatan-add");
-        if (addBtn) stack.insertBefore(block, addBtn);
-        else stack.appendChild(block);
-        if (SiteEdit.active) {
-            block.querySelectorAll("[data-edit-key]").forEach(el => { el.contentEditable = "true"; el.spellcheck = false; });
-            SiteEdit.injectPhotoButtons();
-        }
-        block.querySelector("[data-edit-key]")?.focus();
-    },
 
     injectModalFotoButtons(modal, tahun) {
         // foto pimpinan & angkatan di dalam popup — overlay kamera kecil
@@ -458,21 +359,6 @@ const SiteEdit = {
         document.querySelectorAll(".photo-edit-btn, .edit-del-btn, .edit-add-btn, .up-slot-kegiatan").forEach(b => b.remove());
     },
 
-    tambahPrestasi() {
-        const grid = document.querySelector(".prestasi-grid");
-        if (!grid) return;
-        const card = document.createElement("div");
-        card.className = "prestasi-card";
-        card.innerHTML = `
-            <img data-foto="prestasi_new_${Date.now()}" alt="Prestasi">
-            <span class="prestasi-tag" data-edit-key="prestasi_new_${Date.now()}_tag" contenteditable="true">Prestasi Baru</span>
-        `;
-        card.style.position = "relative";
-        // inject buttons after append
-        grid.insertBefore(card, grid.querySelector(".edit-add-btn"));
-        SiteEdit.injectPhotoButtons();
-        card.querySelector("[data-edit-key]")?.focus();
-    },
 
     async savePimpinan(tahun) {
         const u = OsisAuth.getUser && OsisAuth.getUser();

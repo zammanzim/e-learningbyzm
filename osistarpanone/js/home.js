@@ -6,6 +6,7 @@ const Home = {
     cachePimpinan: {},
     cacheAnggota: {},
     tahunAktif: null,
+    fotoPopup: null,
     terinisialisasi: false,
 
     async init() {
@@ -13,7 +14,11 @@ const Home = {
         Home.terinisialisasi = true;
         Home.renderTicker();
         document.addEventListener("keydown", (e) => {
+            const active = document.activeElement;
+            if (active && (active.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName))) return;
             if (e.key === "Escape") Home.tutupModal();
+            if (e.key === "ArrowLeft") Home.geserModalAktif(-1);
+            if (e.key === "ArrowRight") Home.geserModalAktif(1);
         });
         window.addEventListener("popstate", () => {
             if (Home.selfBack) {
@@ -22,33 +27,13 @@ const Home = {
             }
             if (document.querySelector(".struktur-modal")) Home.tutupModal(true);
         });
-        const gridPrestasi = document.querySelector(".prestasi-grid");
-        if (gridPrestasi) {
-            gridPrestasi.addEventListener("click", (e) => {
-                if (e.target.closest("[data-edit-key]")) return;
-                if (document.body.classList.contains("edit-mode")) return;
-                const card = e.target.closest(".prestasi-card");
-                if (!card) return;
-                const img = card.querySelector("img");
-                const tag = card.querySelector(".prestasi-tag");
-                Home.bukaFotoPopup(img, tag ? tag.textContent : "Prestasi OSIS");
-            });
-        }
-        const stackBento = document.getElementById("bentoScroll");
-        if (stackBento) {
-            stackBento.addEventListener("click", (e) => {
-                const item = e.target.closest(".item");
-                if (!item) return;
-                const block = item.closest(".bento-block");
-                const judul = block ? block.querySelector(".bento-meta h4") : null;
-                Home.bukaFotoPopup(item.querySelector("img"), judul ? judul.textContent : "Kegiatan");
-            });
-        }
+        // Prestasi & kegiatan sekarang DB-driven (prestasi.js/kegiatan.js handle popup sendiri)
+        // Tidak perlu listener hardcode di sini.
         await Home.muatArsip();
     },
 
     // ============ POPUP FOTO ============
-    bukaFotoPopup(img, judul) {
+    bukaFotoPopup(img, judul, caption, opsi = {}) {
         Home.tutupModal();
         Home.statePushed = false;
         try {
@@ -56,24 +41,82 @@ const Home = {
             Home.statePushed = true;
         } catch (e) {}
 
-        const src = (img && img.src) ? img.src : getFoto(FOTO_DEFAULT[(img && img.dataset.foto) || ""] || "");
+        const gallery = Array.isArray(opsi.gallery) ? opsi.gallery : null;
+        const startIndex = gallery ? Math.max(0, Math.min(opsi.index || 0, gallery.length - 1)) : 0;
+        const current = gallery ? gallery[startIndex] : null;
+        Home.fotoPopup = gallery ? { gallery, index: startIndex, onChange: opsi.onChange || null } : null;
+
+        const src = current ? current.src : ((img && img.src) ? img.src : getFoto(FOTO_DEFAULT[(img && img.dataset.foto) || ""] || ""));
+        const finalJudul = current ? (current.judul || judul || "") : (judul || "");
+        const finalCaption = current ? (current.caption || "") : (caption || "");
+        const canEditCaption = document.body.classList.contains("edit-mode") && (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+        const captionPill = `<span class="foto-caption-pill" ${canEditCaption ? 'contenteditable="true" spellcheck="false"' : ''}>${escapeHtml(finalCaption || "")}</span>`;
+        const captionHtml = finalCaption || canEditCaption ? `<div class="foto-caption">${captionPill}</div>` : "";
+        const navHtml = gallery && gallery.length > 1 ? `
+                    <button class="foto-nav foto-nav-prev" type="button" onclick="Home.geserFotoPopup(-1)" title="Foto sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="foto-nav foto-nav-next" type="button" onclick="Home.geserFotoPopup(1)" title="Foto berikutnya"><i class="fa-solid fa-chevron-right"></i></button>` : "";
         const modal = document.createElement("div");
         modal.className = "struktur-modal";
         modal.innerHTML = `
             <div class="struktur-modal-bg"></div>
             <div class="struktur-modal-box foto-only">
                 <div class="struktur-head">
-                    <h4>${escapeHtml(judul)}</h4>
+                    <h4>${escapeHtml(finalJudul)}</h4>
                     <button class="struktur-close" type="button">&times;</button>
                 </div>
                 <div class="foto-pop">
-                    <img src="${src}" alt="${escapeHtml(judul)}">
+                    ${navHtml}
+                    <img src="${src}" alt="${escapeHtml(finalJudul)}">
                 </div>
+                ${captionHtml}
             </div>`;
         modal.querySelector(".struktur-modal-bg").addEventListener("click", () => Home.tutupModal());
         modal.querySelector(".struktur-close").addEventListener("click", () => Home.tutupModal());
         document.body.appendChild(modal);
         document.body.style.overflow = "hidden";
+        if (Home.fotoPopup && typeof Home.fotoPopup.onChange === "function") {
+            Home.fotoPopup.onChange(Home.fotoPopup.index, modal);
+        }
+    },
+
+    geserFotoPopup(arah) {
+        if (!Home.fotoPopup || !Array.isArray(Home.fotoPopup.gallery) || Home.fotoPopup.gallery.length < 2) return;
+        if (!window.matchMedia("(min-width: 1024px)").matches) return;
+        const modal = document.querySelector(".struktur-modal");
+        if (!modal || !modal.querySelector(".foto-pop")) return;
+        const total = Home.fotoPopup.gallery.length;
+        Home.fotoPopup.index = (Home.fotoPopup.index + arah + total) % total;
+        const item = Home.fotoPopup.gallery[Home.fotoPopup.index];
+        const title = modal.querySelector(".struktur-head h4");
+        const img = modal.querySelector(".foto-pop img");
+        let captionEl = modal.querySelector(".foto-caption");
+        const canEditCaption = document.body.classList.contains("edit-mode") && (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+
+        if (title) title.textContent = item.judul || "";
+        if (img) {
+            img.src = item.src || "";
+            img.alt = item.judul || "";
+        }
+        if ((item.caption || canEditCaption) && !captionEl) {
+            captionEl = document.createElement("div");
+            captionEl.className = "foto-caption";
+            captionEl.innerHTML = `<span class="foto-caption-pill" ${canEditCaption ? 'contenteditable="true" spellcheck="false"' : ''}></span>`;
+            const pop = modal.querySelector(".foto-pop");
+            if (pop && pop.parentNode) pop.parentNode.appendChild(captionEl);
+        }
+        const pill = captionEl ? captionEl.querySelector(".foto-caption-pill") : null;
+        if (pill) {
+            pill.contentEditable = canEditCaption ? "true" : "false";
+            pill.spellcheck = false;
+            pill.textContent = item.caption || "";
+            if (!item.caption && !canEditCaption && captionEl) captionEl.remove();
+        } else if (captionEl) {
+            captionEl.textContent = item.caption || "";
+            if (!item.caption && !canEditCaption) captionEl.remove();
+        }
+        if (typeof Home.fotoPopup.onChange === "function") {
+            Home.fotoPopup.onChange(Home.fotoPopup.index, modal);
+        }
     },
 
     // ============ TICKER ============
@@ -176,6 +219,7 @@ const Home = {
             }, 200);
         }
         Home.tahunAktif = null;
+        Home.fotoPopup = null;
         document.body.style.overflow = "";
         const perluBack = !dariBack && Home.statePushed;
         Home.statePushed = false;
@@ -186,12 +230,14 @@ const Home = {
         }
     },
 
-    bukaModal(tahun) {
-        Home.statePushed = false;
-        try {
-            history.pushState({ struktur: tahun }, "");
-            Home.statePushed = true;
-        } catch (e) {}
+    bukaModal(tahun, tanpaHistory = false, tanpaAnimasi = false) {
+        if (!tanpaHistory) {
+            Home.statePushed = false;
+            try {
+                history.pushState({ struktur: tahun }, "");
+                Home.statePushed = true;
+            } catch (e) {}
+        }
         const pimpinan = Home.cachePimpinan[String(tahun)] || null;
         const anggota = Home.cacheAnggota[String(tahun)] || [];
         const foto = (pimpinan && pimpinan.foto_angkatan) ? pimpinan.foto_angkatan : `angkatan/foto-${tahun}.jpg`;
@@ -225,7 +271,7 @@ const Home = {
         }
 
         const modal = document.createElement("div");
-        modal.className = "struktur-modal";
+        modal.className = tanpaAnimasi ? "struktur-modal no-anim" : "struktur-modal";
         // simpan tahun di dataset modal biar auto-save tau konteksnya
         modal.dataset.tahun = String(tahun);
         modal.innerHTML = `
@@ -236,8 +282,11 @@ const Home = {
                     <button class="struktur-close" type="button">&times;</button>
                 </div>
                 <div class="struktur-modal-body">
+                    <button class="foto-nav foto-nav-prev struktur-nav" type="button" onclick="Home.geserStruktur(-1)" title="Angkatan sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="foto-nav foto-nav-next struktur-nav" type="button" onclick="Home.geserStruktur(1)" title="Angkatan berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
                     <div class="struktur-foto">
                         <img src="${getFoto(foto)}" alt="Angkatan ${tahun}" loading="lazy"
+                             onclick="Home.bukaFotoAngkatan(${tahun}, 'angkatan')"
                              onerror="this.remove();">
                     </div>
 
@@ -245,6 +294,7 @@ const Home = {
                         <div class="pimp-card">
                             <div class="pimp-photo">
                                 <img src="${getFoto(pimpinan ? pimpinan.ketua_foto : "")}" alt="Ketua OSIS"
+                                     onclick="Home.bukaFotoAngkatan(${tahun}, 'ketua')"
                                      onerror="this.remove();">
                             </div>
                             <div class="pimp-info">
@@ -255,6 +305,7 @@ const Home = {
                         <div class="pimp-card">
                             <div class="pimp-photo">
                                 <img src="${getFoto(pimpinan ? pimpinan.wakil_foto : "")}" alt="Wakil Ketua"
+                                     onclick="Home.bukaFotoAngkatan(${tahun}, 'wakil')"
                                      onerror="this.remove();">
                             </div>
                             <div class="pimp-info">
@@ -280,6 +331,52 @@ const Home = {
             SiteEdit.injectModalFotoButtons(modal, tahun);
         }
         document.body.style.overflow = "hidden";
+    },
+
+    getGaleriAngkatan(tahun) {
+        const pimpinan = Home.cachePimpinan[String(tahun)] || null;
+        const fotoAngkatan = (pimpinan && pimpinan.foto_angkatan) ? pimpinan.foto_angkatan : `angkatan/foto-${tahun}.jpg`;
+        return [
+            { key: "angkatan", src: getFoto(fotoAngkatan), judul: `Angkatan ${tahun}`, caption: labelTahun(tahun) },
+            { key: "ketua", src: getFoto(pimpinan ? pimpinan.ketua_foto : ""), judul: "Ketua OSIS", caption: pimpinan && pimpinan.ketua_nama ? pimpinan.ketua_nama : "" },
+            { key: "wakil", src: getFoto(pimpinan ? pimpinan.wakil_foto : ""), judul: "Wakil Ketua", caption: pimpinan && pimpinan.wakil_nama ? pimpinan.wakil_nama : "" }
+        ].filter(item => item.src);
+    },
+
+    bukaFotoAngkatan(tahun, key) {
+        const gallery = Home.getGaleriAngkatan(tahun);
+        if (gallery.length === 0) return;
+        const index = Math.max(0, gallery.findIndex(item => item.key === key));
+        Home.bukaFotoPopup(null, gallery[index].judul, gallery[index].caption, { gallery, index });
+    },
+
+    geserModalAktif(arah) {
+        const modal = document.querySelector(".struktur-modal");
+        if (!modal) return;
+        if (Home.fotoPopup) {
+            Home.geserFotoPopup(arah);
+            return;
+        }
+        if (modal.dataset.tahun) Home.geserStruktur(arah);
+    },
+
+    geserStruktur(arah) {
+        if (!window.matchMedia("(min-width: 1024px)").matches) return;
+        const modal = document.querySelector(".struktur-modal[data-tahun]");
+        if (!modal) return;
+        const tahun = parseInt(modal.dataset.tahun, 10);
+        if (!tahun || isNaN(tahun)) return;
+        const tahunList = [];
+        for (let thn = 2010; thn <= 2027; thn++) tahunList.push(thn);
+        const idx = tahunList.indexOf(tahun);
+        if (idx < 0) return;
+        const next = tahunList[(idx + arah + tahunList.length) % tahunList.length];
+        if (document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.savePopup) {
+            SiteEdit.savePopup(tahun, modal);
+        }
+        modal.remove();
+        Home.tahunAktif = next;
+        Home.bukaModal(next, true, true);
     }
 };
 

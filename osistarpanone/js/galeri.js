@@ -23,6 +23,30 @@ const Galeri = {
                 document.getElementById("galFileInput").click();
             }
         });
+        if (grid) {
+            ["dragenter", "dragover"].forEach(ev => {
+                grid.addEventListener(ev, (e) => {
+                    const slot = e.target.closest(".up-slot");
+                    if (!slot) return;
+                    e.preventDefault();
+                    slot.classList.add("dragover");
+                });
+            });
+            ["dragleave", "drop"].forEach(ev => {
+                grid.addEventListener(ev, (e) => {
+                    const slot = e.target.closest(".up-slot");
+                    if (!slot) return;
+                    e.preventDefault();
+                    slot.classList.remove("dragover");
+                });
+            });
+            grid.addEventListener("drop", (e) => {
+                const slot = e.target.closest(".up-slot");
+                if (!slot) return;
+                const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                Galeri.tambahFileDraft(file);
+            });
+        }
         const fileInput = document.getElementById("galFileInput");
         if (fileInput) fileInput.addEventListener("change", () => Galeri.tambahFotoDraft(fileInput));
 
@@ -64,10 +88,18 @@ const Galeri = {
     // Tambah foto ke draft — cuma preview lokal, belum upload
     tambahFotoDraft(input) {
         if (!Galeri.draft) return;
-        Galeri.bacaTeksDraft();
         const file = input.files && input.files[0];
         input.value = "";
-        if (!file || !file.type.startsWith("image/")) return;
+        Galeri.tambahFileDraft(file);
+    },
+
+    tambahFileDraft(file) {
+        if (!Galeri.draft) return;
+        Galeri.bacaTeksDraft();
+        if (!file || !file.type.startsWith("image/")) {
+            if (file) showToast("File harus gambar", "error");
+            return;
+        }
         if (!Galeri.draft.files) Galeri.draft.files = [];
         Galeri.draft.files.push(file);
         Galeri.render();
@@ -215,7 +247,7 @@ const Galeri = {
         let fotoHtml = "";
         fotos.forEach(path => {
             fotoHtml += `
-                <div class="item" onclick="Home.bukaFotoPopup(this.querySelector('img'), ${JSON.stringify(item.judul).replace(/"/g, "&quot;")})">
+                <div class="item" onclick="Home.bukaFotoPopup(this.querySelector('img'), ${JSON.stringify(item.judul).replace(/"/g, "&quot;")}, ${JSON.stringify(item.deskripsi || "").replace(/"/g, "&quot;")})">
                     <img src="${getFoto(path)}" alt="${judul}" loading="lazy">
                 </div>`;
         });

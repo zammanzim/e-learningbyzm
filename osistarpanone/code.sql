@@ -17,6 +17,7 @@
 -- 7. Storage policy       (folder gallery/ di bucket osis-foto)
 -- 8. Site content         (teks editable hero/visi/misi/pembina/dll)
 -- 9. Web foto + storage   (web/ & angkatan/ buat foto editable)
+-- 10. Prestasi & Kegiatan home (DB-driven, fotos jsonb, display_order)
 --
 -- NOTE VISITOR:
 -- - device_id = id perangkat MURNI (ga pernah berubah jadi key akun).
@@ -620,6 +621,144 @@ CREATE POLICY "osis_foto_angkatan_insert" ON storage.objects
 DROP POLICY IF EXISTS "osis_foto_angkatan_delete" ON storage.objects;
 CREATE POLICY "osis_foto_angkatan_delete" ON storage.objects
     FOR DELETE TO anon USING (bucket_id = 'osis-foto' AND (storage.foldername(name))[1] = 'angkatan');
+
+-- ============ 10. PRESTASI & KEGIATAN HOME (DB-driven) ============
+-- HTML cuma container kosong, data dari DB. Fotos = jsonb array [{path,caption}] biar n foto fleksibel.
+CREATE TABLE IF NOT EXISTS public.prestasi (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tag text NOT NULL,
+    caption text NOT NULL DEFAULT '',
+    fotos jsonb NOT NULL DEFAULT '[]'::jsonb,
+    display_order integer NOT NULL DEFAULT 99,
+    created_by bigint,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_prestasi_order ON public.prestasi (display_order, created_at);
+ALTER TABLE public.prestasi ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "prestasi_public_select" ON public.prestasi;
+CREATE POLICY "prestasi_public_select" ON public.prestasi FOR SELECT USING (true);
+DROP POLICY IF EXISTS "prestasi_public_insert" ON public.prestasi;
+
+CREATE TABLE IF NOT EXISTS public.kegiatan (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    judul text NOT NULL,
+    deskripsi text NOT NULL DEFAULT '',
+    badge text NOT NULL DEFAULT '',
+    fotos jsonb NOT NULL DEFAULT '[]'::jsonb,
+    display_order integer NOT NULL DEFAULT 99,
+    created_by bigint,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_kegiatan_order ON public.kegiatan (display_order, created_at);
+ALTER TABLE public.kegiatan ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "kegiatan_public_select" ON public.kegiatan;
+CREATE POLICY "kegiatan_public_select" ON public.kegiatan FOR SELECT USING (true);
+DROP POLICY IF EXISTS "kegiatan_public_insert" ON public.kegiatan;
+
+-- RPCs — SECURITY DEFINER, cek osis_users
+CREATE OR REPLACE FUNCTION public.buat_prestasi(p_user_id bigint, p_tag text, p_caption text, p_fotos jsonb, p_display_order integer DEFAULT 99)
+RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE nid bigint;
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN -1; END IF;
+    p_tag := left(COALESCE(NULLIF(btrim(p_tag),''), 'Tanpa Tag'), 40);
+    p_caption := left(COALESCE(p_caption,''), 200);
+    IF p_fotos IS NULL OR jsonb_typeof(p_fotos) <> 'array' THEN p_fotos := '[]'::jsonb; END IF;
+    INSERT INTO public.prestasi (tag, caption, fotos, display_order, created_by)
+    VALUES (p_tag, p_caption, p_fotos, COALESCE(p_display_order,99), p_user_id) RETURNING id INTO nid;
+    RETURN nid;
+END $$;
+CREATE OR REPLACE FUNCTION public.update_prestasi(p_user_id bigint, p_id bigint, p_tag text, p_caption text, p_fotos jsonb, p_display_order integer)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN 'ERR_NO_AUTH'; END IF;
+    UPDATE public.prestasi SET tag=left(COALESCE(NULLIF(btrim(p_tag),tag),tag),40), caption=left(COALESCE(p_caption,caption),200), fotos=COALESCE(p_fotos,fotos), display_order=COALESCE(p_display_order,display_order) WHERE id=p_id;
+    IF FOUND THEN RETURN 'OK'; END IF; RETURN 'ERR_NOT_FOUND';
+END $$;
+CREATE OR REPLACE FUNCTION public.hapus_prestasi(p_user_id bigint, p_id bigint)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN 'ERR_NO_AUTH'; END IF;
+    DELETE FROM public.prestasi WHERE id=p_id;
+    IF FOUND THEN RETURN 'OK'; END IF; RETURN 'ERR_NOT_FOUND';
+END $$;
+
+CREATE OR REPLACE FUNCTION public.buat_kegiatan(p_user_id bigint, p_judul text, p_deskripsi text, p_badge text, p_fotos jsonb, p_display_order integer DEFAULT 99)
+RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE nid bigint;
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN -1; END IF;
+    p_judul := left(COALESCE(NULLIF(btrim(p_judul),''), 'Tanpa Judul'), 80);
+    p_deskripsi := left(COALESCE(p_deskripsi,''), 200);
+    p_badge := left(COALESCE(NULLIF(btrim(p_badge),''), ''), 12);
+    IF p_fotos IS NULL OR jsonb_typeof(p_fotos) <> 'array' THEN p_fotos := '[]'::jsonb; END IF;
+    INSERT INTO public.kegiatan (judul, deskripsi, badge, fotos, display_order, created_by)
+    VALUES (p_judul, p_deskripsi, p_badge, p_fotos, COALESCE(p_display_order,99), p_user_id) RETURNING id INTO nid;
+    RETURN nid;
+END $$;
+CREATE OR REPLACE FUNCTION public.update_kegiatan(p_user_id bigint, p_id bigint, p_judul text, p_deskripsi text, p_badge text, p_fotos jsonb, p_display_order integer)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN 'ERR_NO_AUTH'; END IF;
+    UPDATE public.kegiatan SET judul=left(COALESCE(NULLIF(btrim(p_judul),judul),judul),80), deskripsi=left(COALESCE(p_deskripsi,deskripsi),200), badge=left(COALESCE(p_badge,badge),12), fotos=COALESCE(p_fotos,fotos), display_order=COALESCE(p_display_order,display_order) WHERE id=p_id;
+    IF FOUND THEN RETURN 'OK'; END IF; RETURN 'ERR_NOT_FOUND';
+END $$;
+CREATE OR REPLACE FUNCTION public.hapus_kegiatan(p_user_id bigint, p_id bigint)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.osis_users WHERE id=p_user_id) THEN RETURN 'ERR_NO_AUTH'; END IF;
+    DELETE FROM public.kegiatan WHERE id=p_id;
+    IF FOUND THEN RETURN 'OK'; END IF; RETURN 'ERR_NOT_FOUND';
+END $$;
+
+REVOKE EXECUTE ON FUNCTION public.buat_prestasi(bigint, text, text, jsonb, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.update_prestasi(bigint, bigint, text, text, jsonb, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.hapus_prestasi(bigint, bigint) FROM public;
+REVOKE EXECUTE ON FUNCTION public.buat_kegiatan(bigint, text, text, text, jsonb, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.update_kegiatan(bigint, bigint, text, text, text, jsonb, integer) FROM public;
+REVOKE EXECUTE ON FUNCTION public.hapus_kegiatan(bigint, bigint) FROM public;
+GRANT EXECUTE ON FUNCTION public.buat_prestasi(bigint, text, text, jsonb, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_prestasi(bigint, bigint, text, text, jsonb, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.hapus_prestasi(bigint, bigint) TO anon;
+GRANT EXECUTE ON FUNCTION public.buat_kegiatan(bigint, text, text, text, jsonb, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_kegiatan(bigint, bigint, text, text, text, jsonb, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.hapus_kegiatan(bigint, bigint) TO anon;
+
+-- Storage prestasi/ & kegiatan/
+DROP POLICY IF EXISTS "osis_foto_prestasi_select" ON storage.objects;
+CREATE POLICY "osis_foto_prestasi_select" ON storage.objects FOR SELECT TO anon USING (bucket_id='osis-foto' AND (storage.foldername(name))[1]='prestasi');
+DROP POLICY IF EXISTS "osis_foto_prestasi_insert" ON storage.objects;
+CREATE POLICY "osis_foto_prestasi_insert" ON storage.objects FOR INSERT TO anon WITH CHECK (bucket_id='osis-foto' AND (storage.foldername(name))[1]='prestasi');
+DROP POLICY IF EXISTS "osis_foto_prestasi_delete" ON storage.objects;
+CREATE POLICY "osis_foto_prestasi_delete" ON storage.objects FOR DELETE TO anon USING (bucket_id='osis-foto' AND (storage.foldername(name))[1]='prestasi');
+DROP POLICY IF EXISTS "osis_foto_kegiatan_select" ON storage.objects;
+CREATE POLICY "osis_foto_kegiatan_select" ON storage.objects FOR SELECT TO anon USING (bucket_id='osis-foto' AND (storage.foldername(name))[1]='kegiatan');
+DROP POLICY IF EXISTS "osis_foto_kegiatan_insert" ON storage.objects;
+CREATE POLICY "osis_foto_kegiatan_insert" ON storage.objects FOR INSERT TO anon WITH CHECK (bucket_id='osis-foto' AND (storage.foldername(name))[1]='kegiatan');
+DROP POLICY IF EXISTS "osis_foto_kegiatan_delete" ON storage.objects;
+CREATE POLICY "osis_foto_kegiatan_delete" ON storage.objects FOR DELETE TO anon USING (bucket_id='osis-foto' AND (storage.foldername(name))[1]='kegiatan');
+
+-- Seed dari data hardcode lama (hanya jika kosong)
+INSERT INTO public.prestasi (tag, caption, fotos, display_order)
+SELECT * FROM (VALUES
+    ('Kemah Tangkas 1.0','Momen Kemah Tangkas 1.0','[{"path":"web/prestasi3.jpg","caption":"Momen Kemah Tangkas 1.0"}]'::jsonb,1),
+    ('Jambore OSIS','Jambore OSIS tahun ini','[{"path":"web/prestasi2.jpg","caption":"Jambore OSIS tahun ini"}]'::jsonb,2),
+    ('Paskibra','Tim Paskibra kebanggaan','[{"path":"web/prestasi1.jpg","caption":"Tim Paskibra kebanggaan"}]'::jsonb,3),
+    ('Teater','Pentas Teater OSIS','[{"path":"web/prestasi4.jpg","caption":"Pentas Teater OSIS"}]'::jsonb,4)
+) AS v(tag,caption,fotos,display_order)
+WHERE NOT EXISTS (SELECT 1 FROM public.prestasi);
+
+INSERT INTO public.kegiatan (judul, deskripsi, badge, fotos, display_order)
+SELECT * FROM (VALUES
+    ('Makrab OSIS 2026','Meningkatkan rasa kekeluargaan antar pengurus','MAKRAB','[{"path":"web/makrab1.jpg","caption":"Makrab - kebersamaan pengurus"},{"path":"web/makrab2.jpg","caption":"Makrab - sesi keakraban"},{"path":"web/makrab3.jpg","caption":"Makrab - api unggun"},{"path":"web/makrab4.jpg","caption":"Makrab - foto bersama"}]'::jsonb,1),
+    ('Takjilin OSIS 2026','Membangun jiwa kewirausahaan & berbagi','TAKJILIN','[{"path":"web/takjilin1.jpg","caption":"Takjilin - persiapan takjil"},{"path":"web/takjilin2.jpg","caption":"Takjilin - berbagi takjil"},{"path":"web/takjilin3.jpg","caption":"Takjilin - stand bazar"},{"path":"web/takjilin4.jpg","caption":"Takjilin - kebersamaan"}]'::jsonb,2),
+    ('Pentas Seni Antar Kelas','Ajang ekspresi bakat dan kreativitas siswa','PESAK','[{"path":"web/pesak1.jpg","caption":"PESAK - penampilan tari"},{"path":"web/pesak2.jpg","caption":"PESAK - band sekolah"},{"path":"web/pesak3.jpg","caption":"PESAK - drama kelas"},{"path":"web/pesak4.jpg","caption":"PESAK - foto bersama"}]'::jsonb,3)
+) AS v(judul,deskripsi,badge,fotos,display_order)
+WHERE NOT EXISTS (SELECT 1 FROM public.kegiatan);
+
+-- Cleanup keys lama yang sekarang pindah ke tabel prestasi/kegiatan (jalanin setelah seed & verifikasi)
+DELETE FROM public.site_content WHERE kunci LIKE 'prestasi\_%' ESCAPE '\' OR kunci LIKE 'kegiatan\_%' ESCAPE '\' OR kunci IN ('makrab1_caption','makrab2_caption','makrab3_caption','makrab4_caption','takjilin1_caption','takjilin2_caption','takjilin3_caption','takjilin4_caption','pesak1_caption','pesak2_caption','pesak3_caption','pesak4_caption','prestasi_1_tag','prestasi_2_tag','prestasi_3_tag','prestasi_4_tag','prestasi_1_caption','prestasi_2_caption','prestasi_3_caption','prestasi_4_caption','kegiatan_1_title','kegiatan_2_title','kegiatan_3_title','kegiatan_1_desc','kegiatan_2_desc','kegiatan_3_desc');
+DELETE FROM public.web_foto WHERE kunci IN ('prestasi1','prestasi2','prestasi3','prestasi4','makrab1','makrab2','makrab3','makrab4','takjilin1','takjilin2','takjilin3','takjilin4','pesak1','pesak2','pesak3','pesak4');
 
 -- Bersihin sisa objek eksperimen sebelumnya (ganti desain)
 DROP TABLE IF EXISTS public.guests CASCADE;

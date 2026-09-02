@@ -307,6 +307,83 @@ async function hapusLaguOsis(userId, id) {
 }
 
 // =========================================================================
+// PRESTASI — home (DB-driven, multi-foto, display_order)
+// =========================================================================
+async function getPrestasi() {
+    const { data, error } = await supa
+        .from("prestasi")
+        .select("id, tag, caption, fotos, display_order, created_at")
+        .order("display_order", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(50);
+    if (error) throw error;
+    return data || [];
+}
+async function buatPrestasi(userId, tag, caption, fotos, order = 99) {
+    const { data, error } = await supa.rpc("buat_prestasi", {
+        p_user_id: userId, p_tag: tag, p_caption: caption, p_fotos: fotos, p_display_order: order
+    });
+    if (error) throw error;
+    if (data <= 0) throw new Error(String(data));
+    Cache.del("prestasi");
+    return data;
+}
+async function updatePrestasi(userId, id, tag, caption, fotos, order) {
+    const { data, error } = await supa.rpc("update_prestasi", {
+        p_user_id: userId, p_id: id, p_tag: tag, p_caption: caption, p_fotos: fotos, p_display_order: order
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+    Cache.del("prestasi");
+}
+async function hapusPrestasi(userId, id) {
+    const { data, error } = await supa.rpc("hapus_prestasi", {
+        p_user_id: userId, p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+    Cache.del("prestasi");
+}
+
+// =========================================================================
+// KEGIATAN HOME — DB-driven (judul, deskripsi, badge, fotos jsonb, order)
+// =========================================================================
+async function getKegiatan() {
+    const { data, error } = await supa
+        .from("kegiatan")
+        .select("id, judul, deskripsi, badge, fotos, display_order, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+    if (error) throw error;
+    return data || [];
+}
+async function buatKegiatan(userId, judul, deskripsi, badge, fotos, order = 99) {
+    const { data, error } = await supa.rpc("buat_kegiatan", {
+        p_user_id: userId, p_judul: judul, p_deskripsi: deskripsi, p_badge: badge, p_fotos: fotos, p_display_order: order
+    });
+    if (error) throw error;
+    if (data <= 0) throw new Error(String(data));
+    Cache.del("kegiatan");
+    return data;
+}
+async function updateKegiatan(userId, id, judul, deskripsi, badge, fotos, order) {
+    const { data, error } = await supa.rpc("update_kegiatan", {
+        p_user_id: userId, p_id: id, p_judul: judul, p_deskripsi: deskripsi, p_badge: badge, p_fotos: fotos, p_display_order: order
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+    Cache.del("kegiatan");
+}
+async function hapusKegiatan(userId, id) {
+    const { data, error } = await supa.rpc("hapus_kegiatan", {
+        p_user_id: userId, p_id: id
+    });
+    if (error) throw error;
+    if (data !== "OK") throw new Error(data);
+    Cache.del("kegiatan");
+}
+
+// =========================================================================
 // GALLERY — dokumentasi kegiatan (judul + foto, khusus akun OSIS)
 // =========================================================================
 
