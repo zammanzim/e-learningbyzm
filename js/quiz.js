@@ -85,6 +85,35 @@ const QuizPage = {
         return `exam_best_${QuizPage.cls.slug}_${slug}`;
     },
 
+    // Progres per HP: { idx, answers, total, at }. Tanpa login.
+    progKey(slug) {
+        return `exam_prog_${QuizPage.cls.slug}_${slug}`;
+    },
+
+    getProg(slug) {
+        try {
+            const v = JSON.parse(localStorage.getItem(QuizPage.progKey(slug)) || "null");
+            if (v && Array.isArray(v.answers) && typeof v.idx === "number") return v;
+        } catch (e) { /* abaikan */ }
+        return null;
+    },
+
+    saveProg() {
+        try {
+            localStorage.setItem(QuizPage.progKey(QuizPage.mapel.slug), JSON.stringify({
+                idx: QuizPage.idx,
+                answers: QuizPage.answers,
+                total: QuizPage.questions.length,
+                at: Date.now()
+            }));
+        } catch (e) { /* abaikan */ }
+    },
+
+    clearProg(slug) {
+        try { localStorage.removeItem(QuizPage.progKey(slug || (QuizPage.mapel && QuizPage.mapel.slug))); }
+        catch (e) { /* abaikan */ }
+    },
+
     getBest(slug) {
         try {
             const v = JSON.parse(localStorage.getItem(QuizPage.bestKey(slug)) || "null");
@@ -167,8 +196,13 @@ const QuizPage = {
             (g.today ? `<span class="today-badge">HARI INI</span>` : "") + `</header>` +
             `<div class="mapel-grid">` + g.list.map(s => {
                 const best = QuizPage.getBest(s.slug);
-                const badge = best ? `<span class="best">Terbaik: ${best.score}%</span>`
-                    : `<span class="best none">Belum dicoba</span>`;
+                const prog = QuizPage.getProg(s.slug);
+                const doing = prog && prog.total === s.count
+                    && prog.answers.filter(a => a !== null && a !== undefined).length > 0;
+                const badge = doing
+                    ? `<span class="best proc">Lanjutin ${Math.min(prog.idx + 1, prog.total)}/${prog.total}</span>`
+                    : (best ? `<span class="best">Terbaik: ${best.score}%</span>`
+                        : `<span class="best none">Belum dicoba</span>`);
                 return `<button class="mapel-card" data-mapel="${ExamDB.esc(s.slug)}">` +
                     `<i class="fa-solid ${ExamDB.esc(s.icon || "fa-book")}"></i>` +
                     `<b>${ExamDB.esc(s.name)}</b>` +
@@ -191,10 +225,24 @@ const QuizPage = {
         document.getElementById("infoBest").textContent = best
             ? `Terbaik kamu: ${best.score}% (${best.benar}/${best.total} benar)`
             : "Belum pernah dicoba di HP ini.";
+        // Lanjutin progres yang kepotong?
+        const prog = QuizPage.getProg(s.slug);
+        const valid = prog && prog.total === s.count
+            && prog.answers.filter(a => a !== null && a !== undefined).length > 0;
+        const startBtn = document.getElementById("startBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        if (valid) {
+            startBtn.innerHTML = `LANJUTIN SOAL ${Math.min(prog.idx + 1, prog.total)}/${prog.total} <i class="fa-solid fa-play"></i>`;
+            restartBtn.style.display = "inline-flex";
+        } else {
+            if (prog) QuizPage.clearProg(s.slug);
+            startBtn.innerHTML = `MULAI <i class="fa-solid fa-play"></i>`;
+            restartBtn.style.display = "none";
+        }
         window.scrollTo({ top: 0, behavior: "smooth" });
     },
 
-    async startQuiz() {
+    async startQuiz(fresh) {
         if (!QuizPage.mapel) return;
         const box = document.getElementById("quizPlay");
         QuizPage.show("viewQuiz");
@@ -209,6 +257,21 @@ const QuizPage = {
             box.innerHTML = `<div class="pub-empty">Soalnya kosong.</div>`;
             return;
         }
+        // Lanjutin progres kepotong (kecuali minta fresh).
+        if (!fresh) {
+            const prog = QuizPage.getProg(QuizPage.mapel.slug);
+            if (prog && prog.total === QuizPage.questions.length
+                && prog.answers.filter(a => a !== null && a !== undefined).length > 0) {
+                QuizPage.idx = Math.max(0, Math.min(prog.idx, QuizPage.questions.length - 1));
+                QuizPage.answers = QuizPage.questions.map((_, i) =>
+                    (prog.answers[i] === undefined ? null : prog.answers[i]));
+                if (typeof Track !== "undefined") Track.quizStart(QuizPage.mapel.slug, QuizPage.questions.length);
+                QuizPage.renderQ();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
+        }
+        QuizPage.clearProg(QuizPage.mapel.slug);
         QuizPage.idx = 0;
         QuizPage.answers = new Array(QuizPage.questions.length).fill(null);
         if (typeof Track !== "undefined") Track.quizStart(QuizPage.mapel.slug, QuizPage.questions.length);
@@ -258,12 +321,12 @@ const QuizPage = {
             `<div class="q-nav-row">` +
             `<button class="btn ghost" id="qPrev"${QuizPage.idx === 0 ? " disabled" : ""}>` +
             `<i class="fa-solid fa-arrow-left"></i> Kembali</button>` +
+            `<button class="btn ghost sm q-auto${QuizPage.autoNext ? " on" : ""}" id="qAuto" title="Lanjut otomatis 5 detik abis jawab">` +
+            `<i class="fa-solid fa-bolt"></i> ${QuizPage.autoNext ? "ON" : "OFF"}</button>` +
             (QuizPage.idx < total - 1
                 ? `<button class="btn" id="qNext">Lanjut <i class="fa-solid fa-arrow-right"></i></button>`
                 : `<button class="btn gold" id="qFinish">Lihat Nilai <i class="fa-solid fa-flag-checkered"></i></button>`) +
             `</div><div class="q-tools">` +
-            `<button class="btn ghost sm q-auto${QuizPage.autoNext ? " on" : ""}" id="qAuto">` +
-            `<i class="fa-solid fa-bolt"></i> Otomatis: ${QuizPage.autoNext ? "ON" : "OFF"}</button>` +
             `<span class="kbd-hint"><kbd>A</kbd>–<kbd>E</kbd> jawab • <kbd>Enter</kbd> lanjut • <kbd>Esc</kbd> kembali</span>` +
             `</div></div><aside class="quiz-side"><div class="q-nav">${nav}</div></aside></div>`;
 
@@ -273,18 +336,25 @@ const QuizPage = {
             b.addEventListener("click", () => {
                 QuizPage._justAnswered = -1;
                 QuizPage.idx = parseInt(b.dataset.n, 10);
+                QuizPage.saveProg();
                 QuizPage.renderQ();
                 window.scrollTo({ top: 0, behavior: "smooth" });
             }));
         const prev = document.getElementById("qPrev");
         if (prev) prev.addEventListener("click", () => {
-            if (QuizPage.idx > 0) { QuizPage._justAnswered = -1; QuizPage.idx--; QuizPage.renderQ(); }
+            if (QuizPage.idx > 0) {
+                QuizPage._justAnswered = -1;
+                QuizPage.idx--;
+                QuizPage.saveProg();
+                QuizPage.renderQ();
+            }
         });
         const next = document.getElementById("qNext");
         if (next) next.addEventListener("click", () => {
             if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
             QuizPage._justAnswered = -1;
             QuizPage.idx++; QuizPage.renderQ();
+            QuizPage.saveProg();
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
         const fin = document.getElementById("qFinish");
@@ -311,7 +381,7 @@ const QuizPage = {
         const btn = document.getElementById("qAuto");
         if (btn) {
             btn.classList.toggle("on", QuizPage.autoNext);
-            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Otomatis: ${QuizPage.autoNext ? "ON" : "OFF"}`;
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> ${QuizPage.autoNext ? "ON" : "OFF"}`;
         }
         // Nyalain lagi timernya kalo posisi lagi di soal yang baru dijawab.
         if (QuizPage.autoNext && QuizPage.currentAnswered()
@@ -355,6 +425,7 @@ const QuizPage = {
         QuizPage.answers[QuizPage.idx] = i;
         QuizPage._justAnswered = QuizPage.idx;
         const q = QuizPage.questions[QuizPage.idx];
+        QuizPage.saveProg();
         if (typeof Track !== "undefined") Track.quizProgress(QuizPage.mapel.slug, QuizPage.idx + 1, QuizPage.questions.length);
 
         const box = document.getElementById("quizPlay");
@@ -392,6 +463,7 @@ const QuizPage = {
         let benar = 0;
         QuizPage.questions.forEach((q, i) => { if (QuizPage.answers[i] === q.answer) benar++; });
         const score = Math.round((benar / total) * 100);
+        QuizPage.clearProg(QuizPage.mapel.slug);
         if (typeof Track !== "undefined") Track.quizFinish(QuizPage.mapel.slug, score, benar, total);
         const who = (ExamDB.profile() || {}).name || "";
         QuizPage.saveBest(QuizPage.mapel.slug, score, benar, total);
@@ -426,7 +498,7 @@ const QuizPage = {
             `<i class="fa-solid fa-book-open"></i> Baca Kisi</a>` +
             `</div></div><h3 class="rev-title">Pembahasan</h3>${review}`;
 
-        document.getElementById("rRetry").addEventListener("click", () => QuizPage.startQuiz());
+        document.getElementById("rRetry").addEventListener("click", () => QuizPage.startQuiz(true));
         document.getElementById("rHub").addEventListener("click", () => {
             QuizPage.renderHub();
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -457,7 +529,9 @@ const QuizPage = {
             else { QuizPage.renderHub(); }
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
-        document.getElementById("startBtn").addEventListener("click", () => QuizPage.startQuiz());
+        document.getElementById("startBtn").addEventListener("click", () => QuizPage.startQuiz(false));
+        const restartBtn = document.getElementById("restartBtn");
+        if (restartBtn) restartBtn.addEventListener("click", () => QuizPage.startQuiz(true));
         document.addEventListener("keydown", QuizPage.onKey);
     },
 

@@ -314,6 +314,7 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 .mapel-card .count { font-size: .75rem; color: var(--muted); }
 .best { font-size: .7rem; font-weight: 800; background: var(--green-soft); color: #0f5132; padding: 4px 11px; border-radius: 999px; }
 .best.none { background: #f0ece0; color: var(--muted); font-weight: 400; }
+.best.proc { background: #fff3d6; color: #8a6d00; }
 
 /* ===== Info + tombol ===== */
 .info-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 32px 22px; text-align: center; box-shadow: var(--shadow-pop); }
