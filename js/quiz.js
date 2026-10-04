@@ -1,467 +1,533 @@
 // ============================================================
-// quiz.js — Simulasi Ujian Logic
-// Handles fetching questions, checking answers, and navigation.
+// QUIZ — halaman publik: strip jadwal + hub mapel + runner bernilai.
+// URL: quiz.html?id=xrpl1&mapel=mtk
+// Best-score per HP (localStorage exam_best_<slug>_<mapel>).
 // ============================================================
 
-let QUIZ_DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-let quizScheduleMap = {};
+const QuizPage = {
+    cls: null,
+    classes: [],
+    days: [],
+    sched: {},
+    subjects: [],   // [{slug, name, icon, count}]
+    mapel: null,
+    questions: [],
+    idx: 0,
+    answers: [],
+    autoNext: true,     // lanjut otomatis 5 dtk abis jawab (bisa dimatiin)
+    _justAnswered: -1,  // idx soal yang BARU dijawab (timer cuma jalan di sini)
+    _timer: null,
+    _count: 0,
 
-const QuizApp = {
-    state: {
-        subjectId: null,
-        questions: [],
-        currentIndex: 0,
-        answeredCorrectly: false,
-        user: null,
-        history: {}, // Map: questionIndex -> Array of selected option indices
-        subjectsInfo: {} // Map: subjectId -> { name, icon, qCount, progress }
+    async boot() {
+        const params = new URLSearchParams(location.search);
+        // Kelas dari ?id=, profil tersimpan, atau default xrpl2.
+        try {
+            QuizPage.cls = await ExamDB.resolveClass(params.get("id") || (ExamDB.profile() || {}).slug || "xrpl2");
+            QuizPage.classes = [];
+        } catch (e) {
+            document.getElementById("quizRoot").innerHTML =
+                `<div class="pub-empty">Gagal nyambung ke database.<br>${ExamDB.esc(e.message || e)}</div>`;
+            return;
+        }
+        document.title = `Latihan Soal ${QuizPage.cls.name} • Ujian`;
+        document.getElementById("kelasTitle").textContent = QuizPage.cls.name;
+        ExamDB.whoLine("whoLine");
+        const qhref = "quiz?id=" + encodeURIComponent(QuizPage.cls.slug);
+        const khref = "kisi?id=" + encodeURIComponent(QuizPage.cls.slug);
+        const tk = document.getElementById("topKisiLink");
+        if (tk) tk.href = khref;
+        const mq = document.getElementById("miniQuiz");
+        if (mq) mq.href = qhref;
+        const mk = document.getElementById("miniKisi");
+        if (mk) mk.href = khref;
+        const heroKisi = document.getElementById("heroKisiLink");
+        if (heroKisi) heroKisi.href = khref;
+
+        try {
+            const [days, sch, subjects, counts] = await Promise.all([
+                ExamDB.examDays(QuizPage.cls.id),
+                ExamDB.schedule(QuizPage.cls.id),
+                ExamDB.subjects(),
+                ExamDB.questionCount(QuizPage.cls.id)
+            ]);
+            QuizPage.days = days;
+            QuizPage.sched = sch.map;
+            QuizPage.subjects = subjects
+                .filter(s => counts[s.slug])
+                .map(s => ({ ...s, count: counts[s.slug] }));
+        } catch (e) {
+            document.getElementById("mapelBox").innerHTML =
+                `<div class="pub-empty">Gagal ambil data.<br>${ExamDB.esc(e.message || e)}</div>`;
+            return;
+        }
+        QuizPage.renderStrip();
+        QuizPage.renderHub();
+        if (typeof Track !== "undefined") Track.page("quiz");
+
+        try {
+            QuizPage.autoNext = localStorage.getItem("exam_autonext") !== "0";
+        } catch (e) { QuizPage.autoNext = true; }
+
+        const mp = (params.get("mapel") || "").toLowerCase();
+        if (mp) {
+            const hit = QuizPage.subjects.find(s => s.slug.toLowerCase() === mp);
+            if (hit) QuizPage.openInfo(hit.slug);
+        }
+        QuizPage.bindNav();
     },
 
-    resetState() {
-        this.state.subjectId = null;
-        this.state.questions = [];
-        this.state.currentIndex = 0;
-        this.state.answeredCorrectly = false;
-        this.state.history = {};
+    norm(s) {
+        return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    },
 
-        // Reset UI Elements
-        const elements = ['backBtn', 'selectionView', 'infoView', 'quizView', 'resultView'];
-        elements.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
+    bestKey(slug) {
+        return `exam_best_${QuizPage.cls.slug}_${slug}`;
+    },
+
+    getBest(slug) {
+        try {
+            const v = JSON.parse(localStorage.getItem(QuizPage.bestKey(slug)) || "null");
+            return (v && typeof v.score === "number") ? v : null;
+        } catch (e) { return null; }
+    },
+
+    saveBest(slug, score, benar, total) {
+        try {
+            const old = QuizPage.getBest(slug);
+            if (!old || score > old.score) {
+                localStorage.setItem(QuizPage.bestKey(slug),
+                    JSON.stringify({ score, benar, total, at: Date.now() }));
+            }
+        } catch (e) { /* private mode — skip */ }
+    },
+
+    renderStrip() {
+        const box = document.getElementById("jadwalStrip");
+        const order = ExamDB.dayOrder(QuizPage.days);
+        const ada = order.some(d => (QuizPage.sched[d] || []).length);
+        if (!ada) {
+            box.innerHTML = `<div class="strip-empty">Belum ada jadwal ujian.</div>`;
+            return;
+        }
+        const noise = ["istirahat", "apel", "upacara", "sholat", "shalat", "makan", "ishoma", "pulang", "senam", "persiapan"];
+        const isNoise = m => {
+            const n = QuizPage.norm(m);
+            return !n || noise.some(b => n.includes(b));
+        };
+        const clean = {};
+        order.forEach(d => {
+            const rows = (QuizPage.sched[d] || []).filter(e => !isNoise(e.mapel));
+            if (rows.length) clean[d] = rows;
+        });
+        if (!Object.keys(clean).length) {
+            box.innerHTML = `<div class="strip-empty">Belum ada jadwal ujian.</div>`;
+            return;
+        }
+        box.innerHTML = Object.keys(clean).map((day, i) =>
+            `<div class="strip-day${i === 0 ? " is-today" : ""}"><b>${day}</b><ul>` +
+            clean[day].map(e => `<li>${ExamDB.esc(e.mapel)}</li>`).join("") +
+            `</ul></div>`
+        ).join("");
+    },
+
+    // Kelompokin mapel latihan ngikut hari jadwal (cocok norm dua arah).
+    hubGroups() {
+        const assigned = new Set();
+        const groups = [];
+        const order = ExamDB.dayOrder(QuizPage.days);
+        order.forEach(day => {
+            const rows = QuizPage.sched[day] || [];
+            const hit = QuizPage.subjects.filter(s => {
+                const ns = QuizPage.norm(s.slug);
+                const ok = rows.some(r => {
+                    const nm = QuizPage.norm(r.mapel);
+                    return ns.includes(nm) || nm.includes(ns);
+                });
+                if (ok) assigned.add(s.slug);
+                return ok;
+            });
+            if (hit.length) groups.push({ day, list: hit, today: day === order[0] });
+        });
+        const rest = QuizPage.subjects.filter(s => !assigned.has(s.slug));
+        if (rest.length) groups.push({ day: "Lainnya", list: rest, today: false });
+        return groups;
+    },
+
+    renderHub() {
+        QuizPage.show("viewHub");
+        const box = document.getElementById("mapelBox");
+        if (!QuizPage.subjects.length) {
+            box.innerHTML = `<div class="pub-empty">Belum ada soal.<br>Cek berkala ya.</div>`;
+            return;
+        }
+        box.innerHTML = QuizPage.hubGroups().map(g =>
+            `<section class="hari${g.today ? " is-today" : ""}${g.day === "Lainnya" ? " hari-other" : ""}">` +
+            `<header class="hari-head"><h2>${g.day}</h2>` +
+            (g.today ? `<span class="today-badge">HARI INI</span>` : "") + `</header>` +
+            `<div class="mapel-grid">` + g.list.map(s => {
+                const best = QuizPage.getBest(s.slug);
+                const badge = best ? `<span class="best">Terbaik: ${best.score}%</span>`
+                    : `<span class="best none">Belum dicoba</span>`;
+                return `<button class="mapel-card" data-mapel="${ExamDB.esc(s.slug)}">` +
+                    `<i class="fa-solid ${ExamDB.esc(s.icon || "fa-book")}"></i>` +
+                    `<b>${ExamDB.esc(s.name)}</b>` +
+                    `<span class="count">${s.count} soal</span>${badge}</button>`;
+            }).join("") + `</div></section>`
+        ).join("");
+        box.querySelectorAll(".mapel-card").forEach(b =>
+            b.addEventListener("click", () => QuizPage.openInfo(b.dataset.mapel)));
+    },
+
+    openInfo(slug) {
+        const s = QuizPage.subjects.find(x => x.slug === slug);
+        if (!s) return;
+        QuizPage.mapel = s;
+        QuizPage.show("viewInfo");
+        document.getElementById("infoIcon").className = `fa-solid ${s.icon || "fa-book"}`;
+        document.getElementById("infoName").textContent = s.name;
+        document.getElementById("infoCount").textContent = s.count;
+        const best = QuizPage.getBest(s.slug);
+        document.getElementById("infoBest").textContent = best
+            ? `Terbaik kamu: ${best.score}% (${best.benar}/${best.total} benar)`
+            : "Belum pernah dicoba di HP ini.";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+
+    async startQuiz() {
+        if (!QuizPage.mapel) return;
+        const box = document.getElementById("quizPlay");
+        QuizPage.show("viewQuiz");
+        box.innerHTML = `<div class="pub-empty">Wet, lagi nyiapin soal…</div>`;
+        try {
+            QuizPage.questions = await ExamDB.questions(QuizPage.mapel.slug, QuizPage.cls.id);
+        } catch (e) {
+            box.innerHTML = `<div class="pub-empty">Gagal ambil soal.<br>${ExamDB.esc(e.message || e)}</div>`;
+            return;
+        }
+        if (!QuizPage.questions.length) {
+            box.innerHTML = `<div class="pub-empty">Soalnya kosong.</div>`;
+            return;
+        }
+        QuizPage.idx = 0;
+        QuizPage.answers = new Array(QuizPage.questions.length).fill(null);
+        if (typeof Track !== "undefined") Track.quizStart(QuizPage.mapel.slug, QuizPage.questions.length);
+        QuizPage.renderQ();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+
+    renderQ() {
+        QuizPage.clearTimer();
+        const q = QuizPage.questions[QuizPage.idx];
+        const total = QuizPage.questions.length;
+        const box = document.getElementById("quizPlay");
+        const answered = QuizPage.answers[QuizPage.idx] !== null
+            && QuizPage.answers[QuizPage.idx] !== undefined;
+        const prefix = ["A", "B", "C", "D", "E"];
+
+        const opts = (q.options || []).map((opt, i) => {
+            let cls = "opt";
+            if (answered) {
+                if (i === q.answer) cls += " correct";
+                else if (i === QuizPage.answers[QuizPage.idx]) cls += " wrong";
+                else cls += " dim";
+            }
+            return `<button class="${cls}" data-i="${i}"${answered ? " disabled" : ""}>` +
+                `<span class="opt-pre">${prefix[i] || ""}</span><span>${ExamDB.esc(opt)}</span></button>`;
+        }).join("");
+
+        const expInner = (answered && q.explanation)
+            ? `<b>Pembahasan:</b><br>${ExamDB.esc(q.explanation)}` : "";
+
+        const nav = QuizPage.questions.map((qq, i) => {
+            let cls = "nav-n";
+            if (i === QuizPage.idx) cls += " active";
+            else if (QuizPage.answers[i] !== null && QuizPage.answers[i] !== undefined) {
+                cls += QuizPage.answers[i] === qq.answer ? " ok" : " bad";
+            }
+            return `<button class="${cls}" data-n="${i}">${i + 1}</button>`;
+        }).join("");
+
+        box.innerHTML =
+            `<div class="q-top"><span>SOAL ${QuizPage.idx + 1}/${total}</span><span>${ExamDB.esc(QuizPage.mapel.name)}</span></div>` +
+            `<div class="pbar"><div style="width:${(QuizPage.idx / total) * 100}%"></div></div>` +
+            `<div class="quiz-split"><div class="quiz-main">` +
+            `<div class="q-card"><p class="q-text">${ExamDB.esc(q.question)}</p>` +
+            `<div class="opts">${opts}</div>` +
+            `<div class="exp" id="qExp"${expInner ? "" : ' style="display:none"'}>${expInner}</div></div>` +
+            `<div class="q-nav-row">` +
+            `<button class="btn ghost" id="qPrev"${QuizPage.idx === 0 ? " disabled" : ""}>` +
+            `<i class="fa-solid fa-arrow-left"></i> Kembali</button>` +
+            (QuizPage.idx < total - 1
+                ? `<button class="btn" id="qNext">Lanjut <i class="fa-solid fa-arrow-right"></i></button>`
+                : `<button class="btn gold" id="qFinish">Lihat Nilai <i class="fa-solid fa-flag-checkered"></i></button>`) +
+            `</div><div class="q-tools">` +
+            `<button class="btn ghost sm q-auto${QuizPage.autoNext ? " on" : ""}" id="qAuto">` +
+            `<i class="fa-solid fa-bolt"></i> Otomatis: ${QuizPage.autoNext ? "ON" : "OFF"}</button>` +
+            `<span class="kbd-hint"><kbd>A</kbd>–<kbd>E</kbd> jawab • <kbd>Enter</kbd> lanjut • <kbd>Esc</kbd> kembali</span>` +
+            `</div></div><aside class="quiz-side"><div class="q-nav">${nav}</div></aside></div>`;
+
+        box.querySelectorAll(".opt").forEach(b =>
+            b.addEventListener("click", () => QuizPage.answer(parseInt(b.dataset.i, 10))));
+        box.querySelectorAll(".nav-n").forEach(b =>
+            b.addEventListener("click", () => {
+                QuizPage._justAnswered = -1;
+                QuizPage.idx = parseInt(b.dataset.n, 10);
+                QuizPage.renderQ();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }));
+        const prev = document.getElementById("qPrev");
+        if (prev) prev.addEventListener("click", () => {
+            if (QuizPage.idx > 0) { QuizPage._justAnswered = -1; QuizPage.idx--; QuizPage.renderQ(); }
+        });
+        const next = document.getElementById("qNext");
+        if (next) next.addEventListener("click", () => {
+            if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
+            QuizPage._justAnswered = -1;
+            QuizPage.idx++; QuizPage.renderQ();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+        const fin = document.getElementById("qFinish");
+        if (fin) fin.addEventListener("click", () => {
+            if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
+            QuizPage._justAnswered = -1;
+            QuizPage.finish();
+        });
+        const auto = document.getElementById("qAuto");
+        if (auto) auto.addEventListener("click", () => QuizPage.setAuto(!QuizPage.autoNext));
+    },
+
+    clearTimer() {
+        if (QuizPage._timer) {
+            clearInterval(QuizPage._timer);
+            QuizPage._timer = null;
+        }
+    },
+
+    setAuto(on) {
+        QuizPage.autoNext = !!on;
+        try { localStorage.setItem("exam_autonext", QuizPage.autoNext ? "1" : "0"); } catch (e) { /* abaikan */ }
+        QuizPage.clearTimer();
+        const btn = document.getElementById("qAuto");
+        if (btn) {
+            btn.classList.toggle("on", QuizPage.autoNext);
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Otomatis: ${QuizPage.autoNext ? "ON" : "OFF"}`;
+        }
+        // Nyalain lagi timernya kalo posisi lagi di soal yang baru dijawab.
+        if (QuizPage.autoNext && QuizPage.currentAnswered()
+            && QuizPage.idx === QuizPage._justAnswered
+            && document.getElementById("viewQuiz").style.display === "block") {
+            QuizPage.startAuto();
+        }
+    },
+
+    startAuto() {
+        QuizPage.clearTimer();
+        QuizPage._count = 5;
+        const tick = () => {
+            const isLast = QuizPage.idx >= QuizPage.questions.length - 1;
+            const btn = document.getElementById(isLast ? "qFinish" : "qNext");
+            if (!btn) { QuizPage.clearTimer(); return; }
+            if (QuizPage._count <= 0) {
+                QuizPage.clearTimer();
+                QuizPage._justAnswered = -1;
+                if (isLast) QuizPage.finish();
+                else { QuizPage.idx++; QuizPage.renderQ(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+                return;
+            }
+            btn.innerHTML = isLast
+                ? `Lihat Nilai (${QuizPage._count}) <i class="fa-solid fa-flag-checkered"></i>`
+                : `Lanjut (${QuizPage._count}) <i class="fa-solid fa-arrow-right"></i>`;
+            QuizPage._count--;
+        };
+        tick();
+        QuizPage._timer = setInterval(tick, 1000);
+    },
+
+    currentAnswered() {
+        const a = QuizPage.answers[QuizPage.idx];
+        return a !== null && a !== undefined;
+    },
+
+    // Update in-place (tanpa re-render) biar card ga blink.
+    answer(i) {
+        if (QuizPage.currentAnswered()) return;
+        QuizPage.answers[QuizPage.idx] = i;
+        QuizPage._justAnswered = QuizPage.idx;
+        const q = QuizPage.questions[QuizPage.idx];
+        if (typeof Track !== "undefined") Track.quizProgress(QuizPage.mapel.slug, QuizPage.idx + 1, QuizPage.questions.length);
+
+        const box = document.getElementById("quizPlay");
+        box.querySelectorAll(".opt").forEach(b => {
+            const bi = parseInt(b.dataset.i, 10);
+            b.disabled = true;
+            if (bi === q.answer) b.classList.add("correct");
+            else if (bi === i) b.classList.add("wrong");
+            else b.classList.add("dim");
+        });
+        const exp = document.getElementById("qExp");
+        if (exp && q.explanation) {
+            exp.innerHTML = `<b>Pembahasan:</b><br>${ExamDB.esc(q.explanation)}`;
+            exp.style.display = "block";
+        }
+        const navBtn = box.querySelector(`.nav-n[data-n="${QuizPage.idx}"]`);
+        if (navBtn) {
+            navBtn.classList.remove("active");
+            navBtn.classList.add(i === q.answer ? "ok" : "bad");
+        }
+        if (QuizPage.autoNext) QuizPage.startAuto();
+    },
+
+    flash(msg) {
+        const el = document.getElementById("quizFlash");
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(QuizPage._t);
+        QuizPage._t = setTimeout(() => el.classList.remove("show"), 1800);
+    },
+
+    finish() {
+        const total = QuizPage.questions.length;
+        let benar = 0;
+        QuizPage.questions.forEach((q, i) => { if (QuizPage.answers[i] === q.answer) benar++; });
+        const score = Math.round((benar / total) * 100);
+        if (typeof Track !== "undefined") Track.quizFinish(QuizPage.mapel.slug, score, benar, total);
+        const who = (ExamDB.profile() || {}).name || "";
+        QuizPage.saveBest(QuizPage.mapel.slug, score, benar, total);
+
+        const emoji = score === 100 ? "🏆" : score >= 80 ? "🔥" : score >= 60 ? "💪" : "📚";
+        const msg = score === 100 ? "Sempurna! Pertahanin."
+            : score >= 80 ? "Mantap! Dikit lagi sempurna."
+            : score >= 60 ? "Lumayan, gas latihan lagi."
+            : "Jangan nyerah — baca kisi-kisinya terus coba lagi.";
+
+        const review = QuizPage.questions.map((q, i) => {
+            const ok = QuizPage.answers[i] === q.answer;
+            const opts = q.options || [];
+            return `<details class="rev${ok ? " ok" : " bad"}">` +
+                `<summary><b>${i + 1}.</b> ${ExamDB.esc(q.question)} ` +
+                `<span class="rev-ic">${ok ? "✅" : "❌"}</span></summary>` +
+                `<p>Jawabanmu: <b>${ExamDB.esc(opts[QuizPage.answers[i]] ?? "(kosong)")}</b><br>` +
+                `Kunci: <b>${ExamDB.esc(opts[q.answer] ?? "-")}</b></p>` +
+                (q.explanation ? `<p class="rev-exp">${ExamDB.esc(q.explanation)}</p>` : "") +
+                `</details>`;
+        }).join("");
+
+        QuizPage.show("viewResult");
+        document.getElementById("quizResult").innerHTML =
+            `<div class="score-card"><div class="score-emoji">${emoji}</div>` +
+            `<div class="score-num">${score}</div>` +
+            `<p class="score-sub">${who ? ExamDB.esc(who) + " • " : ""}${benar}/${total} benar • ${ExamDB.esc(QuizPage.mapel.name)}</p>` +
+            `<p class="score-msg">${msg}</p><div class="score-btns">` +
+            `<button class="btn gold" id="rRetry"><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>` +
+            `<button class="btn ghost" id="rHub"><i class="fa-solid fa-grid-2"></i> Mapel Lain</button>` +
+            `<a class="btn ghost" href="kisi?id=${ExamDB.esc(QuizPage.cls.slug)}">` +
+            `<i class="fa-solid fa-book-open"></i> Baca Kisi</a>` +
+            `</div></div><h3 class="rev-title">Pembahasan</h3>${review}`;
+
+        document.getElementById("rRetry").addEventListener("click", () => QuizPage.startQuiz());
+        document.getElementById("rHub").addEventListener("click", () => {
+            QuizPage.renderHub();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+
+    show(id) {
+        QuizPage.clearTimer();
+        QuizPage._justAnswered = -1;
+        ["viewHub", "viewInfo", "viewQuiz", "viewResult"].forEach(v => {
+            const el = document.getElementById(v);
+            if (el) el.style.display = v === id ? "block" : "none";
         });
     },
 
-    async init() {
-        this.resetState();
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        this.state.subjectId = urlParams.get('id');
-        this.state.user = JSON.parse(localStorage.getItem('user'));
+    bindNav() {
+        document.getElementById("backBtn").addEventListener("click", () => {
+            const home = "kisi?id=" + encodeURIComponent(QuizPage.cls.slug);
+            const vis = ["viewResult", "viewQuiz", "viewInfo", "viewHub"].find(v => {
+                const el = document.getElementById(v);
+                return el && el.style.display === "block";
+            });
+            // Hub (paling luar) -> balik ke kisi. Sisanya mundur satu level, tanpa reload.
+            if (!vis || vis === "viewHub") { location.href = home; return; }
+            if (vis === "viewInfo") { QuizPage.renderHub(); }
+            else if (vis === "viewQuiz" && QuizPage.mapel) { QuizPage.openInfo(QuizPage.mapel.slug); }
+            else { QuizPage.renderHub(); }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+        document.getElementById("startBtn").addEventListener("click", () => QuizPage.startQuiz());
+        document.addEventListener("keydown", QuizPage.onKey);
+    },
 
-        if (!this.state.user) {
-            window.location.href = '../login';
+    // Keyboard desktop: A–E / 1–5 jawab, Enter lanjut, Esc kembali.
+    onKey(e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target && e.target.tagName) || "";
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+
+        const quizOn = document.getElementById("viewQuiz").style.display === "block";
+        const resultOn = document.getElementById("viewResult").style.display === "block";
+        if (!quizOn && !resultOn) return;
+
+        // Biar Enter ga dobel sama tombol yang lagi kefokus.
+        const focusedBtn = document.activeElement && document.activeElement.tagName === "BUTTON";
+
+        if (quizOn) {
+            const k = (e.key || "").toLowerCase();
+            const letters = ["a", "b", "c", "d", "e"];
+            const nums = ["1", "2", "3", "4", "5"];
+            let pick = letters.indexOf(k);
+            if (pick === -1) pick = nums.indexOf(k);
+            if (pick !== -1) {
+                const q = QuizPage.questions[QuizPage.idx];
+                if (q && q.options && pick < q.options.length && !QuizPage.currentAnswered()) {
+                    e.preventDefault();
+                    QuizPage.answer(pick);
+                }
+                return;
+            }
+            if (e.key === "Enter" && !focusedBtn) {
+                e.preventDefault();
+                QuizPage.goNext();
+                return;
+            }
+            if (e.key === "Escape") {
+                e.preventDefault();
+                if (QuizPage.idx > 0) {
+                    QuizPage._justAnswered = -1;
+                    QuizPage.idx--;
+                    QuizPage.renderQ();
+                } else if (QuizPage.mapel) {
+                    QuizPage.openInfo(QuizPage.mapel.slug);
+                }
+            }
             return;
         }
 
-        if (!this.state.subjectId) {
-            // Show Skeleton
-            if (typeof SkeletonUI !== 'undefined') {
-                SkeletonUI.render('selectionView', 'quizHub');
-                document.getElementById('selectionView').style.display = 'block';
-            }
-            await this.loadSchedule();
-            await this.loadQuizMenu();
+        // Di layar nilai: Enter = coba lagi, Esc = mapel lain.
+        if (e.key === "Enter" && !focusedBtn) {
+            e.preventDefault();
+            QuizPage.startQuiz();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            QuizPage.renderHub();
+        }
+    },
+
+    // Lanjut ke soal berikut / lihat nilai (dipake tombol + Enter + timer).
+    goNext() {
+        if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
+        QuizPage._justAnswered = -1;
+        if (QuizPage.idx < QuizPage.questions.length - 1) {
+            QuizPage.idx++;
+            QuizPage.renderQ();
+            window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
-            document.getElementById('selectionView').style.display = 'none';
-            this.updateSubjectSubtitle();
-            await this.loadQuestions();
+            QuizPage.finish();
         }
-        
-        this.setupEventListeners();
-    },
-
-    async loadSchedule() {
-        try {
-            const MASTER_CLASS_ID = 2;
-            const USER_CLASS_ID = getEffectiveClassId() || this.state.user.class_id;
-            
-            // Cek Global Exam
-            const { data: masterConfig } = await supabase.from('daily_config').select('mode, kisi_days').eq('class_id', MASTER_CLASS_ID).single();
-            const isGlobalExam = (masterConfig && masterConfig.mode === 'exam');
-            const TARGET_CLASS_ID = isGlobalExam ? MASTER_CLASS_ID : USER_CLASS_ID;
-
-            if (isGlobalExam && masterConfig.kisi_days) QUIZ_DAYS = masterConfig.kisi_days;
-            else {
-                const { data: localConfig } = await supabase.from('daily_config').select('kisi_days').eq('class_id', USER_CLASS_ID).single();
-                if (localConfig && localConfig.kisi_days) QUIZ_DAYS = localConfig.kisi_days;
-            }
-
-            const { data: schedules } = await supabase
-                .from('daily_schedules')
-                .select('day_name, lessons')
-                .eq('class_id', TARGET_CLASS_ID)
-                .eq('type', 'exam')
-                .in('day_name', QUIZ_DAYS);
-
-            quizScheduleMap = {};
-            (schedules || []).forEach(s => {
-                quizScheduleMap[s.day_name] = (s.lessons || '').split(';').map(raw => {
-                    const name = raw.includes('-') ? raw.substring(raw.lastIndexOf('-') + 1).trim() : raw.trim();
-                    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                }).filter(n => n.length > 1);
-            });
-        } catch (err) {
-            console.error('Gagal ambil jadwal quiz:', err);
-        }
-    },
-
-    async loadQuizMenu() {
-        try {
-            const hTitle = document.getElementById('headerTitle');
-            if (hTitle) hTitle.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${t('exam_simulation')}`;
-            
-            const classId = getEffectiveClassId() || this.state.user.class_id;
-            
-            // 1. Ambil semua soal
-            const { data: allQ, error: qErr } = await supabase.from('simulation_questions').select('subject_id').or(`class_id.eq.${classId},class_id.eq.0`);
-            if (qErr) throw qErr;
-
-            const counts = allQ.reduce((acc, item) => {
-                acc[item.subject_id] = (acc[item.subject_id] || 0) + 1;
-                return acc;
-            }, {});
-
-            const uniqueSubjects = Object.keys(counts);
-            if (uniqueSubjects.length === 0) {
-                this.showEmptyState();
-                return;
-            }
-
-            // 2. Ambil progres & config
-            const [progRes, confRes] = await Promise.all([
-                supabase.from('simulation_progress').select('*').eq('user_id', this.state.user.id),
-                supabase.from('subjects_config').select('subject_id, subject_name, icon').in('subject_id', uniqueSubjects)
-            ]);
-
-            // Map info biar gampang diakses
-            this.state.subjectsInfo = {};
-            uniqueSubjects.forEach(id => {
-                const conf = (confRes.data || []).find(c => c.subject_id === id);
-                const prog = (progRes.data || []).find(p => p.subject_id === id);
-                this.state.subjectsInfo[id] = {
-                    id,
-                    name: conf ? conf.subject_name : (typeof t === 'function' ? t(id) : id),
-                    icon: conf ? conf.icon : 'fa-book',
-                    qCount: counts[id] || 0,
-                    progress: prog
-                };
-            });
-
-            this.renderDayGroups();
-
-        } catch (err) {
-            console.error('Gagal muat menu simulasi:', err);
-        }
-    },
-
-    renderDayGroups() {
-        const selectionView = document.getElementById('selectionView');
-        if (!selectionView) return;
-
-        // Jangan hapus header card (kartu pertama)
-        const headerCard = selectionView.querySelector('.question-card');
-        const headerHTML = headerCard ? headerCard.outerHTML : '';
-        
-        selectionView.innerHTML = headerHTML;
-        selectionView.style.display = 'block';
-        
-        const dayOrder = this.getDayOrder();
-        const subjectsWithProgress = Object.values(this.state.subjectsInfo);
-        const assignedIds = new Set();
-
-        dayOrder.forEach(day => {
-            const scheduledNorms = quizScheduleMap[day] || [];
-            const daySubjects = subjectsWithProgress.filter(s => {
-                const isMatch = scheduledNorms.some(norm => s.id.includes(norm) || norm.includes(s.id));
-                if (isMatch) assignedIds.add(s.id);
-                return isMatch;
-            });
-
-            if (daySubjects.length > 0) {
-                this.createDaySection(day, daySubjects);
-            }
-        });
-
-        // Others
-        const unassigned = subjectsWithProgress.filter(s => !assignedIds.has(s.id));
-        if (unassigned.length > 0) {
-            this.createDaySection(t('other'), unassigned, true);
-        }
-    },
-
-    createDaySection(dayLabel, subjects, isOther = false) {
-        const section = document.createElement('div');
-        section.className = 'quiz-day-section';
-        section.style.marginBottom = '35px';
-
-        const isToday = dayLabel === this.getDayOrder()[0];
-        const titleColor = isOther ? '#ffd700' : (isToday ? 'var(--accent)' : 'rgba(255,255,255,0.5)');
-        
-        section.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                <span style="font-size:14px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:${titleColor};">
-                    ${isOther ? dayLabel : (typeof t === 'function' ? t(dayLabel.toLowerCase()) : dayLabel)}
-                </span>
-                <div style="flex:1; height:1px; background:linear-gradient(to right, ${titleColor}44, transparent);"></div>
-            </div>
-            <div class="quiz-menu-grid">
-                ${subjects.map(s => this.createCardHTML(s)).join('')}
-            </div>
-        `;
-        document.getElementById('selectionView').appendChild(section);
-    },
-
-    createCardHTML(s) {
-        let badgeClass = 'badge-new';
-        let badgeText = 'COBA!';
-        
-        if (s.progress) {
-            if (s.progress.is_completed) {
-                badgeClass = 'badge-done';
-                badgeText = 'SELESAI';
-            } else {
-                badgeClass = 'badge-ongoing';
-                badgeText = `${s.progress.last_index + 1}/${s.qCount}`;
-            }
-        }
-
-        return `
-            <div class="quiz-menu-card" onclick="window.location.href='quiz?id=${s.id}'">
-                <span class="quiz-card-badge ${badgeClass}">${badgeText}</span>
-                <i class="fa-solid ${s.icon}"></i>
-                <h4>${s.name}</h4>
-                <span style="font-size: 14px">${s.qCount} Soal</span>
-            </div>
-        `;
-    },
-
-    getDayOrder() {
-        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        const now = new Date();
-        let todayName = dayNames[now.getDay()];
-        if (now.getHours() >= 15) {
-            const tom = new Date(now);
-            tom.setDate(now.getDate() + 1);
-            todayName = dayNames[tom.getDay()];
-        }
-        const idx = QUIZ_DAYS.indexOf(todayName);
-        if (idx === -1) return [...QUIZ_DAYS];
-        return [...QUIZ_DAYS.slice(idx), ...QUIZ_DAYS.slice(0, idx)];
-    },
-
-    handleBack() {
-        window.location.href = 'quiz';
-    },
-
-    async loadQuestions() {
-        try {
-            const classId = getEffectiveClassId() || this.state.user.class_id;
-            const { data: questions, error: qErr } = await supabase.from('simulation_questions').select('*').eq('subject_id', this.state.subjectId).or(`class_id.eq.${classId},class_id.eq.0`).order('id', { ascending: true });
-            if (qErr) throw qErr;
-            if (!questions || questions.length === 0) {
-                this.showEmptyState();
-                return;
-            }
-            this.state.questions = questions;
-            const { data: progress } = await supabase.from('simulation_progress').select('last_index, is_completed').eq('user_id', this.state.user.id).eq('subject_id', this.state.subjectId).maybeSingle();
-            if (progress && !progress.is_completed) {
-                this.state.currentIndex = Math.min(progress.last_index, questions.length - 1);
-                for(let i=0; i < this.state.currentIndex; i++) {
-                    this.state.history[i] = [questions[i].answer];
-                }
-            }
-            this.showInfoView();
-        } catch (err) {
-            console.error('Gagal ambil soal:', err);
-        }
-    },
-
-    updateSubjectSubtitle() {
-        const subtitle = document.getElementById('subjectSubtitle');
-        if (!subtitle) return;
-        const name = (typeof t === 'function') ? t(this.state.subjectId) : this.state.subjectId;
-        subtitle.innerText = `${t('subject_lesson')}: ${name}`;
-    },
-
-    showInfoView() {
-        const infoV = document.getElementById('infoView');
-        const backB = document.getElementById('backBtn');
-        if (infoV) infoV.style.display = 'block';
-        if (backB) backB.style.display = 'flex';
-        const name = (typeof t === 'function') ? t(this.state.subjectId) : this.state.subjectId;
-        const infoSub = document.getElementById('infoSubject');
-        const infoCount = document.getElementById('infoCount');
-        if (infoSub) infoSub.innerText = name;
-        if (infoCount) infoCount.innerText = this.state.questions.length;
-    },
-
-    startQuiz() {
-        document.getElementById('infoView').style.display = 'none';
-        document.getElementById('quizView').style.display = 'block';
-        this.renderQuestion();
-    },
-
-    showEmptyState() {
-        const container = this.state.subjectId ? document.getElementById('quizView') : document.getElementById('selectionView');
-        if (container) {
-            container.style.display = 'block';
-            container.innerHTML = `
-                <div class="question-card" style="text-align:center; padding:50px;">
-                    <i class="fa-solid fa-face-surprise" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
-                    <h3>${t('no_simulation_questions')}</h3>
-                    <p style="opacity:0.7;">Admin belum masukin soal buat ${this.state.subjectId ? 'mapel ini' : 'kelas lo'}. Tungguin aja ya! wkwk</p>
-                    <button onclick="window.location.href='kisi-kisi'" class="btn-back" style="margin:20px auto;">${t('back_to_topics')}</button>
-                </div>
-            `;
-        }
-    },
-
-    renderQuestion() {
-        const q = this.state.questions[this.state.currentIndex];
-        if (!q) return;
-        const chosenIndices = this.state.history[this.state.currentIndex] || [];
-        this.state.answeredCorrectly = chosenIndices.includes(q.answer);
-        const progressC = document.getElementById('cardProgress');
-        const qText = document.getElementById('questionText');
-        const pBar = document.getElementById('progressBar');
-        if (progressC) progressC.innerText = `SOAL ${this.state.currentIndex + 1}/${this.state.questions.length}`;
-        if (qText) qText.innerText = q.question;
-        if (pBar) pBar.style.width = `${((this.state.currentIndex) / this.state.questions.length) * 100}%`;
-        const prevBtn = document.getElementById('prevBtn');
-        if (prevBtn) {
-            prevBtn.style.opacity = this.state.currentIndex > 0 ? '1' : '0.3';
-            prevBtn.style.pointerEvents = this.state.currentIndex > 0 ? 'auto' : 'none';
-        }
-        const optionsGrid = document.getElementById('optionsGrid');
-        if (optionsGrid) {
-            optionsGrid.innerHTML = '';
-            const prefixes = ['A', 'B', 'C', 'D', 'E'];
-            q.options.forEach((opt, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                if (chosenIndices.includes(index)) {
-                    if (index === q.answer) btn.classList.add('correct');
-                    else btn.classList.add('wrong');
-                }
-                if (this.state.answeredCorrectly && index !== q.answer) {
-                    btn.classList.add('disabled');
-                }
-                btn.innerHTML = `<span class="option-prefix">${prefixes[index]}</span><span class="option-content">${opt}</span>`;
-                btn.onclick = () => this.checkAnswer(index, btn);
-                optionsGrid.appendChild(btn);
-            });
-        }
-        const expBox = document.getElementById('explanationBox');
-        if (expBox) {
-            if (this.state.answeredCorrectly && q.explanation) {
-                expBox.innerHTML = `<strong>Penjelasan:</strong><br>${q.explanation}`;
-                expBox.style.display = 'block';
-            } else {
-                expBox.style.display = 'none';
-            }
-        }
-        const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn) {
-            if (this.state.answeredCorrectly) nextBtn.classList.add('active');
-            else nextBtn.classList.remove('active');
-        }
-        this.renderNavigator();
-    },
-
-    renderNavigator() {
-        const container = document.getElementById('questionNavigator');
-        if (!container) return;
-        container.innerHTML = '';
-        let maxUnlocked = 0;
-        this.state.questions.forEach((q, idx) => {
-            const h = this.state.history[idx] || [];
-            if (h.includes(q.answer)) maxUnlocked = idx + 1;
-        });
-        const currentUnlockedLimit = Math.max(maxUnlocked, this.state.currentIndex);
-        this.state.questions.forEach((_, index) => {
-            const div = document.createElement('div');
-            div.className = 'nav-item';
-            div.innerText = index + 1;
-            const isAnswered = (this.state.history[index] || []).includes(this.state.questions[index].answer);
-            if (index === this.state.currentIndex) div.classList.add('active');
-            else if (isAnswered) div.classList.add('completed');
-            else if (index > currentUnlockedLimit) div.classList.add('locked');
-            if (!div.classList.contains('locked')) {
-                div.onclick = () => {
-                    this.state.currentIndex = index;
-                    this.renderQuestion();
-                };
-            }
-            container.appendChild(div);
-        });
-    },
-
-    prevQuestion() {
-        if (this.state.currentIndex > 0) {
-            this.state.currentIndex--;
-            this.renderQuestion();
-        }
-    },
-
-    checkAnswer(choiceIndex, btn) {
-        if (this.state.answeredCorrectly) return;
-        const q = this.state.questions[this.state.currentIndex];
-        if (!this.state.history[this.state.currentIndex]) this.state.history[this.state.currentIndex] = [];
-        if (!this.state.history[this.state.currentIndex].includes(choiceIndex)) this.state.history[this.state.currentIndex].push(choiceIndex);
-        const isCorrect = choiceIndex === q.answer;
-        if (isCorrect) {
-            this.state.answeredCorrectly = true;
-            btn.classList.add('correct');
-            document.querySelectorAll('.option-btn').forEach(b => { if (b !== btn) b.classList.add('disabled'); });
-            const expBox = document.getElementById('explanationBox');
-            if (q.explanation && expBox) {
-                expBox.innerHTML = `<strong>Penjelasan:</strong><br>${q.explanation}`;
-                expBox.style.display = 'block';
-            }
-            const nextBtn = document.getElementById('nextBtn');
-            if (nextBtn) nextBtn.classList.add('active');
-        } else {
-            btn.classList.add('wrong');
-            btn.style.pointerEvents = 'none';
-        }
-    },
-
-    async syncProgress(completed = false) {
-        if (!this.state.user || !this.state.subjectId) return;
-        try {
-            await supabase.from('simulation_progress').upsert({
-                user_id: this.state.user.id,
-                subject_id: this.state.subjectId,
-                last_index: this.state.currentIndex,
-                total_questions: this.state.questions.length,
-                is_completed: completed,
-                updated_at: new Date().toISOString()
-            });
-        } catch (err) {
-            console.warn('Tracking progress failed:', err);
-        }
-    },
-
-    nextQuestion() {
-        if (!this.state.answeredCorrectly) return;
-        this.syncProgress();
-        this.state.currentIndex++;
-        if (this.state.currentIndex < this.state.questions.length) this.renderQuestion();
-        else this.showResult();
-    },
-
-    showResult() {
-        const pBar = document.getElementById('progressBar');
-        const qView = document.getElementById('quizView');
-        const rView = document.getElementById('resultView');
-        if (pBar) pBar.style.width = '100%';
-        if (qView) qView.style.display = 'none';
-        if (rView) rView.style.display = 'block';
-        this.syncProgress(true);
-        if (typeof logActivity === 'function') logActivity(`Menyelesaikan Simulasi: ${this.state.subjectId}`, "Simulasi", 15, this.state.subjectId);
-    },
-
-    setupEventListeners() {
-        const nextBtn = document.getElementById('nextBtn');
-        const backBtn = document.getElementById('backBtn');
-        const startBtn = document.getElementById('startBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        if (nextBtn) nextBtn.onclick = () => this.nextQuestion();
-        if (backBtn) backBtn.onclick = () => this.handleBack();
-        if (startBtn) startBtn.onclick = () => this.startQuiz();
-        if (prevBtn) prevBtn.onclick = () => this.prevQuestion();
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => QuizApp.init());
+document.addEventListener("DOMContentLoaded", () => QuizPage.boot());

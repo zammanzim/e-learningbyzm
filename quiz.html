@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Latihan Soal • Ujian</title>
+    <meta
+      name="description"
+      content="Latihan soal ulangan dengan nilai otomatis. Tanpa login."
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/track.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-row">
+          <button class="back-btn" id="backBtn" title="Kembali">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div class="brand">
+            <i class="fa-solid fa-graduation-cap"></i> LATIHAN SOAL
+          </div>
+          <div class="top-mini">
+            <a id="miniKisi" href="kisi">Kisi-Kisi</a>
+            <a id="miniQuiz" class="on" href="quiz">Latihan</a>
+          </div>
+        </div>
+        <div class="topbar-sub">
+          Web kisi-kisi and quiz made by Nizam or nimi
+        </div>
+      </div>
+    </div>
+    <div class="wrap" id="quizRoot">
+      <div class="hero">
+        <div class="hero-text">
+          <h1>Kelas <span id="kelasTitle">…</span></h1>
+          <p>
+            Pilih mapel di bawah buat mulai. Jawaban dikunci sekali pilih — kayak
+            ujian beneran.
+          </p>
+          <p class="who" id="whoLine" style="display: none"></p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-hero" id="heroKisiLink" href="kisi"
+            ><i class="fa-solid fa-book-open"></i>Liat Kisi-Kisi →</a
+          >
+        </div>
+      </div>
+      <div id="viewHub">
+        <div class="section-label">
+          <i class="fa-solid fa-calendar-days"></i> Jadwal Ujian
+        </div>
+        <div id="jadwalStrip">
+          <div class="strip-empty">Wet, lagi nyiapin jadwal…</div>
+        </div>
+        <div class="section-label">
+          <i class="fa-solid fa-grid-2"></i> Pilih Mapel
+        </div>
+        <div id="mapelBox"><div class="pub-empty">Wet, lagi nyiapin soal…</div></div>
+      </div>
+      <div id="viewInfo" style="display: none">
+        <div class="info-card">
+          <i id="infoIcon" class="fa-solid fa-book"></i>
+          <h2 id="infoName">Mapel</h2>
+          <div class="info-count" id="infoCount">0</div>
+          <div class="info-cap">Total Soal</div>
+          <p class="info-best" id="infoBest"></p>
+          <p style="margin-top: 12px; font-size: 0.82rem; color: var(--muted)">
+            Soal latihan dari kisi-kisi yang ada. Satu soal satu jawaban — pilih
+            yang paling yakin.
+          </p>
+          <button class="btn gold big" id="startBtn">
+            MULAI <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
+      </div>
+      <div id="viewQuiz" style="display: none"><div id="quizPlay"></div></div>
+      <div id="viewResult" style="display: none">
+        <div id="quizResult"></div>
+      </div>
+      <p class="foot">E-Learning Nizam</p>
+    </div>
+    <div id="quizFlash"></div>
+    <script src="js/quiz.js"></script>
+  </body>
+</html>
