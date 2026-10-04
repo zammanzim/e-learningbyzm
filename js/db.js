@@ -187,10 +187,10 @@ const ExamDB = {
         const p = ExamDB.profile();
         if (p && p.name) {
             el.style.display = "block";
-            el.innerHTML = `Halo, <b>${ExamDB.esc(p.name)}</b> • <a href="index.html">ganti</a>`;
+            el.innerHTML = `Haii, <b>${ExamDB.esc(p.name)}</b>`;
         } else {
             el.style.display = "block";
-            el.innerHTML = `<a href="index.html">Isi nama lo</a> biar nilai ketandain.`;
+            el.innerHTML = `Haii, Someone`;
         }
     },
 
