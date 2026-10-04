@@ -1,0 +1,71 @@
+```css
+/* Reset dasar */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body */
+body{
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Header */
+header{
+    background: #0077cc;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Navigasi */
+nav ul{
+    list-style: none;
+    margin-top: 10px;
+}
+
+nav ul li{
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a{
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav ul li a:hover{
+    color: yellow;
+}
+
+/* Konten */
+main{
+    padding: 30px;
+}
+
+.content{
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.content h2{
+    margin-bottom: 15px;
+    color: #0077cc;
+}
+
+/* Footer */
+footer{
+    background: #222;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+}
+```
