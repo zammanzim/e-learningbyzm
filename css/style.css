@@ -381,7 +381,7 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 }
 
 /* ===== Runner ===== */
-.q-top { display: flex; justify-content: space-between; gap: 8px; font-size: .72rem; font-weight: 900; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 9px; }
+.q-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .72rem; font-weight: 900; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 9px; }
 .pbar { height: 9px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 1px 2px rgba(0,0,0,.1); }
 .pbar div { height: 100%; background: linear-gradient(90deg, var(--navy), var(--gold)); border-radius: 999px; transition: width .35s ease; }
 .q-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 21px; box-shadow: var(--shadow-pop); animation: rise .3s ease both; }
@@ -407,7 +407,8 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 .opt.dim { opacity: .55; }
 .opt[disabled] { cursor: default; }
 .exp { margin-top: 15px; background: #fff8e1; border-left: 5px solid var(--gold); border-radius: 0 13px 13px 0; padding: 13px 15px; font-size: .88rem; line-height: 1.65; white-space: pre-line; }
-.q-nav-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 17px; }
+.q-nav-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 17px; flex-wrap: wrap; }
+.q-nav-row .btn { flex: 1 1 auto; justify-content: center; padding-left: 12px; padding-right: 12px; }
 /* Runner split: soal kiri, navigasi kanan (desktop) */
 .quiz-split { display: grid; gap: 0; }
 .quiz-side .q-nav { margin-top: 0; }
@@ -530,7 +531,11 @@ tr.me td { background: #fff8e1; }
 /* Anti offroad: grid/flex anak jangan maksa lebar viewport */
 .quiz-main, .q-card, .opts, .opt, .wrap { min-width: 0; }
 .opt > span:last-child { min-width: 0; overflow-wrap: anywhere; }
-body { overflow-x: clip; }
+html, body { overflow-x: clip; max-width: 100%; }
+body { overscroll-behavior-x: none; }
+img, canvas, video, iframe { max-width: 100%; }
+.kisi-body { overflow-wrap: anywhere; }
+.kisi-body a { overflow-wrap: anywhere; word-break: break-word; }
 /* ===== Umum ===== */
 .pub-empty { text-align: center; color: var(--muted); padding: 42px 20px; font-size: .95rem; line-height: 1.7; background: var(--card); border: 2px dashed var(--line); border-radius: 18px; }
 .foot { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 32px; }
