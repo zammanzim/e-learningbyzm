@@ -61,6 +61,7 @@ const QuizPage = {
         QuizPage.renderHub();
         if (typeof Track !== "undefined") Track.page("quiz");
         ExamDB.confirmIdentity();
+        ExamDB.watchVersion();
 
         try {
             QuizPage.autoNext = localStorage.getItem("exam_autonext") !== "0";

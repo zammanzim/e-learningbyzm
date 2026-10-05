@@ -274,6 +274,47 @@ const ExamDB = {
             .replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     },
 
+    // Auto-refresh kalo ada update halaman (version.json naik).
+    // Ga langsung reload: munculin popup dulu + tombol.
+    _verSeen: null,
+    _verAsked: false,
+    watchVersion() {
+        const check = async () => {
+            try {
+                const r = await fetch("version.json?_=" + Date.now(), { cache: "no-store" });
+                if (!r.ok) return;
+                const j = await r.json();
+                if (ExamDB._verSeen === null) { ExamDB._verSeen = j.v; return; }
+                if (j.v !== ExamDB._verSeen && !ExamDB._verAsked) {
+                    ExamDB._verAsked = true;
+                    ExamDB.askRefresh();
+                }
+            } catch (e) { /* offline/404 — abaikan */ }
+        };
+        check();
+        setInterval(check, 60000);
+    },
+
+    askRefresh() {
+        try {
+            if (document.getElementById("verPop")) return;
+            const ov = document.createElement("div");
+            ov.id = "verPop";
+            ov.className = "idpop-ov";
+            ov.innerHTML =
+                `<div class="idpop-card">` +
+                `<div style="font-size:2.4rem;">🔄</div>` +
+                `<h2>Ada versi baru nih</h2>` +
+                `<p class="idpop-sub">Halamannya di refresh dulu yaa biar ga ketinggalan update.</p>` +
+                `<div class="idpop-btns">` +
+                `<button class="btn gold" id="verYes">Iya, refresh</button>` +
+                `</div></div>`;
+            document.body.appendChild(ov);
+            requestAnimationFrame(() => ov.classList.add("open"));
+            document.getElementById("verYes").addEventListener("click", () => location.reload());
+        } catch (e) { location.reload(); }
+    },
+
     // Render LaTeX \(...\) / \[...\] via KaTeX (kalo lib-nya ke-load).
     // Aman buat teks biasa: ga ada delimiter = ga diapa-apain.
     // Lib CDN defer bisa telat → retry 5 detik.

@@ -79,6 +79,7 @@ const NilaiPage = {
 
         if (typeof Track !== "undefined") Track.page("nilai");
         if (typeof ExamViewer !== "undefined") ExamViewer.bind();
+        ExamDB.watchVersion();
         await NilaiPage.load(true);
         NilaiPage.setupAdmin();
     },

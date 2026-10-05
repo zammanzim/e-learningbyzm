@@ -23,6 +23,7 @@ const Adm = {
     },
 
     async boot() {
+        ExamDB.watchVersion();
         document.getElementById("r2state").textContent = ExamMedia.r2Aktif()
             ? "Backend media: R2 (presign worker)."
             : "Backend media: R2 BELUM diset — upload mati sampai R2 live (lihat README).";

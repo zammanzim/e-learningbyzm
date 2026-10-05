@@ -64,6 +64,7 @@ const KisiPage = {
         if (typeof ExamViewer !== "undefined") ExamViewer.bind();
         if (typeof Track !== "undefined") Track.page("kisi");
         ExamDB.confirmIdentity();
+        ExamDB.watchVersion();
     },
 
     // norm buat nyocokin mapel jadwal <-> subject kisi <-> slug soal.
