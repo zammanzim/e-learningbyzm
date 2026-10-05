@@ -265,13 +265,6 @@ const ExamDB = {
                         box.classList.remove("open");
                     }
                 });
-                document.getElementById("dropOut").addEventListener("click", () => {
-                    try {
-                        localStorage.removeItem("exam_profile");
-                        localStorage.setItem("exam_logged_out", "1");
-                    } catch (err) { /* abaikan */ }
-                    location.href = "index.html";
-                });
             }
         } catch (e) { /* abaikan */ }
     },

@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js?v=1"></script>
     <script src="js/db.js?v=1"></script>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style.css?v=1" />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
@@ -43,7 +43,8 @@
         <div class="hero-text">
           <h1>Masuk ke web<span>Kisi-Kisi</span>sama <span>Quiz</span></h1>
           <p>
-          Selamat datang di web Kisi-Kisi sama Quiz buatan Nizam. Sebelum masuk pilih kelas sama isi nama dulu yaa! 
+            Selamat datang di web Kisi-Kisi sama Quiz buatan Nizam. Sebelum
+            masuk pilih kelas sama isi nama dulu yaa!
           </p>
         </div>
       </div>
@@ -93,7 +94,8 @@
           <p
             style="font-size: 0.8rem; color: var(--muted); margin-bottom: 12px"
           >
-            Isi nama kalo mau, ga diisi atau pake nama samaran juga gapapa. buat nyatet progress, sama visitor aja. 
+            Isi nama kalo mau, ga diisi atau pake nama samaran juga gapapa. buat
+            nyatet progress, sama visitor aja.
           </p>
           <div style="display: flex; justify-content: flex-end">
             <button class="btn gold sm" id="nameGo">
@@ -104,53 +106,53 @@
       </div>
 
       <p class="foot">
-        Web kisi-kisi and quiz. Made by Nizam or nimi. <br>
+        Web kisi-kisi and quiz. Made by Nizam or nimi. <br />
         &copy 2026 Web Nizam • All Right Reserved
       </p>
     </div>
     <script>
-        const ExamProfile = {
-          KEY: "exam_profile",
-          get() {
-            try {
-              return JSON.parse(localStorage.getItem(ExamProfile.KEY) || "null");
-            } catch (e) {
-              return null;
-            }
-          },
-          set(slug, name) {
-            try {
-              localStorage.setItem(
-                ExamProfile.KEY,
-                JSON.stringify({ slug, name: name || "" }),
-              );
-              localStorage.removeItem("exam_logged_out");
-            } catch (e) {
-              /* abaikan */
-            }
-          },
-          clear() {
-            try {
-              localStorage.removeItem(ExamProfile.KEY);
-            } catch (e) {}
-          },
-          // Catet ke exam_guests (kosong -> someone). Fire-and-forget.
-          async _log(slug) {
-            try {
-              const p =
-                (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
-                ExamProfile.get() ||
-                {};
-              const cls = await ExamDB.resolveClass(slug);
-              await supa.from("exam_guests").insert({
-                name: (p.name || "").trim() || "someone",
-                class_id: cls.id,
-              });
-            } catch (e) {
-              /* abaikan */
-            }
-          },
-        };
+      const ExamProfile = {
+        KEY: "exam_profile",
+        get() {
+          try {
+            return JSON.parse(localStorage.getItem(ExamProfile.KEY) || "null");
+          } catch (e) {
+            return null;
+          }
+        },
+        set(slug, name) {
+          try {
+            localStorage.setItem(
+              ExamProfile.KEY,
+              JSON.stringify({ slug, name: name || "" }),
+            );
+            localStorage.removeItem("exam_logged_out");
+          } catch (e) {
+            /* abaikan */
+          }
+        },
+        clear() {
+          try {
+            localStorage.removeItem(ExamProfile.KEY);
+          } catch (e) {}
+        },
+        // Catet ke exam_guests (kosong -> someone). Fire-and-forget.
+        async _log(slug) {
+          try {
+            const p =
+              (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
+              ExamProfile.get() ||
+              {};
+            const cls = await ExamDB.resolveClass(slug);
+            await supa.from("exam_guests").insert({
+              name: (p.name || "").trim() || "someone",
+              class_id: cls.id,
+            });
+          } catch (e) {
+            /* abaikan */
+          }
+        },
+      };
 
       let chosenSlug = "";
       let chosenName = "";
@@ -162,17 +164,19 @@
         });
       }
 
-        function masuk() {
-          ExamProfile._log(chosenSlug).finally(() => {
-            location.href = "kisi?id=" + encodeURIComponent(chosenSlug);
-          });
-        }
+      function masuk() {
+        ExamProfile._log(chosenSlug).finally(() => {
+          location.href = "kisi?id=" + encodeURIComponent(chosenSlug);
+        });
+      }
 
       document.addEventListener("DOMContentLoaded", async () => {
         const grid = document.getElementById("classGrid");
 
-            // Profil exam ATAU sesi login app lama (key "user", domain sama).
-            const prof = (typeof ExamDB !== "undefined" && ExamDB.profile()) || ExamProfile.get();
+        // Profil exam ATAU sesi login app lama (key "user", domain sama).
+        const prof =
+          (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
+          ExamProfile.get();
         if (prof && prof.slug) {
           try {
             const cls = await ExamDB.resolveClass(prof.slug);
@@ -230,9 +234,7 @@
           ExamProfile.set(chosenSlug, nm);
           masuk();
         };
-        document
-          .getElementById("nameGo")
-          .addEventListener("click", go);
+        document.getElementById("nameGo").addEventListener("click", go);
         document
           .getElementById("nameBack")
           .addEventListener("click", () => show("viewClass"));
