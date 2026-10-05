@@ -157,6 +157,22 @@ const ExamMedia = {
         return body;
     },
 
+    // Hapus file R2 via presign DELETE (butuh worker versi delete).
+    async r2Delete(path) {
+        const key = String(path || "").replace(/^\/+/, "");
+        if (!key) return;
+        const res = await fetch(R2_PRESIGN_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ op: "delete", path: key })
+        });
+        let body = null;
+        try { body = await res.json(); } catch (e) { /* abaikan */ }
+        if (!res.ok) throw new Error((body && body.error) || ("Delete gagal (" + res.status + ")"));
+        if (!body || !body.url) throw new Error("Presign tidak mengembalikan URL.");
+        const del = await fetch(body.url, { method: "DELETE" });
+        if (!del.ok && del.status !== 404) throw new Error("Delete R2 gagal (" + del.status + ")");
+    },
     // Upload 1 file buat kisi. R2 WAJIB (tanpa fallback Supabase —
     // usage bengkak). Return PATH RELATIF buat exam_media.path.
     async upload(kisiId, file) {

@@ -9,8 +9,8 @@
       content="Kisi-kisi + latihan soal ulangan. Pilih kelas, tanpa login."
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/db.js"></script>
+    <script src="js/config.js?v=1"></script>
+    <script src="js/db.js?v=1"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
@@ -124,6 +124,7 @@
                 ExamProfile.KEY,
                 JSON.stringify({ slug, name: name || "" }),
               );
+              localStorage.removeItem("exam_logged_out");
             } catch (e) {
               /* abaikan */
             }
@@ -136,7 +137,10 @@
           // Catet ke exam_guests (kosong -> someone). Fire-and-forget.
           async _log(slug) {
             try {
-              const p = ExamProfile.get() || {};
+              const p =
+                (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
+                ExamProfile.get() ||
+                {};
               const cls = await ExamDB.resolveClass(slug);
               await supa.from("exam_guests").insert({
                 name: (p.name || "").trim() || "someone",
@@ -167,8 +171,8 @@
       document.addEventListener("DOMContentLoaded", async () => {
         const grid = document.getElementById("classGrid");
 
-        // Profil lama? Tawarin lanjut.
-        const prof = ExamProfile.get();
+            // Profil exam ATAU sesi login app lama (key "user", domain sama).
+            const prof = (typeof ExamDB !== "undefined" && ExamDB.profile()) || ExamProfile.get();
         if (prof && prof.slug) {
           try {
             const cls = await ExamDB.resolveClass(prof.slug);

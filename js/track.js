@@ -25,14 +25,17 @@ const Track = {
 
     name() {
         try {
-            const p = JSON.parse(localStorage.getItem("exam_profile") || "null");
-            return (p && p.name && String(p.name).trim()) || "someone";
+            const p = (typeof ExamDB !== "undefined" && ExamDB.profile())
+                || JSON.parse(localStorage.getItem("exam_profile") || "null");
+            const nm = p && (p.name || "").trim ? String(p.name || "").trim() : "";
+            return nm || "someone";
         } catch (e) { return "someone"; }
     },
 
     slug() {
         try {
-            const p = JSON.parse(localStorage.getItem("exam_profile") || "null");
+            const p = (typeof ExamDB !== "undefined" && ExamDB.profile())
+                || JSON.parse(localStorage.getItem("exam_profile") || "null");
             return (p && p.slug) || new URLSearchParams(location.search).get("id") || "";
         } catch (e) { return ""; }
     },

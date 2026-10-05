@@ -32,15 +32,11 @@ const QuizPage = {
         }
         document.title = `Latihan Soal ${QuizPage.cls.name} • Ujian`;
         document.getElementById("kelasTitle").textContent = QuizPage.cls.name;
-        ExamDB.whoLine("whoLine");
+        ExamDB.topUser();
         const qhref = "quiz?id=" + encodeURIComponent(QuizPage.cls.slug);
         const khref = "kisi?id=" + encodeURIComponent(QuizPage.cls.slug);
         const tk = document.getElementById("topKisiLink");
         if (tk) tk.href = khref;
-        const mq = document.getElementById("miniQuiz");
-        if (mq) mq.href = qhref;
-        const mk = document.getElementById("miniKisi");
-        if (mk) mk.href = khref;
         const heroKisi = document.getElementById("heroKisiLink");
         if (heroKisi) heroKisi.href = khref;
 
@@ -64,6 +60,7 @@ const QuizPage = {
         QuizPage.renderStrip();
         QuizPage.renderHub();
         if (typeof Track !== "undefined") Track.page("quiz");
+        ExamDB.confirmIdentity();
 
         try {
             QuizPage.autoNext = localStorage.getItem("exam_autonext") !== "0";
@@ -169,9 +166,11 @@ const QuizPage = {
             const rows = QuizPage.sched[day] || [];
             const hit = QuizPage.subjects.filter(s => {
                 const ns = QuizPage.norm(s.slug);
+                const nn = QuizPage.norm(s.name);
                 const ok = rows.some(r => {
                     const nm = QuizPage.norm(r.mapel);
-                    return ns.includes(nm) || nm.includes(ns);
+                    return (ns && (ns.includes(nm) || nm.includes(ns))) ||
+                        (nn && (nn.includes(nm) || nm.includes(nn)));
                 });
                 if (ok) assigned.add(s.slug);
                 return ok;
@@ -351,7 +350,6 @@ const QuizPage = {
         });
         const next = document.getElementById("qNext");
         if (next) next.addEventListener("click", () => {
-            if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
             QuizPage._justAnswered = -1;
             QuizPage.idx++; QuizPage.renderQ();
             QuizPage.saveProg();
@@ -359,12 +357,12 @@ const QuizPage = {
         });
         const fin = document.getElementById("qFinish");
         if (fin) fin.addEventListener("click", () => {
-            if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
             QuizPage._justAnswered = -1;
             QuizPage.finish();
         });
         const auto = document.getElementById("qAuto");
         if (auto) auto.addEventListener("click", () => QuizPage.setAuto(!QuizPage.autoNext));
+        ExamDB.renderMath(box);
     },
 
     clearTimer() {
@@ -440,6 +438,7 @@ const QuizPage = {
         if (exp && q.explanation) {
             exp.innerHTML = `<b>Pembahasan:</b><br>${ExamDB.esc(q.explanation)}`;
             exp.style.display = "block";
+            ExamDB.renderMath(exp);
         }
         const navBtn = box.querySelector(`.nav-n[data-n="${QuizPage.idx}"]`);
         if (navBtn) {
@@ -467,6 +466,16 @@ const QuizPage = {
         if (typeof Track !== "undefined") Track.quizFinish(QuizPage.mapel.slug, score, benar, total);
         const who = (ExamDB.profile() || {}).name || "";
         QuizPage.saveBest(QuizPage.mapel.slug, score, benar, total);
+        // Catet ke exam_scores (riwayat per device, buat nilai pribadi).
+        try {
+            supa.from("exam_scores").insert({
+                device_key: (typeof Track !== "undefined" ? Track.device() : "unknown"),
+                name: who.trim() || "someone",
+                class_slug: QuizPage.cls.slug,
+                subject: QuizPage.mapel.slug,
+                score, benar, total
+            }).then(() => {}, () => {});
+        } catch (e) { /* abaikan */ }
 
         const emoji = score === 100 ? "🏆" : score >= 80 ? "🔥" : score >= 60 ? "💪" : "📚";
         const msg = score === 100 ? "Sempurna! Pertahanin."
@@ -499,6 +508,7 @@ const QuizPage = {
             `</div></div><h3 class="rev-title">Pembahasan</h3>${review}`;
 
         document.getElementById("rRetry").addEventListener("click", () => QuizPage.startQuiz(true));
+        ExamDB.renderMath(document.getElementById("quizResult"));
         document.getElementById("rHub").addEventListener("click", () => {
             QuizPage.renderHub();
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -590,9 +600,8 @@ const QuizPage = {
         }
     },
 
-    // Lanjut ke soal berikut / lihat nilai (dipake tombol + Enter + timer).
+    // Lanjut ke soal berikut / lihat nilai (boleh kosong, dihitung salah).
     goNext() {
-        if (!QuizPage.currentAnswered()) { QuizPage.flash("Pilih dulu satu jawaban."); return; }
         QuizPage._justAnswered = -1;
         if (QuizPage.idx < QuizPage.questions.length - 1) {
             QuizPage.idx++;

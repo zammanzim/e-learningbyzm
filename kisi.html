@@ -9,12 +9,12 @@
       content="Jadwal ujian + kisi-kisi per hari. Tanpa login."
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/media.js"></script>
-    <script src="js/track.js"></script>
-    <script src="js/viewer.js"></script>
-    <script src="js/pdfview.js"></script>
+    <script src="js/config.js?v=1"></script>
+    <script src="js/db.js?v=1"></script>
+    <script src="js/media.js?v=1"></script>
+    <script src="js/track.js?v=1"></script>
+    <script src="js/viewer.js?v=1"></script>
+    <script src="js/pdfview.js?v=1"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
@@ -24,6 +24,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    ></script>
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
@@ -36,9 +48,28 @@
           <div class="brand">
             <i class="fa-solid fa-list-check"></i> KISI-KISI
           </div>
-          <div class="top-mini">
-            <a id="miniKisi" class="on" href="kisi">Kisi-Kisi</a>
-            <a id="miniQuiz" href="quiz">Latihan</a>
+          <div class="top-user-wrap">
+            <button
+              type="button"
+              class="top-user"
+              id="topUser"
+              style="display: none"
+            >
+              <span class="ava" id="topAva">?</span
+              ><span id="topHai">Haii</span
+              ><i class="fa-solid fa-chevron-down top-caret"></i>
+            </button>
+            <div class="top-drop" id="topDrop">
+              <a id="dropKisi" href="kisi"
+                ><i class="fa-solid fa-book-open"></i> Kisi-Kisi</a
+              >
+              <a id="dropQuiz" href="quiz"
+                ><i class="fa-solid fa-graduation-cap"></i> Latihan Soal</a
+              >
+              <button type="button" id="dropOut">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar
+              </button>
+            </div>
           </div>
         </div>
         <div class="topbar-sub">Web kisi-kisi and quiz made by Nizam or nimi</div>
@@ -52,7 +83,6 @@
             Jadwal ujian paling atas, kisi-kisi per hari di bawahnya. Mapel
             bercentang = kisinya udah ada, tinggal pencet.
           </p>
-          <p class="who" id="whoLine" style="display: none"></p>
         </div>
         <div class="hero-actions">
           <a class="btn gold btn-hero" id="heroQuizLink" href="quiz"
@@ -90,6 +120,6 @@
         &copy 2026 Web Nizam • All Right Reserved
       </p>
     </div>
-    <script src="js/kisi.js"></script>
+    <script src="js/kisi.js?v=1"></script>
   </body>
 </html>

@@ -17,7 +17,7 @@
 // =========================================================================
 
 // Cuma folder ini yang boleh ditulis/dihapus.
-const FOLDER_BOLEH = new Set(["kisi"]);
+const FOLDER_BOLEH = new Set(["kisi", "nilai"]);
 
 const CONTENT_BOLEH = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif",
@@ -124,6 +124,15 @@ export default {
     const path = String(body.path || "").replace(/^\/+/, "");
     if (!validasiPath(path)) return json({ error: "Path tidak diizinkan." }, 400, env, req);
     const region = env.R2_REGION || "auto";
+    const op = body.op === "delete" ? "delete" : "put";
+    if (op === "delete") {
+      const signed = await presignUrl({
+        method: "DELETE", endpoint: env.R2_ENDPOINT, bucket: env.R2_BUCKET,
+        key: path, accessKey: env.R2_ACCESS_KEY, secretKey: env.R2_SECRET_KEY,
+        region, expiresIn: UMUR_PRESIGN_DETIK,
+      });
+      return json({ url: signed, method: "DELETE", path, expiresIn: UMUR_PRESIGN_DETIK }, 200, env, req);
+    }
     try {
       const contentType = String(body.contentType || "application/octet-stream");
       if (!CONTENT_BOLEH.has(contentType)) return json({ error: "Tipe file tidak diizinkan." }, 400, env, req);

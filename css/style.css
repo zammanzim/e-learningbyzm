@@ -35,7 +35,6 @@ body {
     background: linear-gradient(120deg, #16213c 0%, var(--navy) 55%, var(--navy2) 100%);
     border-bottom: 4px solid var(--gold); padding: 12px 16px 14px;
     box-shadow: 0 6px 20px rgba(22,33,60,.35);
-    overflow: hidden;
 }
 .topbar::after {
     content: ""; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px;
@@ -70,6 +69,39 @@ body {
     background: linear-gradient(180deg, #ffe9a8, var(--gold)); color: var(--navy);
     box-shadow: 0 2px 8px rgba(217,165,33,.4);
 }
+.top-user { margin-left: auto; display: flex; align-items: center; gap: 9px; color: #fff; font-weight: 800; font-size: .88rem; }
+.top-user .ava {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(180deg, #ffe9a8, var(--gold)); color: var(--navy);
+    font-weight: 900; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(217,165,33,.4);
+}
+/* Dropdown profil (contek ui-components lama) */
+.top-user-wrap { margin-left: auto; position: relative; }
+.top-user {
+    display: flex; align-items: center; gap: 9px; background: transparent; border: none;
+    color: #fff; font-family: inherit; font-weight: 800; font-size: .88rem; cursor: pointer;
+    padding: 6px 8px; border-radius: 12px;
+}
+.top-user:hover { background: rgba(255,255,255,.1); }
+.top-user .top-caret { font-size: .7rem; opacity: .7; transition: transform .2s; }
+.top-user.open .top-caret { transform: rotate(180deg); }
+.top-drop {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0; min-width: 190px;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow-pop); overflow: hidden; z-index: 99; padding: 6px;
+}
+.top-drop.open { display: block; animation: rise .2s ease both; }
+.top-drop a, .top-drop button {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 11px 13px; border-radius: 9px; border: none; background: transparent;
+    color: var(--ink); font-family: inherit; font-size: .87rem; font-weight: 700;
+    text-decoration: none; cursor: pointer; text-align: left;
+}
+.top-drop a:hover, .top-drop button:hover { background: #f4efe0; }
+.top-drop i { width: 18px; text-align: center; color: #8a6d00; }
+.top-drop #dropOut { color: var(--red); }
+.top-drop #dropOut i { color: var(--red); }
 .top-link:active, .btn:active, .chip:active, .mapel-card:active, .class-card:active { transform: scale(.95); }
 .topbar-sub { font-size: .8rem; opacity: .7; margin-top: 3px; }
 .chips { display: flex; gap: 8px; margin-top: 11px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
@@ -446,6 +478,59 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 .progress-pill { background: #f8f5ec; border: 1.5px solid var(--line); padding: 3px 11px; border-radius: 999px; font-size: .78rem; font-weight: 800; white-space: nowrap; }
 .filter-bar { display: flex; gap: 9px; margin: 12px 0 4px; flex-wrap: wrap; }
 .field-input { font-family: inherit; font-size: .85rem; padding: 9px 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff; outline: none; }
+/* ===== Popup identitas ==== */
+.idpop-ov {
+    position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+    background: rgba(10, 12, 18, .6); opacity: 0; transition: opacity .25s ease; padding: 20px;
+}
+.idpop-ov.open { opacity: 1; }
+/* Modal nilai: pas ketutup jangan nangkep klik. */
+#stuModal { visibility: hidden; pointer-events: none; }
+#stuModal.open { visibility: visible; pointer-events: auto; }
+.idpop-card {
+    background: var(--card); border: 2px solid var(--gold); border-radius: 22px;
+    padding: 30px 28px; text-align: center; max-width: 340px; width: 100%;
+    box-shadow: var(--shadow-pop); transform: scale(.92); transition: transform .25s ease;
+}
+.idpop-ov.open .idpop-card { transform: scale(1); }
+.idpop-ava {
+    width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
+    background: linear-gradient(135deg, var(--navy2), var(--navy)); color: #fff;
+    font-size: 1.7rem; font-weight: 900; display: flex; align-items: center; justify-content: center;
+}
+.idpop-card h2 { font-size: 1.25rem; font-weight: 800; }
+.idpop-card h2 span { color: #8a6d00; }
+.idpop-sub { font-size: .8rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+.idpop-btns { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+.idpop-btns .btn { justify-content: center; }
+/* ===== Podium leaderboard (nilai) ===== */
+.podium-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: end; }
+.podium-box {
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+    padding: 16px 10px 12px; text-align: center; cursor: pointer; font-family: inherit;
+    color: var(--ink); box-shadow: var(--shadow); transition: transform .15s;
+}
+.podium-box:hover { transform: translateY(-3px); }
+.podium-box.p1 { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft), var(--shadow-pop); padding-top: 22px; }
+.pod-medal { font-size: 1.8rem; }
+.pod-name { font-weight: 800; font-size: .82rem; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-score { font-weight: 900; font-size: 1.1rem; color: #8a6d00; }
+.leader-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 10px 13px; margin-bottom: 8px; cursor: pointer; font-family: inherit; color: var(--ink);
+    text-align: left;
+}
+.leader-rank { width: 22px; font-weight: 900; opacity: .4; }
+.leader-name { flex: 1; font-size: .85rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr.me td { background: #fff8e1; }
+/* ===== KaTeX (rumus MTK) ===== */
+.katex-display { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.q-text .katex, .opt .katex, .exp .katex, .kisi-body .katex, .rev-exp .katex { font-size: 1.05em; }
+/* Anti offroad: grid/flex anak jangan maksa lebar viewport */
+.quiz-main, .q-card, .opts, .opt, .wrap { min-width: 0; }
+.opt > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+body { overflow-x: clip; }
 /* ===== Umum ===== */
 .pub-empty { text-align: center; color: var(--muted); padding: 42px 20px; font-size: .95rem; line-height: 1.7; background: var(--card); border: 2px dashed var(--line); border-radius: 18px; }
 .foot { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 32px; }

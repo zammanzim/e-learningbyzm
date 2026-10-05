@@ -175,28 +175,132 @@ const ExamDB = {
     },
 
     // Profil lokal (dari index): { slug, name }. Tanpa login.
+    // Fallback: sesi app lama (key "user", domain sama → kebaca).
+    // class_id lama 1-4 = XI-RPL 1-4 → slug xrpl1-4.
     profile() {
-        try { return JSON.parse(localStorage.getItem("exam_profile") || "null"); }
-        catch (e) { return null; }
+        try {
+            const p = JSON.parse(localStorage.getItem("exam_profile") || "null");
+            if (p && p.slug) return p;
+            // Abis Keluar: jangan fallback ke sesi lama.
+            if (localStorage.getItem("exam_logged_out") === "1") return null;
+        } catch (e) { /* lanjut fallback */ }
+        try {
+            const u = JSON.parse(localStorage.getItem("user") || "null");
+            if (u && (u.nickname || u.full_name)) {
+                const cid = parseInt(u.class_id, 10);
+                return {
+                    slug: Number.isFinite(cid) ? ("xrpl" + cid) : "",
+                    name: u.nickname || u.short_name || String(u.full_name || "").split(" ")[0] || "",
+                    legacy: true
+                };
+            }
+        } catch (e) { /* abaikan */ }
+        return null;
     },
 
-    // Sapaan di hero ("Halo, Budi • ganti"). ID elemen: whoLine.
-    whoLine(elId) {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        const p = ExamDB.profile();
-        if (p && p.name) {
-            el.style.display = "block";
-            el.innerHTML = `Haii, <b>${ExamDB.esc(p.name)}</b>`;
-        } else {
-            el.style.display = "block";
-            el.innerHTML = `Haii, Someone`;
-        }
+    // Popup "Ini ... yaa?" — SEKALI selamanya (flag localStorage).
+    // Tombol: "Iya bener, masuk" (tutup) / "Bukan, ganti" (ke index).
+    confirmIdentity() {
+        try {
+            if (localStorage.getItem("exam_idok") === "1") return;
+            const p = ExamDB.profile();
+            if (!p || !p.name) return;
+            const ov = document.createElement("div");
+            ov.className = "idpop-ov";
+            ov.innerHTML =
+                `<div class="idpop-card">` +
+                `<div class="idpop-ava">${ExamDB.esc(String(p.name).trim().charAt(0).toUpperCase() || "?")}</div>` +
+                `<h2>Ini <span>${ExamDB.esc(p.name)}</span> yaa?</h2>` +
+                `<p class="idpop-sub">Popup ini muncul buat mastiin akunnya, biar nanti bisa liat nilai pribadi.</p>` +
+                `<div class="idpop-btns">` +
+                `<button class="btn gold" id="idpopYes">Iya bener, masuk</button>` +
+                `<button class="btn ghost" id="idpopNo">Bukan, ganti</button>` +
+                `</div></div>`;
+            document.body.appendChild(ov);
+            requestAnimationFrame(() => ov.classList.add("open"));
+            const done = () => {
+                try { localStorage.setItem("exam_idok", "1"); } catch (e) { /* abaikan */ }
+                ov.classList.remove("open");
+                setTimeout(() => ov.remove(), 300);
+            };
+            document.getElementById("idpopYes").addEventListener("click", done);
+            document.getElementById("idpopNo").addEventListener("click", () => { location.href = "index.html"; });
+        } catch (e) { /* abaikan */ }
+    },
+    // Chip user di header kanan: avatar inisial + Haii + caret.
+    // Pencet → dropdown (Kisi-Kisi, Latihan Soal, Keluar).
+    // Keluar = hapus profil + kunci fallback sesi lama (exam_logged_out).
+    topUser() {
+        try {
+            const box = document.getElementById("topUser");
+            if (!box) return;
+            const p = ExamDB.profile();
+            if (!p || !p.name) { box.style.display = "none"; return; }
+            box.style.display = "flex";
+            document.getElementById("topAva").textContent =
+                String(p.name).trim().charAt(0).toUpperCase() || "?";
+            document.getElementById("topHai").textContent = "Haii, " + p.name;
+            const slug = p.slug || "";
+            const dk = document.getElementById("dropKisi");
+            const dq = document.getElementById("dropQuiz");
+            if (dk) dk.href = "kisi" + (slug ? "?id=" + encodeURIComponent(slug) : "");
+            if (dq) dq.href = "quiz" + (slug ? "?id=" + encodeURIComponent(slug) : "");
+            if (!box.dataset.linked) {
+                box.dataset.linked = "1";
+                const drop = document.getElementById("topDrop");
+                box.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const open = drop.classList.toggle("open");
+                    box.classList.toggle("open", open);
+                });
+                document.addEventListener("click", (e) => {
+                    if (!drop.contains(e.target) && e.target !== box && !box.contains(e.target)) {
+                        drop.classList.remove("open");
+                        box.classList.remove("open");
+                    }
+                });
+                document.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape") {
+                        drop.classList.remove("open");
+                        box.classList.remove("open");
+                    }
+                });
+                document.getElementById("dropOut").addEventListener("click", () => {
+                    try {
+                        localStorage.removeItem("exam_profile");
+                        localStorage.setItem("exam_logged_out", "1");
+                    } catch (err) { /* abaikan */ }
+                    location.href = "index.html";
+                });
+            }
+        } catch (e) { /* abaikan */ }
     },
 
     esc(s) {
         return String(s == null ? "" : s).replace(/&/g, "&amp;")
             .replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    },
+
+    // Render LaTeX \(...\) / \[...\] via KaTeX (kalo lib-nya ke-load).
+    // Aman buat teks biasa: ga ada delimiter = ga diapa-apain.
+    // Lib CDN defer bisa telat → retry 5 detik.
+    renderMath(root, tries) {
+        try {
+            const el = root || document.body;
+            if (typeof renderMathInElement !== "function") {
+                if ((tries || 0) < 10) {
+                    setTimeout(() => ExamDB.renderMath(el, (tries || 0) + 1), 500);
+                }
+                return;
+            }
+            renderMathInElement(el, {
+                delimiters: [
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ],
+                throwOnError: false
+            });
+        } catch (e) { /* abaikan, tampil teks mentah */ }
     },
 
     cleanHTML(html) {

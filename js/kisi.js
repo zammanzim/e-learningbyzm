@@ -28,27 +28,25 @@ const KisiPage = {
         }
         document.title = `Kisi-Kisi ${KisiPage.cls.name} • Ujian`;
         document.getElementById("kelasTitle").textContent = KisiPage.cls.name;
-        ExamDB.whoLine("whoLine");
+        ExamDB.topUser();
         const qhref = "quiz?id=" + encodeURIComponent(KisiPage.cls.slug);
-        const khref = "kisi?id=" + encodeURIComponent(KisiPage.cls.slug);
         const tq = document.getElementById("topQuizLink");
         if (tq) tq.href = qhref;
-        const mq = document.getElementById("miniQuiz");
-        if (mq) mq.href = qhref;
-        const mk = document.getElementById("miniKisi");
-        if (mk) mk.href = khref;
         const heroQuiz = document.getElementById("heroQuizLink");
         if (heroQuiz) heroQuiz.href = qhref;
 
         try {
-            const [days, sch, items, counts, teachers] = await Promise.all([
+            const [days, sch, items, counts, teachers, subjects] = await Promise.all([
                 ExamDB.examDays(KisiPage.cls.id),
                 ExamDB.schedule(KisiPage.cls.id),
                 ExamDB.kisi(KisiPage.cls.id),
                 ExamDB.questionCount(KisiPage.cls.id),
-                ExamDB.teachers(KisiPage.cls.id)
+                ExamDB.teachers(KisiPage.cls.id),
+                ExamDB.subjects()
             ]);
             KisiPage.teachers = teachers;
+            KisiPage.subjNames = {};
+            (subjects || []).forEach(s => { KisiPage.subjNames[s.slug] = s.name; });
             KisiPage.days = days;
             KisiPage.sched = sch.map;
             KisiPage.shared = sch.shared;
@@ -65,6 +63,7 @@ const KisiPage = {
         KisiPage.setupSearch();
         if (typeof ExamViewer !== "undefined") ExamViewer.bind();
         if (typeof Track !== "undefined") Track.page("kisi");
+        ExamDB.confirmIdentity();
     },
 
     // norm buat nyocokin mapel jadwal <-> subject kisi <-> slug soal.
@@ -79,7 +78,13 @@ const KisiPage = {
     quizSlugFor(kisiSubject) {
         const n = KisiPage.norm(kisiSubject);
         const slugs = Object.keys(KisiPage.quizCounts);
-        return slugs.find(s => s.includes(n) || n.includes(s)) || null;
+        const hit = slugs.find(s => s.includes(n) || n.includes(s));
+        if (hit) return hit;
+        // Fallback: cocokin nama mapel (mis. slug mtk ↔ Matematika).
+        return slugs.find(s => {
+            const nm = KisiPage.norm((KisiPage.subjNames || {})[s]);
+            return nm && (nm.includes(n) || n.includes(nm));
+        }) || null;
     },
 
     // Cari guru mapel: cocokin norm dua arah lawan slug + nama.
@@ -211,6 +216,7 @@ const KisiPage = {
         }
         box.innerHTML = html || `<div class="pub-empty">Ga ketemu yang cocok sama "<b>${ExamDB.esc(keyword)}</b>".</div>`;
         KisiPage.clampCards();
+        ExamDB.renderMath(box);
         if (typeof PdfView !== "undefined") PdfView.init();
     },
 

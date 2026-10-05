@@ -7,9 +7,10 @@ punya link sendiri. `index.html` cuma redirect ke kisi.
 
 ## Buka
 
-- `index.html` → redirect ke kisi (nerusin `?id=`)
+- `index.html` → pilih kelas + nama (opsional)
 - `kisi.html?id=xrpl1` → jadwal hari ini + kisi per hari (entry utama)
 - `quiz.html?id=xrpl1&mapel=mtk` → latihan soal bernilai (`mapel` opsional)
+- `nilai.html?id=asts` → nilai asli guru (pribadi + leaderboard + file)
 - `admin.html` → PIN default `1234` (ganti di tabel `exam_settings`)
 
 Static doang, langsung serve folder ini (mis. `npx serve` / hosting statis).
