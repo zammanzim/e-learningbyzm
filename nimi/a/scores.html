@@ -931,12 +931,30 @@
 
     <script>
         const TEST_CONFIG = {
+            'asts': { title: 'Nilai ASTS', icon: 'fa-file-lines' },
             'psts': { title: 'Nilai PSTS', icon: 'fa-clipboard-check' },
             'psasi': { title: 'Nilai PSASI', icon: 'fa-file-invoice' },
             'psat': { title: 'Nilai PSAT', icon: 'fa-file-invoice' }
         };
         const SCORES_TABLE = 'nilai_scores';
-        const MAPEL_CONFIG = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda', senibudaya: 'Seni Budaya', informatika: 'Informatika', pjok: 'PJOK', proipas: 'Proipas', dasprog1: 'DASPROGRPL 1', dasprog2: 'DASPROGRPL 2', dasprog3: 'DASPROGRPL 3' };
+        // ASTS 2026 pindah ke tabel sendiri; psts/psat/psasi (tahun lalu) tetap di nilai_scores.
+        function scoresTable() { return currentTestId === 'asts' ? 'scores2026' : SCORES_TABLE; }
+        const MAPEL_LAMA = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda', senibudaya: 'Seni Budaya', informatika: 'Informatika', pjok: 'PJOK', proipas: 'Proipas', dasprog1: 'DASPROGRPL 1', dasprog2: 'DASPROGRPL 2', dasprog3: 'DASPROGRPL 3', kik: 'KIK' };
+        // 2026 (scores2026): pelajaran beda. kk1-3 labelnya ngikutin jurusan kelas.
+        const MAPEL_2026 = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sindo: 'Sejarah Indonesia', bjepang: 'B. Jepang', bsunda: 'B. Sunda', pjok: 'PJOK', kik: 'KIK', kk1: 'KK 1', kk2: 'KK 2', kk3: 'KK 3' };
+        function mapelConfig() { return currentTestId === 'asts' ? MAPEL_2026 : MAPEL_LAMA; }
+        function classMajor() {
+            const sel = document.getElementById('rightClassSelector');
+            const txt = sel && sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+            return ((txt.split('-')[1] || '').trim().split(/\s+/)[0] || '').toUpperCase();
+        }
+        function mapelLabel(k) {
+            if (k === 'kk1' || k === 'kk2' || k === 'kk3') {
+                const mj = classMajor();
+                return 'KK ' + (mj ? mj + ' ' : '') + k.slice(2);
+            }
+            return mapelConfig()[k];
+        }
         const KKM = 75;
         const SCORES_CACHE_TTL = 5 * 60 * 1000; // 5 menit
         function _scoresCacheGet(key) {
@@ -958,7 +976,7 @@
             _selectedClassId = classId || null;
             const ecId = getCurrentClassId();
             Promise.all([
-                supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', ecId).eq('scores_type', currentTestId),
+                supabase.from(scoresTable()).select('*, is_private').eq('class_id', ecId).eq('scores_type', currentTestId),
                 supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', ecId),
             ]).then(([nRes, uRes]) => {
                 if (nRes.error) return;
@@ -969,7 +987,7 @@
                 });
                 const process = s => {
                     let t = 0, c = 0;
-                    for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                    for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
                     return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
                 };
                 globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
@@ -1046,9 +1064,9 @@
         async function _scoresFetchFresh({ effectiveClassId, cacheKey, render }) {
             try {
                 const [nRes, uRes, mRes, cRes] = await Promise.all([
-                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', effectiveClassId).eq('scores_type', currentTestId),
+                    supabase.from(scoresTable()).select('*, is_private').eq('class_id', effectiveClassId).eq('scores_type', currentTestId),
                     supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', effectiveClassId),
-                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', localUser.class_id).eq('scores_type', currentTestId),
+                    supabase.from(scoresTable()).select('*, is_private').eq('class_id', localUser.class_id).eq('scores_type', currentTestId),
                     supabase.from('nilai_config').select('hidden_subjects').eq('test_id', currentTestId).eq('class_id', effectiveClassId).maybeSingle()
                 ]);
                 if (nRes.error) throw nRes.error;
@@ -1061,7 +1079,7 @@
                 });
                 const process = (s) => {
                     let t = 0, c = 0;
-                    for (let k in MAPEL_CONFIG) {
+                    for (let k in mapelConfig()) {
                         if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
                         const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; }
                     }
@@ -1080,7 +1098,7 @@
         function renderMapelSelector() {
             const sel = document.getElementById('mapelSelector');
             const prevVal = sel.value; let html = '';
-            for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; html += `<option value="${k}">${MAPEL_CONFIG[k]}</option>`; }
+            for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; html += `<option value="${k}">${mapelLabel(k)}</option>`; }
             sel.innerHTML = html;
             if (prevVal && sel.querySelector(`option[value="${prevVal}"]`)) sel.value = prevVal;
         }
@@ -1092,7 +1110,7 @@
 
             const totals = {};
             let totalAll = 0, countAll = 0;
-            for (const k in MAPEL_CONFIG) {
+            for (const k in mapelConfig()) {
                 if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
                 let sum = 0, n = 0, top = -Infinity;
                 for (const s of globalData) {
@@ -1121,7 +1139,7 @@
                 const avg = t.avg.toFixed(1);
                 const color = t.avg >= KKM ? '#2ed573' : '#ff6b81';
                 html += `<div class="slide-target" style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); animation-delay:${sIdx * 0.06}s;">
-                    <span style="opacity:0.7;">${MAPEL_CONFIG[k]}</span>
+                    <span style="opacity:0.7;">${mapelLabel(k)}</span>
                     <span style="color:${color}; font-weight:600;">${avg}</span>
                 </div>`;
                 sIdx++;
@@ -1154,13 +1172,13 @@
             else ucapan.innerText = "gapapa, semangat trus";
             const tbody = document.getElementById('personalTableBody'); tbody.innerHTML = "";
             let rowIdx = 0;
-            for (let k in MAPEL_CONFIG) {
+            for (let k in mapelConfig()) {
                 if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
                 const v = parseFloat(data[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff";
                 const tr = document.createElement('tr');
                 tr.className = 'slide-row';
                 tr.style.animationDelay = `${rowIdx * 0.06}s`;
-                tr.innerHTML = `<td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td>`;
+                tr.innerHTML = `<td style="font-weight:600;">${mapelLabel(k)}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td>`;
                 tbody.appendChild(tr);
                 rowIdx++;
             }
@@ -1274,7 +1292,7 @@
             if (s.is_private && !isMe && !isAdminViewAll && localUser?.role !== 'super_admin' && !isTop10) html = `<div style="text-align:center; padding: 30px 10px;"><i class="fa-solid fa-eye-slash" style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;"></i><h2 style="margin-bottom: 10px;">Nilai Tersembunyi</h2><p style="opacity:0.6;">Siswa ini mengaktifkan mode privasi.</p></div>`;
             else {
                 html = `<div style="text-align:left;"><h2 style="color:${color}; margin-bottom:5px; font-size:24px;">${getDisplayName(s.nama_siswa)}</h2><p style="opacity:0.7; margin-bottom:25px;">Rata-Rata: <b style="color:${color}">${s.average.toFixed(2)}</b></p><table class="modern-table"><thead><tr><th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th></tr></thead><tbody>`;
-                for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff"; html += `<tr><td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '✅' : '❌') : '-'}</td></tr>`; }
+                for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff"; html += `<tr><td style="font-weight:600;">${mapelLabel(k)}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '✅' : '❌') : '-'}</td></tr>`; }
                 html += `</tbody></table></div>`;
             }
             document.getElementById('modalBody').innerHTML = html; document.getElementById('scoreModal').classList.add('active'); document.body.style.overflow = 'hidden'; window.history.pushState({ modalOpen: true }, "");
@@ -1287,7 +1305,7 @@
         function reprocess() {
             const proc = (s) => {
                 let t = 0, c = 0;
-                for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
                 return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
             };
             globalData = globalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
@@ -1296,7 +1314,7 @@
 
         function openAdminConfig() {
             const list = document.getElementById('adminConfigList'); let html = '';
-            for (let k in MAPEL_CONFIG) { html += `<div class="config-item"><span>${MAPEL_CONFIG[k]}</span><label class="toggle-switch"><input type="checkbox" class="admin-subject-toggle" value="${k}" ${currentHiddenSubjects.includes(k) ? 'checked' : ''}><span class="toggle-slider"></span></label></div>`; }
+            for (let k in mapelConfig()) { html += `<div class="config-item"><span>${mapelLabel(k)}</span><label class="toggle-switch"><input type="checkbox" class="admin-subject-toggle" value="${k}" ${currentHiddenSubjects.includes(k) ? 'checked' : ''}><span class="toggle-slider"></span></label></div>`; }
             list.innerHTML = html; document.getElementById('adminModal').classList.add('active'); document.body.style.overflow = 'hidden'; window.history.pushState({ adminModal: true }, "");
             renderAdminFiles();
         }
@@ -1322,7 +1340,7 @@
             }
             if (!localUser) return;
             showToast('Menyimpan...', 'info');
-            const { error } = await supabase.from(SCORES_TABLE).update({ is_private: isP }).eq('user_id', localUser.id).eq('scores_type', currentTestId);
+            const { error } = await supabase.from(scoresTable()).update({ is_private: isP }).eq('user_id', localUser.id).eq('scores_type', currentTestId);
             showToast(t('done') + '!', 'success'); loadData();
         }
 
@@ -1413,7 +1431,7 @@
             const _skCached = _scoresCacheGet(_skCacheKey);
             const _skHidden = (_skCached && _skCached.currentHiddenSubjects) || [];
             let pt = '';
-            for (let k in MAPEL_CONFIG) {
+            for (let k in mapelConfig()) {
                 if (!isAdminViewAll && _skHidden.includes(k)) continue;
                 pt += `<tr><td><div class="sk" style="height:14px;width:50%;"></div></td>` +
                     `<td style="text-align:center;"><div class="sk" style="height:24px;width:70px;border-radius:20px;margin:0 auto;"></div></td>` +

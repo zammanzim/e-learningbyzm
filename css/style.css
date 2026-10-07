@@ -143,14 +143,22 @@ body {
 
 /* ===== Split kiri-kanan (desktop) ===== */
 .split { display: grid; gap: 0 26px; }
+/* ===== Nilai layout 2 kolom ala nimi/a/scores (left sticky + right) ===== */
+.nilai-layout { display: grid; gap: 0 26px; min-width: 0; }
+.nilai-layout .left-section, .nilai-layout .right-section { min-width: 0; }
 @media (min-width: 960px) {
     .wrap { max-width: 1180px; }
     .split { grid-template-columns: 350px minmax(0, 1fr); align-items: start; }
     .split-left { position: sticky; top: 120px; }
     .split-left .section-label, .split-right .section-label { margin-top: 26px; }
+    .nilai-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+    .nilai-layout .left-section { position: sticky; top: 120px; }
+    .nilai-layout .left-section .section-label:first-child,
+    .nilai-layout .right-section .section-label:first-child { margin-top: 26px; }
 }
 @media (max-width: 959px) {
     .split-left { margin-bottom: 6px; }
+    .nilai-layout .left-section { margin-bottom: 6px; }
 }
 /* ===== Hari ===== */
 .hari { margin-bottom: 20px; position: relative; }
@@ -213,6 +221,15 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
     outline: none; font-family: inherit; box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s;
 }
 #kisiSearch:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-soft); }
+/* Step 3 index (pilih akun): search + modal, contek #kisiSearch + #stuModal */
+#accSearch {
+    width: 100%; padding: 13px 15px 13px 42px; font-size: .95rem;
+    border: 2px solid var(--line); border-radius: 15px; background: var(--card);
+    outline: none; font-family: inherit; box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s;
+}
+#accSearch:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-soft); }
+#accConfirm { visibility: hidden; pointer-events: none; }
+#accConfirm.open { visibility: visible; pointer-events: auto; }
 
 /* ===== Kartu kisi ===== */
 .kisi-card {
@@ -360,6 +377,56 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 .info-count { font-size: 2.4rem; font-weight: 900; color: #8a6d00; margin-top: 12px; }
 .info-cap { font-size: .75rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
 .info-best { margin-top: 10px; font-size: .85rem; color: #555; }
+/* ===== Kartu Pribadimu compact (/nilai): header sebaris biar tabel muat selayar ===== */
+#myCard.compact { padding: 18px 16px; }
+.me-row { display: flex; align-items: center; gap: 12px; text-align: left; }
+#myCard .score-emoji {
+    font-size: 1.3rem; font-weight: 900; color: #fff; flex-shrink: 0;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--navy2), var(--navy));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.25), var(--shadow);
+}
+.me-id { flex: 1; min-width: 0; }
+.me-id h2 { margin: 0; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-id #myMsg { margin: 2px 0 0; font-size: .8rem; }
+.me-avg { text-align: right; flex-shrink: 0; }
+.me-avg #myAvg { display: block; font-size: 2rem; font-weight: 900; line-height: 1; }
+.me-avg small { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+/* Toggle privasi (gantiin checkbox), di atas tabel */
+.priv-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: .78rem; color: var(--muted); margin-top: 10px; cursor: pointer;
+}
+.priv-row .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.priv-row .switch input { opacity: 0; width: 0; height: 0; }
+.priv-row .slider {
+    position: absolute; inset: 0; background: #d8d2c0; border-radius: 999px;
+    transition: background .2s;
+}
+.priv-row .slider::before {
+    content: ""; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px;
+    background: #fff; border-radius: 50%; transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.priv-row input:checked + .slider { background: var(--navy); }
+.priv-row input:checked + .slider::before { transform: translateX(18px); }
+/* Toggle privasi versi bar atas (di bawah dropdown kelas) */
+.priv-top {
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 13px;
+    padding: 10px 14px; margin: 12px 0 0; box-shadow: var(--shadow);
+    color: var(--ink); font-weight: 700;
+}
+#myCard .info-best { margin-top: 6px; font-size: .8rem; }
+/* Mobile: sunatin chrome atas biar tabel nilai muat selayar */
+@media (max-width: 959px) {
+    .page-nilai .hero { margin: 4px 0 2px; }
+    .page-nilai .hero h1 { font-size: 1.35rem; }
+    .page-nilai .hero p { display: none; }
+    .page-nilai .hero-actions { margin-top: 8px; }
+    .page-nilai .section-label { margin: 16px 0 10px; }
+    .page-nilai #myTable .mon-table th, .page-nilai #myTable .mon-table td { padding: 8px 10px; }
+}
 .btn {
     display: inline-flex; align-items: center; gap: 8px; font-family: inherit;
     background: linear-gradient(180deg, var(--navy2), var(--navy)); color: #fff; border: none;
@@ -482,7 +549,13 @@ a.jl-mapel.has-kisi:hover { text-decoration: underline; }
 /* ===== Popup identitas ==== */
 .idpop-ov {
     position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
-    background: rgba(10, 12, 18, .6); opacity: 0; transition: opacity .25s ease; padding: 20px;
+    background: rgba(10, 12, 18, .6); opacity: 0; padding: 20px;
+    visibility: hidden; pointer-events: none;
+    transition: opacity .25s ease, visibility 0s .25s;
+}
+.idpop-ov.open {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: opacity .25s ease;
 }
 .idpop-ov.open { opacity: 1; }
 /* Modal nilai: pas ketutup jangan nangkep klik. */

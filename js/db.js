@@ -174,7 +174,7 @@ const ExamDB = {
         });
     },
 
-    // Profil lokal (dari index): { slug, name }. Tanpa login.
+    // Profil lokal (dari index): { slug, name, user_id?, claimed? }. Tanpa login.
     // Fallback: sesi app lama (key "user", domain sama → kebaca).
     // class_id lama 1-4 = XI-RPL 1-4 → slug xrpl1-4.
     profile() {
@@ -191,6 +191,7 @@ const ExamDB = {
                 return {
                     slug: Number.isFinite(cid) ? ("xrpl" + cid) : "",
                     name: u.nickname || u.short_name || String(u.full_name || "").split(" ")[0] || "",
+                    user_id: u.id != null ? String(u.id) : null,
                     legacy: true
                 };
             }

@@ -123,10 +123,53 @@ CREATE TABLE IF NOT EXISTS nilai_scores (
     UNIQUE (user_id, scores_type)
 );
 ALTER TABLE nilai_scores ENABLE ROW LEVEL SECURITY;
+-- Kolom KIK (Konsentrasi Keahlian) — tambahan ASTS 2026.
+ALTER TABLE nilai_scores ADD COLUMN IF NOT EXISTS kik NUMERIC DEFAULT 0;
 CREATE POLICY "public_read"   ON nilai_scores FOR SELECT USING (true);
 CREATE POLICY "public_insert" ON nilai_scores FOR INSERT WITH CHECK (true);
 CREATE POLICY "public_update" ON nilai_scores FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "public_delete" ON nilai_scores FOR DELETE USING (true);
+
+-- ============================================================
+-- scores2026 — nilai tahun ajaran 2026 (struktur sama kayak nilai_scores)
+-- ASTS 2026 pindah ke sini. psts/psat/psasi (tahun lalu) tetap di nilai_scores.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS scores2026 (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    class_id TEXT NOT NULL,
+    scores_type TEXT NOT NULL,
+    nama_siswa TEXT,
+    pabp NUMERIC DEFAULT 0, pp NUMERIC DEFAULT 0,
+    bindo NUMERIC DEFAULT 0, bing NUMERIC DEFAULT 0,
+    mtk NUMERIC DEFAULT 0, sindo NUMERIC DEFAULT 0,
+    bjepang NUMERIC DEFAULT 0, bsunda NUMERIC DEFAULT 0,
+    pjok NUMERIC DEFAULT 0,
+    kik NUMERIC DEFAULT 0,
+    kk1 NUMERIC DEFAULT 0, kk2 NUMERIC DEFAULT 0, kk3 NUMERIC DEFAULT 0,
+    is_private BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (user_id, scores_type)
+);
+ALTER TABLE scores2026 ENABLE ROW LEVEL SECURITY;
+-- Bersihin kolom rancangan lama kalo tabelnya keburu kebikin versi salah.
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS sejarah;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS senibudaya;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS informatika;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS pjok;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS proipas;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS dasprog1;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS dasprog2;
+ALTER TABLE scores2026 DROP COLUMN IF EXISTS dasprog3;
+DROP POLICY IF EXISTS "public_read" ON scores2026;
+DROP POLICY IF EXISTS "public_insert" ON scores2026;
+DROP POLICY IF EXISTS "public_update" ON scores2026;
+DROP POLICY IF EXISTS "public_delete" ON scores2026;
+CREATE POLICY "public_read"   ON scores2026 FOR SELECT USING (true);
+CREATE POLICY "public_insert" ON scores2026 FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_update" ON scores2026 FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "public_delete" ON scores2026 FOR DELETE USING (true);
 
 -- ============================================================
 -- page_errors — 404 log

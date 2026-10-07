@@ -117,6 +117,17 @@ ON CONFLICT (class_id) DO NOTHING;
 INSERT INTO exam_settings (key, value) VALUES ('admin_pin', '1234')
 ON CONFLICT (key) DO NOTHING;
 
+-- ---------- 4. KLAIM AKUN (index step 3: pilih akun, kunci permanen) ----------
+-- Satu user_id cuma bisa diklaim sekali → akun gabisa dimasukin orang lain.
+CREATE TABLE IF NOT EXISTS exam_claims (
+    user_id     TEXT PRIMARY KEY,   -- users.id (string)
+    class_id    TEXT NOT NULL DEFAULT '',
+    claimed_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE exam_claims ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public_all" ON exam_claims;
+CREATE POLICY "public_all" ON exam_claims FOR ALL USING (true) WITH CHECK (true);
+
 -- ---------- 4. CEK (harusnya 8 baris, semua c > 0 kecuali schedules) ----------
 -- SELECT 'classes' t, COUNT(*) c FROM exam_classes
 -- UNION ALL SELECT 'config', COUNT(*) FROM exam_config

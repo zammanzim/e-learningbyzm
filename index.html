@@ -10,8 +10,8 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js?v=2"></script>
-    <script src="js/db.js?v=2"></script>
-    <link rel="stylesheet" href="css/style.css?v=1" />
+    <script src="js/db.js?v=3"></script>
+    <link rel="stylesheet" href="css/style.css?v=3" />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
@@ -60,6 +60,12 @@
             </button>
             <button class="btn ghost" id="resChange">Ganti</button>
           </div>
+          <button class="btn gold sm" id="resClaim" style="display: none; margin-top: 10px">
+            <i class="fa-solid fa-user-check"></i> Pilih akun (buat liat nilai)
+          </button>
+          <p id="lockNote" style="display: none; font-size: 0.78rem; color: var(--muted); margin-top: 10px">
+            <i class="fa-solid fa-lock"></i> Akun udah dikunci, gabisa ganti-ganti.
+          </p>
         </div>
       </div>
 
@@ -97,10 +103,42 @@
             Isi nama kalo mau, ga diisi atau pake nama samaran juga gapapa. buat
             nyatet progress, sama visitor aja.
           </p>
-          <div style="display: flex; justify-content: flex-end">
-            <button class="btn gold sm" id="nameGo">
-              MASUK <i class="fa-solid fa-arrow-right"></i>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap">
+            <button class="btn ghost sm" id="nameGo">
+              Masuk tanpa akun
             </button>
+            <button class="btn gold sm" id="nameAcc">
+              Pilih akun <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="viewAccount" style="display: none">
+        <div style="margin-bottom: 10px">
+          <button class="btn ghost sm" id="accBack">
+            <i class="fa-solid fa-arrow-left"></i> Nama
+          </button>
+        </div>
+        <div class="section-label">
+          <i class="fa-solid fa-user-check"></i> 3. Pilih Akun
+        </div>
+        <div class="adm-card">
+          <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 10px">
+            Kelas <b id="accClass">…</b> — pilih namamu yang asli biar nilaimu ketemu.
+          </p>
+          <div class="search-row" style="margin-bottom: 10px">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input
+              id="accSearch"
+              type="search"
+              placeholder="Cari namamu…"
+              autocomplete="off"
+            />
+          </div>
+          <div id="accList"><div class="pub-empty">Nyiapin daftar akun…</div></div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+            <button class="btn ghost sm" id="accSkip">Lewati, masuk tanpa akun</button>
           </div>
         </div>
       </div>
@@ -109,6 +147,19 @@
         Web kisi-kisi and quiz. Made by Nizam or nimi. <br />
         &copy 2026 Web Nizam • All Right Reserved
       </p>
+    </div>
+
+    <!-- Konfirmasi kunci akun (sekali selamanya) -->
+    <div class="idpop-ov" id="accConfirm">
+      <div class="idpop-card">
+        <div class="idpop-ava" id="accAva">?</div>
+        <h2 id="accTitle">Ini bener kamu yaa?</h2>
+        <p class="idpop-sub">Kamu <b>gabisa logout lagi</b> dan akun kamu <b>gabisa dimasukin orang lain</b>.</p>
+        <div class="idpop-btns">
+          <button class="btn gold" id="accYes">Iya, ini aku</button>
+          <button class="btn ghost" id="accNo">Bukan, ganti</button>
+        </div>
+      </div>
     </div>
     <script>
       const ExamProfile = {
@@ -120,21 +171,26 @@
             return null;
           }
         },
-        set(slug, name) {
+        // userId diisi pas klaim akun (step 3) → claimed=true, dikunci permanen.
+        set(slug, name, userId) {
           try {
             localStorage.setItem(
               ExamProfile.KEY,
-              JSON.stringify({ slug, name: name || "" }),
+              JSON.stringify({ slug, name: name || "", user_id: userId != null ? String(userId) : null, claimed: userId != null }),
             );
             localStorage.removeItem("exam_logged_out");
           } catch (e) {
             /* abaikan */
           }
         },
+        // Akun yang udah diklaim gabisa dihapus (gabisa logout lagi).
         clear() {
           try {
+            const cur = ExamProfile.get();
+            if (cur && cur.claimed) return false;
             localStorage.removeItem(ExamProfile.KEY);
-          } catch (e) {}
+            return true;
+          } catch (e) { return true; }
         },
         // Catet ke exam_guests (kosong -> someone). Fire-and-forget.
         async _log(slug) {
@@ -156,18 +212,158 @@
 
       let chosenSlug = "";
       let chosenName = "";
+      let accCache = [];
+      let accClaimed = new Set();
+      let pendingUser = null;
+      const urlQ = new URLSearchParams(location.search);
+      const autoAcc = urlQ.get("akun") === "1";
+
+      // Tujuan balik abis login (mis. dari /nilai yang belum ada datanya).
+      // Cuma path relatif yang boleh, biar ga dilempar ke web lain.
+      function safeNext() {
+        const n = urlQ.get("next") || "";
+        if (!n || /^(https?:)?\/\//i.test(n) || n.includes("\\")) return "";
+        return n;
+      }
 
       function show(id) {
-        ["viewResume", "viewClass", "viewName"].forEach((v) => {
+        ["viewResume", "viewClass", "viewName", "viewAccount"].forEach((v) => {
           document.getElementById(v).style.display =
             v === id ? "block" : "none";
         });
       }
 
       function masuk() {
+        const next = safeNext();
         ExamProfile._log(chosenSlug).finally(() => {
-          location.href = "kisi?id=" + encodeURIComponent(chosenSlug);
+          location.href = next || "kisi?id=" + encodeURIComponent(chosenSlug);
         });
+      }
+
+      // ---- Step 3: pilih akun (contek nimi/login: list dari tabel users + search) ----
+      async function showAccountStep() {
+        show("viewAccount");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        try {
+          const cls = await ExamDB.resolveClass(chosenSlug);
+          document.getElementById("accClass").textContent = cls.name;
+        } catch (e) {
+          document.getElementById("accClass").textContent = chosenSlug;
+        }
+        loadAccounts();
+      }
+
+      async function loadAccounts() {
+        const box = document.getElementById("accList");
+        box.innerHTML = `<div class="pub-empty">Nyiapin daftar akun…</div>`;
+        // users.class_id pake id lama (1-4), digit akhir slug (samain kayak nilai.js).
+        const m = String(chosenSlug || "").match(/(\d+)$/);
+        const legacyId = m ? m[1] : null;
+        if (!legacyId) {
+          box.innerHTML = `<div class="pub-empty">Kelas ini belum ada daftar akunnya.</div>`;
+          return;
+        }
+        try {
+          const { data, error } = await supa.from("users")
+            .select("id, nickname, full_name, class_id")
+            .eq("class_id", legacyId).order("nickname");
+          if (error) throw error;
+          accCache = data || [];
+          // Akun yang udah diklaim orang lain → dikunci (butuh tabel exam_claims, liat schema.sql).
+          accClaimed = new Set();
+          try {
+            const r = await supa.from("exam_claims").select("user_id").eq("class_id", String(legacyId));
+            (r.data || []).forEach((x) => accClaimed.add(String(x.user_id)));
+          } catch (e) { /* tabel belum ada — abaikan, semua kebuka */ }
+          if (!accCache.length) {
+            box.innerHTML = `<div class="pub-empty">Belum ada akun buat kelas ini.</div>`;
+            return;
+          }
+          renderAccList();
+        } catch (e) {
+          box.innerHTML = `<div class="pub-empty">Gagal nyambung ke database.<br>${ExamDB.esc(e.message || e)}</div>`;
+        }
+      }
+
+      function renderAccList() {
+        const q = (document.getElementById("accSearch").value || "").toLowerCase();
+        const box = document.getElementById("accList");
+        const mine = String((ExamProfile.get() || {}).user_id || "");
+        const list = accCache.filter((u) =>
+          !q || (u.nickname || "").toLowerCase().includes(q) || (u.full_name || "").toLowerCase().includes(q));
+        if (!list.length) {
+          box.innerHTML = `<div class="pub-empty">Ga ketemu. Coba kata lain.</div>`;
+          return;
+        }
+        box.innerHTML = list.map((u) => {
+          const taken = accClaimed.has(String(u.id)) && String(u.id) !== mine;
+          const label = u.nickname || u.full_name || ("User " + u.id);
+          return `<button type="button" class="list-item" data-uid="${u.id}"${taken ? " disabled" : ""} ` +
+            `style="width:100%; font-family:inherit; font-size:.9rem; color:var(--ink); text-align:left;${taken ? " opacity:.45; cursor:not-allowed;" : " cursor:pointer;"}">` +
+            `<b style="flex:1;">${ExamDB.esc(label)}</b>` +
+            (taken ? `<small style="color:var(--muted);">dipake orang</small>`
+              : `<i class="fa-solid fa-chevron-right" style="color:var(--muted);"></i>`) +
+            `</button>`;
+        }).join("");
+        box.querySelectorAll("[data-uid]").forEach((b) => {
+          if (!b.disabled) b.addEventListener("click", () => openAccConfirm(b.dataset.uid));
+        });
+      }
+
+      function openAccConfirm(uid) {
+        pendingUser = accCache.find((u) => String(u.id) === String(uid)) || null;
+        if (!pendingUser) return;
+        const label = pendingUser.nickname || pendingUser.full_name || ("User " + pendingUser.id);
+        document.getElementById("accAva").textContent = String(label).trim().charAt(0).toUpperCase() || "?";
+        document.getElementById("accTitle").innerHTML =
+          `Ini bener <span>${ExamDB.esc(label)}</span> yaa?`;
+        const m = document.getElementById("accConfirm");
+        if (m.classList.contains("open")) return;
+        m.classList.add("open");
+        try { history.pushState({ acc: true }, ""); } catch (e) { /* abaikan */ }
+      }
+
+      function closeAccConfirm() {
+        const m = document.getElementById("accConfirm");
+        pendingUser = null;
+        if (!m.classList.contains("open")) return;
+        // Ada cantolan history → makan 1 back biar sinkron (popstate yang nutup).
+        try {
+          if (history.state && history.state.acc) { history.back(); return; }
+        } catch (e) { /* lanjut tutup manual */ }
+        m.classList.remove("open");
+      }
+
+      async function doClaim() {
+        const u = pendingUser;
+        if (!u) return;
+        const mine = String((ExamProfile.get() || {}).user_id || "") === String(u.id);
+        // Cek ulang ke server: kalo udah diklaim orang lain, tolak.
+        try {
+          const { data } = await supa.from("exam_claims").select("user_id").eq("user_id", String(u.id)).maybeSingle();
+          if (data && !mine) {
+            closeAccConfirm();
+            document.getElementById("accList").innerHTML =
+              `<div class="pub-empty">Yah, akun ini keburu dipake orang lain. Pilih yang lain yaa.</div>`;
+            loadAccounts();
+            return;
+          }
+        } catch (e) { /* tabel belum ada — lanjut */ }
+        try {
+          const { error } = await supa.from("exam_claims")
+            .insert({ user_id: String(u.id), class_id: String(u.class_id != null ? u.class_id : "") });
+          if (error && error.code === "23505") {
+            closeAccConfirm();
+            document.getElementById("accList").innerHTML =
+              `<div class="pub-empty">Yah, akun ini keburu dipake orang lain. Pilih yang lain yaa.</div>`;
+            loadAccounts();
+            return;
+          }
+        } catch (e) { /* offline/tabel belum ada — kunci lokal aja */ }
+        ExamProfile.set(chosenSlug, u.nickname || u.full_name || "", u.id);
+        try { localStorage.setItem("exam_idok", "1"); } catch (e) { /* abaikan */ }
+        closeAccConfirm();
+        masuk();
       }
 
         document.addEventListener("DOMContentLoaded", async () => {
@@ -193,9 +389,25 @@
 
         document.getElementById("resGo").addEventListener("click", masuk);
         document.getElementById("resChange").addEventListener("click", () => {
-          ExamProfile.clear();
+          if (ExamProfile.clear() === false) return;
           show("viewClass");
         });
+        // Akun udah dikunci → sembunyiin Ganti. Belum → tawarin pilih akun.
+        if (prof && prof.claimed) {
+          document.getElementById("resChange").style.display = "none";
+          document.getElementById("lockNote").style.display = "block";
+        } else {
+          const rc = document.getElementById("resClaim");
+          rc.style.display = "inline-flex";
+          rc.addEventListener("click", () => {
+            showAccountStep();
+          });
+        }
+        // Deep-link dari /nilai (belum ada data) → langsung ke step 3.
+        // Tanpa return: grid + wiring step 3 di bawah tetap jalan.
+        if (autoAcc && prof && !prof.claimed && chosenSlug) {
+          showAccountStep();
+        }
 
         // Grid kelas.
         try {
@@ -214,6 +426,11 @@
             grid.querySelectorAll(".class-card").forEach((b) =>
               b.addEventListener("click", () => {
                 chosenSlug = b.dataset.slug;
+                // Dari /nilai (?akun=1): abis pilih kelas langsung ke pilih akun.
+                if (autoAcc) {
+                  showAccountStep();
+                  return;
+                }
                 show("viewName");
                 setTimeout(
                   () => document.getElementById("nameInput").focus(),
@@ -236,6 +453,15 @@
           masuk();
         };
         document.getElementById("nameGo").addEventListener("click", go);
+        document.getElementById("nameAcc").addEventListener("click", () => {
+          const nm = document
+            .getElementById("nameInput")
+            .value.trim()
+            .slice(0, 30);
+          chosenName = nm;
+          ExamProfile.set(chosenSlug, nm);
+          showAccountStep();
+        });
         document
           .getElementById("nameBack")
           .addEventListener("click", () => show("viewClass"));
@@ -244,6 +470,23 @@
           .addEventListener("keydown", (e) => {
             if (e.key === "Enter") go();
           });
+
+        // Step 3 wiring.
+        document.getElementById("accBack").addEventListener("click", () => show("viewName"));
+        document.getElementById("accSkip").addEventListener("click", masuk);
+        document.getElementById("accSearch").addEventListener("input", renderAccList);
+        document.getElementById("accYes").addEventListener("click", doClaim);
+        document.getElementById("accNo").addEventListener("click", closeAccConfirm);
+        document.getElementById("accConfirm").addEventListener("click", (e) => {
+          if (e.target.id === "accConfirm") closeAccConfirm();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeAccConfirm();
+        });
+        window.addEventListener("popstate", () => {
+          const m = document.getElementById("accConfirm");
+          if (m && m.classList.contains("open")) { m.classList.remove("open"); pendingUser = null; }
+        });
       });
     </script>
   </body>
