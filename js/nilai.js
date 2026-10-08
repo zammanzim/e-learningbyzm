@@ -463,11 +463,11 @@ const NilaiPage = {
         }).join("");
     },
 
-    // Nilai disembunyiin (is_private): orang lain liat "-" dan gabisa klik.
-    // Yang boleh liat: diri sendiri + admin.
+    // Nilai disembunyiin (is_private): orang lain liat "-" + popup privasi.
+    // Admin pun ikut ketutup, kecuali nyalain mata di samping setting.
     locked(s) {
         if (!s || !s.is_private) return false;
-        if (NilaiPage.isAdmin()) return false;
+        if (NilaiPage.isAdmin() && NilaiPage.adminViewAll) return false;
         return NilaiPage.myUserId == null || String(s.user_id) !== String(NilaiPage.myUserId);
     },
 
