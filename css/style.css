@@ -1349,6 +1349,12 @@ a.jl-mapel.has-kisi:hover {
 .class-pick-drop button i:first-child { color: #8a6d00; }
 .class-pick-drop button .tick { margin-left: auto; color: var(--green); display: none; }
 .class-pick-drop button.on .tick { display: inline; }
+/* Tombol mata hide pribadi (/nilai): cuma ngaruh di layarmu */
+.hide-eye {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--muted); font-size: .75rem; padding: 0 2px; line-height: 1;
+}
+.hide-eye:hover { color: var(--navy); }
 /* Mobile: sunatin chrome atas biar tabel nilai muat selayar */
 @media (max-width: 959px) {
   .page-nilai .hero {

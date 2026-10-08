@@ -303,6 +303,19 @@ const NilaiPage = {
         return Object.keys(NilaiPage.mapel());
     },
 
+    // Hide mapel pribadi: cuma tampilan di layarmu (localStorage per ujian).
+    myHideKey() { return `nilai_myhide_${NilaiPage.testId}`; },
+    myHide() {
+        try { return JSON.parse(localStorage.getItem(NilaiPage.myHideKey()) || "[]"); }
+        catch (e) { return []; }
+    },
+    toggleMyHide(k) {
+        let h = NilaiPage.myHide();
+        h = h.includes(k) ? h.filter(x => x !== k) : [...h, k];
+        try { localStorage.setItem(NilaiPage.myHideKey(), JSON.stringify(h)); } catch (e) { /* abaikan */ }
+        NilaiPage.renderMine();
+    },
+
     // Mapel yang di-hide admin: murid liat "-", admin liat asli.
     // hk = config hide kelas sendiri (buat kartu Pribadimu pas liat kelas lain).
     // Admin default ikut tampilan murid; nyalain adminViewAll buat ngintip semua.
@@ -359,16 +372,24 @@ const NilaiPage = {
 
         document.getElementById("myTable").innerHTML =
             `<div class="mon-table-wrap"><table class="mon-table"><thead><tr>` +
-            `<th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th>` +
+            `<th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th><th style="width:34px;"></th>` +
             `</tr></thead><tbody>` +
-            NilaiPage.visibleKeys().map(k => {
-                const v = parseFloat(r[k]);
-                const ok = !isNaN(v) && !NilaiPage.masked(k, NilaiPage.myHidden);
-                const c = ok ? NilaiPage.color(v) : "var(--muted)";
-                return `<tr><td style="font-weight:700;">${NilaiPage.mlabel(k)}</td>` +
-                    `<td style="text-align:center;"><span class="progress-pill" style="color:${c};">${ok ? v.toFixed(1) : "-"}</span></td>` +
-                    `<td style="text-align:center;">${ok ? (v >= NilaiPage.KKM ? "✅" : "❌") : "-"}</td></tr>`;
-            }).join("") + `</tbody></table></div>`;
+            (() => {
+                const gh = NilaiPage.myHide();
+                return NilaiPage.visibleKeys().map(k => {
+                    const v = parseFloat(r[k]);
+                    const ghost = gh.includes(k);
+                    const ok = !isNaN(v) && !NilaiPage.masked(k, NilaiPage.myHidden) && !ghost;
+                    const c = ok ? NilaiPage.color(v) : "var(--muted)";
+                    return `<tr${ghost ? ` style="opacity:.5;"` : ""}><td style="font-weight:700;">${NilaiPage.mlabel(k)}</td>` +
+                        `<td style="text-align:center;"><span class="progress-pill" style="color:${c};">${ok ? v.toFixed(1) : "-"}</span></td>` +
+                        `<td style="text-align:center;">${ok ? (v >= NilaiPage.KKM ? "✅" : "❌") : "-"}</td>` +
+                        `<td style="text-align:center;"><button type="button" class="hide-eye" data-myhide="${k}" title="Sembunyiin dari layarmu"><i class="fa-solid fa-${ghost ? "eye-slash" : "eye"}"></i></button></td></tr>`;
+                }).join("");
+            })() + `</tbody></table></div>` +
+            `<p style="font-size:.72rem; color:var(--muted); margin-top:8px; text-align:center;">Pencet <i class="fa-solid fa-eye"></i> buat nyembunyiin nilai dari layarmu aja.</p>`;
+        document.querySelectorAll("#myTable [data-myhide]").forEach(b =>
+            b.addEventListener("click", () => NilaiPage.toggleMyHide(b.dataset.myhide)));
 
         const tw = document.getElementById("privWrap");
         if (NilaiPage.myUserId != null) {
@@ -513,12 +534,17 @@ const NilaiPage = {
         document.getElementById("stuName").textContent = NilaiPage.disp(s.nama_siswa);
         document.getElementById("stuAvg").textContent = "Rata-rata " + s.average.toFixed(2);
         document.getElementById("stuTable").innerHTML =
+            `<div class="mon-table-wrap"><table class="mon-table"><thead><tr>` +
+            `<th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th>` +
+            `</tr></thead><tbody>` +
             NilaiPage.visibleKeys().map(k => {
                 const v = parseFloat(s[k]);
                 const show = !isNaN(v) && !NilaiPage.masked(k);
-                return `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--line); font-size:.88rem;">` +
-                    `<span>${NilaiPage.mlabel(k)}</span><b>${show ? v.toFixed(1) : "-"}</b></div>`;
-            }).join("");
+                const c = show ? NilaiPage.color(v) : "var(--muted)";
+                return `<tr><td style="font-weight:700;">${NilaiPage.mlabel(k)}</td>` +
+                    `<td style="text-align:center;"><span class="progress-pill" style="color:${c};">${show ? v.toFixed(1) : "-"}</span></td>` +
+                    `<td style="text-align:center;">${show ? (v >= NilaiPage.KKM ? "✅" : "❌") : "-"}</td></tr>`;
+            }).join("") + `</tbody></table></div>`;
         NilaiPage.openStu();
     },
 
