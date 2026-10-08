@@ -7,7 +7,7 @@
     <meta name="description" content="Nilai ulangan per kelas: pribadimu + leaderboard + file asli.">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js?v=2"></script>
-    <script src="js/db.js?v=3"></script>
+    <script src="js/db.js?v=4"></script>
     <script src="js/media.js?v=2"></script>
     <script src="js/track.js?v=2"></script>
     <script src="js/viewer.js?v=2"></script>
@@ -28,31 +28,31 @@
                     <div class="top-drop" id="topDrop">
                         <a id="dropKisi" href="kisi"><i class="fa-solid fa-book-open"></i> Kisi-Kisi</a>
                         <a id="dropQuiz" href="quiz"><i class="fa-solid fa-graduation-cap"></i> Latihan Soal</a>
+                        <a id="dropNilai" href="nilai"><i class="fa-solid fa-trophy"></i> Nilai</a>
+                        <a id="dropIndex" href="index.html"><i class="fa-solid fa-house"></i> Beranda</a>
                     </div>
                 </div>
             </div>
-            <div class="topbar-sub">Nilai asli dari guru — bukan nilai latihan.</div>
+            <div class="topbar-sub">Web Kisi-Kisi, Quiz, and Nilai. Made by Nizam or nimi • <span class="top-domain">e-learniz.my.id</span></div>
         </div>
     </div>
 
     <div class="wrap">
         <div class="hero">
             <div class="hero-text">
-                <h1>Kelas <span id="kelasTitle">…</span></h1>
-                <p id="testDesc">Pilih jenis ujian di atas buat liat nilainya.</p>
+                <h1>Nilai</h1>
+                <div class="hero-domain">e-learniz.my.id</div>
+                <p id="testDesc">Nilai murni ASTS. Ada nilai pribadi, leaderboard, dan daftar nilai kelas.</p>
             </div>
             <div class="hero-actions">
-                <select id="kelasPick" class="field-input" style="font-weight:800;"></select>
                 <button type="button" class="btn ghost sm" id="setBtn" style="display:none;" title="Pengaturan admin">
                     <i class="fa-solid fa-gear"></i>
                 </button>
+                <button type="button" class="btn ghost sm" id="viewAllBtn" style="display:none;" title="Liat semua nilai (termasuk yang di-hide)">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
             </div>
         </div>
-
-        <label class="priv-row priv-top" id="privWrap" style="display:none;">
-            <span><i class="fa-solid fa-eye-slash"></i> Sembunyikan nilai aku dari semua orang</span>
-            <span class="switch"><input type="checkbox" id="privToggle"><span class="slider"></span></span>
-        </label>
 
         <!-- Layout 2 kolom ala nimi/a/scores: kiri sticky, kanan konten -->
         <div class="nilai-layout">
@@ -74,9 +74,20 @@
                     </div>
                     <div id="myTable"></div>
                 </div>
+                <label class="priv-row priv-top" id="privWrap" style="display:none;">
+                    <span><i class="fa-solid fa-eye-slash"></i> Sembunyikan nilai aku dari semua orang</span>
+                    <span class="switch"><input type="checkbox" id="privToggle"><span class="slider"></span></span>
+                </label>
             </div>
 
             <div class="right-section">
+                <div class="class-pick-row">
+                    <button type="button" class="class-pick-btn" id="kelasPickBtn">
+                        <span>Liat nilai kelas: <b id="kelasPickName">…</b></span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="class-pick-drop" id="kelasPickDrop"></div>
+                </div>
                 <!-- Podium -->
                 <div class="section-label"><i class="fa-solid fa-trophy"></i> Leaderboard</div>
                 <div id="podiumTop3" class="podium-top3"></div>
@@ -121,7 +132,7 @@
         </div>
 
         <p class="foot">
-        Web kisi-kisi and quiz. Made by Nizam or nimi. <br>
+        Web kisi-kisi, quiz and nilai. Made by Nizam or nimi. <br>
         &copy 2026 Web Nizam • All Right Reserved
       </p>
     </div>
@@ -155,6 +166,6 @@
         </div>
     </div>
 
-    <script src="js/nilai.js?v=20"></script>
+    <script src="js/nilai.js?v=29"></script>
 </body>
 </html>

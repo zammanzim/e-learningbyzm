@@ -244,8 +244,10 @@ const ExamDB = {
             const slug = p.slug || "";
             const dk = document.getElementById("dropKisi");
             const dq = document.getElementById("dropQuiz");
+            const dn = document.getElementById("dropNilai");
             if (dk) dk.href = "kisi" + (slug ? "?id=" + encodeURIComponent(slug) : "");
             if (dq) dq.href = "quiz" + (slug ? "?id=" + encodeURIComponent(slug) : "");
+            if (dn) dn.href = "nilai";
             if (!box.dataset.linked) {
                 box.dataset.linked = "1";
                 const drop = document.getElementById("topDrop");

@@ -34,6 +34,8 @@ const NilaiPage = {
     rows: [],       // nilai_scores + average
     myRow: null,
     myUserId: null,
+    myRank: null,
+    myHidden: [],
     hidden: [],
     nickMap: {},    // nama lower -> nickname tampil
 
@@ -63,6 +65,8 @@ const NilaiPage = {
         const p = new URLSearchParams(location.search).get("id") || "asts";
         if (NilaiPage.TESTS[p]) NilaiPage.testId = p;
         document.title = `${NilaiPage.TESTS[NilaiPage.testId]} • Ujian`;
+        const td = document.getElementById("testDesc");
+        if (td) td.textContent = `Nilai murni ${NilaiPage.testId.toUpperCase()}. Ada nilai pribadi, leaderboard, dan daftar nilai kelas.`;
         ExamDB.topUser();
 
         try {
@@ -81,13 +85,44 @@ const NilaiPage = {
         if (!defId && NilaiPage.classes.length) defId = String(NilaiPage.classes[0].id);
         NilaiPage.classId = defId;
 
-        const sel = document.getElementById("kelasPick");
-        sel.innerHTML = NilaiPage.classes.map(c =>
-            `<option value="${c.id}">${ExamDB.esc(c.name)}</option>`).join("");
-        if (defId) sel.value = defId;
-        sel.addEventListener("change", () => {
-            NilaiPage.classId = sel.value;
-            NilaiPage.load(true);
+        // Dropdown kelas custom (contek top-drop header).
+        const pickBtn = document.getElementById("kelasPickBtn");
+        const pickName = document.getElementById("kelasPickName");
+        const pickDrop = document.getElementById("kelasPickDrop");
+        const shortName = n => String(n || "").replace(/\s*-\s*/, "-");
+        const syncPick = () => {
+            const c = NilaiPage.classes.find(x => String(x.id) === String(NilaiPage.classId));
+            pickName.textContent = c ? shortName(c.name) : "…";
+            pickDrop.querySelectorAll("button").forEach(b =>
+                b.classList.toggle("on", String(b.dataset.id) === String(NilaiPage.classId)));
+        };
+        pickDrop.innerHTML = NilaiPage.classes.map(c =>
+            `<button type="button" data-id="${c.id}"><i class="fa-solid fa-users"></i><span>${ExamDB.esc(shortName(c.name))}</span><i class="fa-solid fa-check tick"></i></button>`).join("");
+        pickDrop.querySelectorAll("button").forEach(b =>
+            b.addEventListener("click", () => {
+                NilaiPage.classId = b.dataset.id;
+                syncPick();
+                pickBtn.classList.remove("open");
+                pickDrop.classList.remove("open");
+                NilaiPage.load(true);
+            }));
+        syncPick();
+        pickBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const open = pickDrop.classList.toggle("open");
+            pickBtn.classList.toggle("open", open);
+        });
+        document.addEventListener("click", (e) => {
+            if (!pickDrop.contains(e.target) && !pickBtn.contains(e.target)) {
+                pickDrop.classList.remove("open");
+                pickBtn.classList.remove("open");
+            }
+        });
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                pickDrop.classList.remove("open");
+                pickBtn.classList.remove("open");
+            }
         });
 
         document.getElementById("mapelSel").addEventListener("change", () => NilaiPage.renderTable());
@@ -171,12 +206,44 @@ const NilaiPage = {
 
             // Identitas: profil exam → users lama → user_id; fallback nama_siswa.
             // Kalo udah klaim akun (index step 3), user_id langsung dari profil.
-            let myUserId = null, myRow = null;
+            // Kalo liat kelas lain, Pribadimu tetap dari kelas sendiri.
+            let myClassId = null;
+            try {
+                const prof0 = ExamDB.profile();
+                const mm = prof0 && prof0.slug && prof0.slug.match(/(\d+)$/);
+                if (mm) myClassId = mm[1];
+            } catch (e) { /* abaikan */ }
+            let myRows = rows, myHidden = hidden;
+            if (myClassId && String(myClassId) !== String(NilaiPage.classId)) {
+                try {
+                    const [mRes, mcRes] = await Promise.all([
+                        supa.from(NilaiPage.table()).select("*").eq("class_id", myClassId).eq("scores_type", NilaiPage.testId),
+                        supa.from("nilai_config").select("hidden_subjects")
+                            .eq("test_id", NilaiPage.testId).eq("class_id", myClassId).maybeSingle()
+                    ]);
+                    if (!mRes.error && mRes.data) {
+                        myHidden = (mcRes.data && mcRes.data.hidden_subjects) || [];
+                        const avgM = s => {
+                            let t = 0, c = 0;
+                            for (const k in NilaiPage.mapel()) {
+                                if (myHidden.includes(k)) continue;
+                                const v = parseFloat(s[k]);
+                                if (!isNaN(v)) { t += v; c++; }
+                            }
+                            return c ? parseFloat((t / c).toFixed(2)) : 0;
+                        };
+                        myRows = mRes.data.map(s => ({ ...s, average: avgM(s) }))
+                            .sort((a, b) => b.average - a.average || String(a.nama_siswa || "").localeCompare(String(b.nama_siswa || "")));
+                    }
+                } catch (e) { myRows = rows; myHidden = hidden; }
+            }
+            let myUserId = null, myRow = null, myRank = null;
             try {
                 const prof = ExamDB.profile();
                 if (prof && prof.user_id != null) {
                     myUserId = String(prof.user_id);
-                    myRow = rows.find(r => String(r.user_id) === String(myUserId)) || null;
+                    myRow = myRows.find(r => String(r.user_id) === String(myUserId))
+                        || rows.find(r => String(r.user_id) === String(myUserId)) || null;
                 }
                 if (!myRow) {
                     const nm = ((prof && prof.name) || "").toLowerCase();
@@ -185,15 +252,21 @@ const NilaiPage = {
                             (x.nickname && x.nickname.toLowerCase() === nm) ||
                             (x.full_name && x.full_name.toLowerCase() === nm));
                         if (u) myUserId = u.id;
-                        myRow = rows.find(r => (myUserId != null && String(r.user_id) === String(myUserId)))
+                        myRow = myRows.find(r => (myUserId != null && String(r.user_id) === String(myUserId)))
+                            || myRows.find(r => (r.nama_siswa || "").toLowerCase() === nm)
+                            || rows.find(r => (myUserId != null && String(r.user_id) === String(myUserId)))
                             || rows.find(r => (r.nama_siswa || "").toLowerCase() === nm)
                             || rows.find(r => myUserId != null && (nick["id:" + myUserId] || "").toLowerCase() === (r.nama_siswa || "").toLowerCase())
                             || null;
                     }
                 }
+                if (myRow) {
+                    const src = myRows.includes(myRow) ? myRows : rows;
+                    myRank = src.indexOf(myRow) + 1;
+                }
             } catch (e) { /* abaikan */ }
 
-            const data = { ts: Date.now(), rows, myRow, myUserId, hidden, nick };
+            const data = { ts: Date.now(), rows, myRow, myUserId, myRank, myHidden, hidden, nick };
             try { localStorage.setItem(ck, JSON.stringify(data)); } catch (e) { /* abaikan */ }
             NilaiPage.applyData(data);
             NilaiPage.loadFiles();
@@ -209,10 +282,13 @@ const NilaiPage = {
         NilaiPage.rows = c.rows || [];
         NilaiPage.myRow = c.myRow || null;
         NilaiPage.myUserId = c.myUserId || null;
+        NilaiPage.myRank = c.myRank || null;
+        NilaiPage.myHidden = c.myHidden || c.hidden || [];
         NilaiPage.hidden = c.hidden || [];
         NilaiPage.nickMap = c.nick || {};
         NilaiPage.renderMapel();
         NilaiPage.renderMine();
+        NilaiPage.renderHideGrid();
         NilaiPage.renderAvg();
         NilaiPage.renderPodium();
         NilaiPage.renderTable();
@@ -228,8 +304,14 @@ const NilaiPage = {
     },
 
     // Mapel yang di-hide admin: murid liat "-", admin liat asli.
-    masked(k) {
-        return NilaiPage.hidden.includes(k) && !NilaiPage.isAdmin();
+    // hk = config hide kelas sendiri (buat kartu Pribadimu pas liat kelas lain).
+    // Admin default ikut tampilan murid; nyalain adminViewAll buat ngintip semua.
+    adminViewAll: false,
+    masked(k, hk) {
+        const h = hk || NilaiPage.hidden;
+        if (!h.includes(k)) return false;
+        if (NilaiPage.isAdmin() && NilaiPage.adminViewAll) return false;
+        return true;
     },
 
     renderMapel() {
@@ -259,7 +341,7 @@ const NilaiPage = {
         document.getElementById("myName").textContent = prof.name || NilaiPage.disp(r.nama_siswa);
         document.getElementById("myAvg").textContent = r.average.toFixed(2);
         document.getElementById("myAvg").style.color = NilaiPage.color(r.average);
-        const rank = NilaiPage.rows.indexOf(r) + 1;
+        const rank = NilaiPage.myRank || (NilaiPage.rows.indexOf(r) + 1);
         document.getElementById("myRank").textContent = "#" + rank;
         // Top 5 gabisa private: paksa mati + betulin di DB.
         if (rank >= 1 && rank <= 5 && r.is_private) {
@@ -281,7 +363,7 @@ const NilaiPage = {
             `</tr></thead><tbody>` +
             NilaiPage.visibleKeys().map(k => {
                 const v = parseFloat(r[k]);
-                const ok = !isNaN(v) && !NilaiPage.masked(k);
+                const ok = !isNaN(v) && !NilaiPage.masked(k, NilaiPage.myHidden);
                 const c = ok ? NilaiPage.color(v) : "var(--muted)";
                 return `<tr><td style="font-weight:700;">${NilaiPage.mlabel(k)}</td>` +
                     `<td style="text-align:center;"><span class="progress-pill" style="color:${c};">${ok ? v.toFixed(1) : "-"}</span></td>` +
@@ -295,7 +377,7 @@ const NilaiPage = {
             tgl.checked = !!r.is_private;
             tgl.onchange = async () => {
                 // Top 5 wajib tampil: tolak + kasih tau.
-                const rankNow = NilaiPage.rows.indexOf(r) + 1;
+                const rankNow = NilaiPage.myRank || (NilaiPage.rows.indexOf(r) + 1);
                 if (tgl.checked && rankNow >= 1 && rankNow <= 5) {
                     tgl.checked = false;
                     document.getElementById("stuName").textContent = "Gabisa";
@@ -509,6 +591,15 @@ const NilaiPage = {
         return false;
     },
 
+    // Checklist hide-mapel ngikutin kelas yang aktif (di-render ulang tiap load).
+    renderHideGrid() {
+        const grid = document.getElementById("hideGrid");
+        if (!grid) return;
+        grid.innerHTML = Object.keys(NilaiPage.mapel()).map(k =>
+            `<label class="check-pill"><input type="checkbox" value="${k}"${NilaiPage.hidden.includes(k) ? " checked" : ""}> ${NilaiPage.mlabel(k)}</label>`
+        ).join("");
+    },
+
     // Modal admin: contek pola openStu (fade + Esc + back HP).
     openAdm() {
         const m = document.getElementById("admModal");
@@ -536,19 +627,37 @@ const NilaiPage = {
         document.getElementById("admModal").addEventListener("click", e => {
             if (e.target.id === "admModal") NilaiPage.closeAdm();
         });
-        document.getElementById("hideGrid").innerHTML = Object.keys(NilaiPage.mapel()).map(k =>
-            `<label class="check-pill"><input type="checkbox" value="${k}"${NilaiPage.hidden.includes(k) ? " checked" : ""}> ${NilaiPage.mlabel(k)}</label>`
-        ).join("");
+        // Toggle mata: admin ngintip semua nilai vs tampilan murid.
+        const vw = document.getElementById("viewAllBtn");
+        vw.style.display = "inline-flex";
+        vw.addEventListener("click", () => {
+            NilaiPage.adminViewAll = !NilaiPage.adminViewAll;
+            vw.classList.toggle("gold", NilaiPage.adminViewAll);
+            vw.classList.toggle("ghost", !NilaiPage.adminViewAll);
+            vw.innerHTML = `<i class="fa-solid fa-${NilaiPage.adminViewAll ? "eye-slash" : "eye"}"></i>`;
+            NilaiPage.renderMine();
+            NilaiPage.renderAvg();
+            NilaiPage.renderTable();
+        });
+        NilaiPage.renderHideGrid();
         document.getElementById("hideSave").addEventListener("click", async () => {
             const hidden = [...document.querySelectorAll("#hideGrid input:checked")].map(x => x.value);
+            const btn = document.getElementById("hideSave");
+            const orig = btn.innerHTML;
+            btn.disabled = true;
             try {
                 const { error } = await supa.from("nilai_config").upsert(
                     { test_id: NilaiPage.testId, class_id: NilaiPage.classId, hidden_subjects: hidden },
                     { onConflict: "test_id,class_id" });
                 if (error) throw error;
                 try { localStorage.removeItem(NilaiPage.cacheKey()); } catch (e) {}
-                NilaiPage.load(true);
-            } catch (e) { /* abaikan */ }
+                await NilaiPage.load(true);
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> Tersimpan`;
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+            } catch (e) {
+                btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Gagal, coba lagi`;
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+            }
         });
         document.getElementById("fileBtn").addEventListener("click", async () => {
             const input = document.getElementById("fileUp");

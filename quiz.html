@@ -10,7 +10,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js?v=2"></script>
-    <script src="js/db.js?v=3"></script>
+    <script src="js/db.js?v=4"></script>
     <script src="js/track.js?v=2"></script>
     <link rel="stylesheet" href="css/style.css?v=2" />
     <link
@@ -65,26 +65,36 @@
               <a id="dropQuiz" href="quiz"
                 ><i class="fa-solid fa-graduation-cap"></i> Latihan Soal</a
               >
+              <a id="dropNilai" href="nilai"
+                ><i class="fa-solid fa-trophy"></i> Nilai</a
+              >
+              <a id="dropIndex" href="index.html"
+                ><i class="fa-solid fa-house"></i> Beranda</a
+              >
             </div>
           </div>
         </div>
         <div class="topbar-sub">
-          Web kisi-kisi and quiz made by Nizam or nimi
+          Web Kisi-Kisi, Quiz, and Nilai. Made by Nizam or nimi •
+          <span class="top-domain">e-learniz.my.id</span>
         </div>
       </div>
     </div>
     <div class="wrap" id="quizRoot">
       <div class="hero">
         <div class="hero-text">
-          <h1>Kelas <span id="kelasTitle">…</span></h1>
+          <h1>Latihan Soal</h1>
+          <div class="hero-domain">e-learniz.my.id</div>
           <p>
-            Pilih mapel di bawah buat mulai. Jawaban dikunci sekali pilih —
-            kayak ujian beneran.
+            Pilih latihan soal sesuai mapelnya. Disclaimer: ini soal dibikin oleh AI
           </p>
         </div>
-        <div class="hero-actions">
+        <div class="hero-actions split2">
           <a class="btn btn-hero" id="heroKisiLink" href="kisi"
             ><i class="fa-solid fa-book-open"></i>Liat Kisi-Kisi →</a
+          >
+          <a class="btn gold btn-hero" id="heroNilaiLink" href="nilai"
+            ><i class="fa-solid fa-trophy"></i>Liat Nilai →</a
           >
         </div>
       </div>
@@ -137,6 +147,6 @@
       </p>
     </div>
     <div id="quizFlash"></div>
-    <script src="js/quiz.js?v=2"></script>
+    <script src="js/quiz.js?v=4"></script>
   </body>
 </html>

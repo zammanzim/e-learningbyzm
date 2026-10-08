@@ -27,13 +27,16 @@ const KisiPage = {
             return;
         }
         document.title = `Kisi-Kisi ${KisiPage.cls.name} • Ujian`;
-        document.getElementById("kelasTitle").textContent = KisiPage.cls.name;
+        const kt = document.getElementById("kelasTitle");
+        if (kt) kt.textContent = KisiPage.cls.name;
         ExamDB.topUser();
         const qhref = "quiz?id=" + encodeURIComponent(KisiPage.cls.slug);
         const tq = document.getElementById("topQuizLink");
         if (tq) tq.href = qhref;
         const heroQuiz = document.getElementById("heroQuizLink");
         if (heroQuiz) heroQuiz.href = qhref;
+        const heroNilai = document.getElementById("heroNilaiLink");
+        if (heroNilai) heroNilai.href = "nilai?id=" + encodeURIComponent(KisiPage.cls.slug);
 
         try {
             const [days, sch, items, counts, teachers, subjects] = await Promise.all([

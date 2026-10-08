@@ -31,7 +31,8 @@ const QuizPage = {
             return;
         }
         document.title = `Latihan Soal ${QuizPage.cls.name} • Ujian`;
-        document.getElementById("kelasTitle").textContent = QuizPage.cls.name;
+        const kt = document.getElementById("kelasTitle");
+        if (kt) kt.textContent = QuizPage.cls.name;
         ExamDB.topUser();
         const qhref = "quiz?id=" + encodeURIComponent(QuizPage.cls.slug);
         const khref = "kisi?id=" + encodeURIComponent(QuizPage.cls.slug);
@@ -39,6 +40,8 @@ const QuizPage = {
         if (tk) tk.href = khref;
         const heroKisi = document.getElementById("heroKisiLink");
         if (heroKisi) heroKisi.href = khref;
+        const heroNilai = document.getElementById("heroNilaiLink");
+        if (heroNilai) heroNilai.href = "nilai?id=" + encodeURIComponent(QuizPage.cls.slug);
 
         try {
             const [days, sch, subjects, counts] = await Promise.all([
