@@ -22,12 +22,26 @@ const Adm = {
         Adm._t = setTimeout(() => el.classList.remove("show"), 2200);
     },
 
+    // Pemilik (nizam id=1): langsung masuk tanpa PIN. Orang lain tetap pake PIN.
+    isOwner() {
+        try {
+            const p = ExamDB.profile() || {};
+            if (String(p.user_id || "") === "1") return true;
+            const nm = (p.name || "").trim().toLowerCase();
+            if (nm === "nizam" || nm.split(/\s+/)[0] === "nizam") return true;
+        } catch (e) { /* abaikan */ }
+        return false;
+    },
+
     async boot() {
         ExamDB.watchVersion();
         document.getElementById("r2state").textContent = ExamMedia.r2Aktif()
             ? "Backend media: R2 (presign worker)."
             : "Backend media: R2 BELUM diset — upload mati sampai R2 live (lihat README).";
-        if (sessionStorage.getItem("exam_admin") === "1") Adm.open();
+        if (sessionStorage.getItem("exam_admin") === "1" || Adm.isOwner()) {
+            sessionStorage.setItem("exam_admin", "1");
+            Adm.open();
+        }
         document.getElementById("pinBtn").addEventListener("click", Adm.login);
         document.getElementById("pinInput").addEventListener("keydown", e => {
             if (e.key === "Enter") Adm.login();
@@ -622,6 +636,9 @@ const Adm = {
         if (first && !box.dataset.ready) {
             box.dataset.ready = "1";
             box.innerHTML =
+                `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">` +
+                `<h3 style="font-weight:900;">📡 Aktivitas</h3>` +
+                `<button class="btn sm" id="actRefresh"><i class="fa-solid fa-sync"></i> Refresh</button></div>` +
                 `<div class="adm-card"><h3>📄 Aktivitas Halaman</h3>` +
                 `<div class="mon-table-wrap"><table class="mon-table"><thead><tr>` +
                 `<th>Nama</th><th>Kelas</th><th>Halaman</th><th>Jam</th><th>Status</th>` +
@@ -631,7 +648,6 @@ const Adm = {
                 `<div class="filter-bar">` +
                 `<select id="actFClass" class="field-input"><option value="all">Semua Kelas</option></select>` +
                 `<select id="actFMapel" class="field-input"><option value="all">Semua Mapel</option></select>` +
-                `<button class="btn sm" id="actRefresh"><i class="fa-solid fa-sync"></i> Refresh</button>` +
                 `</div>` +
                 `<div class="mon-table-wrap"><table class="mon-table"><thead><tr>` +
                 `<th>Nama</th><th>Kelas</th><th>Mapel</th><th>Progres</th><th>Status</th><th>Terakhir Aktif</th>` +

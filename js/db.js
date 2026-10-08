@@ -248,6 +248,16 @@ const ExamDB = {
             if (dk) dk.href = "kisi" + (slug ? "?id=" + encodeURIComponent(slug) : "");
             if (dq) dq.href = "quiz" + (slug ? "?id=" + encodeURIComponent(slug) : "");
             if (dn) dn.href = "nilai";
+            // Menu admin cuma buat pemilik (nizam id=1). Orang lain ga liat.
+            const da = document.getElementById("dropAdmin");
+            if (da) {
+                let owner = false;
+                try {
+                    owner = String(p.user_id || "") === "1" ||
+                        (p.name || "").trim().toLowerCase().split(/\s+/)[0] === "nizam";
+                } catch (e) { /* abaikan */ }
+                da.style.display = owner ? "" : "none";
+            }
             if (!box.dataset.linked) {
                 box.dataset.linked = "1";
                 const drop = document.getElementById("topDrop");
