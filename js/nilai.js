@@ -68,6 +68,13 @@ const NilaiPage = {
         const td = document.getElementById("testDesc");
         if (td) td.textContent = `Nilai murni ${NilaiPage.testId.toUpperCase()}. Ada nilai pribadi, leaderboard, dan daftar nilai kelas.`;
         ExamDB.topUser();
+        try {
+            const pslug = (ExamDB.profile() || {}).slug || "";
+            const hk = document.getElementById("heroKisiLink");
+            const hq = document.getElementById("heroQuizLink");
+            if (hk) hk.href = "kisi" + (pslug ? "?id=" + encodeURIComponent(pslug) : "");
+            if (hq) hq.href = "quiz" + (pslug ? "?id=" + encodeURIComponent(pslug) : "");
+        } catch (e) { /* abaikan */ }
 
         try {
             const { data } = await supa.from("classes").select("id, name")
@@ -192,12 +199,14 @@ const NilaiPage = {
                 if (u.nickname) nick[u.nickname.toLowerCase()] = u.nickname;
                 if (u.id != null) nick["id:" + u.id] = u.nickname || u.full_name;
             });
+            // Adil: pembagi tetap = jumlah mapel kelas (yang kosong dihitung 0).
             const avg = s => {
                 let t = 0, c = 0;
                 for (const k in NilaiPage.mapel()) {
                     if (hidden.includes(k)) continue;
+                    c++;
                     const v = parseFloat(s[k]);
-                    if (!isNaN(v)) { t += v; c++; }
+                    if (!isNaN(v)) t += v;
                 }
                 return c ? parseFloat((t / c).toFixed(2)) : 0;
             };
@@ -227,8 +236,9 @@ const NilaiPage = {
                             let t = 0, c = 0;
                             for (const k in NilaiPage.mapel()) {
                                 if (myHidden.includes(k)) continue;
+                                c++;
                                 const v = parseFloat(s[k]);
-                                if (!isNaN(v)) { t += v; c++; }
+                                if (!isNaN(v)) t += v;
                             }
                             return c ? parseFloat((t / c).toFixed(2)) : 0;
                         };
@@ -465,6 +475,7 @@ const NilaiPage = {
 
     // Nilai disembunyiin (is_private): orang lain liat "-" + popup privasi.
     // Admin pun ikut ketutup, kecuali nyalain mata di samping setting.
+    // Ngebuka kunci top 5 cuma di HP orangnya (renderMine), bukan dari HP orang lain.
     locked(s) {
         if (!s || !s.is_private) return false;
         if (NilaiPage.isAdmin() && NilaiPage.adminViewAll) return false;
@@ -645,22 +656,25 @@ const NilaiPage = {
 
     setupAdmin() {
         if (!NilaiPage.isAdmin()) return;
-        // Panel admin jadi popup, dibuka lewat tombol gear (contek nimi/a/scores).
-        const btn = document.getElementById("setBtn");
-        btn.style.display = "inline-flex";
-        btn.addEventListener("click", () => NilaiPage.openAdm());
+        // Gear + mata pindah ke dropdown profil (cuma ada di halaman nilai).
+        const st = document.getElementById("dropSetting");
+        st.style.display = "";
+        const shutDrop = () => {
+            document.getElementById("topDrop").classList.remove("open");
+            document.getElementById("topUser").classList.remove("open");
+        };
+        st.addEventListener("click", () => { shutDrop(); NilaiPage.openAdm(); });
         document.getElementById("admClose").addEventListener("click", () => NilaiPage.closeAdm());
         document.getElementById("admModal").addEventListener("click", e => {
             if (e.target.id === "admModal") NilaiPage.closeAdm();
         });
         // Toggle mata: admin ngintip semua nilai vs tampilan murid.
-        const vw = document.getElementById("viewAllBtn");
-        vw.style.display = "inline-flex";
+        const vw = document.getElementById("dropViewAll");
+        vw.style.display = "";
         vw.addEventListener("click", () => {
             NilaiPage.adminViewAll = !NilaiPage.adminViewAll;
-            vw.classList.toggle("gold", NilaiPage.adminViewAll);
-            vw.classList.toggle("ghost", !NilaiPage.adminViewAll);
-            vw.innerHTML = `<i class="fa-solid fa-${NilaiPage.adminViewAll ? "eye-slash" : "eye"}"></i>`;
+            shutDrop();
+            vw.querySelector("i").className = `fa-solid fa-${NilaiPage.adminViewAll ? "eye-slash" : "eye"}`;
             NilaiPage.renderMine();
             NilaiPage.renderAvg();
             NilaiPage.renderTable();

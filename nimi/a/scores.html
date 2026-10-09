@@ -987,7 +987,7 @@
                 });
                 const process = s => {
                     let t = 0, c = 0;
-                    for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                    for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; c++; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; } }
                     return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
                 };
                 globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
@@ -1081,7 +1081,7 @@
                     let t = 0, c = 0;
                     for (let k in mapelConfig()) {
                         if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
-                        const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; }
+                        c++; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; }
                     }
                     return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
                 };
@@ -1305,7 +1305,7 @@
         function reprocess() {
             const proc = (s) => {
                 let t = 0, c = 0;
-                for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                for (let k in mapelConfig()) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; c++; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; } }
                 return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
             };
             globalData = globalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));

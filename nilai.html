@@ -56,6 +56,12 @@
               <a id="dropAdmin" href="admin" style="display: none"
                 ><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a
               >
+              <button id="dropSetting" style="display: none">
+                <i class="fa-solid fa-gear"></i> Pengaturan
+              </button>
+              <button id="dropViewAll" style="display: none">
+                <i class="fa-solid fa-eye"></i> Liat semua nilai
+              </button>
               <a id="dropIndex" href="index"
                 ><i class="fa-solid fa-house"></i> Beranda</a
               >
@@ -79,25 +85,17 @@
             kelas.
           </p>
         </div>
-        <div class="hero-actions">
-          <button
-            type="button"
-            class="btn ghost sm"
-            id="setBtn"
-            style="display: none"
-            title="Pengaturan admin"
+        <div class="hero-actions" style="display: none"></div>
+        <div
+          class="hero-actions split2"
+          style="flex: 1 1 100%; margin-left: 0"
+        >
+          <a class="btn btn-hero" id="heroKisiLink" href="kisi"
+            ><i class="fa-solid fa-book-open"></i>Liat Kisi-Kisi →</a
           >
-            <i class="fa-solid fa-gear"></i>
-          </button>
-          <button
-            type="button"
-            class="btn ghost sm"
-            id="viewAllBtn"
-            style="display: none"
-            title="Liat semua nilai (termasuk yang di-hide)"
+          <a class="btn gold btn-hero" id="heroQuizLink" href="quiz"
+            ><i class="fa-solid fa-graduation-cap"></i>Liat Latihan Soal →</a
           >
-            <i class="fa-solid fa-eye"></i>
-          </button>
         </div>
       </div>
 
@@ -320,6 +318,6 @@
       </div>
     </div>
 
-    <script src="js/nilai.js?v=33"></script>
+    <script src="js/nilai.js?v=38"></script>
   </body>
 </html>
